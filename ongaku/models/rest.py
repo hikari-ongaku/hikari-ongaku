@@ -132,3 +132,11 @@ class Info:
     @property
     def plugins(self) -> list[Plugin] | None:
         return self._plugins
+
+class Error:
+    def __init__(self, data: dict) -> None:
+        self._timestamp = data["timestamp"]
+        self._timestamp = data["status"]
+        self._error = data["error"]
+        self._message = data["message"]
+        self._path = data["path"]

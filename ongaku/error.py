@@ -12,3 +12,8 @@ class BuildException(OngakuBaseException):
     """
     Raised when a model fails to build correctly.
     """
+
+class LavalinkException(OngakuBaseException):
+    """
+    Raised when an error is returned on the websocket, or a rest command.
+    """
