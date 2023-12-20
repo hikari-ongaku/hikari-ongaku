@@ -87,3 +87,8 @@ class Rest:
                     raise error.ResponseException(response.status)
 
                 data = await response.json()
+
+    async def skip_track(self, track: models.Track, guild_id: int) -> None:
+        """
+        Skip the current track.
+        """
