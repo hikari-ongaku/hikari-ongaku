@@ -1,2 +1,2 @@
 # Hikari-Ongaku
-A voice library for hikari
+A voice library for Hikari.
