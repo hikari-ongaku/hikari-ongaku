@@ -189,7 +189,9 @@ class Ongaku:
                         break
 
     async def create_player(self, guild_id: hikari.Snowflake, channel_id: hikari.Snowflake) -> player.Player:
-        music = player.Player(self._bot, guild_id, channel_id)
+        music = await self._bot.voice.connect_to(
+            guild_id, channel_id, player.CustPlayer, bot=self._bot, ongaku=self
+        )
 
         self._players.update({guild_id: music})
 
