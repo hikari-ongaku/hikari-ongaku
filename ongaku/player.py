@@ -18,6 +18,8 @@ class Player:
     @property
     def queue(self) -> list[models.Track]:
         return self._queue
+    
+    
 
     async def play(self, track: models.Track) -> None:
         """

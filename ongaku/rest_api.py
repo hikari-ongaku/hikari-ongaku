@@ -1,9 +1,55 @@
 from . import models, error, player
 import typing as t
 
+import hikari
 import aiohttp
 import logging
 
+class InternalPlayer:
+    """
+    The Rest based actions for the player.
+    """
+    def __init__(self, link) -> None:
+        from .ongaku import Ongaku  # this is probably a bad thing to do.
+
+        self._link: Ongaku = link
+
+    async def create(self) -> player.Player:
+        """
+        Attempts to build a new player for a server. Will use an old player if already exists.
+        """
+    
+    async def fetch(self, guild: hikari.SnowflakeishOr[hikari.Guild | hikari.PartialGuild]) -> player.Player:
+        """
+        Attempts to fetch an already existing player. Will error out if it does not exist.
+        """
+    
+    async def fetch_all(self) -> list[player.Player]:
+        """
+        Attempts to fetch all existing players.
+        """
+
+    async def delete(self, p: player.Player | hikari.SnowflakeishOr[hikari.Guild | hikari.PartialGuild]) -> None:
+        """
+        Attempts to delete the selected player from lavalink
+        """
+
+    async def delete_all(self) -> None:
+        """
+        Deletes all players
+        """
+
+class Internal:
+    def __init__(self, link) -> None:
+        from .ongaku import Ongaku  # this is probably a bad thing to do.
+
+        self._link: Ongaku = link
+
+        self._internal_player = InternalPlayer(self._link)
+
+    @property
+    def player(self) -> InternalPlayer:
+        return self._internal_player
 
 class Rest:
     """
@@ -14,6 +60,8 @@ class Rest:
         from .ongaku import Ongaku  # this is probably a bad thing to do.
 
         self._link: Ongaku = link
+
+        self._internal = Internal(self._link)
 
     async def fetch_info(self) -> models.Info:
         """
@@ -93,7 +141,6 @@ class Rest:
         Skip the current track.
         """
 
-    async def fetch_players(self) -> t.Optional[player.Player]:
-        """
-        Fetches a player from the server. If it does not exist, returns none.
-        """
+    @property
+    def internal(self) -> Internal:
+        return self._internal
