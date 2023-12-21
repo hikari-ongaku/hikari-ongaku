@@ -208,4 +208,4 @@ class Ongaku:
         try:
             player = self._players[guild_id]
         except:
-            
+            pass

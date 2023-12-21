@@ -14,30 +14,11 @@ class InternalPlayer:
 
         self._link: Ongaku = link
 
-    async def create(self) -> player.Player:
+    async def play_track(self, guild_id: hikari.Snowflake, track: models.Track) -> None:
         """
-        Attempts to build a new player for a server. Will use an old player if already exists.
-        """
-    
-    async def fetch(self, guild: hikari.SnowflakeishOr[hikari.Guild | hikari.PartialGuild]) -> player.Player:
-        """
-        Attempts to fetch an already existing player. Will error out if it does not exist.
-        """
-    
-    async def fetch_all(self) -> list[player.Player]:
-        """
-        Attempts to fetch all existing players.
+        internally plays a track.
         """
 
-    async def delete(self, p: player.Player | hikari.SnowflakeishOr[hikari.Guild | hikari.PartialGuild]) -> None:
-        """
-        Attempts to delete the selected player from lavalink
-        """
-
-    async def delete_all(self) -> None:
-        """
-        Deletes all players
-        """
 
 class Internal:
     def __init__(self, link) -> None:
