@@ -188,17 +188,8 @@ class Ongaku:
                     elif msg.type == aiohttp.WSMsgType.ERROR:
                         break
 
-    async def create_player(self, guild_id: int, channel_id: int) -> player.Player:
-        music = player.Player()
-
-        await music.initialize(
-            self._bot,
-            guild_id,
-            channel_id,
-            self._standard_uri,
-            self._session_id,
-            self._user_id,
-        )
+    async def create_player(self, guild_id: hikari.Snowflake, channel_id: hikari.Snowflake) -> player.Player:
+        music = player.Player(self._bot, guild_id, channel_id)
 
         self._players.update({guild_id: music})
 
@@ -209,3 +200,12 @@ class Ongaku:
 
     async def delete_player(self, guild_id: int) -> None:
         self._players.pop(guild_id)
+
+    async def connect_player(self, guild_id: int) -> None:
+        """
+        Connects a player, so it can play audio.
+        """
+        try:
+            player = self._players[guild_id]
+        except:
+            

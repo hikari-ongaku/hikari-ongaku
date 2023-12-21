@@ -1,4 +1,4 @@
-from . import models, error
+from . import models, error, player
 import typing as t
 
 import aiohttp
@@ -91,4 +91,9 @@ class Rest:
     async def skip_track(self, track: models.Track, guild_id: int) -> None:
         """
         Skip the current track.
+        """
+
+    async def fetch_players(self) -> t.Optional[player.Player]:
+        """
+        Fetches a player from the server. If it does not exist, returns none.
         """
