@@ -13,3 +13,4 @@ Features:
  - [ ] Change EQ and Effects
  - [ ] Mute (basically sets volume to zero, whilst still playing audio)
  - [ ] Complete Error handling
+ - [ ] Node handling (shard based.)
