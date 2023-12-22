@@ -1,10 +1,12 @@
 import typing as t
 import enum as e
 
+
 class TrackSeverityType(e.Enum):
     COMMON = "common"
     SUSPICIOUS = "suspicious"
     FAULT = "fault"
+
 
 class TrackEndReasonType(e.Enum):
     FINISHED = "finished"
@@ -18,6 +20,7 @@ class TrackInfo:
     """
     Information about related track.
     """
+
     def __init__(self, data: dict) -> None:
         self._identifier = data["identifier"]
         self._is_seekable = data["isSeekable"]
@@ -75,10 +78,12 @@ class TrackInfo:
     def source_name(self) -> str:
         return self._source_name
 
+
 class Track:
     """
     A track Object.
     """
+
     def __init__(self, data: dict) -> None:
         self._encoded = data["encoded"]
 
@@ -104,6 +109,7 @@ class Track:
     def user_data(self) -> dict:
         return self._user_data
 
+
 class TrackStart:
     def __init__(self, data: dict) -> None:
         self._track = Track(data["track"])
@@ -111,6 +117,7 @@ class TrackStart:
     @property
     def track(self) -> Track:
         return self._track
+
 
 class TrackEnd:
     def __init__(self, data: dict) -> None:
@@ -125,6 +132,7 @@ class TrackEnd:
     @property
     def reason(self) -> TrackEndReasonType:
         return self._reason
+
 
 class TrackExceptionException:
     def __init__(self, data: dict) -> None:
@@ -144,6 +152,7 @@ class TrackExceptionException:
     def cause(self) -> str:
         return self._cause
 
+
 class TrackException:
     def __init__(self, data: dict) -> None:
         self._track = Track(data["track"])
@@ -157,6 +166,7 @@ class TrackException:
     @property
     def exception(self) -> TrackExceptionException:
         return self._exception
+
 
 class TrackStuck:
     def __init__(self, data: dict) -> None:

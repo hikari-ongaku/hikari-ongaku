@@ -2,87 +2,123 @@ import hikari
 from hikari.api import VoiceConnection, VoiceComponent
 import typing as t
 
-from . import models
+from . import models, error
+
 
 class Player(VoiceConnection):
-    def __init__(self, link, guild_id: int, channel_id) -> None:
-        from .ongaku import Ongaku # this is probably a bad thing to do.
-        self._bot: hikari.GatewayBot = link._bot
-        self._link: Ongaku = link
-        self._guild_id = guild_id
-        self._channel_id = channel_id
-
-        self._queue: list[models.Track] = []
-
-        self._connection: t.Optional[Player] = None
-    
-
-    async def initialize(self):
-        
-
-        return await self._bot.voice.connect_to(
-            self._guild_id,
-            self._channel_id,
-            voice_connection_type=Player
+    @classmethod
+    async def initialize(
+        cls,
+        channel_id: hikari.Snowflake,
+        endpoint: str,
+        guild_id: hikari.Snowflake,
+        on_close,
+        owner: VoiceComponent,
+        session_id: str,
+        shard_id: int,
+        token: str,
+        user_id: hikari.Snowflake,
+        *,
+        bot: hikari.GatewayBot,
+        node,
+    ):
+        init_player = Player(
+            bot=bot,
+            node=node,
+            channel_id=channel_id,
+            endpoint=endpoint,
+            guild_id=guild_id,
+            on_close=on_close,
+            owner=owner,
+            session_id=session_id,
+            shard_id=shard_id,
+            token=token,
+            user_id=user_id,
         )
 
+        return init_player
+
+    def __init__(
+        self,
+        *,
+        bot: hikari.GatewayBot,
+        node,
+        channel_id: hikari.Snowflake,
+        endpoint: str,
+        guild_id: hikari.Snowflake,
+        on_close,
+        owner: VoiceComponent,
+        session_id: str,
+        shard_id: int,
+        token: str,
+        user_id: hikari.Snowflake,
+    ) -> None:
+
+        self._bot = bot
+        self._node = node
+        self._channel_id = channel_id
+        self._endpoint = endpoint
+        self._guild_id = guild_id
+        self._on_close = on_close
+        self._owner = owner
+        self._session_id = session_id
+        self._shard_id = shard_id
+        self._token = token
+        self._user_id = user_id
 
 
-
-    async def play(self, track: models.Track, author_id: int) -> None:
-        """
-        Plays a track on the designated player. If a queue exists, it will push the currently playing song back, and play this song first.
-        """
-
-        self._queue.insert(0, track)
-
-        await self._link.rest.load_track(track, self.guild_id)
-
-    async def add(self, track: models.Track | list[models.Track]) -> None:
-        """
-        Adds song(s) to the queue.
-        """
-        if isinstance(track, models.Track):
-            self._queue.append(track)
-        
-        else:
-            self._queue.extend(track)
 
     @property
     def channel_id(self) -> hikari.Snowflake:
-        """Return the ID of the voice channel this voice connection is in."""
-        return self.channel_id
+        """ID of the voice channel this voice connection is in."""
+        return self._channel_id
 
     @property
     def guild_id(self) -> hikari.Snowflake:
-        """Return the ID of the guild this voice connection is in."""
-        return self.guild_id
+        """ID of the guild this voice connection is in."""
+        return self._guild_id
 
     @property
     def is_alive(self) -> bool:
-        """Return `builtins.True` if the connection is alive."""
-        return self.is_alive
+        """Whether the connection is alive."""
+        return self._is_alive
 
     @property
     def shard_id(self) -> int:
-        """Return the ID of the shard that requested the connection."""
-        return self.shard_id
+        """ID of the shard that requested the connection."""
+        return self._shard_id
 
     @property
     def owner(self) -> VoiceComponent:
         """Return the component that is managing this connection."""
-        return self.owner
+        return self._owner
+
+    async def play(self, track: models.Track) -> None:
+        voice = models.Voice(
+            {
+                "token": self._token,
+                "endpoint": self._endpoint[6:],
+                "sessionId": self._session_id,
+            }
+        )
+
+        if self._node.session_id == None:
+            raise error.SessionNotStartedException()
+
+        await self._node.rest.internal.player.update_player(
+            self.guild_id, self._node.session_id, track=track, voice=voice
+        )
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
+        print("disconnected?")
         self._is_alive = False
-
-    async def leave(self) -> None:
-        """Does the same thing as disconnect"""
-        await self.disconnect()
+        pass
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
+        print("joined?")
 
     async def notify(self, event: hikari.VoiceEvent) -> None:
         """Submit an event to the voice connection to be processed."""
+        pass
