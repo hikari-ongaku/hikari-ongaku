@@ -1,4 +1,4 @@
-from . import error, models, events, player
+from . import error, models, events, ongaku_player
 from . import rest_api
 import typing as t
 import enum as e
@@ -26,7 +26,7 @@ class Ongaku:
 
         self._bot = bot
 
-        self._players: dict[int, player.Player] = {}
+        self._players: dict[int, ongaku_player.OngakuPlayer] = {}
 
         self.rest = rest_api.Rest(self)
 
@@ -188,16 +188,19 @@ class Ongaku:
                     elif msg.type == aiohttp.WSMsgType.ERROR:
                         break
 
-    async def create_player(self, guild_id: hikari.Snowflake, channel_id: hikari.Snowflake) -> player.Player:
+    async def create_player(
+        self, guild_id: hikari.Snowflake, channel_id: hikari.Snowflake
+    ) -> ongaku_player.OngakuPlayer:
         music = await self._bot.voice.connect_to(
-            guild_id, channel_id, player.CustPlayer, bot=self._bot, ongaku=self
+            guild_id, channel_id, ongaku_player.OngakuPlayer, bot=self._bot, ongaku=self
         )
+
 
         self._players.update({guild_id: music})
 
         return music
 
-    async def fetch_player(self, guild_id: int) -> player.Player:
+    async def fetch_player(self, guild_id: int) -> ongaku_player.OngakuPlayer:
         return self._players[guild_id]
 
     async def delete_player(self, guild_id: int) -> None:
