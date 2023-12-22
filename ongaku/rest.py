@@ -1,4 +1,4 @@
-from . import models, error, ongaku_player
+from . import models, error, player
 import typing as t
 
 import hikari
@@ -7,19 +7,18 @@ import logging
 import json
 
 class InternalSession:
-    def __init__(self, link) -> None:
-        from .ongaku import Ongaku  # this is probably a bad thing to do.
+    def __init__(self, ongaku) -> None:
 
-        self._link: Ongaku = link
+        self._ongaku = ongaku
 
-    async def update_session(self) -> models.Session:
-        if self._link._session_id == None:
+    async def update_session(self, session_id: str) -> models.Session:
+        if session_id == None:
             raise error.SessionNotStartedException()
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._link._standard_uri + "/sessions/" + self._link._session_id,
-                headers=self._link._headers,
+                self._ongaku._default_uri + "/sessions/" + session_id,
+                headers=self._ongaku._headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
@@ -37,22 +36,21 @@ class InternalPlayer:
     The Rest based actions for the player.
     """
 
-    def __init__(self, link) -> None:
-        from .ongaku import Ongaku  # this is probably a bad thing to do.
+    def __init__(self, ongaku) -> None:
 
-        self._link: Ongaku = link
+        self._ongaku = ongaku
 
-    async def fetch_players(self) -> t.Optional[list[models.Player]]:
-        if self._link._session_id == None:
+    async def fetch_players(self, session_id: str) -> t.Optional[list[models.Player]]:
+        if session_id == None:
             raise error.SessionNotStartedException()
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._link._standard_uri
+                self._ongaku._default_uri
                 + "/sessions/"
-                + self._link._session_id
+                + session_id
                 + "/players",
-                headers=self._link._headers,
+                headers=self._ongaku._headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
@@ -72,19 +70,18 @@ class InternalPlayer:
         return player_list
 
     async def fetch_player(
-        self, guild_id: hikari.Snowflake
+        self, 
+        session_id: str,
+        guild_id: hikari.Snowflake
     ) -> t.Optional[models.Player]:
-        if self._link._session_id == None:
-            raise error.SessionNotStartedException()
-
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._link._standard_uri
+                self._ongaku._default_uri
                 + "/sessions/"
-                + self._link._session_id
+                + session_id
                 + "/players/"
                 + str(guild_id),
-                headers=self._link._headers,
+                headers=self._ongaku._headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
@@ -99,6 +96,7 @@ class InternalPlayer:
     async def update_player(
         self,
         guild_id: hikari.Snowflake,
+        session_id: str,
         *,
         track: hikari.UndefinedOr[models.Track] = hikari.UNDEFINED,
         position: hikari.UndefinedOr[int] = hikari.UNDEFINED,
@@ -137,13 +135,7 @@ class InternalPlayer:
         if voice != hikari.UNDEFINED:
             patch_data.update({"voice": voice.raw})
 
-        if self._link._session_id == None:
-            raise error.SessionNotStartedException()
-        print(patch_data)
-
-        #patch_data = json.dumps(patch_data)
-
-        new_headers = self._link._headers.copy()
+        new_headers = self._ongaku._headers.copy()
 
         new_headers.update({"Content-Type":"application/json"})
 
@@ -153,9 +145,9 @@ class InternalPlayer:
             print("here")
             try:
                 async with session.patch(
-                self._link._standard_uri
+                self._ongaku._default_uri
                 + "/sessions/"
-                + self._link._session_id
+                + session_id
                 + "/players/"
                 + str(guild_id),
                 headers=new_headers,
@@ -178,21 +170,18 @@ class InternalPlayer:
 
         return player_model
 
-    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
+    async def delete_player(self, session_id: str, guild_id: hikari.Snowflake) -> None:
         """
         Creates a new player for the specified guild. If one already exists, returns that instead.
         """
-        if self._link._session_id == None:
-            raise error.SessionNotStartedException()
-
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                self._link._standard_uri
+                self._ongaku._default_uri
                 + "/sessions/"
-                + self._link._session_id
+                + session_id
                 + "/players/"
                 + str(guild_id),
-                headers=self._link._headers,
+                headers=self._ongaku._headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
@@ -203,10 +192,10 @@ class InternalTrack:
     The rest based actions for the track.
     """
 
-    def __init__(self, link) -> None:
+    def __init__(self, ongaku) -> None:
         from .ongaku import Ongaku  # this is probably a bad thing to do.
 
-        self._link: Ongaku = link
+        self._ongaku: Ongaku = ongaku
 
     async def load_track(
         self, platform: models.PlatformType, query: str
@@ -222,8 +211,8 @@ class InternalTrack:
                 params = {"identifier": f'scsearch:"{query}"'}
 
             async with session.get(
-                self._link._standard_uri + "/loadtracks",
-                headers=self._link._headers,
+                self._ongaku._default_uri + "/loadtracks",
+                headers=self._ongaku._headers,
                 params=params,
             ) as response:
                 if response.status >= 400:
@@ -253,16 +242,16 @@ class InternalTrack:
 
 
 class Internal:
-    def __init__(self, link) -> None:
+    def __init__(self, ongaku) -> None:
         from .ongaku import Ongaku  # this is probably a bad thing to do.
 
-        self._link: Ongaku = link
+        self._ongaku: Ongaku = ongaku
 
-        self._internal_session = InternalSession(self._link)
+        self._internal_session = InternalSession(self._ongaku)
 
-        self._internal_player = InternalPlayer(self._link)
+        self._internal_player = InternalPlayer(self._ongaku)
 
-        self._internal_track = InternalTrack(self._link)
+        self._internal_track = InternalTrack(self._ongaku)
 
     @property
     def session(self) -> InternalSession:
@@ -277,17 +266,17 @@ class Internal:
         return self._internal_track
 
 
-class Rest:
+class RestApi:
     """
     The base rest class for all rest related things.
     """
 
-    def __init__(self, link) -> None:
+    def __init__(self, ongaku) -> None:
         from .ongaku import Ongaku  # this is probably a bad thing to do.
 
-        self._link: Ongaku = link
+        self._ongaku: Ongaku = ongaku
 
-        self._internal = Internal(self._link)
+        self._internal = Internal(self._ongaku)
 
     @property
     def internal(self) -> Internal:
@@ -295,14 +284,14 @@ class Rest:
 
     async def fetch_info(self) -> models.Info:
         """
-        Fetch the information about the lavalink server.
+        Fetch the information about the lavaongaku server.
 
         ----
         Returns: Returns a
         """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._link._standard_uri + "/info", headers=self._link._headers
+                self._ongaku._default_uri + "/info", headers=self._ongaku._headers
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)

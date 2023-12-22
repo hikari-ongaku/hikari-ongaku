@@ -22,6 +22,18 @@ class LavalinkException(OngakuBaseException):
     """
 
 
+class NodeException(OngakuBaseException):
+    """
+    Base node exception.
+    """
+
+
+class NodeMissingException(NodeException):
+    """
+    Raised when a node is missing.
+    """
+
+
 class SessionNotStartedException(LavalinkException):
     """
     Raised when the session id is needed, but is null.
@@ -37,4 +49,9 @@ class PlayerException(OngakuBaseException):
 class PlayerVolumeLevelException(PlayerException):
     """
     Raised when an invalid volume is set.
+    """
+
+class PlayerMissingException(PlayerException):
+    """
+    Raised when the player does not exist.
     """

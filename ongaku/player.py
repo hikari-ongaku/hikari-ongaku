@@ -5,7 +5,7 @@ import typing as t
 from . import models, error
 
 
-class OngakuPlayer(VoiceConnection):
+class Player(VoiceConnection):
     @classmethod
     async def initialize(
         cls,
@@ -19,12 +19,12 @@ class OngakuPlayer(VoiceConnection):
         token: str,
         user_id: hikari.Snowflake,
         *,
-        bot: hikari.GatewayBotAware,
-        ongaku,
+        bot: hikari.GatewayBot,
+        node,
     ):
-        init_player = OngakuPlayer(
+        init_player = Player(
             bot=bot,
-            ongaku=ongaku,
+            node=node,
             channel_id=channel_id,
             endpoint=endpoint,
             guild_id=guild_id,
@@ -33,8 +33,7 @@ class OngakuPlayer(VoiceConnection):
             session_id=session_id,
             shard_id=shard_id,
             token=token,
-            user_id=user_id
-
+            user_id=user_id,
         )
 
         return init_player
@@ -42,8 +41,8 @@ class OngakuPlayer(VoiceConnection):
     def __init__(
         self,
         *,
-        bot: hikari.GatewayBotAware,
-        ongaku,
+        bot: hikari.GatewayBot,
+        node,
         channel_id: hikari.Snowflake,
         endpoint: str,
         guild_id: hikari.Snowflake,
@@ -54,10 +53,9 @@ class OngakuPlayer(VoiceConnection):
         token: str,
         user_id: hikari.Snowflake,
     ) -> None:
-        from .ongaku import Ongaku
 
         self._bot = bot
-        self._ongaku: Ongaku = ongaku
+        self._node = node
         self._channel_id = channel_id
         self._endpoint = endpoint
         self._guild_id = guild_id
@@ -67,6 +65,8 @@ class OngakuPlayer(VoiceConnection):
         self._shard_id = shard_id
         self._token = token
         self._user_id = user_id
+
+
 
     @property
     def channel_id(self) -> hikari.Snowflake:
@@ -102,8 +102,11 @@ class OngakuPlayer(VoiceConnection):
             }
         )
 
-        await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, track=track, voice=voice
+        if self._node.session_id == None:
+            raise error.SessionNotStartedException()
+
+        await self._node.rest.internal.player.update_player(
+            self.guild_id, self._node.session_id, track=track, voice=voice
         )
 
     async def disconnect(self) -> None:

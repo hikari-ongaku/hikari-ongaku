@@ -9,10 +9,11 @@ class OngakuEvent(hikari.Event):
     The base Ongaku events.
     """
 
-
 @attr.define()
 class ReadyEvent(OngakuEvent):
     app: hikari.GatewayBotAware
+
+    shard_id: int
 
     _event: models.Ready
 
@@ -28,6 +29,8 @@ class ReadyEvent(OngakuEvent):
 @attr.define()
 class StatisticsEvent(OngakuEvent):
     app: hikari.GatewayBotAware
+
+    shard_id: int
 
     _event: models.Statistics
 
@@ -64,6 +67,8 @@ class TrackStartEvent(OngakuEvent):
 
     app: hikari.GatewayBotAware
 
+    shard_id: int
+
     _event: models.TrackStart
 
     _guild_id: int
@@ -84,6 +89,8 @@ class TrackEndEvent(OngakuEvent):
     """
 
     app: hikari.GatewayBotAware
+
+    shard_id: int
 
     _event: models.TrackEnd
 
@@ -110,6 +117,8 @@ class TrackExceptionEvent(OngakuEvent):
 
     app: hikari.GatewayBotAware
 
+    shard_id: int
+
     _event: models.TrackException
 
     _guild_id: int
@@ -135,6 +144,8 @@ class TrackStuckEvent(OngakuEvent):
 
     app: hikari.GatewayBotAware
 
+    shard_id: int
+
     _event: models.TrackStuck
 
     _guild_id: int
@@ -159,6 +170,8 @@ class WebsocketClosedEvent(OngakuEvent):
     """
 
     app: hikari.GatewayBotAware
+
+    shard_id: int
 
     _event: models.WebsocketClosed
 
