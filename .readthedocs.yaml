@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 # Read the Docs configuration file for Sphinx projects
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
@@ -7,7 +6,7 @@ version: 2
 
 # Set the OS, Python version and other tools you might need
 build:
-  os: ubuntu-22.04
+  os: Windows-11
   tools:
     python: "3.11"
     # You can also specify other tool versions:
@@ -34,18 +33,3 @@ sphinx:
 # python:
 #   install:
 #     - requirements: docs/requirements.txt
-=======
-version: "2"
-
-build:
-  os: "ubuntu-22.04"
-  tools:
-    python: "3.10"
-
-python:
-  install:
-    - requirements: docs/requirements.txt
-
-sphinx:
-  configuration: docs/source/conf.py
->>>>>>> Stashed changes
