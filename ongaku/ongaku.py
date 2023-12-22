@@ -104,7 +104,7 @@ class Ongaku:
                                         track_start_event = events.TrackStartEvent(
                                             self._bot,
                                             track_start,
-                                            json_data["guild_id"],
+                                            json_data["guildId"],
                                         )
 
                                         await self._bot.dispatch(track_start_event)
@@ -119,7 +119,7 @@ class Ongaku:
                                         )
                                     else:
                                         track_end_event = events.TrackEndEvent(
-                                            self._bot, track_end, json_data["guild_id"]
+                                            self._bot, track_end, json_data["guildId"]
                                         )
 
                                         await self._bot.dispatch(track_end_event)
@@ -139,7 +139,7 @@ class Ongaku:
                                             events.TrackExceptionEvent(
                                                 self._bot,
                                                 track_exception,
-                                                json_data["guild_id"],
+                                                json_data["guildId"],
                                             )
                                         )
 
@@ -157,7 +157,7 @@ class Ongaku:
                                         track_stuck_event = events.TrackStuckEvent(
                                             self._bot,
                                             track_stuck,
-                                            json_data["guild_id"],
+                                            json_data["guildId"],
                                         )
 
                                         await self._bot.dispatch(track_stuck_event)
@@ -179,7 +179,7 @@ class Ongaku:
                                             events.WebsocketClosedEvent(
                                                 self._bot,
                                                 websocket_closed,
-                                                json_data["guild_id"],
+                                                json_data["guildId"],
                                             )
                                         )
 
@@ -187,7 +187,7 @@ class Ongaku:
 
                     elif msg.type == aiohttp.WSMsgType.ERROR:
                         break
-
+    
     async def create_player(
         self, guild_id: hikari.Snowflake, channel_id: hikari.Snowflake
     ) -> ongaku_player.OngakuPlayer:

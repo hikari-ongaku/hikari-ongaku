@@ -19,7 +19,7 @@ class OngakuPlayer(VoiceConnection):
         token: str,
         user_id: hikari.Snowflake,
         *,
-        bot: hikari.GatewayBot,
+        bot: hikari.GatewayBotAware,
         ongaku,
     ):
         init_player = OngakuPlayer(
@@ -42,7 +42,7 @@ class OngakuPlayer(VoiceConnection):
     def __init__(
         self,
         *,
-        bot: hikari.GatewayBot,
+        bot: hikari.GatewayBotAware,
         ongaku,
         channel_id: hikari.Snowflake,
         endpoint: str,
@@ -97,7 +97,7 @@ class OngakuPlayer(VoiceConnection):
         voice = models.Voice(
             {
                 "token": self._token,
-                "endpoint": self._endpoint,
+                "endpoint": self._endpoint[6:],
                 "sessionId": self._session_id,
             }
         )

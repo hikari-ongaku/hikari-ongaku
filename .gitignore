@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 testing.py
+testing_*.py

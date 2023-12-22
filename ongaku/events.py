@@ -12,7 +12,7 @@ class OngakuEvent(hikari.Event):
 
 @attr.define()
 class ReadyEvent(OngakuEvent):
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.Ready
 
@@ -27,7 +27,7 @@ class ReadyEvent(OngakuEvent):
 
 @attr.define()
 class StatisticsEvent(OngakuEvent):
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.Statistics
 
@@ -62,7 +62,7 @@ class TrackStartEvent(OngakuEvent):
     Called when a track starts!
     """
 
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.TrackStart
 
@@ -83,7 +83,7 @@ class TrackEndEvent(OngakuEvent):
     Called when a track starts!
     """
 
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.TrackEnd
 
@@ -108,7 +108,7 @@ class TrackExceptionEvent(OngakuEvent):
     Called when a track starts!
     """
 
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.TrackException
 
@@ -133,7 +133,7 @@ class TrackStuckEvent(OngakuEvent):
     Called when a track starts!
     """
 
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.TrackStuck
 
@@ -158,7 +158,7 @@ class WebsocketClosedEvent(OngakuEvent):
     Called when a track starts!
     """
 
-    app: hikari.GatewayBot
+    app: hikari.GatewayBotAware
 
     _event: models.WebsocketClosed
 

@@ -148,8 +148,11 @@ class InternalPlayer:
         new_headers.update({"Content-Type":"application/json"})
 
         params = {"noReplace": "true", "trace": "true"}
+        print("here")
         async with aiohttp.ClientSession() as session:
-            async with session.patch(
+            print("here")
+            try:
+                async with session.patch(
                 self._link._standard_uri
                 + "/sessions/"
                 + self._link._session_id
@@ -161,13 +164,17 @@ class InternalPlayer:
             ) as response:
                 #if response.status >= 400:
                 #    raise error.ResponseException(response.status)
-                print("response?")
-                print(await response.text())
+                    print("response?")
+                    print(await response.text())
 
-                try:
-                    player_model = models.Player(await response.json())
-                except Exception as e:
-                    raise error.BuildException(e)
+                    try:
+                        player_model = models.Player(await response.json())
+                    except Exception as e:
+                        raise error.BuildException(e)
+            except Exception as e:
+                print(e)
+                raise e
+
 
         return player_model
 
