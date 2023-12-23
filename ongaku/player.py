@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import hikari
 from hikari.api import VoiceConnection, VoiceComponent
 import typing as t
 
-from . import models, error
+from . import models, error, events
 
+if t.TYPE_CHECKING:
+    from .ongaku import Ongaku
+
+    OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
 class Player(VoiceConnection):
     @classmethod
@@ -20,7 +26,7 @@ class Player(VoiceConnection):
         user_id: hikari.Snowflake,
         *,
         bot: hikari.GatewayBot,
-        ongaku,
+        ongaku: Ongaku,
     ):
         init_player = Player(
             bot=bot,
@@ -43,7 +49,7 @@ class Player(VoiceConnection):
         self,
         *,
         bot: hikari.GatewayBot,
-        ongaku,
+        ongaku: Ongaku,
         channel_id: hikari.Snowflake,
         endpoint: str,
         guild_id: hikari.Snowflake,
@@ -54,9 +60,8 @@ class Player(VoiceConnection):
         token: str,
         user_id: hikari.Snowflake,
     ) -> None:
-        from .ongaku import Ongaku
         self._bot = bot
-        self._ongaku: Ongaku = ongaku
+        self._ongaku = ongaku
         self._channel_id = channel_id
         self._endpoint = endpoint
         self._guild_id = guild_id
@@ -69,6 +74,7 @@ class Player(VoiceConnection):
 
         self._is_paused = True
 
+        bot.subscribe(events.TrackEndEvent, self.track_end_event)
 
 
     @property
@@ -134,16 +140,33 @@ class Player(VoiceConnection):
             self.guild_id, self._ongaku._session_id, paused=self.is_paused
         )
     
-    async def stop(self) -> None:
-        """
-        Stop, and clear all tracks.
-        """
+    #TODO: The following things between these to do's, do not work yet.
+
+    async def add(self, tracks: list[models.Track]):
+        return
+
+    async def remove(self, *, value: models.Track | int) -> None:
+        if isinstance(value, models.Track):
+            return
+        
+        else:
+            return
+
+    async def skip(self, *, amount: int) -> None:
+        return
+
+    async def track_end_event(self, event: events.TrackEndEvent):
+        print("I SEE THAT THE TRACK HAS ENDED.")
+        print(event.guild_id, self.guild_id)
+        if event.guild_id == self.guild_id:
+            print("IN THE CORRECT GUILD?????")
+
+    #TODO: The following things between these to do's, do not work yet.
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
-        print("disconnected?")
         self._is_alive = False
-        pass
+        await self._ongaku.rest.internal.player.delete_player(self._ongaku._session_id, self._guild_id)
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""

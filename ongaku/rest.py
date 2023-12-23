@@ -283,7 +283,7 @@ class RestApi:
 
     async def fetch_info(self) -> models.Info:
         """
-        Fetch the information about the lavaongaku server.
+        Fetch the information about the Lavalink server.
 
         ----
         Returns: Returns a

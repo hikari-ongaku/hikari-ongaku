@@ -6,7 +6,7 @@ class OngakuBaseException(Exception):
 
 class ResponseException(OngakuBaseException):
     """
-    Raised when a 4XX or 5XX error gets recieved.
+    Raised when a 4XX or 5XX error gets received.
     """
 
 
@@ -20,7 +20,11 @@ class LavalinkException(OngakuBaseException):
     """
     Raised when an error is returned on the websocket, or a rest command.
     """
-
+    
+class LavalinkConnectionException(LavalinkException):
+    """
+    Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server.
+    """
 
 class NodeException(OngakuBaseException):
     """
