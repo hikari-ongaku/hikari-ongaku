@@ -92,9 +92,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
         hikari.ResponseType.DEFERRED_MESSAGE_CREATE, flags=hikari.MessageFlag.EPHEMERAL
     )
 
-    musicthing = ongaku.Ongaku(ctx.bot, password="youshallnotpass")
-
-    results = await musicthing.rest.search(ongaku.PlatformType.YOUTUBE, query)
+    results = await lavalink.rest.search(ongaku.models.PlatformType.YOUTUBE, query)
 
     if results == None:
         await ctx.respond(
@@ -111,7 +109,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
 
     player = await lavalink.create_player(ctx.guild_id, ctx.channel_id)
 
-    await player.play(results[0], ctx.author.id)
+    await player.play(results[0])
 
     try:
         await bot.update_voice_state(

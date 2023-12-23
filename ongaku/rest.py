@@ -28,7 +28,7 @@ class InternalSession:
                 except Exception as e:
                     raise error.BuildException(e)
 
-                return session_model
+                return session_model 
 
 
 class InternalPlayer:
