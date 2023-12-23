@@ -1,4 +1,4 @@
-from . import models, events, player
+from . import models, events, player, error
 from . import rest
 import typing as t
 import enum as e
@@ -210,3 +210,12 @@ class Ongaku:
         self._players.update({guild_id: new_player})
 
         return new_player
+
+    async def fetch_player(self, guild_id: hikari.Snowflake) -> player.Player:
+        fetched_player = self._players.get(guild_id)
+
+        if fetched_player == None:
+            raise error.PlayerMissingException(guild_id)
+        
+        return fetched_player
+        

@@ -66,7 +66,11 @@ class Player:
     """
 
     def __init__(self, data: dict) -> None:
+        print("player guild:", data)
+        print("guild:", data["guildId"])
+
         self._guild_id = data["guildId"]
+
         try:
             self._track = track.Track(data["track"])
         except:
@@ -93,7 +97,7 @@ class Player:
         return self._track
 
     @property
-    def volume(self) -> float:
+    def volume(self) -> float | int:
         return self._volume
 
     @property

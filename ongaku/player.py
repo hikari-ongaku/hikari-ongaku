@@ -67,6 +67,8 @@ class Player(VoiceConnection):
         self._token = token
         self._user_id = user_id
 
+        self._is_paused = True
+
 
 
     @property
@@ -93,6 +95,13 @@ class Player(VoiceConnection):
     def owner(self) -> VoiceComponent:
         """Return the component that is managing this connection."""
         return self._owner
+    
+    @property
+    def is_paused(self) -> bool:
+        """
+        Returns whether the bot is paused or not.
+        """
+        return self._is_paused
 
     async def play(self, track: models.Track) -> None:
         voice = models.Voice(
@@ -108,6 +117,21 @@ class Player(VoiceConnection):
 
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id, self._ongaku._session_id, track=track, voice=voice
+        )
+
+        self._is_paused = False
+
+    async def pause(self, value: hikari.UndefinedOr[bool] = hikari.UNDEFINED) -> None:
+        if self._ongaku._session_id == None:
+            raise error.SessionNotStartedException()
+        
+        if value == hikari.UNDEFINED:
+            self._is_paused = (not self.is_paused)
+        else:
+            self._is_paused = value
+
+        await self._ongaku.rest.internal.player.update_player(
+            self.guild_id, self._ongaku._session_id, paused=self.is_paused
         )
 
     async def disconnect(self) -> None:

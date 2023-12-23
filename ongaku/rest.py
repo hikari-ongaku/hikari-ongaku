@@ -108,7 +108,7 @@ class InternalPlayer:
         """
         Creates a new player for the specified guild. If one already exists, returns that instead.
         """
-        patch_data: dict = {} # = {"track":{"encoded":None, "identifier":None}, "position": 0, "endTime": 0, "volume": 100, "paused": "false", "voice": {"token": None, "endpoint":None, "sessionId":None}}
+        patch_data: dict = {}
 
         if track != hikari.UNDEFINED:
             patch_data.update(
@@ -130,7 +130,10 @@ class InternalPlayer:
             patch_data.update({"volume": volume})
 
         if paused != hikari.UNDEFINED:
-            patch_data.update({"paused": str(paused).lower()})
+            paused_str = "false"
+            if paused:
+                paused_str = "true"
+            patch_data.update({"paused": paused})
 
         if voice != hikari.UNDEFINED:
             patch_data.update({"voice": voice.raw})
@@ -140,9 +143,8 @@ class InternalPlayer:
         new_headers.update({"Content-Type":"application/json"})
 
         params = {"noReplace": "true", "trace": "true"}
-        print("here")
+
         async with aiohttp.ClientSession() as session:
-            print("here")
             try:
                 async with session.patch(
                 self._ongaku._default_uri
@@ -156,15 +158,12 @@ class InternalPlayer:
             ) as response:
                 #if response.status >= 400:
                 #    raise error.ResponseException(response.status)
-                    print("response?")
-                    print(await response.text())
 
                     try:
                         player_model = models.Player(await response.json())
                     except Exception as e:
                         raise error.BuildException(e)
             except Exception as e:
-                print(e)
                 raise e
 
 
