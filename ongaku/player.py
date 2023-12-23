@@ -133,6 +133,11 @@ class Player(VoiceConnection):
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id, self._ongaku._session_id, paused=self.is_paused
         )
+    
+    async def stop(self) -> None:
+        """
+        Stop, and clear all tracks.
+        """
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
