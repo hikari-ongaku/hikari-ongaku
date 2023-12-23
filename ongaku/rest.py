@@ -6,9 +6,9 @@ import aiohttp
 import logging
 import json
 
+
 class InternalSession:
     def __init__(self, ongaku) -> None:
-
         self._ongaku = ongaku
 
     async def update_session(self, session_id: str) -> models.Session:
@@ -28,7 +28,7 @@ class InternalSession:
                 except Exception as e:
                     raise error.BuildException(e)
 
-                return session_model 
+                return session_model
 
 
 class InternalPlayer:
@@ -37,7 +37,6 @@ class InternalPlayer:
     """
 
     def __init__(self, ongaku) -> None:
-
         self._ongaku = ongaku
 
     async def fetch_players(self, session_id: str) -> t.Optional[list[models.Player]]:
@@ -46,10 +45,7 @@ class InternalPlayer:
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku._default_uri
-                + "/sessions/"
-                + session_id
-                + "/players",
+                self._ongaku._default_uri + "/sessions/" + session_id + "/players",
                 headers=self._ongaku._headers,
             ) as response:
                 if response.status >= 400:
@@ -70,9 +66,7 @@ class InternalPlayer:
         return player_list
 
     async def fetch_player(
-        self, 
-        session_id: str,
-        guild_id: hikari.Snowflake
+        self, session_id: str, guild_id: hikari.Snowflake
     ) -> t.Optional[models.Player]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -98,27 +92,46 @@ class InternalPlayer:
         guild_id: hikari.Snowflake,
         session_id: str,
         *,
-        track: hikari.UndefinedOr[models.Track] = hikari.UNDEFINED,
+        track: hikari.UndefinedNoneOr[models.Track] = hikari.UNDEFINED,
         position: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
         voice: hikari.UndefinedOr[models.Voice] = hikari.UNDEFINED,
+        no_replace: bool = True,
     ) -> models.Player:
         """
-        Creates a new player for the specified guild. If one already exists, returns that instead.
+        Update a player
+
+        Updates a player with the new parameters, or creates a new one if none exist.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The guild id that the bot is playing in.
+        session_id : str
+            The session_id for the lavalink server session.
+        
         """
         patch_data: dict = {}
 
         if track != hikari.UNDEFINED:
-            patch_data.update(
-                {
-                    "track": {
-                        "encoded": track.encoded,
-                        #"identifier": track.track.identifier
+            if track == None:
+                patch_data.update(
+                    {
+                        "track": {
+                            "encoded": None,
+                        }
                     }
-                }
-            )
+                )
+            else:
+                patch_data.update(
+                    {
+                        "track": {
+                            "encoded": track.encoded,
+                        }
+                    }
+                )
 
         if position != hikari.UNDEFINED:
             patch_data.update({"position": position})
@@ -140,24 +153,27 @@ class InternalPlayer:
 
         new_headers = self._ongaku._headers.copy()
 
-        new_headers.update({"Content-Type":"application/json"})
+        new_headers.update({"Content-Type": "application/json"})
 
-        params = {"noReplace": "true", "trace": "true"}
+        params = {"noReplace": "false"}
+
+        if no_replace:
+            params.update({"noReplace": "false"})
 
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.patch(
-                self._ongaku._default_uri
-                + "/sessions/"
-                + session_id
-                + "/players/"
-                + str(guild_id),
-                headers=new_headers,
-                params=params,
-                json=patch_data,
-            ) as response:
-                #if response.status >= 400:
-                #    raise error.ResponseException(response.status)
+                    self._ongaku._default_uri
+                    + "/sessions/"
+                    + session_id
+                    + "/players/"
+                    + str(guild_id),
+                    headers=new_headers,
+                    params=params,
+                    json=patch_data,
+                ) as response:
+                    # if response.status >= 400:
+                    #    raise error.ResponseException(response.status)
 
                     try:
                         player_model = models.Player(await response.json())
@@ -165,7 +181,6 @@ class InternalPlayer:
                         raise error.BuildException(e)
             except Exception as e:
                 raise e
-
 
         return player_model
 

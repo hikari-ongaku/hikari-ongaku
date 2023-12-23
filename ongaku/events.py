@@ -9,6 +9,7 @@ class OngakuEvent(hikari.Event):
     The base Ongaku events.
     """
 
+
 @attr.define()
 class ReadyEvent(OngakuEvent):
     app: hikari.GatewayBotAware
@@ -149,6 +150,21 @@ class TrackStuckEvent(OngakuEvent):
     @property
     def guild_id(self) -> int:
         return self._guild_id
+
+@attr.define()
+class PlayerQueueEmptyEvent(OngakuEvent):
+    """
+    Called when a players queue is zero.
+    """
+
+    app: hikari.GatewayBotAware
+
+    _guild_id: int
+
+    @property
+    def guild_id(self) -> int:
+        return self._guild_id
+
 
 
 @attr.define()

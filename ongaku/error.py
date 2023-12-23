@@ -20,11 +20,13 @@ class LavalinkException(OngakuBaseException):
     """
     Raised when an error is returned on the websocket, or a rest command.
     """
-    
+
+
 class LavalinkConnectionException(LavalinkException):
     """
     Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server.
     """
+
 
 class NodeException(OngakuBaseException):
     """
@@ -55,7 +57,17 @@ class PlayerVolumeLevelException(PlayerException):
     Raised when an invalid volume is set.
     """
 
+
 class PlayerMissingException(PlayerException):
     """
     Raised when the player does not exist.
+    """
+class PlayerEmptyQueueException(PlayerException):
+    """
+    Raised when there is no tracks in the queue.
+    """
+
+class PlayerInvalidVolumeException(PlayerException):
+    """
+    Raised when the volume is above 1000, or below 0.
     """

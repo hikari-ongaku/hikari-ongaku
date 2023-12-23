@@ -11,6 +11,7 @@ if t.TYPE_CHECKING:
 
     OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
+
 class Player(VoiceConnection):
     @classmethod
     async def initialize(
@@ -40,7 +41,6 @@ class Player(VoiceConnection):
             shard_id=shard_id,
             token=token,
             user_id=user_id,
-            
         )
 
         return init_player
@@ -74,8 +74,9 @@ class Player(VoiceConnection):
 
         self._is_paused = True
 
-        bot.subscribe(events.TrackEndEvent, self.track_end_event)
+        self._queue: list[models.Track] = []
 
+        bot.subscribe(events.TrackEndEvent, self.track_end_event)
 
     @property
     def channel_id(self) -> hikari.Snowflake:
@@ -101,13 +102,20 @@ class Player(VoiceConnection):
     def owner(self) -> VoiceComponent:
         """Return the component that is managing this connection."""
         return self._owner
-    
+
     @property
     def is_paused(self) -> bool:
         """
         Returns whether the bot is paused or not.
         """
         return self._is_paused
+
+    @property
+    def queue(self) -> list[models.Track]:
+        """
+        View all the tracks that currently exist.
+        """
+        return tuple(self._queue)
 
     async def play(self, track: models.Track) -> None:
         voice = models.Voice(
@@ -122,7 +130,11 @@ class Player(VoiceConnection):
             raise error.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, self._ongaku._session_id, track=track, voice=voice
+            self.guild_id,
+            self._ongaku._session_id,
+            track=track,
+            voice=voice,
+            no_replace=False,
         )
 
         self._is_paused = False
@@ -130,43 +142,100 @@ class Player(VoiceConnection):
     async def pause(self, value: hikari.UndefinedOr[bool] = hikari.UNDEFINED) -> None:
         if self._ongaku._session_id == None:
             raise error.SessionNotStartedException()
-        
+
         if value == hikari.UNDEFINED:
-            self._is_paused = (not self.is_paused)
+            self._is_paused = not self.is_paused
         else:
             self._is_paused = value
 
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id, self._ongaku._session_id, paused=self.is_paused
         )
-    
-    #TODO: The following things between these to do's, do not work yet.
 
     async def add(self, tracks: list[models.Track]):
-        return
+        self._queue.extend(tracks)
 
-    async def remove(self, *, value: models.Track | int) -> None:
+    async def remove(self, value: models.Track | int) -> None:
         if isinstance(value, models.Track):
+            index = self._queue.index(value)
+
+        else:
+            index = value
+
+        try:
+            self._queue.pop(index)
+        except Exception as e:
+            raise e
+
+    async def skip(self, amount: int) -> None:
+        if amount == 0:
+            return
+        if len(self.queue) == 0:
+            raise error.PlayerEmptyQueueException(0)
+
+        for item in range(amount):
+            if len(self._queue) == 0:
+                break
+            else:
+                self._queue.pop(0)
+
+        if len(self.queue) == 0:
+            self._ongaku.rest.internal.player.update_player(
+                self.guild_id, self._ongaku._session_id, track=None, 
+            )
             return
         
-        else:
-            return
-
-    async def skip(self, *, amount: int) -> None:
-        return
+        self._ongaku.rest.internal.player.update_player(
+            self.guild_id, self._ongaku._session_id, track=self._queue[0], no_replace=False
+        )
 
     async def track_end_event(self, event: events.TrackEndEvent):
-        print("I SEE THAT THE TRACK HAS ENDED.")
-        print(event.guild_id, self.guild_id)
-        if event.guild_id == self.guild_id:
-            print("IN THE CORRECT GUILD?????")
+        if int(event.guild_id) == int(self.guild_id):
+            await self.remove(0)
+            
+            if len(self.queue) == 0:
+                await self._bot.dispatch(events.PlayerQueueEmptyEvent(self._bot, self.guild_id))
+                return
+            
+            self._ongaku.rest.internal.player.update_player(
+                self.guild_id, self._ongaku._session_id, track=self._queue[0], no_replace=False
+            )
 
-    #TODO: The following things between these to do's, do not work yet.
+    # TODO: The following things between these to do's, do not work yet.
+
+    async def volume(self, volume: int) -> None:
+        if volume < 0 or volume > 1000:
+            raise error.PlayerInvalidVolumeException(volume)
+        pass
+
+    async def clear(self) -> None:
+        """
+        Clears the queue, and stops the current song.
+        """
+        self._queue.clear()
+        self._ongaku.rest.internal.player.update_player(
+            self.guild_id, self._ongaku._session_id, track=None, no_replace=False
+        )
+
+    async def position(self, value: int) -> None:
+        """
+        Change the tracks position in ms.
+        
+        Raises
+        ------
+        PlayerInvalidPosition: When the track position selected is not a valid position.
+        """
+        pass
+
+    # TODO: The following things between these to do's, do not work yet.
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
         self._is_alive = False
-        await self._ongaku.rest.internal.player.delete_player(self._ongaku._session_id, self._guild_id)
+        await self.clear()
+        await self._ongaku.rest.internal.player.delete_player(
+            self._ongaku._session_id, self._guild_id
+        )
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
