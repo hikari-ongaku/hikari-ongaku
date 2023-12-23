@@ -20,11 +20,11 @@ class Player(VoiceConnection):
         user_id: hikari.Snowflake,
         *,
         bot: hikari.GatewayBot,
-        node,
+        ongaku,
     ):
         init_player = Player(
             bot=bot,
-            node=node,
+            ongaku=ongaku,
             channel_id=channel_id,
             endpoint=endpoint,
             guild_id=guild_id,
@@ -34,6 +34,7 @@ class Player(VoiceConnection):
             shard_id=shard_id,
             token=token,
             user_id=user_id,
+            
         )
 
         return init_player
@@ -42,7 +43,7 @@ class Player(VoiceConnection):
         self,
         *,
         bot: hikari.GatewayBot,
-        node,
+        ongaku,
         channel_id: hikari.Snowflake,
         endpoint: str,
         guild_id: hikari.Snowflake,
@@ -53,9 +54,9 @@ class Player(VoiceConnection):
         token: str,
         user_id: hikari.Snowflake,
     ) -> None:
-
+        from .ongaku import Ongaku
         self._bot = bot
-        self._node = node
+        self._ongaku: Ongaku = ongaku
         self._channel_id = channel_id
         self._endpoint = endpoint
         self._guild_id = guild_id
@@ -102,11 +103,11 @@ class Player(VoiceConnection):
             }
         )
 
-        if self._node.session_id == None:
+        if self._ongaku._session_id == None:
             raise error.SessionNotStartedException()
 
-        await self._node.rest.internal.player.update_player(
-            self.guild_id, self._node.session_id, track=track, voice=voice
+        await self._ongaku.rest.internal.player.update_player(
+            self.guild_id, self._ongaku._session_id, track=track, voice=voice
         )
 
     async def disconnect(self) -> None:

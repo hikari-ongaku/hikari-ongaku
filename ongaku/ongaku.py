@@ -1,4 +1,4 @@
-from . import error, models, events, node, player
+from . import models, events, player
 from . import rest
 import typing as t
 import enum as e
@@ -10,6 +10,8 @@ import logging
 class Ongaku:
     def __init__(
         self,
+        bot: hikari.GatewayBot,
+        *,
         host: str = "localhost",
         port: int = 2333,
         password: str | None = None,
@@ -31,7 +33,9 @@ class Ongaku:
         version: models.VersionType
             The version of lavalink you are running. Currently only supports V3, or V4. (default is V4)
         """
-        self._nodes: t.Dict[hikari.Snowflake | int, node.Node] = {}
+        self._bot = bot
+
+        self._players: dict[hikari.Snowflake, player.Player] = {}
         
         self._default_uri = f"http://{host}:{port}/{version.value}"
 
@@ -42,25 +46,145 @@ class Ongaku:
 
         self._rest = rest.RestApi(self)
 
-    @property
-    def nodes(self) -> list[node.Node]:
-        """
-        Nodes
+        self._connected = False
+        self._session_id: t.Optional[str] = None
 
-        A property of all nodes.
+    @property
+    def players(self) -> list[player.Player]:
         """
-        return list(self._nodes.values())
+        players
+
+        All the currently active players.
+        """
+        return list(self._players.values())
 
     @property
     def rest(self) -> rest.RestApi:
         return self._rest
 
-    async def create_node(
+    @property
+    def bot(self) -> hikari.GatewayBot:
+        """
+        Gateway bot.
+
+        The gateway bot the server is attached to.
+        """
+        return self._bot
+    
+    @property
+    def connected(self) -> bool:
+        """
+        Connected to lavalink.
+
+        Whether or not it is connected to lavalink's websocket.
+
+        Returns
+        -------
+        A boolean. If true, it is connected to the server, if false, it is not.
+        """
+        return self._connected
+
+    async def connect(self, user_id: hikari.Snowflake) -> None:
+        async with aiohttp.ClientSession() as session:
+            new_header = {
+                "User-Id": str(user_id),
+                "Client-Name": f"{str(user_id)}::Unknown"
+            }
+
+            new_header.update(self._headers)
+
+            async with session.ws_connect(self._default_uri + "/websocket", headers=new_header) as ws:
+                async for msg in ws:
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        try:
+                            json_data = msg.json()
+                        except:
+                            logging.info("Failed to decode json data.")
+                        else:
+                            op_code = json_data["op"]
+                            logging.info("received op code: " + op_code)
+                            if op_code == "ready":
+                                self._connected = True
+                                try:
+                                    ready = models.Ready(json_data)
+                                except Exception as e:
+                                    logging.error("Failed to convert a ready statement. Error:" + str(e))
+                                else:
+                                    ready_event = events.ReadyEvent(self._bot, ready)
+
+                                    await self._bot.dispatch(ready_event)
+
+                                    self._session_id = ready.session_id
+                            elif op_code == "stats":
+                                try:
+                                    stats = models.Statistics(json_data)
+                                except Exception as e:
+                                    logging.error("Failed to convert a statistics statement. Error:" + str(e))
+                                else:
+                                    ready_event = events.StatisticsEvent(self._bot, stats)
+
+                                    await self._bot.dispatch(ready_event)
+                            elif op_code == "event":
+                                event_type = json_data["type"]
+
+                                if event_type == "TrackStartEvent":
+                                    try:
+                                        track_start = models.TrackStart(json_data)
+                                    except Exception as e:
+                                        logging.error("Failed to convert a event track start. Error:" + str(e))
+                                    else:
+                                        track_start_event = events.TrackStartEvent(self._bot, track_start, json_data["guildId"])
+
+                                        await self._bot.dispatch(track_start_event)
+
+                                if event_type == "TrackEndEvent":
+                                    try:
+                                        track_end = models.TrackEnd(json_data)
+                                    except Exception as e:
+                                        logging.error("Failed to convert a event track start. Error:" + str(e))
+                                    else:
+                                        track_end_event = events.TrackEndEvent(self._bot, track_end, json_data["guildId"])
+
+                                        await self._bot.dispatch(track_end_event)
+
+                                if event_type == "TrackExceptionEvent":
+                                    try:
+                                        track_exception = models.TrackException(json_data)
+                                    except Exception as e:
+                                        logging.error("Failed to convert a event track start. Error:" + str(e))
+                                    else:
+                                        track_exception_event = events.TrackExceptionEvent(self._bot, track_exception, json_data["guildId"])
+
+                                        await self._bot.dispatch(track_exception_event)
+
+                                if event_type == "TrackStuckEvent":
+                                    try:
+                                        track_stuck = models.TrackStuck(json_data)
+                                    except Exception as e:
+                                        logging.error("Failed to convert a event track start. Error:" + str(e))
+                                    else:
+                                        track_stuck_event = events.TrackStuckEvent(self._bot, track_stuck, json_data["guildId"])
+
+                                        await self._bot.dispatch(track_stuck_event)
+
+                                if event_type == "WebSocketClosedEvent":
+                                    try:
+                                        websocket_closed = models.WebsocketClosed(json_data)
+                                    except Exception as e:
+                                        logging.error("Failed to convert a event track start. Error:" + str(e))
+                                    else:
+                                        websocket_closed_event = events.WebsocketClosedEvent(self._bot, websocket_closed, json_data["guildId"])
+
+                                        await self._bot.dispatch(websocket_closed_event)
+
+                    elif msg.type == aiohttp.WSMsgType.ERROR:
+                        break
+
+    async def create_player(
         self,
-        bot: hikari.GatewayBot,
-        shard_id: int,
-        user_id: hikari.Snowflake,
-    ) -> node.Node:
+        guild_id: hikari.Snowflake,
+        channel_id: hikari.Snowflake,
+    ) -> player.Player:
         """
         Creates a new node.
 
@@ -75,49 +199,14 @@ class Ongaku:
         user_id : hikari.Snowflake
             The bots user id.
         """
-        new_node = node.Node(
-            bot=bot,
-            shard_id=shard_id,
-            user_id=user_id,
-            uri=self._default_uri,
-            headers=self._headers,
-            rest=self.rest,
+        new_player = await self.bot.voice.connect_to(
+            guild_id,
+            channel_id,
+            player.Player,
+            bot=self.bot,
+            ongaku=self
         )
 
-        try:
-            await new_node.start()
-        except Exception as e:
-            raise e
+        self._players.update({guild_id: new_player})
 
-        self._nodes.update({shard_id: new_node})
-
-        return new_node
-
-    async def fetch_node(self, shard_id: hikari.Snowflake) -> node.Node:
-        try:
-            return_node = self._nodes[shard_id]
-        except Exception as e:
-            raise error.NodeMissingException(e)
-
-        return return_node
-
-    async def delete_node(self, shard_id: hikari.Snowflake) -> None:
-        try:
-            self._nodes.pop(shard_id)
-        except Exception as e:
-            error.NodeMissingException(e)
-
-    async def fetch_player(self, guild_id: hikari.Snowflake) -> player.Player:
-        for node in self.nodes:
-            print(node.players)
-            try:
-                node_player = node._players.get(guild_id)
-            except:
-                continue
-
-            if node_player == None:
-                continue
-            
-            return node_player
-        else:
-            raise error.PlayerMissingException()
+        return new_player
