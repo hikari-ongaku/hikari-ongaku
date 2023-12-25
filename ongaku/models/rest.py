@@ -1,13 +1,3 @@
-from .. import error
-import enum as e
-
-
-class PlatformType(e.Enum):
-    YOUTUBE = 0
-    YOUTUBE_MUSIC = 1
-    SPOTIFY = 2
-
-
 class Version:
     """
     The version information of the Lavalink server.

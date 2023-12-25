@@ -1,12 +1,9 @@
-from . import models, events, player, error
+from . import player, error, enums, events
 from . import rest
 import typing as t
-import enum as e
 import aiohttp
 import hikari
 import logging
-
-from hikari.api import VoiceConnection
 
 
 class Ongaku:
@@ -17,7 +14,9 @@ class Ongaku:
         host: str = "localhost",
         port: int = 2333,
         password: str | None = None,
-        version: models.VersionType = models.VersionType.V4,
+        version: enums.VersionType = enums.VersionType.V4,
+        max_retries: int = 3,
+
     ) -> None:
         """
         Base Ongaku class
@@ -32,8 +31,10 @@ class Ongaku:
             The port your lavalink server runs on. (default is 2333)
         password : str | None
             The password for your lavalink server. (default is None)
-        version: models.VersionType
+        version : models.VersionType
             The version of lavalink you are running. Currently only supports V3, or V4. (default is V4)
+        max_retries : int
+            The maximum amount of retries for the Websocket. (default is 3)
         """
         self._bot = bot
 
@@ -50,6 +51,11 @@ class Ongaku:
 
         self._connected = False
         self._session_id: t.Optional[str] = None
+
+        self._remaining_retries = max_retries
+        self._total_retries = max_retries
+
+        self._event_handler = events.EventHandler(self)
 
     @property
     def players(self) -> list[player.Player]:
@@ -86,6 +92,10 @@ class Ongaku:
         """
         return self._connected
 
+    @property
+    def session_id(self) -> t.Optional[str]:
+        self._session_id
+
     async def connect(self, user_id: hikari.Snowflake) -> None:
         async with aiohttp.ClientSession() as session:
             new_header = {
@@ -99,146 +109,18 @@ class Ongaku:
                     self._default_uri + "/websocket", headers=new_header
                 ) as ws:
                     async for msg in ws:
+                        if msg.type == aiohttp.WSMsgType.ERROR:
+                            logging.error(msg.json())
+
+                        if msg.type == aiohttp.WSMsgType.CLOSED:
+                            print("ws closed.")
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             try:
                                 json_data = msg.json()
                             except:
                                 logging.info("Failed to decode json data.")
                             else:
-                                op_code = json_data["op"]
-                                logging.info("received op code: " + op_code)
-                                if op_code == "ready":
-                                    self._connected = True
-                                    try:
-                                        ready = models.Ready(json_data)
-                                    except Exception as e:
-                                        logging.error(
-                                            "Failed to convert a ready statement. Error:"
-                                            + str(e)
-                                        )
-                                    else:
-                                        ready_event = events.ReadyEvent(
-                                            self._bot, ready
-                                        )
-
-                                        await self._bot.dispatch(ready_event)
-
-                                        self._session_id = ready.session_id
-                                elif op_code == "stats":
-                                    try:
-                                        stats = models.Statistics(json_data)
-                                    except Exception as e:
-                                        logging.error(
-                                            "Failed to convert a statistics statement. Error:"
-                                            + str(e)
-                                        )
-                                    else:
-                                        ready_event = events.StatisticsEvent(
-                                            self._bot, stats
-                                        )
-
-                                        await self._bot.dispatch(ready_event)
-                                elif op_code == "event":
-                                    event_type = json_data["type"]
-
-                                    if event_type == "TrackStartEvent":
-                                        try:
-                                            track_start = models.TrackStart(json_data)
-                                        except Exception as e:
-                                            logging.error(
-                                                "Failed to convert a event track start. Error:"
-                                                + str(e)
-                                            )
-                                        else:
-                                            track_start_event = events.TrackStartEvent(
-                                                self._bot,
-                                                track_start,
-                                                json_data["guildId"],
-                                            )
-
-                                            await self._bot.dispatch(track_start_event)
-
-                                    if event_type == "TrackEndEvent":
-                                        try:
-                                            track_end = models.TrackEnd(json_data)
-                                        except Exception as e:
-                                            logging.error(
-                                                "Failed to convert a event track start. Error:"
-                                                + str(e)
-                                            )
-                                        else:
-                                            track_end_event = events.TrackEndEvent(
-                                                self._bot,
-                                                track_end,
-                                                json_data["guildId"],
-                                            )
-
-                                            await self._bot.dispatch(track_end_event)
-
-                                    if event_type == "TrackExceptionEvent":
-                                        try:
-                                            track_exception = models.TrackException(
-                                                json_data
-                                            )
-                                        except Exception as e:
-                                            logging.error(
-                                                "Failed to convert a event track start. Error:"
-                                                + str(e)
-                                            )
-                                        else:
-                                            track_exception_event = (
-                                                events.TrackExceptionEvent(
-                                                    self._bot,
-                                                    track_exception,
-                                                    json_data["guildId"],
-                                                )
-                                            )
-
-                                            await self._bot.dispatch(
-                                                track_exception_event
-                                            )
-
-                                    if event_type == "TrackStuckEvent":
-                                        try:
-                                            track_stuck = models.TrackStuck(json_data)
-                                        except Exception as e:
-                                            logging.error(
-                                                "Failed to convert a event track start. Error:"
-                                                + str(e)
-                                            )
-                                        else:
-                                            track_stuck_event = events.TrackStuckEvent(
-                                                self._bot,
-                                                track_stuck,
-                                                json_data["guildId"],
-                                            )
-
-                                            await self._bot.dispatch(track_stuck_event)
-
-                                    if event_type == "WebSocketClosedEvent":
-                                        try:
-                                            websocket_closed = models.WebsocketClosed(
-                                                json_data
-                                            )
-                                        except Exception as e:
-                                            logging.error(
-                                                "Failed to convert a event track start. Error:"
-                                                + str(e)
-                                            )
-                                        else:
-                                            websocket_closed_event = (
-                                                events.WebsocketClosedEvent(
-                                                    self._bot,
-                                                    websocket_closed,
-                                                    json_data["guildId"],
-                                                )
-                                            )
-                                            await self.delete_player(
-                                                int(json_data["guildId"])
-                                            )
-                                            await self._bot.dispatch(
-                                                websocket_closed_event
-                                            )
+                                await self._event_handler.handle_payload(json_data)
 
                         elif msg.type == aiohttp.WSMsgType.ERROR:
                             break
@@ -297,3 +179,7 @@ class Ongaku:
         except Exception as e:
             print(e)
             raise e
+
+    async def set_session_id(self, session_id: str) -> None:
+        self._connected = True
+        self._session_id = session_id

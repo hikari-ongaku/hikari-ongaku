@@ -62,10 +62,13 @@ class PlayerMissingException(PlayerException):
     """
     Raised when the player does not exist.
     """
+
+
 class PlayerEmptyQueueException(PlayerException):
     """
     Raised when there is no tracks in the queue.
     """
+
 
 class PlayerInvalidVolumeException(PlayerException):
     """

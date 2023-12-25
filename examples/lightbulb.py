@@ -13,7 +13,7 @@ lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
 
 
 @bot.listen(hikari.events.StartedEvent)
-async def start_event(event):
+async def start_event(event: hikari.events.StartedEvent):
     me = bot.get_me()
 
     if me == None:

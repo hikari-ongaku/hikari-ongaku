@@ -1,4 +1,4 @@
-from . import models, error, player
+from . import models, error, abc
 import typing as t
 
 import hikari
@@ -11,7 +11,7 @@ class InternalSession:
     def __init__(self, ongaku) -> None:
         self._ongaku = ongaku
 
-    async def update_session(self, session_id: str) -> models.Session:
+    async def update_session(self, session_id: str) -> abc.Session:
         if session_id == None:
             raise error.SessionNotStartedException()
 
@@ -24,7 +24,7 @@ class InternalSession:
                     raise error.ResponseException(response.status)
 
                 try:
-                    session_model = models.Session(await response.json())
+                    session_model = abc.Session(await response.json())
                 except Exception as e:
                     raise error.BuildException(e)
 
@@ -92,7 +92,7 @@ class InternalPlayer:
         guild_id: hikari.Snowflake,
         session_id: str,
         *,
-        track: hikari.UndefinedNoneOr[models.Track] = hikari.UNDEFINED,
+        track: hikari.UndefinedNoneOr[abc.Track] = hikari.UNDEFINED,
         position: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
