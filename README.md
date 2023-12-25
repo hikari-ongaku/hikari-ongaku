@@ -7,13 +7,16 @@ If you have suggestions or ideas, please DM me on discord, `mplaty`.
 
 Features:
  - [ ] Volume
- - [ ] Playlist (youtube and spotify)
- - [ ] Skip
- - [ ] Load and view queue
+ - [x] Playlist (youtube/ytmusic)
+ - [x] Skip
+ - [x] Load and view queue
  - [ ] Resume Sessions
  - [ ] Delete tracks (current, and other, by both position, and Track)
- - [ ] Clear tracks
+ - [x] Clear tracks
  - [ ] Change EQ and Effects
- - [ ] Mute (basically sets volume to zero, whilst still playing audio)
+ - [x] Mute (basically sets volume to zero, whilst still playing audio)
  - [ ] Complete Error handling
  - [ ] Nodes
+ - [ ] Retries
+ - [ ] Testing (internal)
+
