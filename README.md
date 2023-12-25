@@ -19,4 +19,4 @@ Features:
  - [ ] Nodes
  - [ ] Retries
  - [ ] Testing (internal)
-
+ - [ ] Store the user who asked for specific songs.
