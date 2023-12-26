@@ -6,6 +6,7 @@ class TrackInfo(abc.ABC):
     """
     Information about related track.
     """
+
     _identifier: str
     _is_seekable: bool
     _author: str

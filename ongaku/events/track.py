@@ -2,6 +2,7 @@ import hikari
 import typing as t
 from .. import abc
 
+
 class TrackInfo(abc.TrackInfo):
     def __init__(self, payload: dict[t.Any, t.Any]) -> None:
         self._identifier = payload["identifier"]
@@ -11,7 +12,7 @@ class TrackInfo(abc.TrackInfo):
         self._is_stream = payload["isStream"]
         self._position = payload["position"]
         self._title = payload["title"]
-        try: #TODO: This needs to be switched to actually check if it exists first, and if it doesn't set it as none.
+        try:  # TODO: This needs to be switched to actually check if it exists first, and if it doesn't set it as none.
             self._uri = payload["uri"]
         except:
             self._uri = None
@@ -24,7 +25,7 @@ class TrackInfo(abc.TrackInfo):
         except:
             self._isrc = None
         self._source_name = payload["sourceName"]
-        
+
 
 class Track(abc.Track):
     def __init__(self, payload: dict[t.Any, t.Any]) -> None:
@@ -32,6 +33,7 @@ class Track(abc.Track):
         self._info = TrackInfo(payload["track"])
         self._plugin_info = payload["pluginInfo"]
         self._user_data = payload["userData"]
+
 
 class TrackStartEvent(abc.TrackStart, abc.OngakuEvent):
     """
@@ -78,7 +80,7 @@ class TrackEndEvent(abc.TrackEnd, abc.OngakuEvent):
     @property
     def track(self):
         return self._track
-        
+
     @property
     def reason(self):
         return self._reason
@@ -106,7 +108,7 @@ class TrackExceptionEvent(abc.TrackException, abc.OngakuEvent):
     @property
     def track(self):
         return self._track
-    
+
     @property
     def reason(self):
         return self._reason

@@ -6,6 +6,58 @@ import hikari
 import logging
 
 
+class OngakuInternal:
+    def __init__(self, uri: str, max_retries: int = 3) -> None:
+        self._headers: dict[t.Any, t.Any] = {}
+        self._session_id: t.Optional[str] = None
+        self._uri: str = uri
+        self._total_retries = max_retries
+        self._remaining_retries = max_retries
+        self._connected = False
+
+    @property
+    def headers(self) -> dict[t.Any, t.Any]:
+        return self._headers
+
+    @property
+    def uri(self) -> str:
+        return self._uri
+
+    @property
+    def session_id(self) -> t.Optional[str]:
+        return self._session_id
+
+    @property
+    def total_retries(self) -> int:
+        return self._total_retries
+
+    @property
+    def remaining_retries(self) -> int:
+        return self._remaining_retries
+
+    @property
+    def connected(self) -> bool:
+        return self._connected
+
+    def set_session_id(self, session_id: str) -> None:
+        self._session_id = session_id
+
+    def add_headers(self, headers: dict[t.Any, t.Any]) -> None:
+        self._headers.update(headers)
+
+    def remove_headers(self, headers: t.Any) -> None:
+        try:
+            self._headers.pop(headers)
+        except Exception as e:
+            raise e
+
+    def clear_headers(self) -> None:
+        self._headers.clear()
+
+    def remove_attempt(self) -> int:
+        return self._remaining_retries - 1
+
+
 class Ongaku:
     def __init__(
         self,
@@ -16,7 +68,6 @@ class Ongaku:
         password: str | None = None,
         version: enums.VersionType = enums.VersionType.V4,
         max_retries: int = 3,
-
     ) -> None:
         """
         Base Ongaku class
@@ -40,22 +91,16 @@ class Ongaku:
 
         self._players: dict[hikari.Snowflake, player.Player] = {}
 
-        self._default_uri = f"http://{host}:{port}/{version.value}"
-
-        self._headers: dict[str, t.Any] = {}
-
         if password:
-            self._headers.update({"Authorization": password})
+            self._internal.add_headers({"Authorization": password})
 
         self._rest = rest.RestApi(self)
 
-        self._connected = False
-        self._session_id: t.Optional[str] = None
-
-        self._remaining_retries = max_retries
-        self._total_retries = max_retries
-
         self._event_handler = events.EventHandler(self)
+
+        self._internal = OngakuInternal(
+            f"http://{host}:{port}/{version.value}", max_retries
+        )
 
     @property
     def players(self) -> list[player.Player]:
@@ -90,11 +135,14 @@ class Ongaku:
         -------
         A boolean. If true, it is connected to the server, if false, it is not.
         """
-        return self._connected
+        return self._internal.connected
 
     @property
-    def session_id(self) -> t.Optional[str]:
-        self._session_id
+    def internal(self) -> OngakuInternal:
+        """
+        This is for internal related stuff. Do not touch this area.
+        """
+        return self._internal
 
     async def connect(self, user_id: hikari.Snowflake) -> None:
         async with aiohttp.ClientSession() as session:
@@ -103,10 +151,10 @@ class Ongaku:
                 "Client-Name": f"{str(user_id)}::Unknown",
             }
 
-            new_header.update(self._headers)
+            new_header.update(self._internal.headers)
             try:
                 async with session.ws_connect(
-                    self._default_uri + "/websocket", headers=new_header
+                    self._internal.uri + "/websocket", headers=new_header
                 ) as ws:
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.ERROR:
@@ -179,7 +227,3 @@ class Ongaku:
         except Exception as e:
             print(e)
             raise e
-
-    async def set_session_id(self, session_id: str) -> None:
-        self._connected = True
-        self._session_id = session_id

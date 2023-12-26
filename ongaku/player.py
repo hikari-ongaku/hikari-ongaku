@@ -128,12 +128,12 @@ class Player(VoiceConnection):
             }
         )
 
-        if self._ongaku.session_id == None:
+        if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id,
-            self._ongaku.session_id,
+            self._ongaku.internal.session_id,
             track=track,
             voice=voice,
             no_replace=False,
@@ -142,7 +142,7 @@ class Player(VoiceConnection):
         self._is_paused = False
 
     async def pause(self, value: hikari.UndefinedOr[bool] = hikari.UNDEFINED) -> None:
-        if self._ongaku.session_id == None:
+        if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
 
         if value == hikari.UNDEFINED:
@@ -151,7 +151,7 @@ class Player(VoiceConnection):
             self._is_paused = value
 
         await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, self._ongaku.session_id, paused=self.is_paused
+            self.guild_id, self._ongaku.internal.session_id, paused=self.is_paused
         )
 
     async def add(self, tracks: list[abc.Track]):
@@ -170,7 +170,7 @@ class Player(VoiceConnection):
             raise e
 
     async def skip(self, amount: int) -> None:
-        if self._ongaku.session_id == None:
+        if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
         
         if amount == 0:
@@ -178,7 +178,7 @@ class Player(VoiceConnection):
         if len(self.queue) == 0:
             raise error.PlayerEmptyQueueException(0)
 
-        for item in range(amount):
+        for x in range(amount):
             if len(self._queue) == 0:
                 break
             else:
@@ -186,16 +186,16 @@ class Player(VoiceConnection):
 
         if len(self.queue) == 0:
             await self._ongaku.rest.internal.player.update_player(
-                self.guild_id, self._ongaku.session_id, track=None, 
+                self.guild_id, self._ongaku.internal.session_id, track=None, 
             )
             return
         
         await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, self._ongaku.session_id, track=self._queue[0], no_replace=False
+            self.guild_id, self._ongaku.internal.session_id, track=self._queue[0], no_replace=False
         )
 
     async def track_end_event(self, event: events.TrackEndEvent):
-        if self._ongaku.session_id == None:
+        if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
         
         if int(event.guild_id) == int(self.guild_id):
@@ -206,7 +206,7 @@ class Player(VoiceConnection):
                 return
             
             await self._ongaku.rest.internal.player.update_player(
-                self.guild_id, self._ongaku.session_id, track=self._queue[0], no_replace=False
+                self.guild_id, self._ongaku.internal.session_id, track=self._queue[0], no_replace=False
             )
 
     # TODO: The following things between these to do's, do not work yet.
@@ -222,11 +222,11 @@ class Player(VoiceConnection):
         """
         self._queue.clear()
 
-        if self._ongaku.session_id == None:
+        if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, self._ongaku.session_id, track=None, no_replace=False
+            self.guild_id, self._ongaku.internal.session_id, track=None, no_replace=False
         )
 
     async def position(self, value: int) -> None:
@@ -246,11 +246,11 @@ class Player(VoiceConnection):
         self._is_alive = False
         await self.clear()
 
-        if self._ongaku.session_id == None:
+        if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.delete_player(
-            self._ongaku.session_id, self._guild_id
+            self._ongaku.internal.session_id, self._guild_id
         )
 
     async def join(self) -> None:

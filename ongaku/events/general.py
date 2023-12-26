@@ -4,9 +4,7 @@ from .. import abc
 
 
 class ReadyEvent(abc.Ready, abc.OngakuEvent):
-    def __init__(
-        self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]
-    ) -> None:
+    def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
         self._resumed = payload["resumed"]
         self._session_id = payload["sessionId"]
@@ -23,6 +21,7 @@ class ReadyEvent(abc.Ready, abc.OngakuEvent):
     @property
     def session_id(self):
         return self._session_id
+
 
 class Memory(abc.Memory):
     def __init__(self, payload: dict[t.Any, t.Any]) -> None:
@@ -47,6 +46,7 @@ class Memory(abc.Memory):
     def reservable(self):
         return self._reservable
 
+
 class Cpu(abc.Cpu):
     def __init__(self, payload: dict[t.Any, t.Any]) -> None:
         self._cores = payload["cores"]
@@ -64,6 +64,7 @@ class Cpu(abc.Cpu):
     @property
     def lavalink_load(self):
         return self._lavalink_load
+
 
 class FrameStatistics(abc.FrameStatistics):
     def __init__(self, payload: dict[t.Any, t.Any]) -> None:
@@ -83,13 +84,9 @@ class FrameStatistics(abc.FrameStatistics):
     def deficit(self):
         return self._deficit
 
+
 class StatisticsEvent(abc.Statistics, abc.OngakuEvent):
-    def __init__(
-        self,
-        app: hikari.RESTAware,
-        payload: dict[t.Any, t.Any]
-    ) -> None:
-                
+    def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
         self._players = payload["players"]
         self._playing_players = payload["playingPlayers"]

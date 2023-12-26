@@ -1,24 +1,23 @@
-from . import models, error, abc
+from . import error, abc, enums
 import typing as t
 
 import hikari
 import aiohttp
 import logging
-import json
+
+if t.TYPE_CHECKING:
+    from .ongaku import Ongaku
 
 
 class InternalSession:
-    def __init__(self, ongaku) -> None:
+    def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
     async def update_session(self, session_id: str) -> abc.Session:
-        if session_id == None:
-            raise error.SessionNotStartedException()
-
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku._default_uri + "/sessions/" + session_id,
-                headers=self._ongaku._headers,
+                self._ongaku.internal.uri + "/sessions/" + session_id,
+                headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
@@ -36,28 +35,25 @@ class InternalPlayer:
     The Rest based actions for the player.
     """
 
-    def __init__(self, ongaku) -> None:
+    def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
-    async def fetch_players(self, session_id: str) -> t.Optional[list[models.Player]]:
-        if session_id == None:
-            raise error.SessionNotStartedException()
-
+    async def fetch_players(self, session_id: str) -> t.Optional[list[abc.Player]]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku._default_uri + "/sessions/" + session_id + "/players",
-                headers=self._ongaku._headers,
+                self._ongaku.internal.uri + "/sessions/" + session_id + "/players",
+                headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
 
                 players = await response.json()
 
-                player_list: list[models.Player] = []
+                player_list: list[abc.Player] = []
 
                 for player in players:
                     try:
-                        player_model = models.Player(player)
+                        player_model = abc.Player(player)
                     except Exception as e:
                         raise error.BuildException(e)
 
@@ -67,21 +63,21 @@ class InternalPlayer:
 
     async def fetch_player(
         self, session_id: str, guild_id: hikari.Snowflake
-    ) -> t.Optional[models.Player]:
+    ) -> t.Optional[abc.Player]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku._default_uri
+                self._ongaku.internal.uri
                 + "/sessions/"
                 + session_id
                 + "/players/"
                 + str(guild_id),
-                headers=self._ongaku._headers,
+                headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
 
                 try:
-                    player_model = models.Player(await response.json())
+                    player_model = abc.Player(await response.json())
                 except Exception as e:
                     raise error.BuildException(e)
 
@@ -97,9 +93,9 @@ class InternalPlayer:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        voice: hikari.UndefinedOr[models.Voice] = hikari.UNDEFINED,
+        voice: hikari.UndefinedOr[abc.Voice] = hikari.UNDEFINED,
         no_replace: bool = True,
-    ) -> models.Player:
+    ) -> abc.Player:
         """
         Update a player
 
@@ -111,9 +107,9 @@ class InternalPlayer:
             The guild id that the bot is playing in.
         session_id : str
             The session_id for the lavalink server session.
-        
+
         """
-        patch_data: dict = {}
+        patch_data: dict[str, t.Any] = {}
 
         if track != hikari.UNDEFINED:
             if track == None:
@@ -143,15 +139,20 @@ class InternalPlayer:
             patch_data.update({"volume": volume})
 
         if paused != hikari.UNDEFINED:
-            paused_str = "false"
-            if paused:
-                paused_str = "true"
             patch_data.update({"paused": paused})
 
         if voice != hikari.UNDEFINED:
-            patch_data.update({"voice": voice.raw})
+            patch_data.update(
+                {
+                    "voice": {
+                        "token": voice.token,
+                        "endpoint": voice.endpoint,
+                        "sessionId": voice.session_id,
+                    }
+                }
+            )
 
-        new_headers = self._ongaku._headers.copy()
+        new_headers = self._ongaku.internal.headers.copy()
 
         new_headers.update({"Content-Type": "application/json"})
 
@@ -163,7 +164,7 @@ class InternalPlayer:
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.patch(
-                    self._ongaku._default_uri
+                    self._ongaku.internal.uri
                     + "/sessions/"
                     + session_id
                     + "/players/"
@@ -190,12 +191,12 @@ class InternalPlayer:
         """
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                self._ongaku._default_uri
+                self._ongaku.internal.uri
                 + "/sessions/"
                 + session_id
                 + "/players/"
                 + str(guild_id),
-                headers=self._ongaku._headers,
+                headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
@@ -206,27 +207,25 @@ class InternalTrack:
     The rest based actions for the track.
     """
 
-    def __init__(self, ongaku) -> None:
-        from .ongaku import Ongaku  # this is probably a bad thing to do.
-
+    def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
     async def load_track(
-        self, platform: models.PlatformType, query: str
-    ) -> t.Optional[list[models.Track]]:
+        self, platform: enums.PlatformType, query: str
+    ) -> t.Optional[list[abc.Track]]:
         async with aiohttp.ClientSession() as session:
-            if platform == models.PlatformType.YOUTUBE:
+            if platform == enums.PlatformType.YOUTUBE:
                 params = {"identifier": f'ytsearch:"{query}"'}
-            elif platform == models.PlatformType.YOUTUBE_MUSIC:
+            elif platform == enums.PlatformType.YOUTUBE_MUSIC:
                 params = {"identifier": f'ytmsearch:"{query}"'}
-            elif platform == models.PlatformType.SPOTIFY:
+            elif platform == enums.PlatformType.SPOTIFY:
                 params = {"identifier": f'scsearch:"{query}"'}
             else:
                 params = {"identifier": f'scsearch:"{query}"'}
 
             async with session.get(
-                self._ongaku._default_uri + "/loadtracks",
-                headers=self._ongaku._headers,
+                self._ongaku.internal.uri + "/loadtracks",
+                headers=self._ongaku.internal.headers,
                 params=params,
             ) as response:
                 if response.status >= 400:
@@ -241,7 +240,7 @@ class InternalTrack:
 
                     for t in data["data"]:
                         try:
-                            track = models.Track(t)
+                            track = abc.Track(t)
                         except Exception as e:
                             logging.error("Failed to build track: " + str(e))
                             continue
@@ -256,9 +255,7 @@ class InternalTrack:
 
 
 class Internal:
-    def __init__(self, ongaku) -> None:
-        from .ongaku import Ongaku  # this is probably a bad thing to do.
-
+    def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
         self._internal_session = InternalSession(self._ongaku)
@@ -285,9 +282,7 @@ class RestApi:
     The base rest class for all rest related things.
     """
 
-    def __init__(self, ongaku) -> None:
-        from .ongaku import Ongaku  # this is probably a bad thing to do.
-
+    def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
         self._internal = Internal(self._ongaku)
@@ -296,7 +291,7 @@ class RestApi:
     def internal(self) -> Internal:
         return self._internal
 
-    async def fetch_info(self) -> models.Info:
+    async def fetch_info(self) -> abc.Info:
         """
         Fetch the information about the Lavalink server.
 
@@ -305,19 +300,20 @@ class RestApi:
         """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku._default_uri + "/info", headers=self._ongaku._headers
+                self._ongaku.internal.uri + "/info",
+                headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise error.ResponseException(response.status)
 
                 try:
-                    info_resp = models.Info(await response.json())
+                    info_resp = abc.Info(await response.json())
                 except Exception as e:
                     raise error.BuildException(e)
 
         return info_resp
 
     async def search(
-        self, platform: models.PlatformType, query: str
-    ) -> t.Optional[list[models.Track]]:
+        self, platform: enums.PlatformType, query: str
+    ) -> t.Optional[list[abc.Track]]:
         return await self.internal.track.load_track(platform, query)
