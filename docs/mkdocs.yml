@@ -1,11 +1,12 @@
-site_name: hikari ongaku documentation
+site_name: Ongaku Docs
+site_url: https://ongaku.mplaty.com/
 
 theme:
   name: material
   palette:
     scheme: slate
-    primary: purple
-    accent: black
+    primary: custom
+    accent: custom
   font:
     text: Open Sans
   features:
@@ -16,18 +17,47 @@ theme:
     - navigation.path
     - navigation.indexes
     - search.suggest
+    - content.code.copy
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
+
+markdown_extensions:
+  - toc:
+      permalink: "#"
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+copyright: Copyright &copy; 2023 MPlaty
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/MPlatypus/hikari-ongaku
+      name: Hikari Ongaku Github
 
 nav:
   - home: index.md
   - Getting Started:
     - getting_started/index.md
-    - hikari: getting_started/hikari.md
-    - lightbulb: getting_started/lightbulb.md
-    - tanjun: getting_started/tanjun.md
-    - akarui: getting_started/akarui.md
+    - Basics: getting_started/basics.md
+    - Commands: getting_started/commands.md
+    - Nodes: getting_started/nodes.md
   - API Reference:
     - api_reference/index.md
     - Ongaku: api_reference/ongaku.md
+    - Player: api_reference/player.md
+    - Rest: api_reference/rest.md
+    - errors: api_reference/errors.md
