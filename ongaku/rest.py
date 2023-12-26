@@ -23,7 +23,7 @@ class InternalSession:
                     raise error.ResponseException(response.status)
 
                 try:
-                    session_model = abc.Session(await response.json())
+                    session_model = abc.Session.as_payload(await response.json())
                 except Exception as e:
                     raise error.BuildException(e)
 
@@ -53,7 +53,7 @@ class InternalPlayer:
 
                 for player in players:
                     try:
-                        player_model = abc.Player(player)
+                        player_model = abc.Player.as_payload(player)
                     except Exception as e:
                         raise error.BuildException(e)
 
@@ -77,7 +77,7 @@ class InternalPlayer:
                     raise error.ResponseException(response.status)
 
                 try:
-                    player_model = abc.Player(await response.json())
+                    player_model = abc.Player.as_payload(await response.json())
                 except Exception as e:
                     raise error.BuildException(e)
 
@@ -177,7 +177,7 @@ class InternalPlayer:
                     #    raise error.ResponseException(response.status)
 
                     try:
-                        player_model = models.Player(await response.json())
+                        player_model = abc.Player.as_payload(await response.json())
                     except Exception as e:
                         raise error.BuildException(e)
             except Exception as e:
@@ -236,11 +236,11 @@ class InternalTrack:
                 load_type = data["loadType"]
 
                 if load_type == "search":
-                    tracks = []
+                    tracks: list[abc.Track] = []
 
                     for t in data["data"]:
                         try:
-                            track = abc.Track(t)
+                            track = abc.Track.as_payload(t)
                         except Exception as e:
                             logging.error("Failed to build track: " + str(e))
                             continue
@@ -307,7 +307,7 @@ class RestApi:
                     raise error.ResponseException(response.status)
 
                 try:
-                    info_resp = abc.Info(await response.json())
+                    info_resp = abc.Info.as_payload(await response.json())
                 except Exception as e:
                     raise error.BuildException(e)
 

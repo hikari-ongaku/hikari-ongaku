@@ -1,19 +1,19 @@
 import abc
 import typing as t
+import dataclasses
 
-
+@dataclasses.dataclass
 class Session(abc.ABC):
-    def __init__(self, payload: dict[t.Any, t.Any]) -> None:
-        self._resuming = payload["resuming"]
-        self._timeout = payload["timeout"]
+    resuming: bool
+    timeout: bool
 
-    _resuming: bool
-    _timeout: bool
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        resuming = payload["resuming"]
+        timeout = payload["timeout"]
 
+        return cls(resuming, timeout)
+    
     @property
-    def resuming(self) -> bool:
-        return self._resuming
-
-    @property
-    def timeout(self) -> bool:
-        return self._timeout
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)

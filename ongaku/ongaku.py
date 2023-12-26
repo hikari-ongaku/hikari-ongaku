@@ -8,6 +8,9 @@ import logging
 
 class OngakuInternal:
     def __init__(self, uri: str, max_retries: int = 3) -> None:
+        """
+        asdf
+        """
         self._headers: dict[t.Any, t.Any] = {}
         self._session_id: t.Optional[str] = None
         self._uri: str = uri
@@ -77,15 +80,15 @@ class Ongaku:
         Parameters
         ----------
         host : str
-            The host, or IP that your lavalink server is running on. (default is 'localhost')
+            The host, or IP that your lavalink server is running on.
         port : int
-            The port your lavalink server runs on. (default is 2333)
+            The port your lavalink server runs on.
         password : str | None
-            The password for your lavalink server. (default is None)
+            The password for your lavalink server.
         version : models.VersionType
-            The version of lavalink you are running. Currently only supports V3, or V4. (default is V4)
+            The version of lavalink you are running. Currently only supports V3, or V4.
         max_retries : int
-            The maximum amount of retries for the Websocket. (default is 3)
+            The maximum amount of retries for the Websocket.
         """
         self._bot = bot
 
@@ -108,19 +111,38 @@ class Ongaku:
         players
 
         All the currently active players.
+
+        Returns
+        -------
+        list[Player]
+            A list of players
         """
         return list(self._players.values())
 
     @property
     def rest(self) -> rest.RestApi:
+        """
+        Rest
+
+        The REST API for the Lavalink server.
+
+        Returns
+        -------
+        rest.RestApi
+            The rest api for lavalink
+        """
         return self._rest
 
     @property
-    def bot(self) -> hikari.GatewayBot:
+    def bot(self) -> hikari.RESTAware:
         """
         Gateway bot.
 
         The gateway bot the server is attached to.
+
+        Returns:
+        hikari.RESTAware
+            A Rest aware hikari bot.
         """
         return self._bot
 
@@ -133,18 +155,29 @@ class Ongaku:
 
         Returns
         -------
-        A boolean. If true, it is connected to the server, if false, it is not.
+        bool
+            If true, it is connected to the server, if false, it is not.
         """
         return self._internal.connected
 
     @property
     def internal(self) -> OngakuInternal:
         """
-        This is for internal related stuff. Do not touch this area.
+        For internal information about the bot.
+
+        Returns
+        -------
+        OngakuInternal
+            An internal class for ongaku.
         """
         return self._internal
 
     async def connect(self, user_id: hikari.Snowflake) -> None:
+        """
+        connect to the server
+
+        Allows for the user to connect to the server.
+        """
         async with aiohttp.ClientSession() as session:
             new_header = {
                 "User-Id": str(user_id),
@@ -153,16 +186,16 @@ class Ongaku:
 
             new_header.update(self._internal.headers)
             try:
-                async with session.ws_connect(
+                async with session.ws_connect( #type: ignore
                     self._internal.uri + "/websocket", headers=new_header
                 ) as ws:
                     async for msg in ws:
-                        if msg.type == aiohttp.WSMsgType.ERROR:
+                        if msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
                             logging.error(msg.json())
 
-                        if msg.type == aiohttp.WSMsgType.CLOSED:
+                        if msg.type == aiohttp.WSMsgType.CLOSED: #type: ignore
                             print("ws closed.")
-                        if msg.type == aiohttp.WSMsgType.TEXT:
+                        if msg.type == aiohttp.WSMsgType.TEXT: #type: ignore
                             try:
                                 json_data = msg.json()
                             except:
@@ -170,7 +203,7 @@ class Ongaku:
                             else:
                                 await self._event_handler.handle_payload(json_data)
 
-                        elif msg.type == aiohttp.WSMsgType.ERROR:
+                        elif msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
                             break
             except Exception as e:
                 raise error.LavalinkConnectionException(e)

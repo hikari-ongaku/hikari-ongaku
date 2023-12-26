@@ -1,0 +1,3 @@
+# Lavalink
+
+::: ongaku.abc.lavalink

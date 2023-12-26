@@ -24,6 +24,21 @@ extra_css:
 
 plugins:
   - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            merge_init_into_class: true
+            inherited_members: false
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            show_source: false
+            show_submodules: false
+            annotations_path: source
 
 markdown_extensions:
   - toc:
@@ -60,4 +75,18 @@ nav:
     - Ongaku: api_reference/ongaku.md
     - Player: api_reference/player.md
     - Rest: api_reference/rest.md
+    - Events:
+      - Event Handler: api_reference/events/event_handler.md
+      - Track: api_reference/events/track.md
+      - Other: api_reference/events/other.md
+    - ABC:
+      - Events: api_reference/abc/events.md
+      - Lavalink: api_reference/abc/lavalink.md
+      - Player: api_reference/abc/player.md
+      - Session: api_reference/abc/session.md
+      - Track: api_reference/abc/track.md
     - errors: api_reference/errors.md
+
+watch:
+  - docs
+  - ongaku

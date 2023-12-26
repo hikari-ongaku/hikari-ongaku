@@ -1,92 +1,81 @@
-import abc
-from . import track
+from .track import Track
 import hikari
 import typing as t
+import dataclasses
 
-class State(abc.ABC):
+@dataclasses.dataclass
+class State:
     """
     The player state.
     """
 
-    _time: int
-    _position: int
-    _connected: bool
-    _ping: int
+    time: int
+    position: int
+    connected: bool
+    ping: int
 
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        time = payload["time"]
+        position = payload["position"]
+        connected = payload["connected"]
+        ping = payload["ping"]
+
+        return cls(time, position, connected, ping)
+    
     @property
-    def time(self) -> int:
-        return self._time
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
 
-    @property
-    def position(self) -> int:
-        return self._position
-
-    @property
-    def connected(self) -> bool:
-        return self._connected
-
-    @property
-    def ping(self) -> int:
-        return self._ping
-
+@dataclasses.dataclass
 class Voice:
     """
     The voice connection data.
     """
-    _token: str
-    _endpoint: str
-    _session_id: str
 
+    token: str
+    endpoint: str
+    session_id: str
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        token = payload["token"]
+        endpoint = payload["endpoint"]
+        session_id = payload["sessionId"]
+
+        return cls(token, endpoint, session_id)
+    
     @property
-    def token(self) -> str:
-        return self._token
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
 
-    @property
-    def endpoint(self) -> str:
-        return self._endpoint
-
-    @property
-    def session_id(self) -> str:
-        return self._session_id
-
-
-class Player(abc.ABC):
+@dataclasses.dataclass
+class Player:
     """
     The player data returned from lavalink.
     """
 
-    def __init__(self, payload: dict[t.Any, t.Any]) -> None:
-        self._guild_id = payload["guildId"]
-        self._track = track.Track(payload)
+    guild_id: hikari.Snowflake
+    track: t.Optional[Track]
+    volume: int
+    paused: bool
+    state: State
+    voice: Voice
 
-    _guild_id: hikari.Snowflake
-    _track: t.Optional[track.Track]
-    _volume: int
-    _paused: bool
-    _state: State
-    _voice: Voice
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        guild_id = payload["guildId"]
+        try:
+            track = Track.as_payload(payload["track"])
+        except:
+            track = None
+        volume = payload["volume"]
+        paused = payload["paused"]
+        state = State.as_payload(payload["state"])
+        voice = Voice.as_payload(payload["voice"])
 
-    @property
-    def guild_id(self) -> hikari.Snowflake:
-        return self._guild_id
-
-    @property
-    def track(self) -> t.Optional[track.Track]:
-        return self._track
-
-    @property
-    def volume(self) -> int:
-        return self._volume
-
-    @property
-    def paused(self) -> bool:
-        return self._paused
-
-    @property
-    def state(self) -> State:
-        return self._state
-
-    @property
-    def voice(self) -> Voice:
-        return self._voice
+        return cls(guild_id, track, volume, paused, state, voice)
     
+    @property
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)

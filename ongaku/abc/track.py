@@ -1,91 +1,74 @@
 import abc
 import typing as t
+import dataclasses
 
-
-class TrackInfo(abc.ABC):
+@dataclasses.dataclass
+class TrackInfo:
     """
     Information about related track.
     """
 
-    _identifier: str
-    _is_seekable: bool
-    _author: str
-    _length: int
-    _is_stream: bool
-    _position: int
-    _title: str
-    _uri: t.Optional[str]
-    _artwork_url: t.Optional[str]
-    _isrc: t.Optional[str]
-    _source_name: str
+    identifier: str
+    is_seekable: bool
+    author: str
+    length: int
+    is_stream: bool
+    position: int
+    title: str
+    uri: t.Optional[str]
+    artwork_url: t.Optional[str]
+    isrc: t.Optional[str]
+    source_name: str
 
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        identifier = payload["identifier"]
+        is_seekable = payload["isSeekable"]
+        author = payload["author"]
+        length = payload["length"]
+        is_stream = payload["isStream"]
+        position = payload["position"]
+        title = payload["title"]
+        try:  # TODO: This needs to be switched to actually check if it exists first, and if it doesn't set it as none.
+            uri = payload["uri"]
+        except:
+            uri = None
+        try:
+            artwork_url = payload["artworkUrl"]
+        except:
+            artwork_url = None
+        try:
+            isrc = payload["isrc"]
+        except:
+            isrc = None
+        source_name = payload["sourceName"]
+
+        return cls(identifier, is_seekable, author, length, is_stream, position, title, uri, artwork_url, isrc, source_name)
+    
     @property
-    def identifier(self) -> str:
-        return self._identifier
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
 
-    @property
-    def is_seekable(self) -> bool:
-        return self._is_seekable
-
-    @property
-    def author(self) -> str:
-        return self._author
-
-    @property
-    def length(self) -> int:
-        return self._length
-
-    @property
-    def is_stream(self) -> bool:
-        return self._is_stream
-
-    @property
-    def position(self) -> int:
-        return self._position
-
-    @property
-    def title(self) -> str:
-        return self._title
-
-    @property
-    def uri(self) -> t.Optional[str]:
-        return self._uri
-
-    @property
-    def artwork_url(self) -> t.Optional[str]:
-        return self._artwork_url
-
-    @property
-    def isrc(self) -> t.Optional[str]:
-        return self._isrc
-
-    @property
-    def source_name(self) -> str:
-        return self._source_name
-
-
+@dataclasses.dataclass
 class Track(abc.ABC):
     """
     A track Object.
     """
 
-    _encoded: str
-    _info: TrackInfo
-    _plugin_info: dict[t.Any, t.Any]
-    _user_data: dict[t.Any, t.Any]
+    encoded: str
+    info: TrackInfo
+    plugin_info: dict[t.Any, t.Any]
+    user_data: dict[t.Any, t.Any]
 
-    @property
-    def encoded(self) -> str:
-        return self._encoded
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        encoded = payload["identifier"]
+        info = TrackInfo.as_payload(payload["info"])
+        plugin_info = payload["pluginInfo"]
+        user_data = payload["userData"]
 
+        return cls(encoded, info, plugin_info, user_data)
+    
     @property
-    def info(self) -> TrackInfo:
-        return self._info
-
-    @property
-    def plugin_info(self) -> dict[t.Any, t.Any]:
-        return self._plugin_info
-
-    @property
-    def user_data(self) -> dict[t.Any, t.Any]:
-        return self._user_data
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)

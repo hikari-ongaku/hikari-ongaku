@@ -3,6 +3,7 @@ import hikari
 from . import track
 from .. import enums
 import typing as t
+import dataclasses
 
 
 class OngakuEvent(hikari.Event, abc.ABC):
@@ -15,108 +16,115 @@ class OngakuEvent(hikari.Event, abc.ABC):
 
 
 class Ready(abc.ABC):
+    def __init__(self, app: hikari.RESTAware, resumed: bool, session_id: str) -> None:
+        self._app = app
+        self._resumed = resumed
+        self._session_id = session_id
+
+    @classmethod
+    def from_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        resumed = payload["resumed"]
+        session_id = payload["sessionId"]
+
+        return cls(app, resumed, session_id)
+
     @property
-    @abc.abstractmethod
     def app(self) -> hikari.RESTAware:
-        ...
+        return self._app
 
     @property
-    @abc.abstractmethod
     def resumed(self) -> bool:
-        ...
+        return self._resumed
 
     @property
-    @abc.abstractmethod
-    def session_id(self) -> int:
-        ...
+    def session_id(self) -> str:
+        return self._session_id
 
+@dataclasses.dataclass
+class Memory:
+    free: int
+    used: int
+    allocated: int
+    reservable: int
+        
 
-class Memory(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def free(self) -> int:
-        ...
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        free = payload["free"]
+        used = payload["used"]
+        allocated = payload["allocated"]
+        reservable = payload["reservable"]
 
-    @property
-    @abc.abstractmethod
-    def used(self) -> int:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def allocated(self) -> int:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def reservable(self) -> int:
-        ...
-
-
-class Cpu(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def cores(self) -> int:
-        ...
+        return cls(free, used, allocated, reservable)
 
     @property
-    @abc.abstractmethod
-    def system_load(self) -> float:
-        ...
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
+
+@dataclasses.dataclass
+class Cpu:
+    cores: int
+    system_load: float
+    lavalink_load: float
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        cores = payload["cores"]
+        system_load = payload["systemLoad"]
+        lavalink_load = payload["lavalinkLoad"]
+
+        return cls(cores, system_load, lavalink_load)
 
     @property
-    @abc.abstractmethod
-    def lavalink_load(self) -> float:
-        ...
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
 
+@dataclasses.dataclass
+class FrameStatistics:
+    sent: int
+    nulled: int
+    deficit: int
 
-class FrameStatistics(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def sent(self) -> int:
-        ...
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        sent = payload["sent"]
+        nulled = payload["nulled"]
+        deficit = payload["deficit"]
 
-    @property
-    @abc.abstractmethod
-    def nulled(self) -> int:
-        ...
+        return cls(sent, nulled, deficit)
 
-    @property
-    @abc.abstractmethod
-    def deficit(self) -> int:
-        ...
-
-
+@dataclasses.dataclass
 class Statistics(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def players(self) -> int:
-        ...
+    players: int
+    playing_players: int
+    uptime: int
+    memory: t.Optional[Memory]
+    cpu: t.Optional[Cpu]
+    frame_statistics: t.Optional[FrameStatistics]
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        players = payload["players"]
+        playing_players = payload["playingPlayers"]
+        uptime = payload["uptime"]
+        try:
+            memory = Memory.as_payload(payload["memory"])
+        except:
+            memory = None
+        try:
+            cpu = Cpu.as_payload(payload["cpu"])
+        except:
+            cpu = None
+        try:
+            frame_statistics = FrameStatistics.as_payload(payload["frameStatistics"])
+        except:
+            frame_statistics = None
+
+        return cls(players, playing_players, uptime, memory, cpu, frame_statistics)
 
     @property
-    @abc.abstractmethod
-    def playing_players(self) -> int:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def uptime(self) -> int:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def memory(self) -> t.Optional[Memory]:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def cpu(self) -> t.Optional[Cpu]:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def frame_statistics(self) -> t.Optional[FrameStatistics]:
-        ...
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
 
 
 class WebsocketClosed(abc.ABC):

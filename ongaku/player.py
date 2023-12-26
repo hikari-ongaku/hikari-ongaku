@@ -16,12 +16,12 @@ if t.TYPE_CHECKING:
 
 class Player(VoiceConnection):
     @classmethod
-    async def initialize( #type: ignore
+    async def initialize(  # type: ignore
         cls,
         channel_id: hikari.Snowflake,
         endpoint: str,
         guild_id: hikari.Snowflake,
-        on_close: t.Awaitable[None], # type: ignore TODO: This needs to be fixed, or I need to make my own player.
+        on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
@@ -55,7 +55,7 @@ class Player(VoiceConnection):
         channel_id: hikari.Snowflake,
         endpoint: str,
         guild_id: hikari.Snowflake,
-        on_close: t.Awaitable[None], # type: ignore TODO: This needs to be fixed, or I need to make my own player.
+        on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
@@ -120,13 +120,7 @@ class Player(VoiceConnection):
         return tuple(self._queue)
 
     async def play(self, track: abc.Track) -> None:
-        voice = abc.Voice(
-            {
-                "token": self._token,
-                "endpoint": self._endpoint[6:],
-                "sessionId": self._session_id,
-            }
-        )
+        voice = abc.Voice(self._token, self._endpoint[6:], self._session_id) # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
 
         if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
@@ -172,13 +166,13 @@ class Player(VoiceConnection):
     async def skip(self, amount: int) -> None:
         if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
-        
+
         if amount == 0:
             return
         if len(self.queue) == 0:
             raise error.PlayerEmptyQueueException(0)
 
-        for x in range(amount):
+        for _ in range(amount):
             if len(self._queue) == 0:
                 break
             else:
@@ -186,27 +180,37 @@ class Player(VoiceConnection):
 
         if len(self.queue) == 0:
             await self._ongaku.rest.internal.player.update_player(
-                self.guild_id, self._ongaku.internal.session_id, track=None, 
+                self.guild_id,
+                self._ongaku.internal.session_id,
+                track=None,
             )
             return
-        
+
         await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, self._ongaku.internal.session_id, track=self._queue[0], no_replace=False
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            track=self._queue[0],
+            no_replace=False,
         )
 
     async def track_end_event(self, event: events.TrackEndEvent):
         if self._ongaku.internal.session_id == None:
             raise error.SessionNotStartedException()
-        
+
         if int(event.guild_id) == int(self.guild_id):
             await self.remove(0)
-            
+
             if len(self.queue) == 0:
-                await self._bot.dispatch(general.PlayerQueueEmptyEvent(self._bot, self.guild_id))
+                await self._bot.dispatch(
+                    general.PlayerQueueEmptyEvent(self._bot, self.guild_id)
+                )
                 return
-            
+
             await self._ongaku.rest.internal.player.update_player(
-                self.guild_id, self._ongaku.internal.session_id, track=self._queue[0], no_replace=False
+                self.guild_id,
+                self._ongaku.internal.session_id,
+                track=self._queue[0],
+                no_replace=False,
             )
 
     # TODO: The following things between these to do's, do not work yet.
@@ -226,13 +230,16 @@ class Player(VoiceConnection):
             raise error.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
-            self.guild_id, self._ongaku.internal.session_id, track=None, no_replace=False
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            track=None,
+            no_replace=False,
         )
 
     async def position(self, value: int) -> None:
         """
         Change the tracks position in ms.
-        
+
         Raises
         ------
         PlayerInvalidPosition: When the track position selected is not a valid position.
