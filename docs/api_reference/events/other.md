@@ -1,0 +1,3 @@
+# Other
+
+::: ongaku.events.other

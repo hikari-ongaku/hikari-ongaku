@@ -1,12 +1,14 @@
-from . import player, error, enums, events
+from . import errors, player, enums, events, abc
 from . import rest
 import typing as t
 import aiohttp
 import hikari
 import logging
+import asyncio
 
+_logger = logging.getLogger("ongaku") # Internal logger.
 
-class OngakuInternal:
+class _OngakuInternal:
     def __init__(self, uri: str, max_retries: int = 3) -> None:
         """
         asdf
@@ -16,7 +18,8 @@ class OngakuInternal:
         self._uri: str = uri
         self._total_retries = max_retries
         self._remaining_retries = max_retries
-        self._connected = False
+        self._connected = enums.ConnectionStatus.LOADING
+        self._failure_reason = None
 
     @property
     def headers(self) -> dict[t.Any, t.Any]:
@@ -39,8 +42,17 @@ class OngakuInternal:
         return self._remaining_retries
 
     @property
-    def connected(self) -> bool:
+    def connected(self) -> enums.ConnectionStatus:
         return self._connected
+    
+    @property
+    def connection_failure(self) -> t.Optional[str]:
+        return self._failure_reason
+
+    def set_connection(self, connected: enums.ConnectionStatus, *, reason: t.Optional[str] = None) -> None:
+        self._connected = connected
+        if reason:
+            self._reason = reason
 
     def set_session_id(self, session_id: str) -> None:
         self._session_id = session_id
@@ -57,9 +69,24 @@ class OngakuInternal:
     def clear_headers(self) -> None:
         self._headers.clear()
 
-    def remove_attempt(self) -> int:
-        return self._remaining_retries - 1
-
+    def remove_retry(self, set: int = 1) -> int:
+        if set == -1:
+            self._remaining_retries = 0
+            _logger.warning("All lavalink attempts used!")
+            return self._remaining_retries
+        if self._remaining_retries == 0 or self._remaining_retries < set:
+            raise ValueError("Already Zero.")
+        self._remaining_retries -= set
+        _logger.warning(f"Lavalink connection attempts used: {set} remaining: {self._remaining_retries}")
+        return self._remaining_retries
+        
+    async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[abc.Error]:
+        try:
+            error = abc.Error.as_payload(payload)
+        except:
+            return
+        
+        return error
 
 class Ongaku:
     def __init__(
@@ -94,6 +121,10 @@ class Ongaku:
 
         self._players: dict[hikari.Snowflake, player.Player] = {}
 
+        self._internal = _OngakuInternal(
+            f"http://{host}:{port}/{version.value}", max_retries
+        )
+
         if password:
             self._internal.add_headers({"Authorization": password})
 
@@ -101,9 +132,7 @@ class Ongaku:
 
         self._event_handler = events.EventHandler(self)
 
-        self._internal = OngakuInternal(
-            f"http://{host}:{port}/{version.value}", max_retries
-        )
+        bot.subscribe(hikari.StartedEvent, self._handle_connect)
 
     @property
     def players(self) -> list[player.Player]:
@@ -134,7 +163,7 @@ class Ongaku:
         return self._rest
 
     @property
-    def bot(self) -> hikari.RESTAware:
+    def bot(self) -> hikari.GatewayBot:
         """
         Gateway bot.
 
@@ -147,7 +176,7 @@ class Ongaku:
         return self._bot
 
     @property
-    def connected(self) -> bool:
+    def connection_status(self) -> enums.ConnectionStatus:
         """
         Connected to lavalink.
 
@@ -155,13 +184,23 @@ class Ongaku:
 
         Returns
         -------
-        bool
-            If true, it is connected to the server, if false, it is not.
+        enums.ConnectionStatus.LOADING
+            Ongaku has not yet attempted to connect to the lavalink server.
+        enums.ConnectionStatus.CONNECTED
+            Ongaku has successfully connected to the lavalink server.
+        enums.ConnectionStatus.FAILURE
+            Ongaku has failed to connect to the lavalink server. Check connection_failure_reason for more information.
+
+            
         """
         return self._internal.connected
 
     @property
-    def internal(self) -> OngakuInternal:
+    def connection_failure_reason(self) -> t.Optional[str]:
+        return self._internal.connection_failure
+
+    @property
+    def internal(self) -> _OngakuInternal:
         """
         For internal information about the bot.
 
@@ -171,42 +210,6 @@ class Ongaku:
             An internal class for ongaku.
         """
         return self._internal
-
-    async def connect(self, user_id: hikari.Snowflake) -> None:
-        """
-        connect to the server
-
-        Allows for the user to connect to the server.
-        """
-        async with aiohttp.ClientSession() as session:
-            new_header = {
-                "User-Id": str(user_id),
-                "Client-Name": f"{str(user_id)}::Unknown",
-            }
-
-            new_header.update(self._internal.headers)
-            try:
-                async with session.ws_connect( #type: ignore
-                    self._internal.uri + "/websocket", headers=new_header
-                ) as ws:
-                    async for msg in ws:
-                        if msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
-                            logging.error(msg.json())
-
-                        if msg.type == aiohttp.WSMsgType.CLOSED: #type: ignore
-                            print("ws closed.")
-                        if msg.type == aiohttp.WSMsgType.TEXT: #type: ignore
-                            try:
-                                json_data = msg.json()
-                            except:
-                                logging.info("Failed to decode json data.")
-                            else:
-                                await self._event_handler.handle_payload(json_data)
-
-                        elif msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
-                            break
-            except Exception as e:
-                raise error.LavalinkConnectionException(e)
 
     async def create_player(
         self,
@@ -228,13 +231,9 @@ class Ongaku:
             The bots user id.
         """
 
-        print("connections:", self.bot.voice.connections)
         connection = self.bot.voice.connections.get(guild_id)
 
-        print("connection:", connection, type(connection))
-
         if isinstance(connection, player.Player):
-            print("disconnecting...")
             await self.bot.voice.disconnect(guild_id)
 
         new_player = await self.bot.voice.connect_to(
@@ -249,7 +248,7 @@ class Ongaku:
         fetched_player = self._players.get(guild_id)
 
         if fetched_player == None:
-            raise error.PlayerMissingException(guild_id)
+            raise errors.PlayerMissingException(guild_id)
 
         return fetched_player
 
@@ -260,3 +259,61 @@ class Ongaku:
         except Exception as e:
             print(e)
             raise e
+        
+    async def _handle_connect(self, event: hikari.StartedEvent):
+        try:
+            bot = self.bot.get_me()
+        except:
+            self._internal.remove_retry(-1)
+            self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found.")
+            _logger.error("Ongaku could not start, due to the bot ID not being found.")
+            return
+        
+        if bot == None:
+            self._internal.remove_retry(-1)
+            self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found.")
+            _logger.error("Ongaku could not start, due to the bot ID not being found.")
+            return
+        
+        new_header = {
+            "User-Id": str(bot.id),
+            "Client-Name": f"{str(bot.id)}::Unknown",
+        }
+
+        new_header.update(self._internal.headers)
+
+        while self._internal.remaining_retries > 1:
+            await asyncio.sleep(3)
+            async with aiohttp.ClientSession() as session:
+            
+                try:
+                    async with session.ws_connect( #type: ignore
+                        self._internal.uri + "/websocket", headers=new_header
+                    ) as ws:
+                        async for msg in ws:
+                            if msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
+                                _logger.error(msg.json())
+
+                            if msg.type == aiohttp.WSMsgType.CLOSED: #type: ignore
+                                print("ws closed.")
+                            if msg.type == aiohttp.WSMsgType.TEXT: #type: ignore
+                                try:
+                                    json_data = msg.json()
+                                except:
+                                    _logger.info("Failed to decode json data.")
+                                else:
+                                    error = await self._internal.check_error(json_data)
+
+                                    if error:
+                                        self._internal.remove_retry()
+                                        self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=error.message)
+
+                                    await self._event_handler.handle_payload(json_data)
+
+                            elif msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
+                                self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=msg.data)
+                except:
+                    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason="Exception Raised")
+                    self._internal.remove_retry(1)
+        else:
+            _logger.error(f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}")

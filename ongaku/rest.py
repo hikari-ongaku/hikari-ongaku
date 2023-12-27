@@ -1,4 +1,6 @@
-from . import error, abc, enums
+from __future__ import annotations
+
+from . import abc, enums, errors
 import typing as t
 
 import hikari
@@ -8,8 +10,10 @@ import logging
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
 
+    OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
-class InternalSession:
+
+class _InternalSession:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
@@ -20,17 +24,17 @@ class InternalSession:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise error.ResponseException(response.status)
+                    raise errors.ResponseException(response.status)
 
                 try:
                     session_model = abc.Session.as_payload(await response.json())
                 except Exception as e:
-                    raise error.BuildException(e)
+                    raise errors.BuildException(e)
 
                 return session_model
 
 
-class InternalPlayer:
+class _InternalPlayer:
     """
     The Rest based actions for the player.
     """
@@ -45,7 +49,7 @@ class InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise error.ResponseException(response.status)
+                    raise errors.ResponseException(response.status)
 
                 players = await response.json()
 
@@ -55,7 +59,7 @@ class InternalPlayer:
                     try:
                         player_model = abc.Player.as_payload(player)
                     except Exception as e:
-                        raise error.BuildException(e)
+                        raise errors.BuildException(e)
 
                     player_list.append(player_model)
 
@@ -74,12 +78,12 @@ class InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise error.ResponseException(response.status)
+                    raise errors.ResponseException(response.status)
 
                 try:
                     player_model = abc.Player.as_payload(await response.json())
                 except Exception as e:
-                    raise error.BuildException(e)
+                    raise errors.BuildException(e)
 
         return player_model
 
@@ -179,7 +183,7 @@ class InternalPlayer:
                     try:
                         player_model = abc.Player.as_payload(await response.json())
                     except Exception as e:
-                        raise error.BuildException(e)
+                        raise errors.BuildException(e)
             except Exception as e:
                 raise e
 
@@ -199,10 +203,10 @@ class InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise error.ResponseException(response.status)
+                    raise errors.ResponseException(response.status)
 
 
-class InternalTrack:
+class _InternalTrack:
     """
     The rest based actions for the track.
     """
@@ -229,7 +233,7 @@ class InternalTrack:
                 params=params,
             ) as response:
                 if response.status >= 400:
-                    raise error.ResponseException(response.status)
+                    raise errors.ResponseException(response.status)
 
                 data = await response.json()
 
@@ -258,22 +262,22 @@ class Internal:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
-        self._internal_session = InternalSession(self._ongaku)
+        self._internal_session = _InternalSession(self._ongaku)
 
-        self._internal_player = InternalPlayer(self._ongaku)
+        self._internal_player = _InternalPlayer(self._ongaku)
 
-        self._internal_track = InternalTrack(self._ongaku)
+        self._internal_track = _InternalTrack(self._ongaku)
 
     @property
-    def session(self) -> InternalSession:
+    def session(self) -> _InternalSession:
         return self._internal_session
 
     @property
-    def player(self) -> InternalPlayer:
+    def player(self) -> _InternalPlayer:
         return self._internal_player
 
     @property
-    def track(self) -> InternalTrack:
+    def track(self) -> _InternalTrack:
         return self._internal_track
 
 
@@ -304,12 +308,12 @@ class RestApi:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise error.ResponseException(response.status)
+                    raise errors.ResponseException(response.status)
 
                 try:
                     info_resp = abc.Info.as_payload(await response.json())
                 except Exception as e:
-                    raise error.BuildException(e)
+                    raise errors.BuildException(e)
 
         return info_resp
 

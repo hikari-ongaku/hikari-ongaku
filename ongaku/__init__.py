@@ -1,4 +1,4 @@
-from .error import *
+from .errors import *
 from .events import *
 from .ongaku import *
 from .enums import *

@@ -4,9 +4,9 @@ import hikari
 from hikari.api import VoiceConnection, VoiceComponent
 import typing as t
 
-from .events import general
+from .events import other
 
-from . import error, abc, events
+from . import abc, errors, events
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -123,7 +123,7 @@ class Player(VoiceConnection):
         voice = abc.Voice(self._token, self._endpoint[6:], self._session_id) # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
 
         if self._ongaku.internal.session_id == None:
-            raise error.SessionNotStartedException()
+            raise errors.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id,
@@ -137,7 +137,7 @@ class Player(VoiceConnection):
 
     async def pause(self, value: hikari.UndefinedOr[bool] = hikari.UNDEFINED) -> None:
         if self._ongaku.internal.session_id == None:
-            raise error.SessionNotStartedException()
+            raise errors.SessionNotStartedException()
 
         if value == hikari.UNDEFINED:
             self._is_paused = not self.is_paused
@@ -165,12 +165,12 @@ class Player(VoiceConnection):
 
     async def skip(self, amount: int) -> None:
         if self._ongaku.internal.session_id == None:
-            raise error.SessionNotStartedException()
+            raise errors.SessionNotStartedException()
 
         if amount == 0:
             return
         if len(self.queue) == 0:
-            raise error.PlayerEmptyQueueException(0)
+            raise errors.PlayerEmptyQueueException(0)
 
         for _ in range(amount):
             if len(self._queue) == 0:
@@ -195,14 +195,14 @@ class Player(VoiceConnection):
 
     async def track_end_event(self, event: events.TrackEndEvent):
         if self._ongaku.internal.session_id == None:
-            raise error.SessionNotStartedException()
+            raise errors.SessionNotStartedException()
 
         if int(event.guild_id) == int(self.guild_id):
             await self.remove(0)
 
             if len(self.queue) == 0:
                 await self._bot.dispatch(
-                    general.PlayerQueueEmptyEvent(self._bot, self.guild_id)
+                    other.PlayerQueueEmptyEvent(self._bot, self.guild_id)
                 )
                 return
 
@@ -217,7 +217,7 @@ class Player(VoiceConnection):
 
     async def volume(self, volume: int) -> None:
         if volume < 0 or volume > 1000:
-            raise error.PlayerInvalidVolumeException(volume)
+            raise errors.PlayerInvalidVolumeException(volume)
         pass
 
     async def clear(self) -> None:
@@ -227,7 +227,7 @@ class Player(VoiceConnection):
         self._queue.clear()
 
         if self._ongaku.internal.session_id == None:
-            raise error.SessionNotStartedException()
+            raise errors.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id,
@@ -254,7 +254,7 @@ class Player(VoiceConnection):
         await self.clear()
 
         if self._ongaku.internal.session_id == None:
-            raise error.SessionNotStartedException()
+            raise errors.SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.delete_player(
             self._ongaku.internal.session_id, self._guild_id

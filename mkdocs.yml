@@ -76,7 +76,6 @@ nav:
     - Player: api_reference/player.md
     - Rest: api_reference/rest.md
     - Events:
-      - Event Handler: api_reference/events/event_handler.md
       - Track: api_reference/events/track.md
       - Other: api_reference/events/other.md
     - ABC:

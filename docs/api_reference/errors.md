@@ -1,3 +1,3 @@
 # errors
 
-::: ongaku.error
+::: ongaku.errors

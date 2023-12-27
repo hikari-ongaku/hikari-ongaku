@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import typing as t
 import logging
-from . import general, track
+from . import other, track
+from .. import errors
 
 if t.TYPE_CHECKING:
     from ..ongaku import Ongaku
@@ -14,7 +15,6 @@ if t.TYPE_CHECKING:
 class EventHandler:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
-        pass
 
     async def handle_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
@@ -38,10 +38,15 @@ class EventHandler:
             logging.warning(f"OP code not recognized: {op_code}")
 
     async def _ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
-        await self._ongaku.set_session_id(payload["sessionId"])
+        try:
+            session_id = str(payload["sessionId"])
+        except:
+            raise errors.InvalidSessionId()
+
+        self._ongaku.internal.set_session_id(session_id)
 
         try:
-            event = general.ReadyEvent(self._ongaku.bot, payload)
+            event = other.ReadyEvent(self._ongaku.bot, payload)
         except Exception as e:
             raise e
 
@@ -49,7 +54,7 @@ class EventHandler:
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            event = general.StatisticsEvent(self._ongaku.bot, payload)
+            event = other.StatisticsEvent(self._ongaku.bot, payload)
         except Exception as e:
             raise e
 
@@ -87,7 +92,7 @@ class EventHandler:
 
         elif event_type == "WebSocketClosedEvent":
             try:
-                event = general.WebsocketClosedEvent(self._ongaku.bot, payload)
+                event = other.WebsocketClosedEvent(self._ongaku.bot, payload)
             except Exception as e:
                 raise e
 

@@ -74,3 +74,13 @@ class PlayerInvalidVolumeException(PlayerException):
     """
     Raised when the volume is above 1000, or below 0.
     """
+
+class RestNotSupported(OngakuBaseException):
+    """
+    Raised when Gateway bot is not used.
+    """
+
+class InvalidSessionId(OngakuBaseException):
+    """
+    Raised when the session id does not exist in the ready statement. 
+    """

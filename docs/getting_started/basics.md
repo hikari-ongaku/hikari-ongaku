@@ -15,7 +15,6 @@ All bots that use Ongaku, require the following basics.
 
  - Gateway Bot
  - Ongaku
- - Starting Event
 
 ### Gateway Bot #
 
@@ -42,18 +41,6 @@ lavalink = ongaku.Ongaku(
     bot,
     password="youshallnotpass"
 )
-```
-
-### Starting event #
-
-Finally, you must have the starting event.
-
-```python
-@bot.listen(hikari.events.StartedEvent)
-async def started_event(event: hikari.events.StartedEvent):
-    await lavalink.connect(
-        bot.get_me().id
-    )
 ```
 
 ## Thats it!
