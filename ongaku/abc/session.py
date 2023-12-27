@@ -2,6 +2,7 @@ import abc
 import typing as t
 import dataclasses
 
+
 @dataclasses.dataclass
 class Session(abc.ABC):
     resuming: bool
@@ -13,7 +14,7 @@ class Session(abc.ABC):
         timeout = payload["timeout"]
 
         return cls(resuming, timeout)
-    
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)

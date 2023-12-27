@@ -6,7 +6,8 @@ import hikari
 import logging
 import asyncio
 
-_logger = logging.getLogger("ongaku") # Internal logger.
+_logger = logging.getLogger("ongaku")  # Internal logger.
+
 
 class _OngakuInternal:
     def __init__(self, uri: str, max_retries: int = 3) -> None:
@@ -44,12 +45,14 @@ class _OngakuInternal:
     @property
     def connected(self) -> enums.ConnectionStatus:
         return self._connected
-    
+
     @property
     def connection_failure(self) -> t.Optional[str]:
         return self._failure_reason
 
-    def set_connection(self, connected: enums.ConnectionStatus, *, reason: t.Optional[str] = None) -> None:
+    def set_connection(
+        self, connected: enums.ConnectionStatus, *, reason: t.Optional[str] = None
+    ) -> None:
         self._connected = connected
         if reason != None:
             print(reason)
@@ -78,16 +81,19 @@ class _OngakuInternal:
         if self._remaining_retries == 0 or self._remaining_retries < set:
             raise ValueError("Already Zero.")
         self._remaining_retries -= set
-        _logger.warning(f"Lavalink connection attempts used: {set} remaining: {self._remaining_retries}")
+        _logger.warning(
+            f"Lavalink connection attempts used: {set} remaining: {self._remaining_retries}"
+        )
         return self._remaining_retries
-        
+
     async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[abc.Error]:
         try:
             error = abc.Error.as_payload(payload)
         except:
             return
-        
+
         return error
+
 
 class Ongaku:
     def __init__(
@@ -192,7 +198,7 @@ class Ongaku:
         enums.ConnectionStatus.FAILURE
             Ongaku has failed to connect to the lavalink server. Check connection_failure_reason for more information.
 
-            
+
         """
         return self._internal.connected
 
@@ -260,25 +266,32 @@ class Ongaku:
         except Exception as e:
             print(e)
             raise e
-        
+
     async def _handle_connect(self, event: hikari.StartedEvent):
-        if self._internal.connected == enums.ConnectionStatus.CONNECTED or self._internal.connected == enums.ConnectionStatus.FAILURE:
+        if (
+            self._internal.connected == enums.ConnectionStatus.CONNECTED
+            or self._internal.connected == enums.ConnectionStatus.FAILURE
+        ):
             return
-        
+
         try:
             bot = self.bot.get_me()
         except:
             self._internal.remove_retry(-1)
-            self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found.")
+            self._internal.set_connection(
+                enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found."
+            )
             _logger.error("Ongaku could not start, due to the bot ID not being found.")
             return
-        
+
         if bot == None:
             self._internal.remove_retry(-1)
-            self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found.")
+            self._internal.set_connection(
+                enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found."
+            )
             _logger.error("Ongaku could not start, due to the bot ID not being found.")
             return
-        
+
         new_header = {
             "User-Id": str(bot.id),
             "Client-Name": f"{str(bot.id)}::Unknown",
@@ -290,35 +303,43 @@ class Ongaku:
             await asyncio.sleep(3)
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.ws_connect( #type: ignore
+                    async with session.ws_connect(  # type: ignore
                         self._internal.uri + "/websocket", headers=new_header
                     ) as ws:
                         async for msg in ws:
-                            if msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
+                            if msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
                                 _logger.error(msg.json())
 
-                            if msg.type == aiohttp.WSMsgType.CLOSED: #type: ignore
+                            if msg.type == aiohttp.WSMsgType.CLOSED:  # type: ignore
                                 print("ws closed.")
-                            if msg.type == aiohttp.WSMsgType.TEXT: #type: ignore
+                            if msg.type == aiohttp.WSMsgType.TEXT:  # type: ignore
                                 try:
                                     json_data = msg.json()
                                 except:
                                     _logger.info("Failed to decode json data.")
                                 else:
-                                    #error = await self._internal.check_error(json_data)
+                                    # error = await self._internal.check_error(json_data)
 
-                                    #if error:
+                                    # if error:
                                     #    self._internal.remove_retry()
                                     #    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=error.message)
-                                    #    return 
-                                    
-                                    self._internal.set_connection(enums.ConnectionStatus.CONNECTED)
+                                    #    return
+
+                                    self._internal.set_connection(
+                                        enums.ConnectionStatus.CONNECTED
+                                    )
                                     await self._event_handler.handle_payload(json_data)
 
-                            elif msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
-                                self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=msg.data)
+                            elif msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
+                                self._internal.set_connection(
+                                    enums.ConnectionStatus.FAILURE, reason=msg.data
+                                )
                 except Exception as e:
-                    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=f"Exception Raised: {e}")
+                    self._internal.set_connection(
+                        enums.ConnectionStatus.FAILURE, reason=f"Exception Raised: {e}"
+                    )
                     self._internal.remove_retry(1)
         else:
-            _logger.error(f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}")
+            _logger.error(
+                f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}"
+            )

@@ -2,12 +2,13 @@ import abc
 import dataclasses
 import typing as t
 
+
 @dataclasses.dataclass
 class Version:
     """
     The version information of the Lavalink server.
     """
-    
+
     semver: str
     major: int
     minor: int
@@ -28,12 +29,12 @@ class Version:
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
 
+
 @dataclasses.dataclass
 class Git:
     """
     The git information of the Lavalink server.
     """
-
 
     branch: str
     commit: str
@@ -72,6 +73,7 @@ class Plugin:
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
 
+
 @dataclasses.dataclass
 class Info(abc.ABC):
     """
@@ -108,7 +110,9 @@ class Info(abc.ABC):
 
             plugins.append(new_plugin)
 
-        return cls(version, build_time, git, jvm, lavaplayer, source_managers, filters, plugins)
+        return cls(
+            version, build_time, git, jvm, lavaplayer, source_managers, filters, plugins
+        )
 
     @property
     def raw(self) -> dict[str, t.Any]:
@@ -137,7 +141,7 @@ class Error(abc.ABC):
         path = payload["path"]
 
         return cls(timestamp, status, error, trace, message, path)
-    
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)

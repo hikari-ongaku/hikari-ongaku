@@ -15,7 +15,6 @@ class ReadyEvent(abc.OngakuEvent):
             self._session_id = payload["sessionId"]
         except Exception as e:
             print(f"session id: {e}")
-            
 
     @property
     def app(self):
@@ -29,6 +28,7 @@ class ReadyEvent(abc.OngakuEvent):
     def session_id(self):
         return self._session_id
 
+
 class StatisticsEvent(abc.Statistics, abc.OngakuEvent):
     def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
@@ -40,9 +40,9 @@ class StatisticsEvent(abc.Statistics, abc.OngakuEvent):
 
         self.frame_statistics = None
         if payload.get("frameStats", None) != None:
-            self.frame_statistics = abc.FrameStatistics.as_payload(payload["frameStats"])
-
-
+            self.frame_statistics = abc.FrameStatistics.as_payload(
+                payload["frameStats"]
+            )
 
     @property
     def app(self) -> hikari.RESTAware:

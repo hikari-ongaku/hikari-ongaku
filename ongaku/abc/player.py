@@ -3,6 +3,7 @@ import hikari
 import typing as t
 import dataclasses
 
+
 @dataclasses.dataclass
 class State:
     """
@@ -22,10 +23,11 @@ class State:
         ping = payload["ping"]
 
         return cls(time, position, connected, ping)
-    
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class Voice:
@@ -44,10 +46,11 @@ class Voice:
         session_id = payload["sessionId"]
 
         return cls(token, endpoint, session_id)
-    
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class Player:
@@ -75,7 +78,7 @@ class Player:
         voice = Voice.as_payload(payload["voice"])
 
         return cls(guild_id, track, volume, paused, state, voice)
-    
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)

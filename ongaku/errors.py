@@ -4,12 +4,6 @@ class OngakuBaseException(Exception):
     """
 
 
-class ResponseException(OngakuBaseException):
-    """
-    Raised when a 4XX or 5XX error gets received.
-    """
-
-
 class BuildException(OngakuBaseException):
     """
     Raised when a model fails to build correctly.
@@ -28,18 +22,6 @@ class LavalinkConnectionException(LavalinkException):
     """
 
 
-class NodeException(OngakuBaseException):
-    """
-    Base node exception.
-    """
-
-
-class NodeMissingException(NodeException):
-    """
-    Raised when a node is missing.
-    """
-
-
 class SessionNotStartedException(LavalinkException):
     """
     Raised when the session id is needed, but is null.
@@ -52,9 +34,9 @@ class PlayerException(OngakuBaseException):
     """
 
 
-class PlayerVolumeLevelException(PlayerException):
+class PlayerSettingException(PlayerException):
     """
-    Raised when an invalid volume is set.
+    Raised when a setting is set wrong.
     """
 
 
@@ -64,23 +46,13 @@ class PlayerMissingException(PlayerException):
     """
 
 
-class PlayerEmptyQueueException(PlayerException):
+class PlayerQueueException(PlayerException):
     """
-    Raised when there is no tracks in the queue.
-    """
-
-
-class PlayerInvalidVolumeException(PlayerException):
-    """
-    Raised when the volume is above 1000, or below 0.
+    Raised when there is a problem with the queue.
     """
 
-class RestNotSupported(OngakuBaseException):
+
+class GatewayOnlyException(OngakuBaseException):
     """
     Raised when Gateway bot is not used.
-    """
-
-class InvalidSessionId(OngakuBaseException):
-    """
-    Raised when the session id does not exist in the ready statement. 
     """

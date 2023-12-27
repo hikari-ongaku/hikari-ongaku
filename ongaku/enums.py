@@ -19,11 +19,13 @@ class PlatformType(int, enum.Enum):
     YOUTUBE = 0
     YOUTUBE_MUSIC = 1
     SPOTIFY = 2
+    SOUNDCLOUD = 3
 
 
 class VersionType(enum.Enum):
     V3 = "v3"
     V4 = "v4"
+
 
 class ConnectionStatus(enum.Enum):
     FAILURE = 0

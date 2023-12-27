@@ -40,6 +40,11 @@ plugins:
             show_submodules: false
             annotations_path: source
 
+  - social:
+      cards_layout_options:
+        title: Beans
+        description: My custom description
+
 markdown_extensions:
   - toc:
       permalink: "#"

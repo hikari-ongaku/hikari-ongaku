@@ -39,12 +39,12 @@ class EventHandler:
 
     async def _ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
         print("payload: ", payload)
-        
+
         try:
             session_id = payload["sessionId"]
         except:
             raise errors.InvalidSessionId()
-        
+
         if session_id == None:
             raise errors.InvalidSessionId()
 
@@ -57,7 +57,6 @@ class EventHandler:
             raise e
 
         await self._ongaku.bot.dispatch(event)
-
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:

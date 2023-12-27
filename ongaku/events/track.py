@@ -2,6 +2,7 @@ import hikari
 import typing as t
 from .. import abc
 
+
 class TrackStartEvent(abc.TrackStart, abc.OngakuEvent):
     """
     Called when a track starts!

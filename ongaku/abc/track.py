@@ -2,6 +2,7 @@ import abc
 import typing as t
 import dataclasses
 
+
 @dataclasses.dataclass
 class TrackInfo:
     """
@@ -43,11 +44,24 @@ class TrackInfo:
             isrc = None
         source_name = payload["sourceName"]
 
-        return cls(identifier, is_seekable, author, length, is_stream, position, title, uri, artwork_url, isrc, source_name)
-    
+        return cls(
+            identifier,
+            is_seekable,
+            author,
+            length,
+            is_stream,
+            position,
+            title,
+            uri,
+            artwork_url,
+            isrc,
+            source_name,
+        )
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class Track(abc.ABC):
@@ -68,7 +82,7 @@ class Track(abc.ABC):
         user_data = payload["userData"]
 
         return cls(encoded, info, plugin_info, user_data)
-    
+
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)

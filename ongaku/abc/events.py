@@ -40,13 +40,13 @@ class Ready(abc.ABC):
     def session_id(self) -> str:
         return self._session_id
 
+
 @dataclasses.dataclass
 class Memory:
     free: int
     used: int
     allocated: int
     reservable: int
-        
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -60,6 +60,7 @@ class Memory:
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class Cpu:
@@ -79,6 +80,7 @@ class Cpu:
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
 
+
 @dataclasses.dataclass
 class FrameStatistics:
     sent: int
@@ -92,6 +94,7 @@ class FrameStatistics:
         deficit = payload["deficit"]
 
         return cls(sent, nulled, deficit)
+
 
 @dataclasses.dataclass
 class Statistics(abc.ABC):

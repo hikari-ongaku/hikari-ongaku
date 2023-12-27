@@ -120,7 +120,9 @@ class Player(VoiceConnection):
         return tuple(self._queue)
 
     async def play(self, track: abc.Track) -> None:
-        voice = abc.Voice(self._token, self._endpoint[6:], self._session_id) # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
+        voice = abc.Voice(
+            self._token, self._endpoint[6:], self._session_id
+        )  # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
 
         if self._ongaku.internal.session_id == None:
             raise errors.SessionNotStartedException()
