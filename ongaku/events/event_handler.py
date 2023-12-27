@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import typing as t
 import logging
-from . import other, track
+from . import track, other
 from .. import errors
 
 if t.TYPE_CHECKING:
@@ -38,9 +38,14 @@ class EventHandler:
             logging.warning(f"OP code not recognized: {op_code}")
 
     async def _ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
+        print("payload: ", payload)
+        
         try:
-            session_id = str(payload["sessionId"])
+            session_id = payload["sessionId"]
         except:
+            raise errors.InvalidSessionId()
+        
+        if session_id == None:
             raise errors.InvalidSessionId()
 
         self._ongaku.internal.set_session_id(session_id)
@@ -48,9 +53,11 @@ class EventHandler:
         try:
             event = other.ReadyEvent(self._ongaku.bot, payload)
         except Exception as e:
+            print(e, e.args)
             raise e
 
         await self._ongaku.bot.dispatch(event)
+
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:

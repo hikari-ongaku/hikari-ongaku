@@ -51,8 +51,9 @@ class _OngakuInternal:
 
     def set_connection(self, connected: enums.ConnectionStatus, *, reason: t.Optional[str] = None) -> None:
         self._connected = connected
-        if reason:
-            self._reason = reason
+        if reason != None:
+            print(reason)
+            self._failure_reason = reason
 
     def set_session_id(self, session_id: str) -> None:
         self._session_id = session_id
@@ -261,6 +262,9 @@ class Ongaku:
             raise e
         
     async def _handle_connect(self, event: hikari.StartedEvent):
+        if self._internal.connected == enums.ConnectionStatus.CONNECTED or self._internal.connected == enums.ConnectionStatus.FAILURE:
+            return
+        
         try:
             bot = self.bot.get_me()
         except:
@@ -285,7 +289,6 @@ class Ongaku:
         while self._internal.remaining_retries > 1:
             await asyncio.sleep(3)
             async with aiohttp.ClientSession() as session:
-            
                 try:
                     async with session.ws_connect( #type: ignore
                         self._internal.uri + "/websocket", headers=new_header
@@ -302,18 +305,20 @@ class Ongaku:
                                 except:
                                     _logger.info("Failed to decode json data.")
                                 else:
-                                    error = await self._internal.check_error(json_data)
+                                    #error = await self._internal.check_error(json_data)
 
-                                    if error:
-                                        self._internal.remove_retry()
-                                        self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=error.message)
-
+                                    #if error:
+                                    #    self._internal.remove_retry()
+                                    #    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=error.message)
+                                    #    return 
+                                    
+                                    self._internal.set_connection(enums.ConnectionStatus.CONNECTED)
                                     await self._event_handler.handle_payload(json_data)
 
                             elif msg.type == aiohttp.WSMsgType.ERROR: #type: ignore
                                 self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=msg.data)
-                except:
-                    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason="Exception Raised")
+                except Exception as e:
+                    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=f"Exception Raised: {e}")
                     self._internal.remove_retry(1)
         else:
             _logger.error(f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}")

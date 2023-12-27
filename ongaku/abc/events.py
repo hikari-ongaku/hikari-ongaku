@@ -100,7 +100,10 @@ class Statistics(abc.ABC):
     uptime: int
     memory: t.Optional[Memory]
     cpu: t.Optional[Cpu]
-    frame_statistics: t.Optional[FrameStatistics]
+    try:
+        frame_statistics: t.Optional[FrameStatistics]
+    except:
+        frame_statistics = None
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):

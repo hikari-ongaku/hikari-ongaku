@@ -3,11 +3,19 @@ import typing as t
 from .. import abc
 
 
-class ReadyEvent(abc.Ready, abc.OngakuEvent):
+class ReadyEvent(abc.OngakuEvent):
     def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
-        self._resumed = payload["resumed"]
-        self._session_id = payload["sessionId"]
+        try:
+            self._resumed = payload["resumed"]
+        except Exception as e:
+            print(f"resumed: {e}")
+
+        try:
+            self._session_id = payload["sessionId"]
+        except Exception as e:
+            print(f"session id: {e}")
+            
 
     @property
     def app(self):
@@ -29,7 +37,12 @@ class StatisticsEvent(abc.Statistics, abc.OngakuEvent):
         self.uptime = payload["uptime"]
         self.memory = abc.Memory.as_payload(payload["memory"])
         self.cpu = abc.Cpu.as_payload(payload["cpu"])
-        self.frame_statistics = abc.FrameStatistics.as_payload(payload["FrameStatistics"])
+
+        self.frame_statistics = None
+        if payload.get("frameStats", None) != None:
+            self.frame_statistics = abc.FrameStatistics.as_payload(payload["frameStats"])
+
+
 
     @property
     def app(self) -> hikari.RESTAware:

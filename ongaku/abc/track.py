@@ -62,7 +62,7 @@ class Track(abc.ABC):
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
-        encoded = payload["identifier"]
+        encoded = payload["encoded"]
         info = TrackInfo.as_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
         user_data = payload["userData"]

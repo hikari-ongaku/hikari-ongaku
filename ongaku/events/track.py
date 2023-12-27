@@ -9,7 +9,7 @@ class TrackStartEvent(abc.TrackStart, abc.OngakuEvent):
 
     def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
-        self._guild_id = payload["guild_id"]
+        self._guild_id = payload["guildId"]
         self._track = abc.Track.as_payload(payload["track"])
 
     @property
@@ -32,7 +32,7 @@ class TrackEndEvent(abc.TrackEnd, abc.OngakuEvent):
 
     def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
-        self._guild_id = payload["guild_id"]
+        self._guild_id = payload["guildId"]
         self._track = abc.Track.as_payload(payload["track"])
         self._reason = payload["reason"]
 
@@ -60,7 +60,7 @@ class TrackExceptionEvent(abc.TrackException, abc.OngakuEvent):
 
     def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
-        self._guild_id = payload["guild_id"]
+        self._guild_id = payload["guildId"]
         self._track = abc.Track.as_payload(payload["track"])
         self._reason = payload["reason"]
 
@@ -88,7 +88,7 @@ class TrackStuckEvent(abc.TrackStuck, abc.OngakuEvent):
 
     def __init__(self, app: hikari.RESTAware, payload: dict[t.Any, t.Any]) -> None:
         self._app = app
-        self._guild_id = payload["guild_id"]
+        self._guild_id = payload["guildId"]
         self._track = abc.Track.as_payload(payload["track"])
         self._threshold_ms = payload["thresholdMs"]
 
