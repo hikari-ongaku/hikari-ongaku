@@ -18,6 +18,8 @@ theme:
     - navigation.indexes
     - search.suggest
     - content.code.copy
+  logo: assets/logo.png
+  favicon: assets/favicon.png
 
 extra_css:
   - stylesheets/extra.css
@@ -39,11 +41,7 @@ plugins:
             show_source: false
             show_submodules: false
             annotations_path: source
-
-  - social:
-      cards_layout_options:
-        title: Beans
-        description: My custom description
+            docstring_section_style: spacy
 
 markdown_extensions:
   - toc:
