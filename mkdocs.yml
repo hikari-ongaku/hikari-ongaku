@@ -32,16 +32,14 @@ plugins:
         python:
           options:
             docstring_style: numpy
+            docstring_section_style: spacy
             show_source: false
             merge_init_into_class: true
             inherited_members: false
-            merge_init_into_class: true
             separate_signature: true
             show_signature_annotations: true
-            show_source: false
             show_submodules: false
             annotations_path: source
-            docstring_section_style: spacy
 
 
 markdown_extensions:
