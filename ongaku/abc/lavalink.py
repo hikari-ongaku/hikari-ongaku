@@ -1,29 +1,68 @@
-import abc
 import dataclasses
 import typing as t
 
 
 @dataclasses.dataclass
-class Version:
+class InfoVersion:
     """
-    The version information of the Lavalink server.
+    All of the Info Version information.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#version-object).
+
+    Parameters
+    ----------
+    semver : str
+        The full version string of this Lavalink server
+    major : int
+        The major version of this Lavalink server
+    minor : int
+        The minor version of this Lavalink server
+    patch : int
+        The patch version of this Lavalink server
+    pre_release : str | None
+        The pre-release version according to semver as a `.` separated list of identifiers
+    build : str | None
+        The build metadata according to semver as a `.` separated list of identifiers
     """
 
     semver: str
     major: int
     minor: int
     patch: int
-    pre_release: str
+    pre_release: t.Optional[str]
+    build: t.Optional[str]
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Info Version parser
+
+        parse a payload of information, to receive a `InfoVersion` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        InfoVersion
+            The Info Version you parsed.
+        """
         semver = payload["semver"]
         major = payload["major"]
         minor = payload["minor"]
         patch = payload["patch"]
-        pre_release = payload["preRelease"]
-
-        return cls(semver, major, minor, patch, pre_release)
+        try:
+            pre_release = payload["preRelease"]
+        except:
+            pre_release = None
+        try:
+            build = payload["build"]
+        except:
+            build = None
+        
+        return cls(semver, major, minor, patch, pre_release, build)
 
     @property
     def raw(self) -> dict[str, t.Any]:
@@ -31,9 +70,20 @@ class Version:
 
 
 @dataclasses.dataclass
-class Git:
+class InfoGit:
     """
-    The git information of the Lavalink server.
+    All of the Info Git information.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#git-object).
+
+    Parameters
+    ----------
+    branch : str
+        The branch this Lavalink server was built on
+    commit : str
+        The commit this Lavalink server was built on
+    commit_time : int
+        The millisecond unix timestamp for when the commit was created
     """
 
     branch: str
@@ -42,6 +92,21 @@ class Git:
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Info Git parser
+
+        parse a payload of information, to receive a `InfoGit` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        InfoGit
+            The Info Git you parsed.
+        """
         branch = payload["branch"]
         commit = payload["commit"]
         commit_time = payload["commitTime"]
@@ -54,9 +119,18 @@ class Git:
 
 
 @dataclasses.dataclass
-class Plugin:
+class InfoPlugin:
     """
-    The plugin information of the Lavalink server.
+    All of the Info Plugin information.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#plugin-object).
+
+    Parameters
+    ----------
+    name : str
+        The name of the plugin
+    version : int
+        The version of the plugin
     """
 
     name: str
@@ -64,6 +138,21 @@ class Plugin:
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Info Plugin parser
+
+        parse a payload of information, to receive a `InfoPlugin` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        InfoPlugin
+            The Info Plugin you parsed.
+        """
         name = payload["name"]
         version = payload["version"]
 
@@ -75,36 +164,72 @@ class Plugin:
 
 
 @dataclasses.dataclass
-class Info(abc.ABC):
+class Info:
     """
-    The information about the lavalink server.
+    All of the Info Version information.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#version-object).
+
+    Parameters
+    ----------
+    version : InfoVersion
+        The version of this Lavalink server
+    build_time : int
+        The millisecond unix timestamp when this Lavalink jar was built
+    git : InfoGit
+        The git information of this Lavalink server
+    jvm : str
+        The JVM version this Lavalink server runs on
+    lavaplayer : str
+        The Lavaplayer version being used by this server
+    source_managers : list[str]
+        The enabled source managers for this server
+    filters : list[str]
+        The enabled filters for this server
+    plugins : list[InfoPlugin]
+        The enabled plugins for this server
     """
 
-    version: Version
+    version: InfoVersion
     build_time: int
-    git: Git
+    git: InfoGit
     jvm: str
     lavaplayer: str
     source_managers: list[str]
     filters: list[str]
-    plugins: list[Plugin]
+    plugins: list[InfoPlugin]
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
-        version = Version.as_payload(payload["version"])
+        """
+        Info parser
+
+        parse a payload of information, to receive a `Info` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        Info
+            The Info you parsed.
+        """
+        version = InfoVersion.as_payload(payload["version"])
         build_time = payload["buildTime"]
-        git = Git.as_payload(payload["git"])
+        git = InfoGit.as_payload(payload["git"])
         jvm = payload["jvm"]
         lavaplayer = payload["lavaplayer"]
         source_managers = payload["sourceManager"]
         filters = payload["filters"]
-        plugins: list[Plugin] = []
+        plugins: list[InfoPlugin] = []
 
         payload_plugins = payload["plugins"]
 
         for plugin in payload_plugins:
             try:
-                new_plugin = Plugin.as_payload(plugin)
+                new_plugin = InfoPlugin.as_payload(plugin)
             except Exception as e:
                 raise e
 
@@ -120,7 +245,28 @@ class Info(abc.ABC):
 
 
 @dataclasses.dataclass
-class Error(abc.ABC):
+class Error:
+    """
+    All of the Error information.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#version-object).
+
+    Parameters
+    ----------
+    timestamp : int
+        The timestamp of the error in milliseconds since the Unix epoch
+    status : int
+        The HTTP status code
+    error : str
+        The HTTP status code message
+    trace : str | None
+        The stack trace of the error.
+    message : str
+        The error message
+    path : str
+        The request path
+    """
+
     timestamp: int
     status: int
     error: str
@@ -130,6 +276,21 @@ class Error(abc.ABC):
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Error parser
+
+        parse a payload of information, to receive a `Error` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        Error
+            The Error you parsed.
+        """
         timestamp = payload["timestamp"]
         status = payload["status"]
         error = payload["error"]

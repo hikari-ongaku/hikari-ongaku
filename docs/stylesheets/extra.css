@@ -4,3 +4,11 @@
     --md-primary-fg-color--dark:  var(--md-primary-fg-color);
     --md-accent-fg-color:           #66ff61;
   }
+
+  :root > * {
+    --md-code-hl-string-color: #00ca00;
+    --md-code-hl-name-color: #FFB123;
+    --md-code-hl-variable-color: #FFFF00;
+    --md-code-hl-comment-color: white;
+    --md-code-hl-variable-color: blue;
+  }

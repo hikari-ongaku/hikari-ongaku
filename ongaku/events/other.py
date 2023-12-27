@@ -35,12 +35,12 @@ class StatisticsEvent(abc.Statistics, abc.OngakuEvent):
         self.players = payload["players"]
         self.playing_players = payload["playingPlayers"]
         self.uptime = payload["uptime"]
-        self.memory = abc.Memory.as_payload(payload["memory"])
-        self.cpu = abc.Cpu.as_payload(payload["cpu"])
+        self.memory = abc.StatsMemory.as_payload(payload["memory"])
+        self.cpu = abc.StatsCpu.as_payload(payload["cpu"])
 
         self.frame_statistics = None
         if payload.get("frameStats", None) != None:
-            self.frame_statistics = abc.FrameStatistics.as_payload(
+            self.frame_statistics = abc.StatsFrameStatistics.as_payload(
                 payload["frameStats"]
             )
 

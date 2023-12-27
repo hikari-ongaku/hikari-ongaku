@@ -5,7 +5,6 @@ import typing as t
 
 import hikari
 import aiohttp
-import logging
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -24,7 +23,7 @@ class _InternalSession:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.ResponseException(response.status)
+                    raise errors.LavalinkException(response.status)
 
                 try:
                     session_model = abc.Session.as_payload(await response.json())
@@ -49,7 +48,7 @@ class _InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.ResponseException(response.status)
+                    raise errors.LavalinkException(response.status)
 
                 players = await response.json()
 
@@ -78,7 +77,7 @@ class _InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.ResponseException(response.status)
+                    raise errors.LavalinkException(response.status)
 
                 try:
                     player_model = abc.Player.as_payload(await response.json())
@@ -177,8 +176,8 @@ class _InternalPlayer:
                     params=params,
                     json=patch_data,
                 ) as response:
-                    # if response.status >= 400:
-                    #    raise error.ResponseException(response.status)
+                    if response.status >= 400:
+                        raise errors.LavalinkException(response.status)
 
                     try:
                         player_model = abc.Player.as_payload(await response.json())
@@ -203,7 +202,7 @@ class _InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.ResponseException(response.status)
+                    raise errors.LavalinkException(response.status)
 
 
 class _InternalTrack:
@@ -222,10 +221,10 @@ class _InternalTrack:
                 params = {"identifier": f'ytsearch:"{query}"'}
             elif platform == enums.PlatformType.YOUTUBE_MUSIC:
                 params = {"identifier": f'ytmsearch:"{query}"'}
-            elif platform == enums.PlatformType.SPOTIFY:
+            elif platform == enums.PlatformType.SOUNDCLOUD:
                 params = {"identifier": f'scsearch:"{query}"'}
             else:
-                params = {"identifier": f'scsearch:"{query}"'}
+                params = {"identifier": f'ytsearch:"{query}"'}
 
             async with session.get(
                 self._ongaku.internal.uri + "/loadtracks",
@@ -233,7 +232,7 @@ class _InternalTrack:
                 params=params,
             ) as response:
                 if response.status >= 400:
-                    raise errors.ResponseException(response.status)
+                    raise errors.LavalinkException(f"status: {response.status} message: {response.text()}")
 
                 data = await response.json()
 
@@ -246,8 +245,7 @@ class _InternalTrack:
                         try:
                             track = abc.Track.as_payload(t)
                         except Exception as e:
-                            logging.error("Failed to build track: " + str(e))
-                            continue
+                            raise e
 
                         tracks.append(track)
 
@@ -283,7 +281,9 @@ class Internal:
 
 class RestApi:
     """
-    The base rest class for all rest related things.
+    Base rest class
+
+    The base rest class, for all rest related actions.
     """
 
     def __init__(self, ongaku: Ongaku) -> None:
@@ -297,10 +297,21 @@ class RestApi:
 
     async def fetch_info(self) -> abc.Info:
         """
+        Fetch info
+
         Fetch the information about the Lavalink server.
 
-        ----
-        Returns: Returns a
+        Returns
+        -------
+        abc.Info
+            Returns an information object.
+
+        Raises
+        ------
+        LavalinkException
+            Response was a 400 or 500 error.
+        BuildException
+            Failure to build `abc.Info`
         """
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -308,7 +319,7 @@ class RestApi:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.ResponseException(response.status)
+                    raise errors.LavalinkException(f"status: {response.status} message: {response.text()}")
 
                 try:
                     info_resp = abc.Info.as_payload(await response.json())
@@ -320,4 +331,30 @@ class RestApi:
     async def search(
         self, platform: enums.PlatformType, query: str
     ) -> t.Optional[list[abc.Track]]:
-        return await self.internal.track.load_track(platform, query)
+        """
+        Search for a track
+
+        Search for tracks.
+
+        Parameters
+        ----------
+        platform : enums.PlatformType
+            The platform you wish to choose.
+        query : str
+            The query you wish to provide.
+        
+        !!! INFO
+            The following supported platforms are: *Youtube*, *Youtube Music* and *Sound cloud*.
+
+        Raises
+        ------
+        LavalinkException
+            Response was a 400 or 500 error.
+        BuildException
+            Failure to build one or more `abc.Track`
+        
+        """
+        try:
+            return await self.internal.track.load_track(platform, query)
+        except Exception as e:
+            raise e

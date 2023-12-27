@@ -26,7 +26,6 @@ extra_css:
 
 plugins:
   - search
-  - social
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -89,7 +88,7 @@ nav:
       - Player: api_reference/abc/player.md
       - Session: api_reference/abc/session.md
       - Track: api_reference/abc/track.md
-    - errors: api_reference/errors.md
+    - Errors: api_reference/errors.md
 
 watch:
   - docs

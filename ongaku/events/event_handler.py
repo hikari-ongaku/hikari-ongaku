@@ -43,10 +43,10 @@ class EventHandler:
         try:
             session_id = payload["sessionId"]
         except:
-            raise errors.InvalidSessionId()
+            raise errors.SessionNotStartedException("Missing session id.")
 
         if session_id == None:
-            raise errors.InvalidSessionId()
+            raise errors.SessionNotStartedException("Missing session id.")
 
         self._ongaku.internal.set_session_id(session_id)
 

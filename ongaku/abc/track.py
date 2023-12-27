@@ -1,4 +1,3 @@
-import abc
 import typing as t
 import dataclasses
 
@@ -6,7 +5,34 @@ import dataclasses
 @dataclasses.dataclass
 class TrackInfo:
     """
-    Information about related track.
+    Track information
+
+    All of the track information.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#track-info).
+
+    Parameters
+    ----------
+    identifier : str
+        The track identifier
+    is_seekable : bool
+        Whether the track is seekable
+    author : str
+        The track author
+    length : int
+        The track length in milliseconds
+    is_stream : bool
+        Whether the track is a stream
+    title : str
+        The track position in milliseconds
+    source_name : str
+        The track source name
+    uri : str | None
+        The track uri
+    artwork_url : str | None
+        The track artwork url
+    isrc : str | None
+        The track ISRC
     """
 
     identifier: str
@@ -16,13 +42,29 @@ class TrackInfo:
     is_stream: bool
     position: int
     title: str
-    uri: t.Optional[str]
-    artwork_url: t.Optional[str]
-    isrc: t.Optional[str]
     source_name: str
+    uri: t.Optional[str] = None
+    artwork_url: t.Optional[str] = None
+    isrc: t.Optional[str] = None
+    
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Track info parser
+
+        parse a payload of information, to receive a `TrackInfo` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        TrackInfo
+            The Track Info you parsed.
+        """
         identifier = payload["identifier"]
         is_seekable = payload["isSeekable"]
         author = payload["author"]
@@ -52,10 +94,10 @@ class TrackInfo:
             is_stream,
             position,
             title,
+            source_name,
             uri,
             artwork_url,
             isrc,
-            source_name,
         )
 
     @property
@@ -64,9 +106,24 @@ class TrackInfo:
 
 
 @dataclasses.dataclass
-class Track(abc.ABC):
+class Track:
     """
-    A track Object.
+    Track
+
+    The base track object.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#track).
+
+    Parameters
+    ----------
+    encoded : str
+        The base64 encoded track data
+    info : TrackInfo
+        Information about the track
+    plugin_info : dict[Any, Any]
+        Additional track info provided by plugins
+    user_data : dict[Any, Any]
+        Additional track data.
     """
 
     encoded: str
@@ -76,6 +133,21 @@ class Track(abc.ABC):
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Track parser
+
+        parse a payload of information, to receive a `Track` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        Track
+            The Track you parsed.
+        """
         encoded = payload["encoded"]
         info = TrackInfo.as_payload(payload["info"])
         plugin_info = payload["pluginInfo"]

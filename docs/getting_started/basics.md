@@ -37,6 +37,14 @@ You now must make the ongaku class, and attach it to hikari.
 ```python
 import ongaku
 
+1
+
+int
+
+# comment
+
+def function()
+
 lavalink = ongaku.Ongaku(
     bot,
     password="youshallnotpass"
