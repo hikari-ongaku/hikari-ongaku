@@ -26,6 +26,7 @@ extra_css:
 
 plugins:
   - search
+  - social
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -42,6 +43,7 @@ plugins:
             show_submodules: false
             annotations_path: source
             docstring_section_style: spacy
+
 
 markdown_extensions:
   - toc:
