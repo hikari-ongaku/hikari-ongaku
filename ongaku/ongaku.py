@@ -1,5 +1,5 @@
 from . import errors, player, enums, events, abc
-from . import rest
+from .rest import RestApi
 import typing as t
 import aiohttp
 import hikari
@@ -135,7 +135,7 @@ class Ongaku:
         if password:
             self._internal.add_headers({"Authorization": password})
 
-        self._rest = rest.RestApi(self)
+        self._rest = RestApi(self)
 
         self._event_handler = events.EventHandler(self)
 
@@ -157,7 +157,7 @@ class Ongaku:
         return list(self._players.values())
 
     @property
-    def rest(self) -> rest.RestApi:
+    def rest(self) -> RestApi:
         """
         Rest
 
