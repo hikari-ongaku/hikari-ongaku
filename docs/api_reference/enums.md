@@ -1,0 +1,3 @@
+# Enums
+
+::: ongaku.enums

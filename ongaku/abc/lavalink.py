@@ -1,4 +1,5 @@
 import dataclasses
+from .. import enums
 import typing as t
 
 
@@ -61,7 +62,7 @@ class InfoVersion:
             build = payload["build"]
         except:
             build = None
-        
+
         return cls(semver, major, minor, patch, pre_release, build)
 
     @property
@@ -245,11 +246,12 @@ class Info:
 
 
 @dataclasses.dataclass
-class Error:
+class RestError:
     """
-    All of the Error information.
+    All of the Rest Error information.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#version-object).
+    This is the error that is formed, when a call to a rest method fails.
+    Find out more [here](https://lavalink.dev/api/rest.html#error-responses).
 
     Parameters
     ----------
@@ -277,9 +279,9 @@ class Error:
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
         """
-        Error parser
+        Rest Error parser
 
-        parse a payload of information, to receive a `Error` dataclass.
+        parse a payload of information, to receive a `RestError` dataclass.
 
         Parameters
         ----------
@@ -306,3 +308,47 @@ class Error:
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
+@dataclasses.dataclass
+class ExceptionError:
+    """
+    All of the Exception Error information.
+
+    Find out more [here](https://lavalink.dev/api/websocket.html#exception-object).
+
+    Parameters
+    ----------
+    message : str
+        The message of the exception
+    severity : enums.LavalinkSeverityType
+        The severity of the exception
+    cause : str
+        The cause of the exception
+
+    """
+    message: str
+    severity: enums.LavalinkSeverityType
+    cause: str
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Exception Error parser
+
+        parse a payload of information, to receive a `ExceptionError` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        ExceptionError
+            The Error you parsed.
+        """
+        message = payload["message"]
+        severity = payload["severity"]
+        cause = payload["cause"]
+
+        return cls(message, severity, cause)

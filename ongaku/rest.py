@@ -96,7 +96,7 @@ class _InternalPlayer:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        voice: hikari.UndefinedOr[abc.Voice] = hikari.UNDEFINED,
+        voice: hikari.UndefinedOr[abc.PlayerVoice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> abc.Player:
         """
@@ -213,18 +213,35 @@ class _InternalTrack:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
+    async def _url_handler(self, possible_url: str) -> t.Optional[str]: 
+        #TODO: Handle all different url types, spotify, youtube, youtube music, and soundcloud.
+        #TODO: Probably good to convert the query string into arguments, so they are handled correctly.
+        if possible_url.count("youtube.com") > 0:
+            if possible_url.count("list=") > 0:
+                return possible_url.split("list=")[1]
+            
+            elif possible_url.count("v=") > 0:
+                return possible_url.split("v=")[1]
+
+
+
     async def load_track(
         self, platform: enums.PlatformType, query: str
-    ) -> t.Optional[list[abc.Track]]:
+    ) -> abc.SearchResult | abc.Playlist | abc.Track | None:
         async with aiohttp.ClientSession() as session:
-            if platform == enums.PlatformType.YOUTUBE:
-                params = {"identifier": f'ytsearch:"{query}"'}
-            elif platform == enums.PlatformType.YOUTUBE_MUSIC:
-                params = {"identifier": f'ytmsearch:"{query}"'}
-            elif platform == enums.PlatformType.SOUNDCLOUD:
-                params = {"identifier": f'scsearch:"{query}"'}
+            query_sanitize = await self._url_handler(query)
+            
+            if query_sanitize != None:
+                params = {"identifier": query_sanitize}
             else:
-                params = {"identifier": f'ytsearch:"{query}"'}
+                if platform == enums.PlatformType.YOUTUBE:
+                    params = {"identifier": f'ytsearch:{query}'}
+                elif platform == enums.PlatformType.YOUTUBE_MUSIC:
+                    params = {"identifier": f'ytmsearch:{query}'}
+                elif platform == enums.PlatformType.SOUNDCLOUD:
+                    params = {"identifier": f'scsearch:{query}'}
+                else:
+                    params = {"identifier": f'ytsearch:{query}'}
 
             async with session.get(
                 self._ongaku.internal.uri + "/loadtracks",
@@ -232,31 +249,47 @@ class _InternalTrack:
                 params=params,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(f"status: {response.status} message: {response.text()}")
+                    raise errors.LavalinkException(
+                        f"status: {response.status} message: {response.text()}"
+                    )
 
                 data = await response.json()
 
                 load_type = data["loadType"]
 
+                if load_type == "empty":
+                    return
+                
+                if load_type == "error":
+                    raise errors.LavalinkException(abc.ExceptionError.as_payload(data["data"]))
+
                 if load_type == "search":
-                    tracks: list[abc.Track] = []
+                    try:
+                        search_result = abc.SearchResult.as_payload(data["data"])
+                    except Exception as e:
+                        raise e
 
-                    for t in data["data"]:
-                        try:
-                            track = abc.Track.as_payload(t)
-                        except Exception as e:
-                            raise e
+                    return search_result
+                    
+                if load_type == "track":
+                    try:
+                        track = abc.Track.as_payload(data["data"])
+                    except Exception as e:
+                        raise e
+                    
+                    return track
+                
+                if load_type == "playlist":
+                    try:
+                        playlist = abc.Playlist.as_payload(data["data"])
+                    except Exception as e:
+                        raise e
 
-                        tracks.append(track)
-
-                    if len(tracks) <= 0:
-                        return
-
-                    else:
-                        return tracks
+                    return playlist
 
 
-class Internal:
+
+class _Internal:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
@@ -289,10 +322,10 @@ class RestApi:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
-        self._internal = Internal(self._ongaku)
+        self._internal = _Internal(self._ongaku)
 
     @property
-    def internal(self) -> Internal:
+    def internal(self) -> _Internal:
         return self._internal
 
     async def fetch_info(self) -> abc.Info:
@@ -319,7 +352,9 @@ class RestApi:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(f"status: {response.status} message: {response.text()}")
+                    raise errors.LavalinkException(
+                        f"status: {response.status} message: {response.text()}"
+                    )
 
                 try:
                     info_resp = abc.Info.as_payload(await response.json())
@@ -330,7 +365,7 @@ class RestApi:
 
     async def search(
         self, platform: enums.PlatformType, query: str
-    ) -> t.Optional[list[abc.Track]]:
+    ) -> abc.SearchResult | abc.Playlist | abc.Track | None:
         """
         Search for a track
 
@@ -342,7 +377,7 @@ class RestApi:
             The platform you wish to choose.
         query : str
             The query you wish to provide.
-        
+
         !!! INFO
             The following supported platforms are: *Youtube*, *Youtube Music* and *Sound cloud*.
 
@@ -352,7 +387,7 @@ class RestApi:
             Response was a 400 or 500 error.
         BuildException
             Failure to build one or more `abc.Track`
-        
+
         """
         try:
             return await self.internal.track.load_track(platform, query)

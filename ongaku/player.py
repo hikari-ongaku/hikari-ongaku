@@ -155,7 +155,7 @@ class Player(VoiceConnection):
         ----------
         track: t.Optional[abc.Track]
             the track you wish to play. If empty, it will pull from the queue.
-        
+
         Raises
         ------
         SessionNotStartedException
@@ -163,14 +163,13 @@ class Player(VoiceConnection):
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
         """
-        voice = abc.Voice(
+        voice = abc.PlayerVoice(
             self._token, self._endpoint[6:], self._session_id
         )  # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
 
         if self._ongaku.internal.session_id == None:
             raise errors.SessionNotStartedException()
 
-                
         if len(self.queue) > 0 and track == None:
             raise errors.PlayerQueueException("Empty Queue. Cannot play nothing.")
 
@@ -197,7 +196,7 @@ class Player(VoiceConnection):
         ----------
         value : hikari.UndefinedOr[bool]
             How you wish to pause the bot.
-        
+
         !!! INFO
             `True` will force pause the bot, `False` will force unpause the bot, and `undefined` will toggle.
 
@@ -219,7 +218,7 @@ class Player(VoiceConnection):
             self.guild_id, self._ongaku.internal.session_id, paused=self.is_paused
         )
 
-    async def add(self, tracks: list[abc.Track]):
+    async def add(self, tracks: t.Sequence[abc.Track]) -> None:
         """
         Add tracks
 
@@ -245,8 +244,16 @@ class Player(VoiceConnection):
 
         Raises
         ------
-
+        PlayerSettingException
+            The queue is empty.
+        SessionNotStartedException
+            No session id provided, or the session id is null.
         """
+        if len(self.queue) == 0:
+            raise errors.PlayerSettingException("Queue is empty.")
+
+        if self._ongaku.internal.session_id == None:
+            raise errors.SessionNotStartedException()
 
         if isinstance(value, abc.Track):
             index = self._queue.index(value)
@@ -257,7 +264,15 @@ class Player(VoiceConnection):
         try:
             self._queue.pop(index)
         except Exception as e:
-            raise e
+            raise errors.PlayerException(f"Failed to remove a song: {e}")
+
+        if index == 0:
+            if len(self.queue) == 0:
+                await self._ongaku.rest.internal.player.update_player(
+                    self.guild_id, self._ongaku.internal.session_id, track=None
+                )
+            else:
+                await self.play()
 
     async def skip(self, amount: int = 1) -> None:
         """
@@ -283,7 +298,9 @@ class Player(VoiceConnection):
             raise errors.SessionNotStartedException()
 
         if amount <= 0:
-            raise errors.PlayerSettingException(f"Skip amount cannot be 0 or negative. Value: {amount}")
+            raise errors.PlayerSettingException(
+                f"Skip amount cannot be 0 or negative. Value: {amount}"
+            )
         if len(self.queue) == 0:
             raise errors.PlayerQueueException("No tracks in queue.")
 
@@ -308,8 +325,6 @@ class Player(VoiceConnection):
             no_replace=False,
         )
 
-    # TODO: The following things between these to do's, do not work yet.
-
     async def volume(self, volume: int) -> None:
         """
         change the volume
@@ -323,14 +338,30 @@ class Player(VoiceConnection):
 
         Raises
         ------
+        SessionNotStartedException
+            The session has not been yet started.
         PlayerSettingException
             Raised if the value is above, or below 0, or 1000.
         """
+
+        if self._ongaku.internal.session_id == None:
+            raise errors.SessionNotStartedException()
+
         if volume < 0:
-            raise errors.PlayerSettingException(f"Volume cannot be below zero. Volume: {volume}")
+            raise errors.PlayerSettingException(
+                f"Volume cannot be below zero. Volume: {volume}"
+            )
         if volume > 1000:
-            raise errors.PlayerSettingException(f"Volume cannot be above 1000. Volume: {volume}")
-        pass
+            raise errors.PlayerSettingException(
+                f"Volume cannot be above 1000. Volume: {volume}"
+            )
+
+        await self._ongaku.rest.internal.player.update_player(
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            volume=volume,
+            no_replace=False,
+        )
 
     async def clear(self) -> None:
         """
@@ -368,14 +399,24 @@ class Player(VoiceConnection):
 
         Raises
         ------
-        SessionNotStarted
+        SessionNotStartedException
             The session is not yet started.
         PlayerSettingException
             When the track position selected is not a valid position.
+        PlayerSettingException
+            The queue is empty.
         """
-        
+        if self._ongaku.internal.session_id == None:
+            raise errors.SessionNotStartedException()
 
-    # TODO: The following things between these to do's, do not work yet.
+        if self.queue[0].info.length < value:
+            raise errors.PlayerSettingException(
+                "Length is longer than currently playing song!"
+            )
+
+        await self._ongaku.rest.internal.player.update_player(
+            self.guild_id, self._ongaku.internal.session_id, position=value
+        )
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
@@ -402,7 +443,13 @@ class Player(VoiceConnection):
             raise errors.SessionNotStartedException()
 
         if int(event.guild_id) == int(self.guild_id):
-            await self.remove(0)
+            try:
+                await self.remove(0)
+            except:
+                await self._bot.dispatch(
+                    other.PlayerQueueEmptyEvent(self._bot, self.guild_id)
+                )
+                return
 
             if len(self.queue) == 0:
                 await self._bot.dispatch(

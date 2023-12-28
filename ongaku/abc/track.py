@@ -1,7 +1,6 @@
 import typing as t
 import dataclasses
 
-
 @dataclasses.dataclass
 class TrackInfo:
     """
@@ -46,7 +45,6 @@ class TrackInfo:
     uri: t.Optional[str] = None
     artwork_url: t.Optional[str] = None
     isrc: t.Optional[str] = None
-    
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -154,6 +152,148 @@ class Track:
         user_data = payload["userData"]
 
         return cls(encoded, info, plugin_info, user_data)
+
+    @property
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
+
+@dataclasses.dataclass
+class PlaylistInfo:
+    """
+    Playlist info
+
+    The playlist info object.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#track-info).
+
+    Parameters
+    ----------
+    name : str
+        The name of the playlist
+    selected_track : int
+        The selected track of the playlist (`-1` if no track is selected)
+    """
+    
+    name: str
+    selected_track: int
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Playlist Info parser
+
+        parse a payload of information, to receive a `PlaylistInfo` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        PlaylistInfo
+            The Playlist Info you parsed.
+        """
+        name = payload["name"]
+        selected_track = payload["selectedTrack"]
+
+        return cls(name, selected_track)
+
+    @property
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
+
+@dataclasses.dataclass
+class Playlist:
+    """
+    Playlist
+
+    The playlist object.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#track-info).
+
+    Parameters
+    ----------
+    info : PlaylistInfo
+        The info of the playlist
+    plugin_info : pluginInfo
+        Addition playlist info provided by plugins
+    tracks : tuple[Track]
+    """
+
+    info: PlaylistInfo
+    plugin_info: dict[t.Any, t.Any]
+    tracks: tuple[Track, ...]
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Playlist Info parser
+
+        parse a payload of information, to receive a `PlaylistInfo` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        PlaylistInfo
+            The Playlist Info you parsed.
+        """
+        info = payload["info"]
+        plugin_info = payload["pluginInfo"]
+        
+        tracks: list[Track] | tuple[Track, ...] = []
+        for track in payload["tracks"]:
+            try: 
+                new_track = Track.as_payload(track)
+            except Exception as e:
+                raise e
+            
+            tracks.append(new_track)
+
+
+        return cls(info, plugin_info, tuple(tracks))
+
+    @property
+    def raw(self) -> dict[str, t.Any]:
+        return dataclasses.asdict(self)
+
+@dataclasses.dataclass
+class SearchResult:
+    tracks: tuple[Track, ...]
+
+    @classmethod
+    def as_payload(cls, payload: dict[t.Any, t.Any]):
+        """
+        Playlist Info parser
+
+        parse a payload of information, to receive a `PlaylistInfo` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        PlaylistInfo
+            The Playlist Info you parsed.
+        """
+
+        tracks: list[Track] | tuple[Track, ...] = []
+        for track in payload["tracks"]:
+            try: 
+                new_track = Track.as_payload(track)
+            except Exception as e:
+                raise e
+            
+            tracks.append(new_track)
+
+
+        return cls(tuple(tracks))
 
     @property
     def raw(self) -> dict[str, t.Any]:

@@ -16,6 +16,7 @@ class Ready(abc.ABC):
     """
     Gotta do the docs for me
     """
+
     def __init__(self, app: hikari.RESTAware, resumed: bool, session_id: str) -> None:
         self._app = app
         self._resumed = resumed
@@ -208,7 +209,7 @@ class Statistics(abc.ABC):
     cpu : StatsCpu | None
         The cpu stats of the node
     frame_statistics : StatsFrameStatistics | None
-        The frame stats of the node. 
+        The frame stats of the node.
     """
 
     players: int
@@ -217,7 +218,6 @@ class Statistics(abc.ABC):
     memory: StatsMemory
     cpu: StatsCpu
     frame_statistics: t.Optional[StatsFrameStatistics]
-
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -229,7 +229,9 @@ class Statistics(abc.ABC):
         frame_statistics = None
         if payload.get("frameStats", None) != None:
             try:
-                frame_statistics = StatsFrameStatistics.as_payload(payload["frameStats"])
+                frame_statistics = StatsFrameStatistics.as_payload(
+                    payload["frameStats"]
+                )
             except:
                 frame_statistics = None
 
@@ -244,6 +246,7 @@ class WebsocketClosed(abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     @abc.abstractmethod
     def app(self) -> hikari.RESTAware:
@@ -277,6 +280,7 @@ class TrackBase(abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     @abc.abstractmethod
     def app(self) -> hikari.RESTAware:
@@ -303,6 +307,7 @@ class TrackEnd(TrackBase, abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     @abc.abstractmethod
     def reason(self) -> enums.TrackEndReasonType:
@@ -313,12 +318,13 @@ class TrackExceptionReason(abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     def message(self) -> str:
         ...
 
     @property
-    def severity(self) -> enums.TrackSeverityType:
+    def severity(self) -> enums.LavalinkSeverityType:
         ...
 
     @property
@@ -330,6 +336,7 @@ class TrackException(TrackBase, abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     @abc.abstractmethod
     def reason(self) -> TrackExceptionReason:
@@ -340,6 +347,7 @@ class TrackStuck(TrackBase, abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     @abc.abstractmethod
     def threshold_ms(self) -> int:
@@ -353,6 +361,7 @@ class PlayerBase(abc.ABC):
     """
     Gotta do the docs for me
     """
+
     @property
     @abc.abstractmethod
     def app(self) -> hikari.RESTAware:

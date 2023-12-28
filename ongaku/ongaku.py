@@ -86,9 +86,9 @@ class _OngakuInternal:
         )
         return self._remaining_retries
 
-    async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[abc.Error]:
+    async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[abc.RestError]:
         try:
-            error = abc.Error.as_payload(payload)
+            error = abc.RestError.as_payload(payload)
         except:
             return
 
@@ -140,9 +140,10 @@ class Ongaku:
         self._event_handler = events.EventHandler(self)
 
         bot.subscribe(hikari.StartedEvent, self._handle_connect)
+        bot.subscribe(events.WebsocketClosedEvent, self._handle_disconnect)
 
     @property
-    def players(self) -> list[player.Player]:
+    def players(self) -> t.Sequence[player.Player]:
         """
         players
 
@@ -242,6 +243,10 @@ class Ongaku:
 
         if isinstance(connection, player.Player):
             await self.bot.voice.disconnect(guild_id)
+            try:
+                self._players.pop(guild_id)
+            except:
+                pass
 
         new_player = await self.bot.voice.connect_to(
             guild_id, channel_id, player.Player, bot=self.bot, ongaku=self
@@ -342,4 +347,16 @@ class Ongaku:
         else:
             _logger.error(
                 f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}"
+            )
+
+    async def _handle_disconnect(self, event: events.WebsocketClosedEvent):
+        player = self._players[hikari.Snowflake(event.guild_id)]
+
+        if event.code == 4014:
+            await player.disconnect()
+
+        if event.code == 4006:
+            await player.disconnect()
+            await self.create_player(
+                player.guild_id, player.channel_id
             )
