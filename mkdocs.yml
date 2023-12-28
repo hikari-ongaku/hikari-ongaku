@@ -76,7 +76,8 @@ nav:
     - api_reference/index.md
     - Ongaku: api_reference/ongaku.md
     - Player: api_reference/player.md
-    - Rest: api_reference/rest.md
+    - Enums: api_reference/enums.md
+    - Errors: api_reference/errors.md
     - Events:
       - Track: api_reference/events/track.md
       - Other: api_reference/events/other.md
@@ -86,8 +87,7 @@ nav:
       - Player: api_reference/abc/player.md
       - Session: api_reference/abc/session.md
       - Track: api_reference/abc/track.md
-    - Enums: api_reference/enums.md
-    - Errors: api_reference/errors.md
+
 
 watch:
   - docs
