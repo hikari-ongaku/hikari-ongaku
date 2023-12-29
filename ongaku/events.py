@@ -4,7 +4,15 @@ from __future__ import annotations
 import typing as t
 import logging
 from . import errors
-from .abc import ReadyEvent, StatisticsEvent, TrackStartEvent, TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebsocketClosedEvent
+from .abc import (
+    ReadyEvent,
+    StatisticsEvent,
+    TrackStartEvent,
+    TrackEndEvent,
+    TrackExceptionEvent,
+    TrackStuckEvent,
+    WebsocketClosedEvent,
+)
 
 if t.TYPE_CHECKING:
     from ..ongaku import Ongaku

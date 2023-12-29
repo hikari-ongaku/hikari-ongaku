@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from . import abc, enums, errors
+from .enums import PlatformType
+from .abc.session import Session
+from .abc.player import Player, PlayerVoice
+from .abc.track import Track, Playlist, SearchResult
+from .abc.lavalink import Info, ExceptionError
+from .errors import LavalinkException, BuildException
 import typing as t
 
 import hikari
@@ -16,19 +21,19 @@ class _InternalSession:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
-    async def update_session(self, session_id: str) -> abc.Session:
+    async def update_session(self, session_id: str) -> Session:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self._ongaku.internal.uri + "/sessions/" + session_id,
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(response.status)
+                    raise LavalinkException(response.status)
 
                 try:
-                    session_model = abc.Session.as_payload(await response.json())
+                    session_model = Session.as_payload(await response.json())
                 except Exception as e:
-                    raise errors.BuildException(e)
+                    raise BuildException(e)
 
                 return session_model
 
@@ -41,24 +46,24 @@ class _InternalPlayer:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
-    async def fetch_players(self, session_id: str) -> t.Optional[list[abc.Player]]:
+    async def fetch_players(self, session_id: str) -> t.Optional[list[Player]]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self._ongaku.internal.uri + "/sessions/" + session_id + "/players",
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(response.status)
+                    raise LavalinkException(response.status)
 
                 players = await response.json()
 
-                player_list: list[abc.Player] = []
+                player_list: list[Player] = []
 
                 for player in players:
                     try:
-                        player_model = abc.Player.as_payload(player)
+                        player_model = Player.as_payload(player)
                     except Exception as e:
-                        raise errors.BuildException(e)
+                        raise BuildException(e)
 
                     player_list.append(player_model)
 
@@ -66,7 +71,7 @@ class _InternalPlayer:
 
     async def fetch_player(
         self, session_id: str, guild_id: hikari.Snowflake
-    ) -> t.Optional[abc.Player]:
+    ) -> t.Optional[Player]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self._ongaku.internal.uri
@@ -77,12 +82,12 @@ class _InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(response.status)
+                    raise LavalinkException(response.status)
 
                 try:
-                    player_model = abc.Player.as_payload(await response.json())
+                    player_model = Player.as_payload(await response.json())
                 except Exception as e:
-                    raise errors.BuildException(e)
+                    raise BuildException(e)
 
         return player_model
 
@@ -91,14 +96,14 @@ class _InternalPlayer:
         guild_id: hikari.Snowflake,
         session_id: str,
         *,
-        track: hikari.UndefinedNoneOr[abc.Track] = hikari.UNDEFINED,
+        track: hikari.UndefinedNoneOr[Track] = hikari.UNDEFINED,
         position: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        voice: hikari.UndefinedOr[abc.PlayerVoice] = hikari.UNDEFINED,
+        voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
         no_replace: bool = True,
-    ) -> abc.Player:
+    ) -> Player:
         """
         Update a player
 
@@ -177,12 +182,12 @@ class _InternalPlayer:
                     json=patch_data,
                 ) as response:
                     if response.status >= 400:
-                        raise errors.LavalinkException(response.status)
+                        raise LavalinkException(response.status)
 
                     try:
-                        player_model = abc.Player.as_payload(await response.json())
+                        player_model = Player.as_payload(await response.json())
                     except Exception as e:
-                        raise errors.BuildException(e)
+                        raise BuildException(e)
             except Exception as e:
                 raise e
 
@@ -202,7 +207,7 @@ class _InternalPlayer:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(response.status)
+                    raise LavalinkException(response.status)
 
 
 class _InternalTrack:
@@ -224,19 +229,19 @@ class _InternalTrack:
                 return possible_url.split("v=")[1]
 
     async def load_track(
-        self, platform: enums.PlatformType, query: str
-    ) -> abc.SearchResult | abc.Playlist | abc.Track | None:
+        self, platform: PlatformType, query: str
+    ) -> SearchResult | Playlist | Track | None:
         async with aiohttp.ClientSession() as session:
             query_sanitize = await self._url_handler(query)
 
             if query_sanitize != None:
                 params = {"identifier": query_sanitize}
             else:
-                if platform == enums.PlatformType.YOUTUBE:
+                if platform == PlatformType.YOUTUBE:
                     params = {"identifier": f"ytsearch:{query}"}
-                elif platform == enums.PlatformType.YOUTUBE_MUSIC:
+                elif platform == PlatformType.YOUTUBE_MUSIC:
                     params = {"identifier": f"ytmsearch:{query}"}
-                elif platform == enums.PlatformType.SOUNDCLOUD:
+                elif platform == PlatformType.SOUNDCLOUD:
                     params = {"identifier": f"scsearch:{query}"}
                 else:
                     params = {"identifier": f"ytsearch:{query}"}
@@ -247,7 +252,7 @@ class _InternalTrack:
                 params=params,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(
+                    raise LavalinkException(
                         f"status: {response.status} message: {response.text()}"
                     )
 
@@ -259,13 +264,11 @@ class _InternalTrack:
                     return
 
                 if load_type == "error":
-                    raise errors.LavalinkException(
-                        abc.ExceptionError.as_payload(data["data"])
-                    )
+                    raise LavalinkException(ExceptionError.as_payload(data["data"]))
 
                 if load_type == "search":
                     try:
-                        search_result = abc.SearchResult.as_payload(data["data"])
+                        search_result = SearchResult.as_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -273,7 +276,7 @@ class _InternalTrack:
 
                 if load_type == "track":
                     try:
-                        track = abc.Track.as_payload(data["data"])
+                        track = Track.as_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -281,7 +284,7 @@ class _InternalTrack:
 
                 if load_type == "playlist":
                     try:
-                        playlist = abc.Playlist.as_payload(data["data"])
+                        playlist = Playlist.as_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -327,7 +330,7 @@ class RestApi:
     def internal(self) -> _Internal:
         return self._internal
 
-    async def fetch_info(self) -> abc.Info:
+    async def fetch_info(self) -> Info:
         """
         Fetch info
 
@@ -351,20 +354,20 @@ class RestApi:
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
-                    raise errors.LavalinkException(
+                    raise LavalinkException(
                         f"status: {response.status} message: {response.text()}"
                     )
 
                 try:
-                    info_resp = abc.Info.as_payload(await response.json())
+                    info_resp = Info.as_payload(await response.json())
                 except Exception as e:
-                    raise errors.BuildException(e)
+                    raise BuildException(e)
 
         return info_resp
 
     async def search(
-        self, platform: enums.PlatformType, query: str
-    ) -> abc.SearchResult | abc.Playlist | abc.Track | None:
+        self, platform: PlatformType, query: str
+    ) -> SearchResult | Playlist | Track | None:
         """
         Search for a track
 

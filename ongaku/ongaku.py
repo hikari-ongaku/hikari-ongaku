@@ -1,5 +1,9 @@
-from . import errors, player, enums, events, abc
+from .enums import ConnectionType, VersionType
+from .events import EventHandler, WebsocketClosedEvent
+from .player import Player
 from .rest import RestApi
+from .abc.lavalink import RestError
+from .errors import PlayerMissingException
 import typing as t
 import aiohttp
 import hikari
@@ -19,7 +23,7 @@ class _OngakuInternal:
         self._uri: str = uri
         self._total_retries = max_retries
         self._remaining_retries = max_retries
-        self._connected = enums.ConnectionStatus.LOADING
+        self._connected = ConnectionType.LOADING
         self._failure_reason = None
 
     @property
@@ -43,7 +47,7 @@ class _OngakuInternal:
         return self._remaining_retries
 
     @property
-    def connected(self) -> enums.ConnectionStatus:
+    def connected(self) -> ConnectionType:
         return self._connected
 
     @property
@@ -51,7 +55,7 @@ class _OngakuInternal:
         return self._failure_reason
 
     def set_connection(
-        self, connected: enums.ConnectionStatus, *, reason: t.Optional[str] = None
+        self, connected: ConnectionType, *, reason: t.Optional[str] = None
     ) -> None:
         self._connected = connected
         if reason != None:
@@ -86,11 +90,9 @@ class _OngakuInternal:
         )
         return self._remaining_retries
 
-    async def check_error(
-        self, payload: dict[t.Any, t.Any]
-    ) -> t.Optional[abc.RestError]:
+    async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[RestError]:
         try:
-            error = abc.RestError.as_payload(payload)
+            error = RestError.as_payload(payload)
         except:
             return
 
@@ -105,7 +107,7 @@ class Ongaku:
         host: str = "localhost",
         port: int = 2333,
         password: str | None = None,
-        version: enums.VersionType = enums.VersionType.V4,
+        version: VersionType = VersionType.V4,
         max_retries: int = 3,
     ) -> None:
         """
@@ -128,7 +130,7 @@ class Ongaku:
         """
         self._bot = bot
 
-        self._players: dict[hikari.Snowflake, player.Player] = {}
+        self._players: dict[hikari.Snowflake, Player] = {}
 
         self._internal = _OngakuInternal(
             f"http://{host}:{port}/{version.value}", max_retries
@@ -139,13 +141,13 @@ class Ongaku:
 
         self._rest = RestApi(self)
 
-        self._event_handler = events.EventHandler(self)
+        self._event_handler = EventHandler(self)
 
         bot.subscribe(hikari.StartedEvent, self._handle_connect)
-        bot.subscribe(events.WebsocketClosedEvent, self._handle_disconnect)
+        bot.subscribe(WebsocketClosedEvent, self._handle_disconnect)
 
     @property
-    def players(self) -> t.Sequence[player.Player]:
+    def players(self) -> t.Sequence[Player]:
         """
         players
 
@@ -186,7 +188,7 @@ class Ongaku:
         return self._bot
 
     @property
-    def connection_status(self) -> enums.ConnectionStatus:
+    def connection_type(self) -> ConnectionType:
         """
         Connected to lavalink.
 
@@ -225,7 +227,7 @@ class Ongaku:
         self,
         guild_id: hikari.Snowflake,
         channel_id: hikari.Snowflake,
-    ) -> player.Player:
+    ) -> Player:
         """
         Creates a new node.
 
@@ -243,7 +245,7 @@ class Ongaku:
 
         connection = self.bot.voice.connections.get(guild_id)
 
-        if isinstance(connection, player.Player):
+        if isinstance(connection, Player):
             await self.bot.voice.disconnect(guild_id)
             try:
                 self._players.pop(guild_id)
@@ -251,23 +253,22 @@ class Ongaku:
                 pass
 
         new_player = await self.bot.voice.connect_to(
-            guild_id, channel_id, player.Player, bot=self.bot, ongaku=self
+            guild_id, channel_id, Player, bot=self.bot, ongaku=self
         )
 
         self._players.update({guild_id: new_player})
         print(self._players)
         return new_player
 
-    async def fetch_player(self, guild_id: hikari.Snowflake) -> player.Player:
+    async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
         fetched_player = self._players.get(guild_id)
 
         if fetched_player == None:
-            raise errors.PlayerMissingException(guild_id)
+            raise PlayerMissingException(guild_id)
 
         return fetched_player
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        print(self._players, guild_id)
         try:
             self._players.pop(guild_id)
         except Exception as e:
@@ -276,8 +277,8 @@ class Ongaku:
 
     async def _handle_connect(self, event: hikari.StartedEvent):
         if (
-            self._internal.connected == enums.ConnectionStatus.CONNECTED
-            or self._internal.connected == enums.ConnectionStatus.FAILURE
+            self._internal.connected == ConnectionType.CONNECTED
+            or self._internal.connected == ConnectionType.FAILURE
         ):
             return
 
@@ -286,7 +287,7 @@ class Ongaku:
         except:
             self._internal.remove_retry(-1)
             self._internal.set_connection(
-                enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found."
+                ConnectionType.FAILURE, reason="Bot ID could not be found."
             )
             _logger.error("Ongaku could not start, due to the bot ID not being found.")
             return
@@ -294,7 +295,7 @@ class Ongaku:
         if bot == None:
             self._internal.remove_retry(-1)
             self._internal.set_connection(
-                enums.ConnectionStatus.FAILURE, reason="Bot ID could not be found."
+                ConnectionType.FAILURE, reason="Bot ID could not be found."
             )
             _logger.error("Ongaku could not start, due to the bot ID not being found.")
             return
@@ -333,17 +334,17 @@ class Ongaku:
                                     #    return
 
                                     self._internal.set_connection(
-                                        enums.ConnectionStatus.CONNECTED
+                                        ConnectionType.CONNECTED
                                     )
                                     await self._event_handler.handle_payload(json_data)
 
                             elif msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
                                 self._internal.set_connection(
-                                    enums.ConnectionStatus.FAILURE, reason=msg.data
+                                    ConnectionType.FAILURE, reason=msg.data
                                 )
                 except Exception as e:
                     self._internal.set_connection(
-                        enums.ConnectionStatus.FAILURE, reason=f"Exception Raised: {e}"
+                        ConnectionType.FAILURE, reason=f"Exception Raised: {e}"
                     )
                     self._internal.remove_retry(1)
         else:
@@ -351,7 +352,7 @@ class Ongaku:
                 f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}"
             )
 
-    async def _handle_disconnect(self, event: events.WebsocketClosedEvent):
+    async def _handle_disconnect(self, event: WebsocketClosedEvent):
         player = self._players[hikari.Snowflake(event.guild_id)]
 
         if event.code == 4014:

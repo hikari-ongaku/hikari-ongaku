@@ -1,7 +1,7 @@
 import enum
 
 
-class LavalinkSeverityType(str, enum.Enum):
+class SeverityType(str, enum.Enum):
     """
     Track error severity type.
 
@@ -64,7 +64,7 @@ class VersionType(enum.Enum):
     """V4 Servers"""
 
 
-class ConnectionStatus(enum.Enum):
+class ConnectionType(enum.Enum):
     """
     The connection status for the bot.
     """
@@ -75,23 +75,3 @@ class ConnectionStatus(enum.Enum):
     """The bot has not yet attempted to connect to the server."""
     CONNECTED = 2
     """The bot has successfully connected to the lavalink server"""
-
-
-class TrackResultType(enum.Enum):
-    """
-    Track result type.
-
-    The track result type for the current search.
-    Find out more [here](https://lavalink.dev/api/rest.html#load-result-type).
-    """
-
-    ERROR = "error"
-    """Loading has failed with an error"""
-    EMPTY = "empty"
-    """There has been no matches for your identifier"""
-    SEARCH = "search"
-    """A search result has been loaded"""
-    TRACK = "track"
-    """	A track has been loaded"""
-    PLAYLIST = "playlist"
-    """A playlist has been loaded"""

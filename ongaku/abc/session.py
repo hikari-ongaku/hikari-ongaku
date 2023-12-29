@@ -1,10 +1,9 @@
-import abc
 import typing as t
 import dataclasses
 
 
 @dataclasses.dataclass
-class Session(abc.ABC):
+class Session:
     """
     Session
 

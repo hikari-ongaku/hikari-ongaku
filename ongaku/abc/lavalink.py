@@ -329,7 +329,7 @@ class ExceptionError:
     """
 
     message: str
-    severity: enums.LavalinkSeverityType
+    severity: enums.SeverityType
     cause: str
 
     @classmethod

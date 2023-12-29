@@ -1,4 +1,3 @@
-import abc
 import hikari
 from .track import Track
 from .lavalink import ExceptionError
@@ -442,23 +441,63 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
 # Player Events:
 
 
-class PlayerBase(abc.ABC):
+@dataclasses.dataclass
+class PlayerBase:
     """
     Gotta do the docs for me
     """
 
+    _app: hikari.RESTAware
+    guild_id: hikari.Snowflake
+
     @property
-    @abc.abstractmethod
     def app(self) -> hikari.RESTAware:
-        ...
+        return self._app
 
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> int:
-        ...
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
+
+        parse a payload of information, to receive a `StatsCpu` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        guild_id = payload["guildId"]
+
+        return cls(app, guild_id)
 
 
-class PlayerQueueEmpty(PlayerBase, abc.ABC):
+class PlayerQueueEmptyEvent(PlayerBase, OngakuEvent):
     """
     Gotta do the docs for me
     """
+
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
+
+        parse a payload of information, to receive a `StatsCpu` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        base = PlayerBase.as_payload(app, payload)
+
+        return cls(base.app, base.guild_id)
