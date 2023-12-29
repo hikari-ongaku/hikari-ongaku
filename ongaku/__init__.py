@@ -8,6 +8,10 @@ from .player import *
 from .rest import *
 
 
-from .abc.track import Track
+from .abc.track import Track, Playlist, SearchResult
 
-__all__ = ("Track",)
+__all__ = (
+    "Track", 
+    "Playlist", 
+    "SearchResult"
+)

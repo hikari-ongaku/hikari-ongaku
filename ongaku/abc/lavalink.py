@@ -309,6 +309,7 @@ class RestError:
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
 
+
 @dataclasses.dataclass
 class ExceptionError:
     """
@@ -326,6 +327,7 @@ class ExceptionError:
         The cause of the exception
 
     """
+
     message: str
     severity: enums.LavalinkSeverityType
     cause: str

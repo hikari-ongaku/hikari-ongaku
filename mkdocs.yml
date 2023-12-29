@@ -78,9 +78,6 @@ nav:
     - Player: api_reference/player.md
     - Enums: api_reference/enums.md
     - Errors: api_reference/errors.md
-    - Events:
-      - Track: api_reference/events/track.md
-      - Other: api_reference/events/other.md
     - ABC:
       - Events: api_reference/abc/events.md
       - Lavalink: api_reference/abc/lavalink.md

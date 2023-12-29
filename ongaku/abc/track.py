@@ -1,6 +1,7 @@
 import typing as t
 import dataclasses
 
+
 @dataclasses.dataclass
 class TrackInfo:
     """
@@ -157,6 +158,7 @@ class Track:
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
 
+
 @dataclasses.dataclass
 class PlaylistInfo:
     """
@@ -173,7 +175,7 @@ class PlaylistInfo:
     selected_track : int
         The selected track of the playlist (`-1` if no track is selected)
     """
-    
+
     name: str
     selected_track: int
 
@@ -202,6 +204,7 @@ class PlaylistInfo:
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class Playlist:
@@ -244,22 +247,22 @@ class Playlist:
         """
         info = payload["info"]
         plugin_info = payload["pluginInfo"]
-        
+
         tracks: list[Track] | tuple[Track, ...] = []
         for track in payload["tracks"]:
-            try: 
+            try:
                 new_track = Track.as_payload(track)
             except Exception as e:
                 raise e
-            
-            tracks.append(new_track)
 
+            tracks.append(new_track)
 
         return cls(info, plugin_info, tuple(tracks))
 
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class SearchResult:
@@ -285,13 +288,12 @@ class SearchResult:
 
         tracks: list[Track] | tuple[Track, ...] = []
         for track in payload["tracks"]:
-            try: 
+            try:
                 new_track = Track.as_payload(track)
             except Exception as e:
                 raise e
-            
-            tracks.append(new_track)
 
+            tracks.append(new_track)
 
         return cls(tuple(tracks))
 

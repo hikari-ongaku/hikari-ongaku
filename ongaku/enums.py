@@ -8,6 +8,7 @@ class LavalinkSeverityType(str, enum.Enum):
     The severity type of the lavalink track error.
     Find out more [here](https://lavalink.dev/api/websocket#severity).
     """
+
     COMMON = "common"
     """The cause is known and expected, indicates that there is nothing wrong with the library itself"""
     SUSPICIOUS = "suspicious"
@@ -23,6 +24,7 @@ class TrackEndReasonType(str, enum.Enum):
     The track end reason type for the track that was just playing.
     Find out more [here](https://lavalink.dev/api/websocket#track-end-reason).
     """
+
     FINISHED = "finished"
     """The track finished playing"""
     LOADFAILED = "loadFailed"
@@ -55,15 +57,18 @@ class VersionType(enum.Enum):
     """
     The lavalink server version.
     """
+
     V3 = "v3"
     """V3 Servers"""
     V4 = "v4"
     """V4 Servers"""
 
+
 class ConnectionStatus(enum.Enum):
     """
     The connection status for the bot.
     """
+
     FAILURE = 0
     """The bot has failed to connect to the lavalink server."""
     LOADING = 1
@@ -90,4 +95,3 @@ class TrackResultType(enum.Enum):
     """	A track has been loaded"""
     PLAYLIST = "playlist"
     """A playlist has been loaded"""
-

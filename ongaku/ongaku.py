@@ -86,7 +86,9 @@ class _OngakuInternal:
         )
         return self._remaining_retries
 
-    async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[abc.RestError]:
+    async def check_error(
+        self, payload: dict[t.Any, t.Any]
+    ) -> t.Optional[abc.RestError]:
         try:
             error = abc.RestError.as_payload(payload)
         except:
@@ -357,6 +359,4 @@ class Ongaku:
 
         if event.code == 4006:
             await player.disconnect()
-            await self.create_player(
-                player.guild_id, player.channel_id
-            )
+            await self.create_player(player.guild_id, player.channel_id)

@@ -213,35 +213,33 @@ class _InternalTrack:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
-    async def _url_handler(self, possible_url: str) -> t.Optional[str]: 
-        #TODO: Handle all different url types, spotify, youtube, youtube music, and soundcloud.
-        #TODO: Probably good to convert the query string into arguments, so they are handled correctly.
+    async def _url_handler(self, possible_url: str) -> t.Optional[str]:
+        # TODO: Handle all different url types, spotify, youtube, youtube music, and soundcloud.
+        # TODO: Probably good to convert the query string into arguments, so they are handled correctly.
         if possible_url.count("youtube.com") > 0:
             if possible_url.count("list=") > 0:
                 return possible_url.split("list=")[1]
-            
+
             elif possible_url.count("v=") > 0:
                 return possible_url.split("v=")[1]
-
-
 
     async def load_track(
         self, platform: enums.PlatformType, query: str
     ) -> abc.SearchResult | abc.Playlist | abc.Track | None:
         async with aiohttp.ClientSession() as session:
             query_sanitize = await self._url_handler(query)
-            
+
             if query_sanitize != None:
                 params = {"identifier": query_sanitize}
             else:
                 if platform == enums.PlatformType.YOUTUBE:
-                    params = {"identifier": f'ytsearch:{query}'}
+                    params = {"identifier": f"ytsearch:{query}"}
                 elif platform == enums.PlatformType.YOUTUBE_MUSIC:
-                    params = {"identifier": f'ytmsearch:{query}'}
+                    params = {"identifier": f"ytmsearch:{query}"}
                 elif platform == enums.PlatformType.SOUNDCLOUD:
-                    params = {"identifier": f'scsearch:{query}'}
+                    params = {"identifier": f"scsearch:{query}"}
                 else:
-                    params = {"identifier": f'ytsearch:{query}'}
+                    params = {"identifier": f"ytsearch:{query}"}
 
             async with session.get(
                 self._ongaku.internal.uri + "/loadtracks",
@@ -259,9 +257,11 @@ class _InternalTrack:
 
                 if load_type == "empty":
                     return
-                
+
                 if load_type == "error":
-                    raise errors.LavalinkException(abc.ExceptionError.as_payload(data["data"]))
+                    raise errors.LavalinkException(
+                        abc.ExceptionError.as_payload(data["data"])
+                    )
 
                 if load_type == "search":
                     try:
@@ -270,15 +270,15 @@ class _InternalTrack:
                         raise e
 
                     return search_result
-                    
+
                 if load_type == "track":
                     try:
                         track = abc.Track.as_payload(data["data"])
                     except Exception as e:
                         raise e
-                    
+
                     return track
-                
+
                 if load_type == "playlist":
                     try:
                         playlist = abc.Playlist.as_payload(data["data"])
@@ -286,7 +286,6 @@ class _InternalTrack:
                         raise e
 
                     return playlist
-
 
 
 class _Internal:

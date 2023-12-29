@@ -1,45 +1,38 @@
 import abc
 import hikari
-from . import track
+from .track import Track
+from .lavalink import ExceptionError
 from .. import enums
 import typing as t
 import dataclasses
 
 
-class OngakuEvent(hikari.Event, abc.ABC):
+class OngakuEvent(hikari.Event):
     """
     The base Ongaku events.
     """
 
 
-class Ready(abc.ABC):
+@dataclasses.dataclass
+class ReadyEvent(OngakuEvent):
     """
     Gotta do the docs for me
     """
 
-    def __init__(self, app: hikari.RESTAware, resumed: bool, session_id: str) -> None:
-        self._app = app
-        self._resumed = resumed
-        self._session_id = session_id
-
-    @classmethod
-    def from_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
-        resumed = payload["resumed"]
-        session_id = payload["sessionId"]
-
-        return cls(app, resumed, session_id)
+    _app: hikari.RESTAware
+    resumed: bool
+    session_id: str
 
     @property
     def app(self) -> hikari.RESTAware:
         return self._app
 
-    @property
-    def resumed(self) -> bool:
-        return self._resumed
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        resumed = payload["resumed"]
+        session_id = payload["sessionId"]
 
-    @property
-    def session_id(self) -> str:
-        return self._session_id
+        return cls(app, resumed, session_id)
 
 
 @dataclasses.dataclass
@@ -190,7 +183,7 @@ class StatsFrameStatistics:
 
 
 @dataclasses.dataclass
-class Statistics(abc.ABC):
+class StatisticsEvent(OngakuEvent):
     """
     All of the Statistics information.
 
@@ -212,6 +205,7 @@ class Statistics(abc.ABC):
         The frame stats of the node.
     """
 
+    _app: hikari.RESTAware
     players: int
     playing_players: int
     uptime: int
@@ -219,8 +213,12 @@ class Statistics(abc.ABC):
     cpu: StatsCpu
     frame_statistics: t.Optional[StatsFrameStatistics]
 
+    @property
+    def app(self) -> hikari.RESTAware:
+        return self._app
+
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
         players = payload["players"]
         playing_players = payload["playingPlayers"]
         uptime = payload["uptime"]
@@ -235,123 +233,210 @@ class Statistics(abc.ABC):
             except:
                 frame_statistics = None
 
-        return cls(players, playing_players, uptime, memory, cpu, frame_statistics)
+        return cls(app, players, playing_players, uptime, memory, cpu, frame_statistics)
 
     @property
     def raw(self) -> dict[str, t.Any]:
         return dataclasses.asdict(self)
 
 
-class WebsocketClosed(abc.ABC):
+@dataclasses.dataclass
+class WebsocketClosedEvent(OngakuEvent):
     """
     Gotta do the docs for me
     """
 
+    _app: hikari.RESTAware
+    guild_id: hikari.Snowflake
+    code: int
+    reason: str
+    by_remote: bool
+
     @property
-    @abc.abstractmethod
     def app(self) -> hikari.RESTAware:
-        ...
+        return self._app
 
-    @property
-    @abc.abstractmethod
-    def code(self) -> int:
-        ...
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        guild_id = payload["guildId"]
+        code = payload["code"]
+        reason = payload["reason"]
+        by_remote = payload["byRemote"]
 
-    @property
-    @abc.abstractmethod
-    def reason(self) -> str:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def by_remote(self) -> bool:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> int:
-        ...
+        return cls(app, guild_id, code, reason, by_remote)
 
 
 # Track Events:
 
 
-class TrackBase(abc.ABC):
+@dataclasses.dataclass
+class TrackBase:
     """
-    Gotta do the docs for me
+    Base track class
+
+    The class that all tracks inherit.
+
+    Parameters
+    ----------
+    app : hikari.RESTAware
+        The app or bot, that the event is attached to.
+    track : Track
+        The track that the event is attached too.
+    guild_id : hikari.Snowflake
+        The guild the track is playing in.
     """
 
+    _app: hikari.RESTAware
+    track: Track
+    guild_id: hikari.Snowflake
+
     @property
-    @abc.abstractmethod
     def app(self) -> hikari.RESTAware:
-        ...
+        return self._app
 
-    @property
-    @abc.abstractmethod
-    def track(self) -> track.Track:
-        ...
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
 
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> int:
-        ...
+        parse a payload of information, to receive a `StatsCpu` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        track = Track.as_payload(payload["track"])
+        guild_id = hikari.Snowflake(payload["guildId"])
+
+        return cls(app, track, guild_id)
 
 
-class TrackStart(TrackBase, abc.ABC):
+@dataclasses.dataclass
+class TrackStartEvent(TrackBase, OngakuEvent):
     """
     Gotta do the docs for me
     """
 
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
 
-class TrackEnd(TrackBase, abc.ABC):
+        parse a payload of information, to receive a `StatsCpu` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        base = TrackBase.as_payload(app, payload)
+
+        return cls(base.app, base.track, base.guild_id)
+
+
+@dataclasses.dataclass
+class TrackEndEvent(TrackBase, OngakuEvent):
     """
     Gotta do the docs for me
     """
 
-    @property
-    @abc.abstractmethod
-    def reason(self) -> enums.TrackEndReasonType:
-        ...
+    reason: enums.TrackEndReasonType
+
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
+
+        parse a payload of information, to receive a `StatsCpu` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        base = TrackBase.as_payload(app, payload)
+        reason = enums.TrackEndReasonType(payload["reason"])
+
+        return cls(base.app, base.track, base.guild_id, reason)
 
 
-class TrackExceptionReason(abc.ABC):
+@dataclasses.dataclass
+class TrackExceptionEvent(TrackBase, OngakuEvent):
     """
     Gotta do the docs for me
     """
 
-    @property
-    def message(self) -> str:
-        ...
+    reason: ExceptionError
 
-    @property
-    def severity(self) -> enums.LavalinkSeverityType:
-        ...
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
 
-    @property
-    def cause(self) -> str:
-        ...
+        parse a payload of information, to receive a `StatsCpu` dataclass.
+
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        track = Track.as_payload(payload["track"])
+        guild_id = hikari.Snowflake("guildId")
+        reason = ExceptionError.as_payload(payload["exception"])
+
+        return cls(app, track, guild_id, reason)
 
 
-class TrackException(TrackBase, abc.ABC):
+@dataclasses.dataclass
+class TrackStuckEvent(TrackBase, OngakuEvent):
     """
     Gotta do the docs for me
     """
 
-    @property
-    @abc.abstractmethod
-    def reason(self) -> TrackExceptionReason:
-        ...
+    threshold_ms: int
 
+    @classmethod
+    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+        """
+        Stats CPU parser
 
-class TrackStuck(TrackBase, abc.ABC):
-    """
-    Gotta do the docs for me
-    """
+        parse a payload of information, to receive a `StatsCpu` dataclass.
 
-    @property
-    @abc.abstractmethod
-    def threshold_ms(self) -> int:
-        ...
+        Parameters
+        ----------
+        payload : dict[Any, Any]
+            The payload you wish to pass.
+
+        Returns
+        -------
+        StatsCpu
+            The Stats Cpu you parsed.
+        """
+        base = TrackBase.as_payload(app, payload)
+        threshold_ms = payload["thresholdMs"]
+
+        return cls(base.app, base.track, base.guild_id, threshold_ms)
 
 
 # Player Events:
