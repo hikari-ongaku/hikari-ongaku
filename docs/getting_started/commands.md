@@ -67,3 +67,15 @@ tracks =  await lavalink.rest.search(ongaku.PlatformType.YOUTUBE, "AJR")
 
 The first argument parsed, is the [platform type](../api_reference/enums.md#ongaku.enums.PlatformType).
 The second argument parsed, is the query, or the song/link you wish to search.
+
+The method, will then return one of the following:
+
+ * `Playlist` - This is a list of songs, that originated from a playlist on the platform.
+
+ * `+Track` - This is a singular track, because a url to a video/song was originally sent.
+
+ * `SearchResult` - This is a list of songs, that are usually going to be very similar to each other.
+
+ * `None` - Your result returned absolutely nothing!
+
+Then all you have to do, is pass one of the tracks to `.play()`, or pass the entire playlist to `.add()` and then call `.play()` to play the song!

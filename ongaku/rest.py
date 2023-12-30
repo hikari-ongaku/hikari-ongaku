@@ -209,7 +209,6 @@ class _InternalPlayer:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
 
-
 class _InternalTrack:
     """
     The rest based actions for the track.

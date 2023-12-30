@@ -33,6 +33,7 @@ plugins:
           options:
             docstring_style: numpy
             docstring_section_style: spacy
+            allow_inspection: true
             show_source: false
             merge_init_into_class: true
             inherited_members: false

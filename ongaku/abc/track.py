@@ -285,9 +285,9 @@ class SearchResult:
         PlaylistInfo
             The Playlist Info you parsed.
         """
-
+        print(payload)
         tracks: list[Track] | tuple[Track, ...] = []
-        for track in payload["tracks"]:
+        for track in payload:
             try:
                 new_track = Track.as_payload(track)
             except Exception as e:

@@ -3,14 +3,14 @@ from .events import EventHandler, WebsocketClosedEvent
 from .player import Player
 from .rest import RestApi
 from .abc.lavalink import RestError
-from .errors import PlayerMissingException
+from .errors import PlayerMissingException, PlayerCreateException, SessionError
 import typing as t
 import aiohttp
 import hikari
 import logging
 import asyncio
 
-_logger = logging.getLogger("ongaku")  # Internal logger.
+_logger = logging.getLogger("ongaku")
 
 
 class _OngakuInternal:
@@ -59,7 +59,6 @@ class _OngakuInternal:
     ) -> None:
         self._connected = connected
         if reason != None:
-            print(reason)
             self._failure_reason = reason
 
     def set_session_id(self, session_id: str) -> None:
@@ -96,7 +95,7 @@ class _OngakuInternal:
         except:
             return
 
-        return error
+        return error    
 
 
 class Ongaku:
@@ -117,6 +116,8 @@ class Ongaku:
 
         Parameters
         ----------
+        bot : hikari.GatewayBot
+            The bot that ongaku will attach to.
         host : str
             The host, or IP that your lavalink server is running on.
         port : int
@@ -229,18 +230,26 @@ class Ongaku:
         channel_id: hikari.Snowflake,
     ) -> Player:
         """
-        Creates a new node.
+        Create a new player
 
-        Creates a new node for players to attach to.
+        Creates a new player for the specified guild, and places it in the specified channel.
 
         Parameters
         ----------
-        bot : hikari.GatewayBot
-            The bot that you are currently running.
-        shard_id : int
-            The current shard id.
-        user_id : hikari.Snowflake
-            The bots user id.
+        guild_id : hikari.Snowflake
+            The guild id that the bot is in
+        channel_id : hikari.Snowflake
+            The channel id that the bot will join too.
+
+        Raises
+        ------
+        PlayerCreateException
+            Raised when the player failed to be created.
+        
+        Returns
+        -------
+        Player
+            The player that is now in the channel you have specified.
         """
 
         connection = self.bot.voice.connections.get(guild_id)
@@ -251,16 +260,38 @@ class Ongaku:
                 self._players.pop(guild_id)
             except:
                 pass
-
-        new_player = await self.bot.voice.connect_to(
-            guild_id, channel_id, Player, bot=self.bot, ongaku=self
-        )
+        
+        try:
+            new_player = await self.bot.voice.connect_to(
+                guild_id, channel_id, Player, bot=self.bot, ongaku=self
+            )
+        except Exception as e:
+            raise PlayerCreateException(e)
 
         self._players.update({guild_id: new_player})
-        print(self._players)
         return new_player
 
     async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
+        """
+        Fetch a player
+
+        Fetch a player for the specified guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The guild id that the player belongs to.
+
+        Raises
+        ------
+        PlayerMissingException
+            The player was not found for the guild specified.
+
+        Returns
+        -------
+        Player
+            The player that belongs to the specified guild.
+        """
         fetched_player = self._players.get(guild_id)
 
         if fetched_player == None:
@@ -269,13 +300,34 @@ class Ongaku:
         return fetched_player
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
+        """
+        delete a player
+
+        Deletes a player from the specified guild, and disconnect it if it has not been disconnected already.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The guild id that the player belongs to.
+
+        Raises
+        ------
+        PlayerMissingException
+            The player was not found for the guild specified.
+        """
+
         try:
-            self._players.pop(guild_id)
+            player = self._players.pop(guild_id)
         except Exception as e:
-            print(e)
-            raise e
+            raise PlayerMissingException(e)
+
+        await player.disconnect()
 
     async def _handle_connect(self, event: hikari.StartedEvent):
+        """
+        This is an internal function, that handles the connection, and starting of the websocket.
+        """
+        
         if (
             self._internal.connected == ConnectionType.CONNECTED
             or self._internal.connected == ConnectionType.FAILURE
@@ -316,22 +368,16 @@ class Ongaku:
                     ) as ws:
                         async for msg in ws:
                             if msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
-                                _logger.error(msg.json())
+                                raise SessionError(_logger.error(msg.json()))
 
                             if msg.type == aiohttp.WSMsgType.CLOSED:  # type: ignore
-                                print("ws closed.")
+                                pass
                             if msg.type == aiohttp.WSMsgType.TEXT:  # type: ignore
                                 try:
                                     json_data = msg.json()
                                 except:
                                     _logger.info("Failed to decode json data.")
                                 else:
-                                    # error = await self._internal.check_error(json_data)
-
-                                    # if error:
-                                    #    self._internal.remove_retry()
-                                    #    self._internal.set_connection(enums.ConnectionStatus.FAILURE, reason=error.message)
-                                    #    return
 
                                     self._internal.set_connection(
                                         ConnectionType.CONNECTED
@@ -353,6 +399,9 @@ class Ongaku:
             )
 
     async def _handle_disconnect(self, event: WebsocketClosedEvent):
+        """
+        This is an internal function, that handles the disconnection of a websocket (Discord)
+        """
         player = self._players[hikari.Snowflake(event.guild_id)]
 
         if event.code == 4014:
@@ -360,4 +409,5 @@ class Ongaku:
 
         if event.code == 4006:
             await player.disconnect()
-            await self.create_player(player.guild_id, player.channel_id)
+            self._players.pop(hikari.Snowflake(event.guild_id))
+            await self.create_player(hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id))

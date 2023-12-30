@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import hikari
+from hikari import Snowflake, GatewayBot, UndefinedOr, UNDEFINED, VoiceEvent
 from hikari.api import VoiceConnection, VoiceComponent
 import typing as t
 
@@ -24,23 +24,23 @@ class Player(VoiceConnection):
     @classmethod
     async def initialize(  # type: ignore
         cls,
-        channel_id: hikari.Snowflake,
+        channel_id: Snowflake,
         endpoint: str,
-        guild_id: hikari.Snowflake,
-        on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
+        guild_id: Snowflake,
+        on_close: t.Awaitable[t.Any],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
         token: str,
-        user_id: hikari.Snowflake,
+        user_id: Snowflake,
         *,
-        bot: hikari.GatewayBot,
+        bot: GatewayBot,
         ongaku: Ongaku,
     ):
         """
-        Testing
+        Initialise the player.
 
-        Testing something
+        Initialise the player so that the player can be changed.
         """
 
         init_player = Player(
@@ -62,26 +62,22 @@ class Player(VoiceConnection):
     def __init__(
         self,
         *,
-        bot: hikari.GatewayBot,
+        bot: GatewayBot,
         ongaku: Ongaku,
-        channel_id: hikari.Snowflake,
+        channel_id: Snowflake,
         endpoint: str,
-        guild_id: hikari.Snowflake,
+        guild_id: Snowflake,
         on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
         token: str,
-        user_id: hikari.Snowflake,
+        user_id: Snowflake,
     ) -> None:
         """
-        GSDS
+        Base player class
 
-        DGHDJHSJDHGFJS
-
-
-        !!! INFO
-            THIS IS A TEST
+        The class that allows the player, to play songs, and more.
         """
         self._bot = bot
         self._ongaku = ongaku
@@ -102,14 +98,14 @@ class Player(VoiceConnection):
         bot.subscribe(TrackEndEvent, self._track_end_event)
 
     @property
-    def channel_id(self) -> hikari.Snowflake:
+    def channel_id(self) -> Snowflake:
         """
         ID of the voice channel this voice connection is currently in.
         """
         return self._channel_id
 
     @property
-    def guild_id(self) -> hikari.Snowflake:
+    def guild_id(self) -> Snowflake:
         """
         ID of the guild this voice connection is in.
         """
@@ -192,7 +188,7 @@ class Player(VoiceConnection):
 
         self._is_paused = False
 
-    async def pause(self, value: hikari.UndefinedOr[bool] = hikari.UNDEFINED) -> None:
+    async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
         """
         Pause the current track
 
@@ -215,7 +211,7 @@ class Player(VoiceConnection):
         if self._ongaku.internal.session_id == None:
             raise SessionNotStartedException()
 
-        if value == hikari.UNDEFINED:
+        if value == UNDEFINED:
             self._is_paused = not self.is_paused
         else:
             self._is_paused = value
@@ -438,9 +434,9 @@ class Player(VoiceConnection):
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
-        print("joined?")
+        pass
 
-    async def notify(self, event: hikari.VoiceEvent) -> None:
+    async def notify(self, event: VoiceEvent) -> None:
         """Submit an event to the voice connection to be processed."""
         pass
 

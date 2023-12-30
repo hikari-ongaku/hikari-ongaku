@@ -17,8 +17,7 @@ from .abc import (
 if t.TYPE_CHECKING:
     from ..ongaku import Ongaku
 
-    OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
-
+_logger = logging.getLogger("ongaku.events")
 
 class EventHandler:
     def __init__(self, ongaku: Ongaku) -> None:
@@ -59,9 +58,9 @@ class EventHandler:
         try:
             event = ReadyEvent.as_payload(self._ongaku.bot, payload)
         except Exception as e:
-            print(e, e.args)
             raise e
 
+        logging.getLogger("ongaku.info").info("Successfully connected to the server.")
         await self._ongaku.bot.dispatch(event)
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
