@@ -76,6 +76,7 @@ nav:
     - api_reference/index.md
     - Ongaku: api_reference/ongaku.md
     - Player: api_reference/player.md
+    - Nodes: api_reference/nodes.md
     - Enums: api_reference/enums.md
     - Errors: api_reference/errors.md
     - ABC:
