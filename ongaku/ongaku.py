@@ -386,7 +386,7 @@ class Ongaku:
 
                             elif msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
                                 self._internal.set_connection(
-                                    ConnectionType.FAILURE, reason=msg.data
+                                    ConnectionType.FAILURE, reason=msg.data # type: ignore
                                 )
                 except Exception as e:
                     self._internal.set_connection(
