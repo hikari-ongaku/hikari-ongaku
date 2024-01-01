@@ -255,18 +255,32 @@ class Ongaku:
         connection = self.bot.voice.connections.get(guild_id)
 
         if isinstance(connection, Player):
+            print("DISCONNECTING FROM VC. 1")
             await self.bot.voice.disconnect(guild_id)
+            await self.bot.update_voice_state(guild_id, None)
             try:
                 self._players.pop(guild_id)
             except:
                 pass
         
+        bot = self.bot.cache.get_voice_state(guild_id, self.bot.get_me().id) #type: ignore
+
+        if bot != None and bot.channel_id != None:
+            print("DISCONNECTING FROM VC. 2")
+            await self.bot.voice.disconnect(guild_id)
+            try:
+                self._players.pop(guild_id)
+            except:
+                pass
+
         try:
             new_player = await self.bot.voice.connect_to(
                 guild_id, channel_id, Player, bot=self.bot, ongaku=self
             )
         except Exception as e:
             raise PlayerCreateException(e)
+        
+        connection = self.bot.voice.connections.get(guild_id)
 
         self._players.update({guild_id: new_player})
         return new_player

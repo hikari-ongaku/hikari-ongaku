@@ -432,6 +432,10 @@ class Player(VoiceConnection):
             self._ongaku.internal.session_id, self._guild_id
         )
 
+        if self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id) != None: #type: ignore
+            await self._bot.voice.disconnect(self.guild_id)
+            #await self._bot.update_voice_state(self.guild_id, None)
+
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
         pass
