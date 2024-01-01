@@ -154,7 +154,7 @@ class _InternalPlayer:
                 {
                     "voice": {
                         "token": voice.token,
-                        "endpoint": voice.endpoint,
+                        "endpoint": voice.endpoint[6:],
                         "sessionId": voice.session_id,
                     }
                 }
@@ -167,7 +167,11 @@ class _InternalPlayer:
         params = {"noReplace": "false"}
 
         if no_replace:
-            params.update({"noReplace": "false"})
+            params.update({"noReplace": "true"})
+
+        print("here???????????")
+
+        print(patch_data)
 
         async with aiohttp.ClientSession() as session:
             try:

@@ -3,7 +3,7 @@ from .events import EventHandler, WebsocketClosedEvent
 from .player import Player
 from .rest import RestApi
 from .abc.lavalink import RestError
-from .errors import PlayerMissingException, PlayerCreateException, SessionError
+from .errors import PlayerMissingException, SessionError
 import typing as t
 import aiohttp
 import hikari
@@ -261,12 +261,12 @@ class Ongaku:
             except:
                 pass
         
+        new_player = Player(self.bot, self, guild_id)
+
         try:
-            new_player = await self.bot.voice.connect_to(
-                guild_id, channel_id, Player, bot=self.bot, ongaku=self
-            )
+            await new_player.connect(channel_id)
         except Exception as e:
-            raise PlayerCreateException(e)
+            raise e
 
         self._players.update({guild_id: new_player})
         return new_player
@@ -404,10 +404,15 @@ class Ongaku:
         """
         player = self._players[hikari.Snowflake(event.guild_id)]
 
+        if player.channel_id == None:
+            _logger.debug(f"No channel set, skipping disconnection handling for: {event.guild_id}")
+            return
+
         if event.code == 4014:
             await player.disconnect()
 
         if event.code == 4006:
             await player.disconnect()
             self._players.pop(hikari.Snowflake(event.guild_id))
+
             await self.create_player(hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id))

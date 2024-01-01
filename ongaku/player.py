@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hikari import Snowflake, GatewayBot, UndefinedOr, UNDEFINED, VoiceEvent
-from hikari.api import VoiceConnection, VoiceComponent
+from hikari import Snowflake, GatewayBot, UndefinedOr, UNDEFINED
+from hikari.events import VoiceServerUpdateEvent, VoiceStateUpdateEvent
 import typing as t
 
 from .errors import (
@@ -20,59 +20,12 @@ if t.TYPE_CHECKING:
     OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
 
-class Player(VoiceConnection):
-    @classmethod
-    async def initialize(  # type: ignore
-        cls,
-        channel_id: Snowflake,
-        endpoint: str,
-        guild_id: Snowflake,
-        on_close: t.Awaitable[t.Any],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
-        owner: VoiceComponent,
-        session_id: str,
-        shard_id: int,
-        token: str,
-        user_id: Snowflake,
-        *,
-        bot: GatewayBot,
-        ongaku: Ongaku,
-    ):
-        """
-        Initialise the player.
-
-        Initialise the player so that the player can be changed.
-        """
-
-        init_player = Player(
-            bot=bot,
-            ongaku=ongaku,
-            channel_id=channel_id,
-            endpoint=endpoint,
-            guild_id=guild_id,
-            on_close=on_close,
-            owner=owner,
-            session_id=session_id,
-            shard_id=shard_id,
-            token=token,
-            user_id=user_id,
-        )
-
-        return init_player
-
+class Player:
     def __init__(
         self,
-        *,
         bot: GatewayBot,
         ongaku: Ongaku,
-        channel_id: Snowflake,
-        endpoint: str,
         guild_id: Snowflake,
-        on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
-        owner: VoiceComponent,
-        session_id: str,
-        shard_id: int,
-        token: str,
-        user_id: Snowflake,
     ) -> None:
         """
         Base player class
@@ -81,26 +34,33 @@ class Player(VoiceConnection):
         """
         self._bot = bot
         self._ongaku = ongaku
-        self._channel_id = channel_id
-        self._endpoint = endpoint
         self._guild_id = guild_id
-        self._on_close = on_close
-        self._owner = owner
-        self._session_id = session_id
-        self._shard_id = shard_id
-        self._token = token
-        self._user_id = user_id
+        self._channel_id = None
 
+        self._is_alive = False
         self._is_paused = True
 
         self._queue: list[Track] = []
 
+        self._voice: PlayerVoice | None = None
+
+        self._session_id: str | None = None
+
         bot.subscribe(TrackEndEvent, self._track_end_event)
+        bot.subscribe(VoiceServerUpdateEvent, self._voice_server_update_event)
+        bot.subscribe(VoiceStateUpdateEvent, self._voice_state_update_event)
 
     @property
-    def channel_id(self) -> Snowflake:
+    def channel_id(self) -> Snowflake | None:
         """
         ID of the voice channel this voice connection is currently in.
+
+        Returns
+        -------
+        hikari.Snowflake
+            The channel id.
+        None
+            The bot is not currently connected to a channel.
         """
         return self._channel_id
 
@@ -119,20 +79,6 @@ class Player(VoiceConnection):
         return self._is_alive
 
     @property
-    def shard_id(self) -> int:
-        """
-        ID of the shard that requested the connection.
-        """
-        return self._shard_id
-
-    @property
-    def owner(self) -> VoiceComponent:
-        """
-        Return the component that is managing this connection.
-        """
-        return self._owner
-
-    @property
     def is_paused(self) -> bool:
         """
         Returns whether the bot is currently paused.
@@ -145,6 +91,7 @@ class Player(VoiceConnection):
         Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one.
         """
         return tuple(self._queue)
+
 
     async def play(self, track: t.Optional[Track] = None) -> None:
         """
@@ -165,9 +112,8 @@ class Player(VoiceConnection):
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
         """
-        voice = PlayerVoice(
-            self._token, self._endpoint[6:], self._session_id
-        )  # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
+        if self._voice == None or self._channel_id == None:
+            raise PlayerException("Player is not connected to a channel.")
 
         if self._ongaku.internal.session_id == None:
             raise SessionNotStartedException()
@@ -178,13 +124,21 @@ class Player(VoiceConnection):
         if track != None:
             self._queue.insert(0, track)
 
-        await self._ongaku.rest.internal.player.update_player(
-            self.guild_id,
-            self._ongaku.internal.session_id,
-            track=self.queue[0],
-            voice=voice,
-            no_replace=False,
-        )
+        print(self._voice.raw)
+
+        try:
+            player = await self._ongaku.rest.internal.player.update_player(
+                self.guild_id,
+                self._ongaku.internal.session_id,
+                track=self.queue[0],
+                voice=self._voice,
+                no_replace=False,
+            )
+        except Exception as e:
+            print(e)
+            raise e
+
+        print(player)
 
         self._is_paused = False
 
@@ -420,6 +374,14 @@ class Player(VoiceConnection):
             self.guild_id, self._ongaku.internal.session_id, position=value
         )
 
+    async def connect(self, channel_id: Snowflake) -> None:
+        self._channel_id = channel_id
+
+        await self._bot.update_voice_state(self.guild_id, self._channel_id)
+
+        await self._bot.wait_for(VoiceStateUpdateEvent, 10)
+        await self._bot.wait_for(VoiceServerUpdateEvent, 10)
+
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
         self._is_alive = False
@@ -432,15 +394,7 @@ class Player(VoiceConnection):
             self._ongaku.internal.session_id, self._guild_id
         )
 
-    async def join(self) -> None:
-        """Wait for the process to halt before continuing."""
-        pass
-
-    async def notify(self, event: VoiceEvent) -> None:
-        """Submit an event to the voice connection to be processed."""
-        pass
-
-    async def _track_end_event(self, event: TrackEndEvent):
+    async def _track_end_event(self, event: TrackEndEvent) -> None:
         if self._ongaku.internal.session_id == None:
             raise SessionNotStartedException()
 
@@ -465,3 +419,31 @@ class Player(VoiceConnection):
                 track=self._queue[0],
                 no_replace=False,
             )
+
+
+    async def _voice_server_update_event(self, event: VoiceServerUpdateEvent) -> None:
+        print("vc server update event.")
+        if event.endpoint == None:
+            raise PlayerException("Endpoint cannot be null.")
+        if self._session_id == None:
+            raise PlayerException("Session id cannot be none.")
+
+        self._voice = PlayerVoice(event.token, event.endpoint, self._session_id)
+
+    async def _voice_state_update_event(self, event: VoiceStateUpdateEvent) -> None:
+        print("vc state update event started.")
+        if not event.state.member.is_bot:
+            return
+        
+        if event.state.member.id != self._bot.get_me().id: #type: ignore
+            return
+        
+        if event.state.channel_id == None:
+            return
+
+        if self._channel_id == None:
+            return
+        
+        self._session_id = event.state.session_id
+
+        print(event.state.channel_id)
