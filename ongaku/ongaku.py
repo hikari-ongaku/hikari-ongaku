@@ -7,7 +7,12 @@ import hikari
 
 from .abc.lavalink import RestError
 from .enums import ConnectionType, VersionType
-from .errors import PlayerCreateException, PlayerMissingException, SessionError
+from .errors import (
+    PlayerCreateException,
+    PlayerMissingException,
+    RequiredException,
+    SessionError,
+)
 from .events import EventHandler, WebsocketClosedEvent
 from .player import Player
 from .rest import RestApi
@@ -253,22 +258,25 @@ class Ongaku:
         Player
             The player that is now in the channel you have specified.
         """
-
+        #FIXME: Fix the issue where, if the bot is invited to the channel via this, then kicked by a user, allow the bot to join back without a "already in guild" error
         connection = self.bot.voice.connections.get(guild_id)
 
         if isinstance(connection, Player):
-            print("DISCONNECTING FROM VC. 1")
             await self.bot.voice.disconnect(guild_id)
             await self.bot.update_voice_state(guild_id, None)
             try:
                 self._players.pop(guild_id)
             except Exception:
                 pass
+        
+        bot = self.bot.get_me()
 
-        bot = self.bot.cache.get_voice_state(guild_id, self.bot.get_me().id)  # type: ignore
+        if bot is None:
+            raise RequiredException("The bot is required to be able to connect. This is an internal error.")
 
-        if bot is not None and bot.channel_id is not None:
-            print("DISCONNECTING FROM VC. 2")
+        bot_state = self.bot.cache.get_voice_state(guild_id, bot.id)
+
+        if bot_state is not None and bot_state.channel_id is not None:
             await self.bot.voice.disconnect(guild_id)
             try:
                 self._players.pop(guild_id)
@@ -308,12 +316,10 @@ class Ongaku:
         Player
             The player that belongs to the specified guild.
         """
-        print("fetching player...")
         fetched_player = self._players.get(guild_id)
 
         if fetched_player is None:
             raise PlayerMissingException(guild_id)
-        print("found player!")
 
         if not fetched_player.connected:
             await fetched_player.join()
@@ -383,16 +389,20 @@ class Ongaku:
             await asyncio.sleep(3)
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.ws_connect(  # type: ignore
+                    async with session.ws_connect(
                         self._internal.uri + "/websocket", headers=new_header
                     ) as ws:
                         async for msg in ws:
-                            if msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
+                            if msg.type == aiohttp.WSMsgType.ERROR:
+                                self._internal.set_connection(
+                                    ConnectionType.FAILURE,
+                                    reason=msg.data,
+                                )
                                 raise SessionError(_logger.error(msg.json()))
 
-                            if msg.type == aiohttp.WSMsgType.CLOSED:  # type: ignore
+                            if msg.type == aiohttp.WSMsgType.CLOSED:
                                 pass
-                            if msg.type == aiohttp.WSMsgType.TEXT:  # type: ignore
+                            if msg.type == aiohttp.WSMsgType.TEXT:
                                 try:
                                     json_data = msg.json()
                                 except Exception:
@@ -402,12 +412,7 @@ class Ongaku:
                                         ConnectionType.CONNECTED
                                     )
                                     await self._event_handler.handle_payload(json_data)
-
-                            elif msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
-                                self._internal.set_connection(
-                                    ConnectionType.FAILURE,
-                                    reason=msg.data,  # type: ignore
-                                )
+                                
                 except Exception as e:
                     self._internal.set_connection(
                         ConnectionType.FAILURE, reason=f"Exception Raised: {e}"

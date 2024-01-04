@@ -13,6 +13,7 @@ from .errors import (
     PlayerQueueException,
     PlayerSettingException,
     SessionNotStartedException,
+    RequiredException
 )
 
 if t.TYPE_CHECKING:
@@ -442,7 +443,6 @@ class Player(VoiceConnection):
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
-        print("Player disconnecting...")
         self._is_alive = False
         self._connected = False
         await self.clear()
@@ -454,15 +454,19 @@ class Player(VoiceConnection):
             self._ongaku.internal.session_id, self._guild_id
         )
 
+        bot = self._bot.get_me()
+
+        if bot is None:
+            raise RequiredException("Bot is required to disconnect.")
+
         if (
-            self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id)  # type: ignore
+            self._bot.cache.get_voice_state(self.guild_id, bot.id)
             is not None
-        ):  # type: ignore
+        ):
             await self._bot.voice.disconnect(self.guild_id)
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
-        print("Player connecting...")
         voice = PlayerVoice(self._token, self._endpoint[6:], self._session_id)
 
         if self._ongaku.internal.session_id is None:
@@ -479,7 +483,7 @@ class Player(VoiceConnection):
 
     async def notify(self, event: VoiceEvent) -> None:
         """Submit an event to the voice connection to be processed."""
-        print("notifying?")
+        pass
 
     async def _track_end_event(self, event: TrackEndEvent):
         if self._ongaku.internal.session_id is None:
