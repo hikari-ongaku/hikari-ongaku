@@ -305,12 +305,16 @@ class Ongaku:
         -------
         Player
             The player that belongs to the specified guild.
-        """
+        """   
+        print("fetching player...")
         fetched_player = self._players.get(guild_id)
 
         if fetched_player == None:
             raise PlayerMissingException(guild_id)
+        print("found player!")
 
+        if not fetched_player.connected:
+            await fetched_player.join()
         return fetched_player
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:

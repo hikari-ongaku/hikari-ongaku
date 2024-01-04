@@ -27,7 +27,7 @@ class Player(VoiceConnection):
         channel_id: Snowflake,
         endpoint: str,
         guild_id: Snowflake,
-        on_close: t.Awaitable[t.Any],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
+        on_close: t.Any,  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
@@ -92,6 +92,7 @@ class Player(VoiceConnection):
         self._user_id = user_id
 
         self._is_paused = True
+        self._connected = False
 
         self._queue: list[Track] = []
 
@@ -146,6 +147,27 @@ class Player(VoiceConnection):
         """
         return tuple(self._queue)
 
+    @property
+    def connected(self) -> bool:
+        return self._connected
+
+    async def _connect(self) -> None:
+        if self._ongaku.internal.session_id == None:
+            raise SessionNotStartedException()
+        
+        voice = PlayerVoice(
+            self._token, self._endpoint[6:], self._session_id
+        )
+        
+        await self._ongaku.rest.internal.player.update_player(
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            voice=voice,
+            no_replace=False,
+        )
+
+        self._connected = True
+
     async def play(self, track: t.Optional[Track] = None) -> None:
         """
         Play a track
@@ -165,9 +187,6 @@ class Player(VoiceConnection):
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
         """
-        voice = PlayerVoice(
-            self._token, self._endpoint[6:], self._session_id
-        )  # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
 
         if self._ongaku.internal.session_id == None:
             raise SessionNotStartedException()
@@ -178,11 +197,13 @@ class Player(VoiceConnection):
         if track != None:
             self._queue.insert(0, track)
 
+        if self._connected == False:
+            await self._connect()
+
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id,
             self._ongaku.internal.session_id,
             track=self.queue[0],
-            voice=voice,
             no_replace=False,
         )
 
@@ -422,7 +443,9 @@ class Player(VoiceConnection):
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
+        print("Player disconnecting...")
         self._is_alive = False
+        self._connected = False
         await self.clear()
 
         if self._ongaku.internal.session_id == None:
@@ -434,15 +457,31 @@ class Player(VoiceConnection):
 
         if self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id) != None: #type: ignore
             await self._bot.voice.disconnect(self.guild_id)
-            #await self._bot.update_voice_state(self.guild_id, None)
+
+        
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
-        pass
+        print("Player connecting...")
+        voice = PlayerVoice(
+            self._token, self._endpoint[6:], self._session_id
+        )
+
+        if self._ongaku.internal.session_id == None:
+            raise SessionNotStartedException()
+
+        await self._ongaku.rest.internal.player.update_player(
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            track=self.queue[0],
+            voice=voice,
+            no_replace=False,
+        )
+        await self._bot.update_voice_state(self.guild_id, self.channel_id)
 
     async def notify(self, event: VoiceEvent) -> None:
         """Submit an event to the voice connection to be processed."""
-        pass
+        print("notifying?")
 
     async def _track_end_event(self, event: TrackEndEvent):
         if self._ongaku.internal.session_id == None:
