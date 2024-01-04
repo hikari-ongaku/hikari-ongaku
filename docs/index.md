@@ -16,3 +16,8 @@ Not sure what to do? Check out [Getting Started](getting_started/index.md) for e
 
  - [Hikari](https://hikari-py.dev/)
  - [Examples](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples)
+
+
+## Notable mentions
+
+A big thanks to hyper, for their amazing help towards my program :D Would not have been here without them.
