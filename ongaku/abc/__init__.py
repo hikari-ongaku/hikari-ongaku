@@ -1,17 +1,17 @@
 from .events import (
+    PlayerQueueEmptyEvent,
     ReadyEvent,
     StatisticsEvent,
-    TrackStartEvent,
     TrackEndEvent,
     TrackExceptionEvent,
+    TrackStartEvent,
     TrackStuckEvent,
     WebsocketClosedEvent,
-    PlayerQueueEmptyEvent,
 )
-from .lavalink import Info, RestError, ExceptionError
+from .lavalink import ExceptionError, Info, RestError
 from .player import Player, PlayerState, PlayerVoice
 from .session import Session
-from .track import Track, Playlist, SearchResult
+from .track import Playlist, SearchResult, Track
 
 __all__ = (
     # .events

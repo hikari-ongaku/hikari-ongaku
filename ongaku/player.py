@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from hikari import Snowflake, GatewayBot, UndefinedOr, UNDEFINED, VoiceEvent
-from hikari.api import VoiceConnection, VoiceComponent
 import typing as t
 
+from hikari import UNDEFINED, GatewayBot, Snowflake, UndefinedOr, VoiceEvent
+from hikari.api import VoiceComponent, VoiceConnection
+
+from .abc.events import PlayerQueueEmptyEvent, TrackEndEvent
+from .abc.player import PlayerVoice
+from .abc.track import Track
 from .errors import (
-    SessionNotStartedException,
+    PlayerException,
     PlayerQueueException,
     PlayerSettingException,
-    PlayerException,
+    SessionNotStartedException,
 )
-from .abc.track import Track
-from .abc.events import TrackEndEvent, PlayerQueueEmptyEvent
-from .abc.player import PlayerVoice
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -152,13 +153,11 @@ class Player(VoiceConnection):
         return self._connected
 
     async def _connect(self) -> None:
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
-        
-        voice = PlayerVoice(
-            self._token, self._endpoint[6:], self._session_id
-        )
-        
+
+        voice = PlayerVoice(self._token, self._endpoint[6:], self._session_id)
+
         await self._ongaku.rest.internal.player.update_player(
             self.guild_id,
             self._ongaku.internal.session_id,
@@ -188,16 +187,16 @@ class Player(VoiceConnection):
             The queue is empty and no track was given, so it cannot play songs.
         """
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        if len(self.queue) > 0 and track == None:
+        if len(self.queue) > 0 and track is None:
             raise PlayerQueueException("Empty Queue. Cannot play nothing.")
 
-        if track != None:
+        if track is not None:
             self._queue.insert(0, track)
 
-        if self._connected == False:
+        if self._connected is False:
             await self._connect()
 
         await self._ongaku.rest.internal.player.update_player(
@@ -229,7 +228,7 @@ class Player(VoiceConnection):
             The session id was null, or empty.
 
         """
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if value == UNDEFINED:
@@ -275,7 +274,7 @@ class Player(VoiceConnection):
         if len(self.queue) == 0:
             raise PlayerSettingException("Queue is empty.")
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if isinstance(value, Track):
@@ -317,7 +316,7 @@ class Player(VoiceConnection):
         PlayerQueueException
             The queue is already empty, so no songs can be skipped.
         """
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if amount <= 0:
@@ -367,7 +366,7 @@ class Player(VoiceConnection):
             Raised if the value is above, or below 0, or 1000.
         """
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if volume < 0:
@@ -399,7 +398,7 @@ class Player(VoiceConnection):
         """
         self._queue.clear()
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
@@ -429,7 +428,7 @@ class Player(VoiceConnection):
         PlayerSettingException
             The queue is empty.
         """
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if self.queue[0].info.length < value:
@@ -448,26 +447,25 @@ class Player(VoiceConnection):
         self._connected = False
         await self.clear()
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.delete_player(
             self._ongaku.internal.session_id, self._guild_id
         )
 
-        if self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id) != None: #type: ignore
+        if (
+            self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id)  # type: ignore
+            is not None
+        ):  # type: ignore
             await self._bot.voice.disconnect(self.guild_id)
-
-        
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
         print("Player connecting...")
-        voice = PlayerVoice(
-            self._token, self._endpoint[6:], self._session_id
-        )
+        voice = PlayerVoice(self._token, self._endpoint[6:], self._session_id)
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         await self._ongaku.rest.internal.player.update_player(
@@ -484,13 +482,13 @@ class Player(VoiceConnection):
         print("notifying?")
 
     async def _track_end_event(self, event: TrackEndEvent):
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if int(event.guild_id) == int(self.guild_id):
             try:
                 await self.remove(0)
-            except:
+            except Exception:
                 await self._bot.dispatch(
                     PlayerQueueEmptyEvent(self._bot, self.guild_id)
                 )

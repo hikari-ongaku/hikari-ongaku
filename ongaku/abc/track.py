@@ -1,5 +1,5 @@
-import typing as t
 import dataclasses
+import typing as t
 
 
 @dataclasses.dataclass
@@ -73,15 +73,15 @@ class TrackInfo:
         title = payload["title"]
         try:  # TODO: This needs to be switched to actually check if it exists first, and if it doesn't set it as none.
             uri = payload["uri"]
-        except:
+        except Exception:
             uri = None
         try:
             artwork_url = payload["artworkUrl"]
-        except:
+        except Exception:
             artwork_url = None
         try:
             isrc = payload["isrc"]
-        except:
+        except Exception:
             isrc = None
         source_name = payload["sourceName"]
 

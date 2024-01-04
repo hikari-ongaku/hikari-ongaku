@@ -27,6 +27,7 @@ class SessionNotStartedException(LavalinkException):
     Raised when the session id is needed, but is null.
     """
 
+
 class SessionError(LavalinkException):
     """
     Raised when an error occurs with the Lavalink websocket connection.
@@ -44,10 +45,12 @@ class PlayerSettingException(PlayerException):
     Raised when a setting is set wrong.
     """
 
+
 class PlayerCreateException(PlayerException):
     """
     Raised when ongaku failed to build a new player, or connect to the channel.
     """
+
 
 class PlayerMissingException(PlayerException):
     """

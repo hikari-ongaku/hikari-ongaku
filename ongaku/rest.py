@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from .enums import PlatformType
-from .abc.session import Session
-from .abc.player import Player, PlayerVoice
-from .abc.track import Track, Playlist, SearchResult
-from .abc.lavalink import Info, ExceptionError
-from .errors import LavalinkException, BuildException
 import typing as t
 
-import hikari
 import aiohttp
+import hikari
+
+from .abc.lavalink import ExceptionError, Info
+from .abc.player import Player, PlayerVoice
+from .abc.session import Session
+from .abc.track import Playlist, SearchResult, Track
+from .enums import PlatformType
+from .errors import BuildException, LavalinkException
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -120,7 +121,7 @@ class _InternalPlayer:
         patch_data: dict[str, t.Any] = {}
 
         if track != hikari.UNDEFINED:
-            if track == None:
+            if track is None:
                 patch_data.update(
                     {
                         "track": {
@@ -209,6 +210,7 @@ class _InternalPlayer:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
 
+
 class _InternalTrack:
     """
     The rest based actions for the track.
@@ -233,7 +235,7 @@ class _InternalTrack:
         async with aiohttp.ClientSession() as session:
             query_sanitize = await self._url_handler(query)
 
-            if query_sanitize != None:
+            if query_sanitize is not None:
                 params = {"identifier": query_sanitize}
             else:
                 if platform == PlatformType.YOUTUBE:

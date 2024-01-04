@@ -1,15 +1,16 @@
 # This file deals with events, from payloads.
 from __future__ import annotations
 
-import typing as t
 import logging
+import typing as t
+
 from . import errors
 from .abc import (
     ReadyEvent,
     StatisticsEvent,
-    TrackStartEvent,
     TrackEndEvent,
     TrackExceptionEvent,
+    TrackStartEvent,
     TrackStuckEvent,
     WebsocketClosedEvent,
 )
@@ -18,6 +19,7 @@ if t.TYPE_CHECKING:
     from ..ongaku import Ongaku
 
 _logger = logging.getLogger("ongaku.events")
+
 
 class EventHandler:
     def __init__(self, ongaku: Ongaku) -> None:
@@ -47,10 +49,10 @@ class EventHandler:
     async def _ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
             session_id = payload["sessionId"]
-        except:
+        except Exception:
             raise errors.SessionNotStartedException("Missing session id.")
 
-        if session_id == None:
+        if session_id is None:
             raise errors.SessionNotStartedException("Missing session id.")
 
         self._ongaku.internal.set_session_id(session_id)

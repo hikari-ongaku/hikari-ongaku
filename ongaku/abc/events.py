@@ -1,9 +1,11 @@
-import hikari
-from .track import Track
-from .lavalink import ExceptionError
-from .. import enums
-import typing as t
 import dataclasses
+import typing as t
+
+import hikari
+
+from .. import enums
+from .lavalink import ExceptionError
+from .track import Track
 
 
 class OngakuEvent(hikari.Event):
@@ -224,12 +226,12 @@ class StatisticsEvent(OngakuEvent):
         memory = StatsMemory.as_payload(payload["memory"])
         cpu = StatsCpu.as_payload(payload["cpu"])
         frame_statistics = None
-        if payload.get("frameStats", None) != None:
+        if payload.get("frameStats", None) is not None:
             try:
                 frame_statistics = StatsFrameStatistics.as_payload(
                     payload["frameStats"]
                 )
-            except:
+            except Exception:
                 frame_statistics = None
 
         return cls(app, players, playing_players, uptime, memory, cpu, frame_statistics)

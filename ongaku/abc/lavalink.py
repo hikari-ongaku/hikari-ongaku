@@ -1,6 +1,7 @@
 import dataclasses
-from .. import enums
 import typing as t
+
+from .. import enums
 
 
 @dataclasses.dataclass
@@ -56,11 +57,11 @@ class InfoVersion:
         patch = payload["patch"]
         try:
             pre_release = payload["preRelease"]
-        except:
+        except Exception:
             pre_release = None
         try:
             build = payload["build"]
-        except:
+        except Exception:
             build = None
 
         return cls(semver, major, minor, patch, pre_release, build)
@@ -298,7 +299,7 @@ class RestError:
         error = payload["error"]
         try:
             trace = payload["trace"]
-        except:
+        except Exception:
             trace = None
         message = payload["message"]
         path = payload["path"]

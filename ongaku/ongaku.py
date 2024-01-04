@@ -1,14 +1,16 @@
+import asyncio
+import logging
+import typing as t
+
+import aiohttp
+import hikari
+
+from .abc.lavalink import RestError
 from .enums import ConnectionType, VersionType
+from .errors import PlayerCreateException, PlayerMissingException, SessionError
 from .events import EventHandler, WebsocketClosedEvent
 from .player import Player
 from .rest import RestApi
-from .abc.lavalink import RestError
-from .errors import PlayerMissingException, PlayerCreateException, SessionError
-import typing as t
-import aiohttp
-import hikari
-import logging
-import asyncio
 
 _logger = logging.getLogger("ongaku")
 
@@ -58,7 +60,7 @@ class _OngakuInternal:
         self, connected: ConnectionType, *, reason: t.Optional[str] = None
     ) -> None:
         self._connected = connected
-        if reason != None:
+        if reason is not None:
             self._failure_reason = reason
 
     def set_session_id(self, session_id: str) -> None:
@@ -92,10 +94,10 @@ class _OngakuInternal:
     async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[RestError]:
         try:
             error = RestError.as_payload(payload)
-        except:
+        except Exception:
             return
 
-        return error    
+        return error
 
 
 class Ongaku:
@@ -245,7 +247,7 @@ class Ongaku:
         ------
         PlayerCreateException
             Raised when the player failed to be created.
-        
+
         Returns
         -------
         Player
@@ -260,17 +262,17 @@ class Ongaku:
             await self.bot.update_voice_state(guild_id, None)
             try:
                 self._players.pop(guild_id)
-            except:
+            except Exception:
                 pass
-        
-        bot = self.bot.cache.get_voice_state(guild_id, self.bot.get_me().id) #type: ignore
 
-        if bot != None and bot.channel_id != None:
+        bot = self.bot.cache.get_voice_state(guild_id, self.bot.get_me().id)  # type: ignore
+
+        if bot is not None and bot.channel_id is not None:
             print("DISCONNECTING FROM VC. 2")
             await self.bot.voice.disconnect(guild_id)
             try:
                 self._players.pop(guild_id)
-            except:
+            except Exception:
                 pass
 
         try:
@@ -279,7 +281,7 @@ class Ongaku:
             )
         except Exception as e:
             raise PlayerCreateException(e)
-        
+
         connection = self.bot.voice.connections.get(guild_id)
 
         self._players.update({guild_id: new_player})
@@ -305,11 +307,11 @@ class Ongaku:
         -------
         Player
             The player that belongs to the specified guild.
-        """   
+        """
         print("fetching player...")
         fetched_player = self._players.get(guild_id)
 
-        if fetched_player == None:
+        if fetched_player is None:
             raise PlayerMissingException(guild_id)
         print("found player!")
 
@@ -345,7 +347,7 @@ class Ongaku:
         """
         This is an internal function, that handles the connection, and starting of the websocket.
         """
-        
+
         if (
             self._internal.connected == ConnectionType.CONNECTED
             or self._internal.connected == ConnectionType.FAILURE
@@ -354,7 +356,7 @@ class Ongaku:
 
         try:
             bot = self.bot.get_me()
-        except:
+        except Exception:
             self._internal.remove_retry(-1)
             self._internal.set_connection(
                 ConnectionType.FAILURE, reason="Bot ID could not be found."
@@ -362,7 +364,7 @@ class Ongaku:
             _logger.error("Ongaku could not start, due to the bot ID not being found.")
             return
 
-        if bot == None:
+        if bot is None:
             self._internal.remove_retry(-1)
             self._internal.set_connection(
                 ConnectionType.FAILURE, reason="Bot ID could not be found."
@@ -393,10 +395,9 @@ class Ongaku:
                             if msg.type == aiohttp.WSMsgType.TEXT:  # type: ignore
                                 try:
                                     json_data = msg.json()
-                                except:
+                                except Exception:
                                     _logger.info("Failed to decode json data.")
                                 else:
-
                                     self._internal.set_connection(
                                         ConnectionType.CONNECTED
                                     )
@@ -404,7 +405,8 @@ class Ongaku:
 
                             elif msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
                                 self._internal.set_connection(
-                                    ConnectionType.FAILURE, reason=msg.data # type: ignore
+                                    ConnectionType.FAILURE,
+                                    reason=msg.data,  # type: ignore
                                 )
                 except Exception as e:
                     self._internal.set_connection(
@@ -428,4 +430,6 @@ class Ongaku:
         if event.code == 4006:
             await player.disconnect()
             self._players.pop(hikari.Snowflake(event.guild_id))
-            await self.create_player(hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id))
+            await self.create_player(
+                hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id)
+            )

@@ -1,7 +1,9 @@
-from .track import Track
-import hikari
-import typing as t
 import dataclasses
+import typing as t
+
+import hikari
+
+from .track import Track
 
 
 @dataclasses.dataclass
@@ -162,7 +164,7 @@ class Player:
         guild_id = payload["guildId"]
         try:
             track = Track.as_payload(payload["track"])
-        except:
+        except Exception:
             track = None
         volume = payload["volume"]
         paused = payload["paused"]
