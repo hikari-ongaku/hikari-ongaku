@@ -4,8 +4,7 @@ import abc
 import hikari
 import typing as t
 
-if t.TYPE_CHECKING:
-    BuildT = t.TypeVar("BuildT", int, float, bool, str, list[int | float | bool | str | None], dict[str, int | float | bool | str | None])
+
 
 class FilterBase(abc.ABC):
     """
@@ -24,7 +23,7 @@ class FilterBase(abc.ABC):
         return self._name
 
     @abc.abstractmethod
-    def build(self) -> dict[str, BuildT] | None:
+    def build(self) -> t.Mapping[str, t.Any] | None:
         """
         Function to build the filter.
 
@@ -180,7 +179,7 @@ class FilterEqualizer(FilterBase):
         "hz16000": hikari.UNDEFINED,
     }
 
-    def build(self) -> dict[str, BuildT] | None:
+    def build(self):
         return_data: list[dict[str, float | int]] = []
         for x in range(len(self._equalizers)):
             items = list(self._equalizers.values())
@@ -195,10 +194,10 @@ class FilterEqualizer(FilterBase):
         if len(return_data) <= 0:
             return
 
-        return {"equalizer":return_data}
+        return {"equalizer": return_data}
 
 
-class FilterKaraoke(FilterBase[BuildT]):
+class FilterKaraoke(FilterBase):
     """
     Karaoke filter
 
@@ -236,12 +235,14 @@ class FilterKaraoke(FilterBase[BuildT]):
         self._filter_width = filter_width
 
     def build(self):
-        return_data: dict[str, BuildT] = {}
+        return_data: dict[str, t.Any] = {}
         if self._level != hikari.UNDEFINED:
             return_data.update({"level": 0})
 
+        return return_data
+
 class Filters:
-    _filters: dict[str, hikari.UndefinedNoneOr[FilterBase[t.Any]]] = {
+    _filters: dict[str, hikari.UndefinedNoneOr[FilterBase]] = {
         "equalizer": hikari.UNDEFINED,
         "karaoke": hikari.UNDEFINED,
         "timescale": hikari.UNDEFINED,
