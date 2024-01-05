@@ -241,7 +241,7 @@ class FilterKaraoke(FilterBase):
 
         return return_data
 
-class Filters:
+class FilterBuilder:
     _filters: dict[str, hikari.UndefinedNoneOr[FilterBase]] = {
         "equalizer": hikari.UNDEFINED,
         "karaoke": hikari.UNDEFINED,
