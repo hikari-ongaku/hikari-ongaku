@@ -13,7 +13,7 @@ from .errors import (
     PlayerQueueException,
     PlayerSettingException,
     SessionNotStartedException,
-    RequiredException
+    RequiredException,
 )
 
 if t.TYPE_CHECKING:
@@ -459,10 +459,7 @@ class Player(VoiceConnection):
         if bot is None:
             raise RequiredException("Bot is required to disconnect.")
 
-        if (
-            self._bot.cache.get_voice_state(self.guild_id, bot.id)
-            is not None
-        ):
+        if self._bot.cache.get_voice_state(self.guild_id, bot.id) is not None:
             await self._bot.voice.disconnect(self.guild_id)
 
     async def join(self) -> None:

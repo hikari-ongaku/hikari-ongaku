@@ -75,3 +75,6 @@ class ConnectionType(enum.Enum):
     """The bot has not yet attempted to connect to the server."""
     CONNECTED = 2
     """The bot has successfully connected to the lavalink server"""
+
+
+

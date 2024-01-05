@@ -383,7 +383,7 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
     Gotta do the docs for me
     """
 
-    reason: ExceptionError
+    exception: ExceptionError
 
     @classmethod
     def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
@@ -403,7 +403,7 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
             The Stats Cpu you parsed.
         """
         track = Track.as_payload(payload["track"])
-        guild_id = hikari.Snowflake("guildId")
+        guild_id = hikari.Snowflake(payload["guildId"])
         reason = ExceptionError.as_payload(payload["exception"])
 
         return cls(app, track, guild_id, reason)
@@ -473,7 +473,7 @@ class PlayerBase:
         StatsCpu
             The Stats Cpu you parsed.
         """
-        guild_id = payload["guildId"]
+        guild_id = hikari.Snowflake(payload["guildId"])
 
         return cls(app, guild_id)
 

@@ -16,6 +16,7 @@ lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
 
 # Events
 
+
 @bot.listen(ongaku.ReadyEvent)
 async def ready_event(event: ongaku.ReadyEvent):
     print("Ready event")
@@ -53,6 +54,7 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
 
 
 # The following, is just a bunch of example commands.
+
 
 @bot.command
 @lightbulb.option("query", "The song you wish to play (or a playlist link.)")
@@ -96,7 +98,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
 
     if isinstance(result, ongaku.SearchResult):
         track = result.tracks[0]
-    
+
     elif isinstance(result, ongaku.Track):
         track = result
 
@@ -104,7 +106,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
         track = result.tracks[0]
 
     embed = hikari.Embed(
-        title=f"[{track.info.title}]({track.info.uri})", 
+        title=f"[{track.info.title}]({track.info.uri})",
         description=f"made by: {track.info.author}",
     )
 
@@ -123,6 +125,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
         flags=hikari.MessageFlag.EPHEMERAL,
     )
 
+
 @bot.command
 @lightbulb.command("pause", "pause the currently playing song.")
 @lightbulb.implements(lightbulb.SlashCommand)
@@ -136,21 +139,17 @@ async def pause_command(ctx: lightbulb.Context) -> None:
         current_player = await lavalink.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
-            "You must have a player currently running!", flags=hikari.MessageFlag.EPHEMERAL
+            "You must have a player currently running!",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-    
+
     await current_player.pause()
 
     if current_player.is_paused:
-        await ctx.respond(
-            "Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL
-        )
+        await ctx.respond("Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL)
     else:
-        await ctx.respond(
-            "Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL
-        )
-
+        await ctx.respond("Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL)
 
 
 if __name__ == "__main__":

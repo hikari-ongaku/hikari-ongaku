@@ -128,7 +128,7 @@ class Track:
     encoded: str
     info: TrackInfo
     plugin_info: dict[t.Any, t.Any]
-    user_data: dict[t.Any, t.Any]
+    user_data: dict[t.Any, t.Any] | None = None
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -150,7 +150,10 @@ class Track:
         encoded = payload["encoded"]
         info = TrackInfo.as_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
-        user_data = payload["userData"]
+        try:
+            user_data = payload["userData"]
+        except Exception:
+            user_data = None
 
         return cls(encoded, info, plugin_info, user_data)
 

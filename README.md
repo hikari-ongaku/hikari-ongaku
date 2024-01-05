@@ -13,10 +13,11 @@ Features:
  - [ ] Resume Sessions
  - [x] Delete tracks (current, and other, by both position, and Track)
  - [x] Clear tracks
- - [ ] Change EQ and Effects
+ - [ ] Change EQ and Effects (Filters)
  - [x] Mute (basically sets volume to zero, whilst still playing audio)
  - [ ] Complete Error handling
  - [ ] Nodes
  - [x] Retries
  - [ ] Testing (internal)
  - [ ] Store the user who asked for specific songs.
+ - [ ] Support local file playing (mp3, mp4, ogg, wav, etc.)

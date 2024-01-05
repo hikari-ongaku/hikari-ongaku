@@ -69,6 +69,7 @@ class GatewayOnlyException(OngakuBaseException):
     Raised when Gateway bot is not used.
     """
 
+
 class RequiredException(OngakuBaseException):
     """
     Raised when a value is required, but is None, or missing.

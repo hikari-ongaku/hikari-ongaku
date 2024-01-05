@@ -136,7 +136,7 @@ class InfoPlugin:
     """
 
     name: str
-    version: int
+    version: str
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -223,7 +223,8 @@ class Info:
         git = InfoGit.as_payload(payload["git"])
         jvm = payload["jvm"]
         lavaplayer = payload["lavaplayer"]
-        source_managers = payload["sourceManager"]
+
+        source_managers = payload["sourceManagers"]
         filters = payload["filters"]
         plugins: list[InfoPlugin] = []
 

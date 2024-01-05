@@ -143,6 +143,7 @@ class Player:
     paused: bool
     state: PlayerState
     voice: PlayerVoice
+    filters: dict[t.Any, t.Any] | None = None
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -161,7 +162,7 @@ class Player:
         Player
             The Player you parsed.
         """
-        guild_id = payload["guildId"]
+        guild_id = hikari.Snowflake(payload["guildId"])
         try:
             track = Track.as_payload(payload["track"])
         except Exception:
@@ -170,8 +171,9 @@ class Player:
         paused = payload["paused"]
         state = PlayerState.as_payload(payload["state"])
         voice = PlayerVoice.as_payload(payload["voice"])
+        filters = payload["filters"]
 
-        return cls(guild_id, track, volume, paused, state, voice)
+        return cls(guild_id, track, volume, paused, state, voice, filters)
 
     @property
     def raw(self) -> dict[str, t.Any]:

@@ -1,3 +1,5 @@
+from . import events, filters, lavalink, player, session, track
+
 from .events import (
     PlayerQueueEmptyEvent,
     ReadyEvent,
@@ -13,7 +15,15 @@ from .player import Player, PlayerState, PlayerVoice
 from .session import Session
 from .track import Playlist, SearchResult, Track
 
+
 __all__ = (
+    # .
+    "events",
+    "filters",
+    "lavalink",
+    "player",
+    "session",
+    "track",
     # .events
     "ReadyEvent",
     "StatisticsEvent",

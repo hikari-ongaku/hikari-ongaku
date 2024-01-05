@@ -73,6 +73,7 @@ nav:
     - Basics: getting_started/basics.md
     - Commands: getting_started/commands.md
     - Nodes: getting_started/nodes.md
+    - Filters: getting_started/filters.md
   - API Reference:
     - api_reference/index.md
     - Ongaku: api_reference/ongaku.md
@@ -85,6 +86,7 @@ nav:
       - Player: api_reference/abc/player.md
       - Session: api_reference/abc/session.md
       - Track: api_reference/abc/track.md
+      - Filters: api_reference/abc/filters.md
 
 
 watch:
