@@ -20,4 +20,4 @@ Not sure what to do? Check out [Getting Started](getting_started/index.md) for e
 
 ## Notable mentions
 
-A big thanks to [hyper](https://github.com/hypergonial), for their amazing help towards my program :D Would not have been here without them.
+A big thanks to [Hyper](https://github.com/hypergonial), for their amazing help towards my program :D Would not have been here without them.

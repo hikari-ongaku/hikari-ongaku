@@ -71,7 +71,6 @@ nav:
   - Getting Started:
     - getting_started/index.md
     - Basics: getting_started/basics.md
-    - Commands: getting_started/commands.md
     - Nodes: getting_started/nodes.md
     - Filters: getting_started/filters.md
   - API Reference:
