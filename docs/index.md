@@ -6,7 +6,7 @@ hide:
 
 # Home
 
-Welcome to the documentation for **hikari-ongaku**, a library, that handles the discord voice server for you.
+Welcome to the documentation for **hikari-ongaku**, a library that allows you to play music from a lavalink server, to your discord server!
 
 <br>
 
