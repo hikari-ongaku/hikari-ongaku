@@ -1,4 +1,4 @@
-[![PyPI](https://img.shields.io/pypi/v/hikari-arc)](https://pypi.org/project/hikari-ongaku)
+[![PyPI](https://img.shields.io/pypi/v/hikari-ongaku)](https://pypi.org/project/hikari-ongaku)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
 ![Pyright](https://badgen.net/badge/Pyright/strict/2A6DB2)
 
