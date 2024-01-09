@@ -8,7 +8,7 @@ def long_description() -> str:
 
 setup(
     name="hikari-ongaku",
-    version="0.1.1",
+    version="0.2",
     author="MPlaty",
     author_email="contact@mplaty.com",
     description="A music/audio handler for hikari!",
