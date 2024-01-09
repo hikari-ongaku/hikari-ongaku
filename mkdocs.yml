@@ -80,6 +80,7 @@ nav:
     - Enums: api_reference/enums.md
     - Errors: api_reference/errors.md
     - ABC:
+      - Base: api_reference/abc/base.md
       - Events: api_reference/abc/events.md
       - Lavalink: api_reference/abc/lavalink.md
       - Player: api_reference/abc/player.md

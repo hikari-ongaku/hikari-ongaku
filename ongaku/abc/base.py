@@ -5,11 +5,19 @@ import attrs
 import hikari
 import typing as t
 
-class Payload(abc.ABC): # the base payload?
-    pass
+class Payload(abc.ABC):
+    """
+    Main payload
+
+    The main payload, that all payload types are inherited from.
+    """
 
 class PayloadBase(Payload, abc.ABC):
+    """
+    Payload Base
 
+    The payload base, that allows for converting back into payloads to transfer.
+    """
     @classmethod
     def from_payload(cls, payload: dict[str, t.Any]) -> PayloadBase:
         ...
@@ -34,7 +42,14 @@ class PayloadBase(Payload, abc.ABC):
         return new_data
 
 class PayloadBaseApp(Payload, abc.ABC):
+    """
+    Payload base app
 
+    The payload base, that supports an application/bot.
+    
+    !!! WARNING
+        This cannot be converted into a dict.
+    """
     @classmethod
     def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware) -> PayloadBaseApp:
         ...
