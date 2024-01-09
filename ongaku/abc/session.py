@@ -1,9 +1,10 @@
-import dataclasses
+import attrs
 import typing as t
+from .base import PayloadBase
 
 
-@dataclasses.dataclass
-class Session:
+@attrs.define
+class Session(PayloadBase):
     """
     Session
 
@@ -23,7 +24,7 @@ class Session:
     timeout: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Session parser
 
@@ -43,7 +44,3 @@ class Session:
         timeout = payload["timeout"]
 
         return cls(resuming, timeout)
-
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)

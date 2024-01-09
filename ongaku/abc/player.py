@@ -1,13 +1,14 @@
-import dataclasses
+import attrs
 import typing as t
 
 import hikari
 
 from .track import Track
+from .base import PayloadBase
 
 
-@dataclasses.dataclass
-class PlayerState:
+@attrs.define
+class PlayerState(PayloadBase):
     """
     Player State
 
@@ -56,13 +57,8 @@ class PlayerState:
 
         return cls(time, position, connected, ping)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class PlayerVoice:
+@attrs.define
+class PlayerVoice(PayloadBase):
     """
     Player Voice
 
@@ -107,13 +103,8 @@ class PlayerVoice:
 
         return cls(token, endpoint, session_id)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class Player:
+@attrs.define
+class Player(PayloadBase):
     """
     Player Voice
 
@@ -164,7 +155,7 @@ class Player:
         """
         guild_id = hikari.Snowflake(payload["guildId"])
         try:
-            track = Track.as_payload(payload["track"])
+            track = Track.from_payload(payload["track"])
         except Exception:
             track = None
         volume = payload["volume"]
@@ -174,7 +165,3 @@ class Player:
         filters = payload["filters"]
 
         return cls(guild_id, track, volume, paused, state, voice, filters)
-
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)

@@ -104,6 +104,8 @@ class PlayerTest(unittest.TestCase):
         assert test_player.voice.endpoint == "test_endpoint"
         assert test_player.voice.session_id == "test_session_id"
 
+        assert test_player.to_payload == payload
+
     def test_player_state(self):
         test_player_state = PlayerState(12, 24, True, 48)
 
@@ -121,6 +123,8 @@ class PlayerTest(unittest.TestCase):
         assert test_player_state.position == 24
         assert test_player_state.connected is True
         assert test_player_state.ping == 48
+
+        assert test_player_state.to_payload == payload
 
     def test_player_voice(self):
         test_player_voice = PlayerVoice(
@@ -143,3 +147,7 @@ class PlayerTest(unittest.TestCase):
         assert test_player_voice.token == "test_token"
         assert test_player_voice.endpoint == "test_endpoint"
         assert test_player_voice.session_id == "test_session_id"
+
+        print(test_player_voice.to_payload)
+
+        assert test_player_voice.to_payload == payload

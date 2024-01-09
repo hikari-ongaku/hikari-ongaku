@@ -17,7 +17,7 @@ from ongaku.abc.lavalink import ExceptionError
 from ongaku.enums import TrackEndReasonType, SeverityType
 from ongaku.abc.track import Track, TrackInfo
 
-# TODO: make sure to fix, and add, to_payload for all items.
+# TODO: make sure to fix, and add, from_payload for all items.
 # TODO: Fix user data error.
 
 _test_bot = hikari.GatewayBot("", banner=None)
@@ -43,8 +43,8 @@ class ReadyEventTest(unittest.TestCase):
         assert test_ready_event.session_id == "test_session_id"
 
     def test_base_payload(self):
-        test_ready_event = ReadyEvent.as_payload(
-            _test_bot, {"resumed": True, "sessionId": "test_session_id_payload"}
+        test_ready_event = ReadyEvent.from_payload(
+            {"resumed": True, "sessionId": "test_session_id_payload"}, app=_test_bot
         )
 
         assert test_ready_event.app == _test_bot
@@ -94,7 +94,7 @@ class StatsEventTest(unittest.TestCase):
             "frameStats": {"sent": 6000, "nulled": 10, "deficit": -3010},
         }
 
-        test_stats_event = StatisticsEvent.as_payload(_test_bot, payload)
+        test_stats_event = StatisticsEvent.from_payload(payload, app=_test_bot)
 
         assert test_stats_event.app == _test_bot
         assert test_stats_event.players == 1
@@ -128,7 +128,7 @@ class StatsEventTest(unittest.TestCase):
             "reservable": 123456789,
         }
 
-        test_memory = StatsMemory.as_payload(payload)
+        test_memory = StatsMemory.from_payload(payload)
 
         assert test_memory.free == 123456789
         assert test_memory.used == 123456789
@@ -145,7 +145,7 @@ class StatsEventTest(unittest.TestCase):
     def test_cpu_payload(self):
         payload = {"cores": 4, "systemLoad": 0.5, "lavalinkLoad": 0.5}
 
-        test_cpu = StatsCpu.as_payload(payload)
+        test_cpu = StatsCpu.from_payload(payload)
 
         assert test_cpu.cores == 4
         assert test_cpu.system_load == 0.5
@@ -161,7 +161,7 @@ class StatsEventTest(unittest.TestCase):
     def test_frame_stats_payload(self):
         payload = {"sent": 6000, "nulled": 10, "deficit": -3010}
 
-        test_frame_stats = StatsFrameStatistics.as_payload(payload)
+        test_frame_stats = StatsFrameStatistics.from_payload(payload)
 
         assert test_frame_stats.sent == 6000
         assert test_frame_stats.nulled == 10
@@ -199,7 +199,7 @@ class TrackBaseTest(unittest.TestCase):
                 "pluginInfo": {},
             },
         }
-        test_track_base = TrackBase.as_payload(_test_bot, payload)
+        test_track_base = TrackBase.from_payload(payload, app=_test_bot)
 
         assert test_track_base.app == _test_bot
         assert test_track_base.guild_id == hikari.Snowflake(19216868440)
@@ -253,7 +253,7 @@ class TrackStartTest(unittest.TestCase):
             },
         }
 
-        test_start_event = TrackStartEvent.as_payload(_test_bot, payload)
+        test_start_event = TrackStartEvent.from_payload(payload, app=_test_bot)
 
         assert test_start_event.app == _test_bot
         assert test_start_event.guild_id == hikari.Snowflake(19216868440)
@@ -312,7 +312,7 @@ class TrackEndTest(unittest.TestCase):
             "reason": "finished",
         }
 
-        test_end_event = TrackEndEvent.as_payload(_test_bot, payload)
+        test_end_event = TrackEndEvent.from_payload(payload, app=_test_bot)
 
         assert test_end_event.app == _test_bot
         assert test_end_event.guild_id == hikari.Snowflake(19216868440)
@@ -378,7 +378,7 @@ class TrackExceptionTest(unittest.TestCase):
             },
         }
 
-        test_exception_event = TrackExceptionEvent.as_payload(_test_bot, payload)
+        test_exception_event = TrackExceptionEvent.from_payload(payload, app=_test_bot)
 
         assert test_exception_event.app == _test_bot
         assert test_exception_event.guild_id == hikari.Snowflake(19216868440)
@@ -437,7 +437,7 @@ class TrackStuckTest(unittest.TestCase):
             "thresholdMs": 123456789,
         }
 
-        test_end_event = TrackStuckEvent.as_payload(_test_bot, payload)
+        test_end_event = TrackStuckEvent.from_payload(payload, app=_test_bot)
 
         assert test_end_event.app == _test_bot
         assert test_end_event.guild_id == hikari.Snowflake(19216868440)
@@ -479,9 +479,7 @@ class WebsocketClosedTest(unittest.TestCase):
             "byRemote": True,
         }
 
-        test_websocket_closed_event = WebsocketClosedEvent.as_payload(
-            _test_bot, payload
-        )
+        test_websocket_closed_event = WebsocketClosedEvent.from_payload(payload, app=_test_bot)
 
         assert test_websocket_closed_event.app == _test_bot
         assert test_websocket_closed_event.code == 4006

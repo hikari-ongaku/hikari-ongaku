@@ -1,11 +1,12 @@
-import dataclasses
+import attrs
 import typing as t
+from .base import PayloadBase
 
 from .. import enums
 
 
-@dataclasses.dataclass
-class InfoVersion:
+@attrs.define
+class InfoVersion(PayloadBase):
     """
     All of the Info Version information.
 
@@ -35,7 +36,7 @@ class InfoVersion:
     build: t.Optional[str]
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Info Version parser
 
@@ -66,13 +67,9 @@ class InfoVersion:
 
         return cls(semver, major, minor, patch, pre_release, build)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class InfoGit:
+@attrs.define
+class InfoGit(PayloadBase):
     """
     All of the Info Git information.
 
@@ -93,7 +90,7 @@ class InfoGit:
     commit_time: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Info Git parser
 
@@ -115,13 +112,9 @@ class InfoGit:
 
         return cls(branch, commit, commit_time)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class InfoPlugin:
+@attrs.define
+class InfoPlugin(PayloadBase):
     """
     All of the Info Plugin information.
 
@@ -139,7 +132,7 @@ class InfoPlugin:
     version: str
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Info Plugin parser
 
@@ -160,13 +153,10 @@ class InfoPlugin:
 
         return cls(name, version)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
 
-@dataclasses.dataclass
-class Info:
+@attrs.define
+class Info(PayloadBase):
     """
     All of the Info Version information.
 
@@ -202,7 +192,7 @@ class Info:
     plugins: list[InfoPlugin]
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Info parser
 
@@ -218,9 +208,9 @@ class Info:
         Info
             The Info you parsed.
         """
-        version = InfoVersion.as_payload(payload["version"])
+        version = InfoVersion.from_payload(payload["version"])
         build_time = payload["buildTime"]
-        git = InfoGit.as_payload(payload["git"])
+        git = InfoGit.from_payload(payload["git"])
         jvm = payload["jvm"]
         lavaplayer = payload["lavaplayer"]
 
@@ -232,7 +222,7 @@ class Info:
 
         for plugin in payload_plugins:
             try:
-                new_plugin = InfoPlugin.as_payload(plugin)
+                new_plugin = InfoPlugin.from_payload(plugin)
             except Exception as e:
                 raise e
 
@@ -242,13 +232,9 @@ class Info:
             version, build_time, git, jvm, lavaplayer, source_managers, filters, plugins
         )
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class RestError:
+@attrs.define
+class RestError(PayloadBase):
     """
     All of the Rest Error information.
 
@@ -279,7 +265,7 @@ class RestError:
     path: str
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Rest Error parser
 
@@ -307,13 +293,9 @@ class RestError:
 
         return cls(timestamp, status, error, trace, message, path)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class ExceptionError:
+@attrs.define
+class ExceptionError(PayloadBase):
     """
     All of the Exception Error information.
 
@@ -335,7 +317,7 @@ class ExceptionError:
     cause: str
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Exception Error parser
 

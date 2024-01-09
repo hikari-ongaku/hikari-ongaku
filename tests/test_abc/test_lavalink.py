@@ -74,7 +74,7 @@ class InfoTest(unittest.TestCase):
             ],
         }
 
-        test_info = Info.as_payload(payload)
+        test_info = Info.from_payload(payload)
 
         assert test_info.build_time == 60
         assert test_info.jvm == "jvm_test"
@@ -99,6 +99,10 @@ class InfoTest(unittest.TestCase):
         assert test_info.filters[2] == "timescale"
         assert test_info.filters[3] == "channelMix"
 
+        print(test_info.to_payload)
+
+        assert test_info.to_payload == payload
+
     def test_info_version(self):
         test_info_version = InfoVersion(
             "semver_test", 1, 2, 3, "prerelease_test", "build_test"
@@ -121,7 +125,7 @@ class InfoTest(unittest.TestCase):
             "build": "build_test",
         }
 
-        test_info_version = InfoVersion.as_payload(payload)
+        test_info_version = InfoVersion.from_payload(payload)
 
         assert test_info_version.semver == "semver_test"
         assert test_info_version.major == 3
@@ -129,6 +133,8 @@ class InfoTest(unittest.TestCase):
         assert test_info_version.patch == 0
         assert test_info_version.pre_release == "prerelease_test"
         assert test_info_version.build == "build_test"
+
+        assert test_info_version.to_payload == payload
 
     def test_info_git(self):
         test_info_git = InfoGit("branch_test", "commit_test", 30)
@@ -140,11 +146,13 @@ class InfoTest(unittest.TestCase):
     def test_info_git_payload(self):
         payload = {"branch": "branch_test", "commit": "commit_test", "commitTime": 30}
 
-        test_info_git = InfoGit.as_payload(payload)
+        test_info_git = InfoGit.from_payload(payload)
 
         assert test_info_git.branch == "branch_test"
         assert test_info_git.commit == "commit_test"
         assert test_info_git.commit_time == 30
+
+        assert test_info_git.to_payload == payload
 
     def test_info_plugin(self):
         test_info_plugin = InfoPlugin("plugin_test_1", "1.2")
@@ -155,10 +163,12 @@ class InfoTest(unittest.TestCase):
     def test_info_plugin_payload(self):
         payload = {"name": "plugin_test_1", "version": "1.2"}
 
-        test_info_plugin = InfoPlugin.as_payload(payload)
+        test_info_plugin = InfoPlugin.from_payload(payload)
 
         assert test_info_plugin.name == "plugin_test_1"
         assert test_info_plugin.version == "1.2"
+
+        assert test_info_plugin.to_payload == payload
 
 
 class TestErrors(unittest.TestCase):
@@ -184,7 +194,7 @@ class TestErrors(unittest.TestCase):
             "path": "test_path",
         }
 
-        test_rest_error = RestError.as_payload(payload)
+        test_rest_error = RestError.from_payload(payload)
 
         assert test_rest_error.timestamp == 32
         assert test_rest_error.status == 12
@@ -209,7 +219,7 @@ class TestErrors(unittest.TestCase):
             "cause": "test_cause",
         }
 
-        test_exception_error = ExceptionError.as_payload(payload)
+        test_exception_error = ExceptionError.from_payload(payload)
 
         assert test_exception_error.message == "test_message"
         assert test_exception_error.severity == SeverityType.COMMON

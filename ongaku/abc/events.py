@@ -1,4 +1,4 @@
-import dataclasses
+import attrs
 import typing as t
 
 import hikari
@@ -6,7 +6,7 @@ import hikari
 from .. import enums
 from .lavalink import ExceptionError
 from .track import Track
-
+from .base import PayloadBaseApp, PayloadBase
 
 class OngakuEvent(hikari.Event):
     """
@@ -14,8 +14,8 @@ class OngakuEvent(hikari.Event):
     """
 
 
-@dataclasses.dataclass
-class ReadyEvent(OngakuEvent):
+@attrs.define
+class ReadyEvent(OngakuEvent, PayloadBaseApp):
     """
     Gotta do the docs for me
     """
@@ -29,7 +29,7 @@ class ReadyEvent(OngakuEvent):
         return self._app
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[t.Any, t.Any], *, app: hikari.RESTAware):
         """
         Ready Event parser
 
@@ -51,8 +51,8 @@ class ReadyEvent(OngakuEvent):
         return cls(app, resumed, session_id)
 
 
-@dataclasses.dataclass
-class StatsMemory:
+@attrs.define
+class StatsMemory(PayloadBase):
     """
     All of the Statistics Memory information.
 
@@ -76,7 +76,7 @@ class StatsMemory:
     reservable: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Statistics Event, Memory parser
 
@@ -100,8 +100,8 @@ class StatsMemory:
         return cls(free, used, allocated, reservable)
 
 
-@dataclasses.dataclass
-class StatsCpu:
+@attrs.define
+class StatsCpu(PayloadBase):
     """
     All of the Statistics CPU information.
 
@@ -122,7 +122,7 @@ class StatsCpu:
     lavalink_load: float
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Statistics Event, CPU parser
 
@@ -145,8 +145,8 @@ class StatsCpu:
         return cls(cores, system_load, lavalink_load)
 
 
-@dataclasses.dataclass
-class StatsFrameStatistics:
+@attrs.define
+class StatsFrameStatistics(PayloadBase):
     """
     All of the Statistics frame statistics information.
 
@@ -167,7 +167,7 @@ class StatsFrameStatistics:
     deficit: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Statistics Event, Frame Statistics parser
 
@@ -190,7 +190,7 @@ class StatsFrameStatistics:
         return cls(sent, nulled, deficit)
 
 
-@dataclasses.dataclass
+@attrs.define
 class StatisticsEvent(OngakuEvent):
     """
     All of the Statistics information.
@@ -226,7 +226,7 @@ class StatisticsEvent(OngakuEvent):
         return self._app
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Statistics Event parser
 
@@ -245,12 +245,12 @@ class StatisticsEvent(OngakuEvent):
         players = payload["players"]
         playing_players = payload["playingPlayers"]
         uptime = payload["uptime"]
-        memory = StatsMemory.as_payload(payload["memory"])
-        cpu = StatsCpu.as_payload(payload["cpu"])
+        memory = StatsMemory.from_payload(payload["memory"])
+        cpu = StatsCpu.from_payload(payload["cpu"])
         frame_statistics = None
         if payload.get("frameStats", None) is not None:
             try:
-                frame_statistics = StatsFrameStatistics.as_payload(
+                frame_statistics = StatsFrameStatistics.from_payload(
                     payload["frameStats"]
                 )
             except Exception:
@@ -259,8 +259,8 @@ class StatisticsEvent(OngakuEvent):
         return cls(app, players, playing_players, uptime, memory, cpu, frame_statistics)
 
 
-@dataclasses.dataclass
-class WebsocketClosedEvent(OngakuEvent):
+@attrs.define
+class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp):
     """
     Gotta do the docs for me
     """
@@ -276,7 +276,7 @@ class WebsocketClosedEvent(OngakuEvent):
         return self._app
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Websocket Closed Event parser
 
@@ -303,8 +303,8 @@ class WebsocketClosedEvent(OngakuEvent):
 # Track Events:
 
 
-@dataclasses.dataclass
-class TrackBase:
+@attrs.define
+class TrackBase(PayloadBaseApp):
     """
     Base track class
 
@@ -329,7 +329,7 @@ class TrackBase:
         return self._app
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Track Base parser
 
@@ -345,20 +345,20 @@ class TrackBase:
         TrackBase
             The [TrackBase][ongaku.abc.events.TrackBase] payload you parsed.
         """
-        track = Track.as_payload(payload["track"])
+        track = Track.from_payload(payload["track"])
         guild_id = hikari.Snowflake(payload["guildId"])
 
         return cls(app, track, guild_id)
 
 
-@dataclasses.dataclass
+@attrs.define
 class TrackStartEvent(TrackBase, OngakuEvent):
     """
     Gotta do the docs for me
     """
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Track Start Event parser
 
@@ -374,12 +374,12 @@ class TrackStartEvent(TrackBase, OngakuEvent):
         TrackStartEvent
             The [TrackStartEvent][ongaku.abc.events.TrackStartEvent] payload you parsed.
         """
-        base = TrackBase.as_payload(app, payload)
+        base = TrackBase.from_payload(payload, app=app)
 
         return cls(base.app, base.track, base.guild_id)
 
 
-@dataclasses.dataclass
+@attrs.define
 class TrackEndEvent(TrackBase, OngakuEvent):
     """
     Gotta do the docs for me
@@ -388,7 +388,7 @@ class TrackEndEvent(TrackBase, OngakuEvent):
     reason: enums.TrackEndReasonType
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Track End Event parser
 
@@ -404,13 +404,13 @@ class TrackEndEvent(TrackBase, OngakuEvent):
         TrackEndEvent
             The [TrackEndEvent][ongaku.abc.events.TrackEndEvent] payload you parsed.
         """
-        base = TrackBase.as_payload(app, payload)
+        base = TrackBase.from_payload(payload, app=app)
         reason = enums.TrackEndReasonType(payload["reason"])
 
         return cls(base.app, base.track, base.guild_id, reason)
 
 
-@dataclasses.dataclass
+@attrs.define
 class TrackExceptionEvent(TrackBase, OngakuEvent):
     """
     Track Stuck Event
@@ -432,7 +432,7 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
     exception: ExceptionError
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Track Exception Event parser
 
@@ -448,14 +448,14 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
         TrackExceptionEvent
             The [TrackExceptionEvent][ongaku.abc.events.TrackExceptionEvent] payload you parsed.
         """
-        track = Track.as_payload(payload["track"])
+        track = Track.from_payload(payload["track"])
         guild_id = hikari.Snowflake(payload["guildId"])
-        reason = ExceptionError.as_payload(payload["exception"])
+        reason = ExceptionError.from_payload(payload["exception"])
 
         return cls(app, track, guild_id, reason)
 
 
-@dataclasses.dataclass
+@attrs.define
 class TrackStuckEvent(TrackBase, OngakuEvent):
     """
     Track Stuck Event
@@ -477,7 +477,7 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
     threshold_ms: int
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Track Stuck Event parser
 
@@ -493,7 +493,7 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
         TrackStuckEvent
             The [TrackStuckEvent][ongaku.abc.events.TrackStuckEvent] payload you parsed.
         """
-        base = TrackBase.as_payload(app, payload)
+        base = TrackBase.from_payload(payload, app=app)
         threshold_ms = payload["thresholdMs"]
 
         return cls(base.app, base.track, base.guild_id, threshold_ms)
@@ -502,8 +502,8 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
 # Player Events:
 
 
-@dataclasses.dataclass
-class PlayerBase:
+@attrs.define
+class PlayerBase(PayloadBaseApp):
     """
     Player Base
 
@@ -525,7 +525,7 @@ class PlayerBase:
         return self._app
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Player Base parser
 
@@ -561,7 +561,7 @@ class PlayerQueueEmptyEvent(PlayerBase, OngakuEvent):
     """
 
     @classmethod
-    def as_payload(cls, app: hikari.RESTAware, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
         """
         Player Queue parser
 
@@ -577,6 +577,6 @@ class PlayerQueueEmptyEvent(PlayerBase, OngakuEvent):
         PlayerQueueEmptyEvent
             The [PlayerQueueEmptyEvent][ongaku.abc.events.PlayerQueueEmptyEvent] payload you parsed.
         """
-        base = PlayerBase.as_payload(app, payload)
+        base = PlayerBase.from_payload(payload, app=app)
 
         return cls(base.app, base.guild_id)

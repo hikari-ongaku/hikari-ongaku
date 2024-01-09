@@ -1,9 +1,10 @@
-import dataclasses
+import attrs
 import typing as t
+from .base import PayloadBase
 
 
-@dataclasses.dataclass
-class TrackInfo:
+@attrs.define
+class TrackInfo(PayloadBase):
     """
     Track information
 
@@ -48,7 +49,7 @@ class TrackInfo:
     isrc: t.Optional[str] = None
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Track info parser
 
@@ -99,13 +100,9 @@ class TrackInfo:
             isrc,
         )
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class Track:
+@attrs.define
+class Track(PayloadBase):
     """
     Track
 
@@ -131,7 +128,7 @@ class Track:
     user_data: dict[t.Any, t.Any] | None = None
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Track parser
 
@@ -148,7 +145,7 @@ class Track:
             The Track you parsed.
         """
         encoded = payload["encoded"]
-        info = TrackInfo.as_payload(payload["info"])
+        info = TrackInfo.from_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
         try:
             user_data = payload["userData"]
@@ -157,13 +154,9 @@ class Track:
 
         return cls(encoded, info, plugin_info, user_data)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class PlaylistInfo:
+@attrs.define
+class PlaylistInfo(PayloadBase):
     """
     Playlist info
 
@@ -183,7 +176,7 @@ class PlaylistInfo:
     selected_track: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Playlist Info parser
 
@@ -204,13 +197,8 @@ class PlaylistInfo:
 
         return cls(name, selected_track)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class Playlist:
+@attrs.define
+class Playlist(PayloadBase):
     """
     Playlist
 
@@ -232,7 +220,7 @@ class Playlist:
     tracks: tuple[Track, ...]
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Playlist Info parser
 
@@ -254,7 +242,7 @@ class Playlist:
         tracks: list[Track] | tuple[Track, ...] = []
         for track in payload["tracks"]:
             try:
-                new_track = Track.as_payload(track)
+                new_track = Track.from_payload(track)
             except Exception as e:
                 raise e
 
@@ -262,17 +250,13 @@ class Playlist:
 
         return cls(info, plugin_info, tuple(tracks))
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class SearchResult:
+@attrs.define
+class SearchResult(PayloadBase):
     tracks: tuple[Track, ...]
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Playlist Info parser
 
@@ -289,16 +273,12 @@ class SearchResult:
             The Playlist Info you parsed.
         """
         tracks: list[Track] | tuple[Track, ...] = []
-        for track in payload:
+        for track in payload["data"]:
             try:
-                new_track = Track.as_payload(track)
+                new_track = Track.from_payload(track)
             except Exception as e:
                 raise e
 
             tracks.append(new_track)
 
         return cls(tuple(tracks))
-
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
