@@ -1,5 +1,6 @@
 site_name: Ongaku Docs
 site_url: https://ongaku.mplaty.com/
+repo_url: https://github.com/MPlatypus/hikari-ongaku/
 
 theme:
   name: material
@@ -24,23 +25,34 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+authors:
+  mplaty:
+    name: MPlaty
+    description: Creator
+    avatar: https://github.com/
+
 plugins:
   - search
   - mkdocstrings:
       default_handler: python
       handlers:
         python:
+          import:
+            - https://docs.python.org/3.10/objects.inv
+            - https://docs.hikari-py.dev/en/latest/objects.inv
           options:
-            docstring_style: numpy
+            heading_level: 3
+            annotations_path: source
             docstring_section_style: spacy
-            allow_inspection: true
-            show_source: false
+            docstring_style: numpy
+            inherited_members: true
             merge_init_into_class: true
-            inherited_members: false
             separate_signature: true
             show_signature_annotations: true
+            show_source: false
             show_submodules: false
-            annotations_path: source
+            signature_crossrefs: true
+            show_symbol_type_heading: true
 
 
 markdown_extensions:

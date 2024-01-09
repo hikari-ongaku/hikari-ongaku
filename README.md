@@ -1,11 +1,15 @@
+[![PyPI](https://img.shields.io/pypi/v/hikari-arc)](https://pypi.org/project/hikari-ongaku)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
+![Pyright](https://badgen.net/badge/Pyright/strict/2A6DB2)
+
 # Ongaku
 A voice library for Hikari.
-# PLEASE NOTE, THIS IS STILL A WORK IN PROGRESS. USE THIS AT YOUR OWN RISK.
-Currently, any issues created, will most likely be deleted. Issues will be accepted when V1.0.0 first comes out.
 
-If you have suggestions or ideas, please DM me on discord, `mplaty`.
+you can find documentation [here](https://ongaku.mplaty.com/)
 
-Features:
+### Features
+These are things that are being worked on, and will be created, before 1.0
+
  - [x] Volume
  - [x] Playlist (youtube/ytmusic)
  - [x] Skip
@@ -21,3 +25,4 @@ Features:
  - [ ] Testing (internal)
  - [ ] Store the user who asked for specific songs.
  - [ ] Support local file playing (mp3, mp4, ogg, wav, etc.)
+
