@@ -9,6 +9,7 @@ A voice library for Hikari.
 [![Lavalink](https://badgen.net/badge/Lavalink/v4.0.0/ff624a)](https://lavalink.dev/)
 
 </div>
+
 you can find documentation [here](https://ongaku.mplaty.com/)
 
 ### Features
