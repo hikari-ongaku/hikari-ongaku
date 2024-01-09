@@ -8,7 +8,6 @@ A voice library for Hikari.
 ![Pyright](https://badgen.net/badge/Pyright/strict/2A6DB2)
 [![Lavalink](https://badgen.net/badge/Lavalink/v4.0.0/ff624a)](https://lavalink.dev/)
 
-
 </div>
 you can find documentation [here](https://ongaku.mplaty.com/)
 
