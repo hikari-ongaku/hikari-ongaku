@@ -32,7 +32,7 @@ class _InternalSession:
                     raise LavalinkException(response.status)
 
                 try:
-                    session_model = Session.as_payload(await response.json())
+                    session_model = Session.from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 
@@ -265,11 +265,11 @@ class _InternalTrack:
                     return
 
                 if load_type == "error":
-                    raise LavalinkException(ExceptionError.as_payload(data["data"]))
+                    raise LavalinkException(ExceptionError.from_payload(data["data"]))
 
                 if load_type == "search":
                     try:
-                        search_result = SearchResult.as_payload(data["data"])
+                        search_result = SearchResult.from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -277,7 +277,7 @@ class _InternalTrack:
 
                 if load_type == "track":
                     try:
-                        track = Track.as_payload(data["data"])
+                        track = Track.from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -285,7 +285,7 @@ class _InternalTrack:
 
                 if load_type == "playlist":
                     try:
-                        playlist = Playlist.as_payload(data["data"])
+                        playlist = Playlist.from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -360,7 +360,7 @@ class RestApi:
                     )
 
                 try:
-                    info_resp = Info.as_payload(await response.json())
+                    info_resp = Info.from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 

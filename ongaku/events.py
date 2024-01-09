@@ -58,7 +58,7 @@ class EventHandler:
         self._ongaku.internal.set_session_id(session_id)
 
         try:
-            event = ReadyEvent.as_payload(self._ongaku.bot, payload)
+            event = ReadyEvent.from_payload(payload, app=self._ongaku.bot)
         except Exception as e:
             raise e
 
@@ -67,7 +67,7 @@ class EventHandler:
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            event = StatisticsEvent.as_payload(self._ongaku.bot, payload)
+            event = StatisticsEvent.from_payload(payload, app=self._ongaku.bot)
         except Exception as e:
             raise e
 
@@ -81,31 +81,31 @@ class EventHandler:
 
         if event_type == "TrackStartEvent":
             try:
-                event = TrackStartEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackStartEvent.from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackEndEvent":
             try:
-                event = TrackEndEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackEndEvent.from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackExceptionEvent":
             try:
-                event = TrackExceptionEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackExceptionEvent.from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackStuckEvent":
             try:
-                event = TrackStuckEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackStuckEvent.from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "WebSocketClosedEvent":
             try:
-                event = WebsocketClosedEvent.as_payload(self._ongaku.bot, payload)
+                event = WebsocketClosedEvent.from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
@@ -113,3 +113,26 @@ class EventHandler:
             return
 
         await self._ongaku.bot.dispatch(event)
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

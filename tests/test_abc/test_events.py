@@ -479,7 +479,9 @@ class WebsocketClosedTest(unittest.TestCase):
             "byRemote": True,
         }
 
-        test_websocket_closed_event = WebsocketClosedEvent.from_payload(payload, app=_test_bot)
+        test_websocket_closed_event = WebsocketClosedEvent.from_payload(
+            payload, app=_test_bot
+        )
 
         assert test_websocket_closed_event.app == _test_bot
         assert test_websocket_closed_event.code == 4006

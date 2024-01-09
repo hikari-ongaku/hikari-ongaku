@@ -2,6 +2,7 @@ import unittest
 import typing as t
 from ongaku.abc.track import Track, TrackInfo, Playlist, PlaylistInfo, SearchResult
 
+
 class TrackTest(unittest.TestCase):
     track_payload: dict[str, t.Any] = {
         "encoded": "test_encoded",
@@ -16,14 +17,14 @@ class TrackTest(unittest.TestCase):
             "uri": "test_uri",
             "artworkUrl": "test_artwork",
             "isrc": None,
-            "sourceName": "test_source_name"
+            "sourceName": "test_source_name",
         },
         "pluginInfo": {},
-        "userData": {}
+        "userData": {},
     }
 
     track_info_payload: dict[str, t.Any] = track_payload["info"]
-    
+
     def test_track(self):
         test_info = TrackInfo(
             "test_identifier",
@@ -47,9 +48,7 @@ class TrackTest(unittest.TestCase):
 
         assert test_track.info == test_info
 
-
     def test_track_payload(self):
-
         test_track_info = TrackInfo.from_payload(self.track_info_payload)
         test_track = Track.from_payload(self.track_payload)
 
@@ -62,7 +61,6 @@ class TrackTest(unittest.TestCase):
 
         assert test_track.to_payload == self.track_payload
 
-    
     def test_track_info(self):
         test_info = TrackInfo(
             "test_identifier",
@@ -89,11 +87,10 @@ class TrackTest(unittest.TestCase):
         assert test_info.artwork_url == "test_artwork"
         assert test_info.isrc == "test_isrc"
         assert test_info.source_name == "test_source_name"
-        
+
         assert test_info.to_payload == self.track_info_payload
 
-
-    def test_track_info_payload(self): 
+    def test_track_info_payload(self):
         test_info = TrackInfo.from_payload(self.track_info_payload)
 
         assert test_info.identifier == "test_identifier"
@@ -111,21 +108,17 @@ class TrackTest(unittest.TestCase):
         assert test_info.to_payload == self.track_info_payload
 
 
-class PlaylistTest(unittest.TestCase):    
+class PlaylistTest(unittest.TestCase):
     playlist_payload: dict[str, t.Any] = {
         "loadType": "playlist",
         "data": {
-            "info":{
-                "name":"test_playlist_name",
-                "selectedTrack":-1
-            },
+            "info": {"name": "test_playlist_name", "selectedTrack": -1},
             "pluginInfo": {},
-            "tracks": [TrackTest.track_payload]
-        }
+            "tracks": [TrackTest.track_payload],
+        },
     }
 
     playlist_info_payload: dict[str, t.Any] = playlist_payload["data"]["info"]
-
 
     def test_playlist(self):
         test_info = TrackInfo(
@@ -191,10 +184,9 @@ class PlaylistTest(unittest.TestCase):
 
         assert test_playlist_info.to_payload == self.playlist_info_payload
 
+
 class SearchResultTest(unittest.TestCase):
-    search_result_payload: dict[str, t.Any] = {
-        "data":[TrackTest.track_payload]
-    }
+    search_result_payload: dict[str, t.Any] = {"data": [TrackTest.track_payload]}
 
     def test_search_result(self):
         test_info = TrackInfo(
@@ -237,4 +229,3 @@ class SearchResultTest(unittest.TestCase):
         assert test_search_result.tracks == (test_track,)
 
         assert test_search_result.to_payload == self.search_result_payload
-
