@@ -7,7 +7,7 @@ A voice library for Hikari.
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
 ![Pyright](https://badgen.net/badge/Pyright/strict/2A6DB2)
 [![Lavalink](https://badgen.net/badge/Lavalink/v4.0.0/ff624a)](https://lavalink.dev/)
-[![Docs](https://badgen.net/badge/Ongaku/v0.2.0/ff6b61)](https://ongaku.mplaty.com/)
+[![Docs](https://badgen.net/badge/Docs/v0.2.0/ff6b61)](https://ongaku.mplaty.com/)
 
 </div>
 
