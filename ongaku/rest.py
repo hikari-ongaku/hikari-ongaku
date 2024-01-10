@@ -11,6 +11,7 @@ from .abc.session import Session
 from .abc.track import Playlist, SearchResult, Track
 from .enums import PlatformType
 from .errors import BuildException, LavalinkException
+import urllib.parse as urlparse
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -220,17 +221,29 @@ class _InternalTrack:
         self._ongaku: Ongaku = ongaku
 
     async def _url_handler(self, possible_url: str) -> t.Optional[str]:
-        # TODO: Handle all different url types, spotify, youtube, youtube music, and soundcloud.
-        # TODO: Probably good to convert the query string into arguments, so they are handled correctly.
-        if possible_url.count("youtube.com") > 0:
-            if possible_url.count("list=") > 0:
-                return possible_url.split("list=")[1]
+        try:
+            url = urlparse.parse_qs(possible_url.split("?")[1], strict_parsing=True)
+        except Exception:
+            return
+        
+        try:
+            code = url["list"]
+        except Exception:
+            pass
+        else:
+            return code[0]
+        
+        try:
+            code = url["v"]
+        except Exception:
+            pass
+        else:
+            return code[0]
 
-            elif possible_url.count("v=") > 0:
-                return possible_url.split("v=")[1]
+
 
     async def load_track(
-        self, platform: PlatformType, query: str
+        self, query: str, platform: PlatformType = PlatformType.YOUTUBE
     ) -> SearchResult | Playlist | Track | None:
         async with aiohttp.ClientSession() as session:
             query_sanitize = await self._url_handler(query)
@@ -367,7 +380,7 @@ class RestApi:
         return info_resp
 
     async def search(
-        self, platform: PlatformType, query: str
+        self, query: str, platform: PlatformType = PlatformType.YOUTUBE
     ) -> SearchResult | Playlist | Track | None:
         """
         Search for a track
@@ -393,7 +406,7 @@ class RestApi:
 
         """
         try:
-            return await self.internal.track.load_track(platform, query)
+            return await self.internal.track.load_track(query, platform)
         except Exception as e:
             raise e
 

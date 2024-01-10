@@ -2,7 +2,6 @@ import attrs
 import typing as t
 from .base import PayloadBase
 
-
 @attrs.define
 class TrackInfo(PayloadBase):
     """
@@ -274,7 +273,8 @@ class SearchResult(PayloadBase):
             The Playlist Info you parsed.
         """
         tracks: list[Track] | tuple[Track, ...] = []
-        for track in payload["data"]:
+        print(payload)
+        for track in payload:
             try:
                 new_track = Track.from_payload(track)
             except Exception as e:
