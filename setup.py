@@ -26,7 +26,7 @@ setup(
     author_email="contact@mplaty.com",
     url="https://github.com/MPlatypus/hikari-ongaku",
     packages=find_namespace_packages(include=[name + "*"]),
-    package_data={"arc": ["py.typed"]},
+    package_data={"ongaku": ["py.typed"]},
     license="MIT",
     include_package_data=True,
     zip_safe=False,
