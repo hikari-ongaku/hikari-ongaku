@@ -36,7 +36,7 @@ setup(
     },
     python_requires="==3.11.0",
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Framework :: AsyncIO",
         "Intended Audience :: Developers",
         "Natural Language :: English",
