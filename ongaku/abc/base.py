@@ -5,6 +5,8 @@ import attrs
 import hikari
 import typing as t
 
+if t.TYPE_CHECKING:
+    GenericT = str | int | bool | float | list[t.Any] | dict[str, t.Any]
 
 class Payload(abc.ABC):
     """
@@ -22,7 +24,7 @@ class PayloadBase(Payload, abc.ABC):
     """
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]) -> PayloadBase:
+    def from_payload(cls, payload: GenericT) -> PayloadBase:
         ...
 
     @property

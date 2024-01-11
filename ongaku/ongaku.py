@@ -259,21 +259,12 @@ class Ongaku:
             The player that is now in the channel you have specified.
         """
         # FIXME: Fix the issue where, if the bot is invited to the channel via this, then kicked by a user, allow the bot to join back without a "already in guild" error
-        connection = self.bot.voice.connections.get(guild_id)
-
-        if isinstance(connection, Player):
-            await self.bot.voice.disconnect(guild_id)
-            await self.bot.update_voice_state(guild_id, None)
-            try:
-                self._players.pop(guild_id)
-            except Exception:
-                pass
 
         bot = self.bot.get_me()
 
         if bot is None:
             raise RequiredException(
-                "The bot is required to be able to connect. This is an internal error."
+                "The bot is required to be able to connect."
             )
 
         bot_state = self.bot.cache.get_voice_state(guild_id, bot.id)
@@ -285,14 +276,12 @@ class Ongaku:
             except Exception:
                 pass
 
-        try:
-            new_player = await self.bot.voice.connect_to(
-                guild_id, channel_id, Player, bot=self.bot, ongaku=self
-            )
-        except Exception as e:
-            raise PlayerCreateException(e)
+        new_player = Player(self.bot, self, guild_id)
 
-        connection = self.bot.voice.connections.get(guild_id)
+        try:
+            await new_player.connect(channel_id)
+        except Exception:
+            raise
 
         self._players.update({guild_id: new_player})
         return new_player
