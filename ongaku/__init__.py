@@ -1,3 +1,11 @@
+"""A voice handling library for hikari
+
+GitHub: 
+https://github.com/MPlatypus/hikari-ongaku
+Docs:
+https://ongaku.mplaty.com/
+"""
+
 from __future__ import annotations
 
 from . import abc, enums, errors
