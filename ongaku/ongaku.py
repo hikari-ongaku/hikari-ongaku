@@ -8,7 +8,6 @@ import hikari
 from .abc.lavalink import RestError
 from .enums import ConnectionType, VersionType
 from .errors import (
-    PlayerCreateException,
     PlayerMissingException,
     RequiredException,
     SessionError,
@@ -263,9 +262,7 @@ class Ongaku:
         bot = self.bot.get_me()
 
         if bot is None:
-            raise RequiredException(
-                "The bot is required to be able to connect."
-            )
+            raise RequiredException("The bot is required to be able to connect.")
 
         bot_state = self.bot.cache.get_voice_state(guild_id, bot.id)
 

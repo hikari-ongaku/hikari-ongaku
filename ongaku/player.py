@@ -47,6 +47,8 @@ class Player:
 
         self._session_id: str | None = None
 
+        self._connected: bool = False
+
         bot.subscribe(TrackEndEvent, self._track_end_event)
         bot.subscribe(VoiceServerUpdateEvent, self._voice_server_update_event)
         bot.subscribe(VoiceStateUpdateEvent, self._voice_state_update_event)
@@ -87,12 +89,18 @@ class Player:
         return self._is_paused
 
     @property
+    def connected(self) -> bool:
+        """
+        Whether or not the bot is connected to a voice channel.
+        """
+        return self._connected
+
+    @property
     def queue(self) -> tuple[Track, ...]:
         """
         Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one.
         """
         return tuple(self._queue)
-
 
     async def play(self, track: t.Optional[Track] = None) -> None:
         """
@@ -379,7 +387,7 @@ class Player:
         self._channel_id = channel_id
 
         await self._bot.update_voice_state(self.guild_id, self._channel_id)
-        
+
         try:
             state_event, server_event = await asyncio.gather(
                 # Voice state update:
@@ -391,22 +399,31 @@ class Player:
                 self._bot.wait_for(
                     VoiceServerUpdateEvent,
                     timeout=timeout,
-                )
+                ),
             )
         except asyncio.TimeoutError as e:
-            raise PlayerException(f"Could not connect to voice channel {channel_id} in guild {self.guild_id}.") from e
+            raise PlayerException(
+                f"Could not connect to voice channel {channel_id} in guild {self.guild_id}."
+            ) from e
 
-        self._ongaku.internal.set_session_id(state_event.state.session_id)
+        print("session_id: ", state_event.state.session_id)
+
+        if self._ongaku.internal.session_id is None:
+            raise SessionNotStartedException()
 
         if server_event.endpoint is None:
-            raise PlayerException(f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}")
+            raise PlayerException(
+                f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}"
+            )
 
         await self._ongaku.rest.internal.player.update_player(
-                self.guild_id,
-                state_event.state.session_id,
-                voice=PlayerVoice(server_event.token, server_event.endpoint[6:], state_event.state.session_id),
-                no_replace=False,
-            )
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            voice=PlayerVoice(
+                server_event.token, server_event.endpoint, state_event.state.session_id
+            ),
+            no_replace=False,
+        )
 
     async def disconnect(self) -> None:
         """Signal the process to shut down."""
@@ -446,7 +463,6 @@ class Player:
                 no_replace=False,
             )
 
-
     async def _voice_server_update_event(self, event: VoiceServerUpdateEvent) -> None:
         print("vc server update event.")
         if event.endpoint is None:
@@ -460,16 +476,16 @@ class Player:
         print("vc state update event started.")
         if not event.state.member.is_bot:
             return
-        
-        if event.state.member.id != self._bot.get_me().id: #type: ignore
+
+        if event.state.member.id != self._bot.get_me().id:  # type: ignore
             return
-        
+
         if event.state.channel_id is None:
             return
 
         if self._channel_id is None:
             return
-        
+
         self._session_id = event.state.session_id
 
         print(event.state.channel_id)

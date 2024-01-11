@@ -2,6 +2,7 @@ import attrs
 import typing as t
 from .base import PayloadBase
 
+
 @attrs.define
 class TrackInfo(PayloadBase):
     """

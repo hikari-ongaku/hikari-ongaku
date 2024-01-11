@@ -188,7 +188,7 @@ class _InternalPlayer:
                     json=patch_data,
                 ) as response:
                     if response.status >= 400:
-                        raise LavalinkException(response.status)
+                        raise LavalinkException(response.status, await response.json())
 
                     try:
                         player_model = Player.as_payload(await response.json())
@@ -229,22 +229,20 @@ class _InternalTrack:
             url = urlparse.parse_qs(possible_url.split("?")[1], strict_parsing=True)
         except Exception:
             return
-        
+
         try:
             code = url["list"]
         except Exception:
             pass
         else:
             return code[0]
-        
+
         try:
             code = url["v"]
         except Exception:
             pass
         else:
             return code[0]
-
-
 
     async def load_track(
         self, query: str, platform: PlatformType = PlatformType.YOUTUBE

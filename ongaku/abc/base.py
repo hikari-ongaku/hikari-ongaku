@@ -5,10 +5,12 @@ import attrs
 import hikari
 import typing as t
 
-if t.TYPE_CHECKING:
-    GenericT = str | int | bool | float | list[t.Any] | dict[str, t.Any]
+__all__ = ("PayloadT", "PayloadBase", "PayloadBaseApp")
 
-class Payload(abc.ABC):
+PayloadT = t.TypeVar("PayloadT", list[t.Any], dict[str, t.Any])
+
+
+class Payload(abc.ABC, t.Generic[PayloadT]):
     """
     Main payload
 
@@ -16,7 +18,7 @@ class Payload(abc.ABC):
     """
 
 
-class PayloadBase(Payload, abc.ABC):
+class PayloadBase(Payload[PayloadT], abc.ABC):
     """
     Payload Base
 
@@ -24,7 +26,7 @@ class PayloadBase(Payload, abc.ABC):
     """
 
     @classmethod
-    def from_payload(cls, payload: GenericT) -> PayloadBase:
+    def from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
         ...
 
     @property
@@ -47,7 +49,7 @@ class PayloadBase(Payload, abc.ABC):
         return new_data
 
 
-class PayloadBaseApp(Payload, abc.ABC):
+class PayloadBaseApp(Payload[PayloadT], abc.ABC):
     """
     Payload base app
 
@@ -59,8 +61,8 @@ class PayloadBaseApp(Payload, abc.ABC):
 
     @classmethod
     def from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
-    ) -> PayloadBaseApp:
+        cls, payload: PayloadT, *, app: hikari.RESTAware
+    ) -> PayloadBaseApp[PayloadT]:
         ...
 
 

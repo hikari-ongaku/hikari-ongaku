@@ -1,12 +1,22 @@
+from __future__ import annotations
+
 import attrs
 import typing as t
-from .base import PayloadBase
+from .base import PayloadBase, PayloadT
 
 from .. import enums
 
+__all__ = (
+    "InfoVersion",
+    "InfoGit",
+    "InfoPlugin",
+    "Info",
+    "RestError",
+    "ExceptionError"
+)
 
 @attrs.define
-class InfoVersion(PayloadBase):
+class InfoVersion(PayloadBase[PayloadT]):
     """
     All of the Info Version information.
 
@@ -69,7 +79,7 @@ class InfoVersion(PayloadBase):
 
 
 @attrs.define
-class InfoGit(PayloadBase):
+class InfoGit(PayloadBase[PayloadT]):
     """
     All of the Info Git information.
 
@@ -114,7 +124,7 @@ class InfoGit(PayloadBase):
 
 
 @attrs.define
-class InfoPlugin(PayloadBase):
+class InfoPlugin(PayloadBase[PayloadT]):
     """
     All of the Info Plugin information.
 
@@ -155,7 +165,7 @@ class InfoPlugin(PayloadBase):
 
 
 @attrs.define
-class Info(PayloadBase):
+class Info(PayloadBase[PayloadT]):
     """
     All of the Info Version information.
 
@@ -233,7 +243,7 @@ class Info(PayloadBase):
 
 
 @attrs.define
-class RestError(PayloadBase):
+class RestError(PayloadBase[PayloadT]):
     """
     All of the Rest Error information.
 
@@ -264,7 +274,7 @@ class RestError(PayloadBase):
     path: str
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def from_payload(cls, payload: PayloadT) -> RestError[PayloadT]:
         """
         Rest Error parser
 
@@ -280,6 +290,10 @@ class RestError(PayloadBase):
         Error
             The Error you parsed.
         """
+
+        if not isinstance(payload, dict):
+            raise ValueError(f"Payload expected type was dict, payload was: {type(payload)}")
+
         timestamp = payload["timestamp"]
         status = payload["status"]
         error = payload["error"]
@@ -294,7 +308,7 @@ class RestError(PayloadBase):
 
 
 @attrs.define
-class ExceptionError(PayloadBase):
+class ExceptionError(PayloadBase[PayloadT]):
     """
     All of the Exception Error information.
 
@@ -316,7 +330,7 @@ class ExceptionError(PayloadBase):
     cause: str
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def from_payload(cls, payload: PayloadT) -> ExceptionError[PayloadT]:
         """
         Exception Error parser
 
@@ -332,6 +346,10 @@ class ExceptionError(PayloadBase):
         ExceptionError
             The Error you parsed.
         """
+
+        if not isinstance(payload, dict):
+            raise ValueError(f"Payload expected type was dict, payload was: {type(payload)}")
+        
         message = payload["message"]
         severity = payload["severity"]
         cause = payload["cause"]
