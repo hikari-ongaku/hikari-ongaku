@@ -49,8 +49,8 @@ class TrackTest(unittest.TestCase):
         assert test_track.info == test_info
 
     def test_track_payload(self):
-        test_track_info = TrackInfo.from_payload(self.track_info_payload)
-        test_track = Track.from_payload(self.track_payload)
+        test_track_info = TrackInfo._from_payload(self.track_info_payload)
+        test_track = Track._from_payload(self.track_payload)
 
         assert test_track.encoded == "test_encoded"
         assert test_track.plugin_info == {}
@@ -91,7 +91,7 @@ class TrackTest(unittest.TestCase):
         assert test_info.to_payload == self.track_info_payload
 
     def test_track_info_payload(self):
-        test_info = TrackInfo.from_payload(self.track_info_payload)
+        test_info = TrackInfo._from_payload(self.track_info_payload)
 
         assert test_info.identifier == "test_identifier"
         assert test_info.is_seekable is False
@@ -160,7 +160,7 @@ class PlaylistTest(unittest.TestCase):
         )
         test_track = Track("test_encoded", test_info, {}, {})
         test_playlist_info = PlaylistInfo("beans", 0)
-        test_playlist = Playlist.from_payload(self.playlist_payload)
+        test_playlist = Playlist._from_payload(self.playlist_payload)
 
         assert test_playlist.info == test_playlist_info
         assert test_playlist.plugin_info == {}
@@ -177,7 +177,7 @@ class PlaylistTest(unittest.TestCase):
         assert test_playlist_info.to_payload == self.playlist_info_payload
 
     def test_playlist_info_payload(self):
-        test_playlist_info = PlaylistInfo.from_payload(self.playlist_info_payload)
+        test_playlist_info = PlaylistInfo._from_payload(self.playlist_info_payload)
 
         assert test_playlist_info.name == "beans"
         assert test_playlist_info.selected_track == 0
@@ -186,7 +186,7 @@ class PlaylistTest(unittest.TestCase):
 
 
 class SearchResultTest(unittest.TestCase):
-    search_result_payload: dict[str, t.Any] = {"data": [TrackTest.track_payload]}
+    search_result_payload: list[dict[str, t.Any]] = [TrackTest.track_payload]
 
     def test_search_result(self):
         test_info = TrackInfo(
@@ -224,7 +224,7 @@ class SearchResultTest(unittest.TestCase):
             None,
         )
         test_track = Track("test_encoded", test_info, {}, {})
-        test_search_result = SearchResult.from_payload(self.search_result_payload)
+        test_search_result = SearchResult._from_payload(self.search_result_payload)
 
         assert test_search_result.tracks == (test_track,)
 

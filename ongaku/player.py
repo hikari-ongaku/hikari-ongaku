@@ -133,10 +133,8 @@ class Player:
         if track:
             self._queue.insert(0, track)
 
-        print(self._voice.to_payload)
-
         try:
-            player = await self._ongaku.rest.internal.player.update_player(
+            await self._ongaku.rest.player.update(
                 self.guild_id,
                 self._ongaku.internal.session_id,
                 track=self.queue[0],
@@ -144,10 +142,7 @@ class Player:
                 no_replace=False,
             )
         except Exception as e:
-            print(e)
             raise e
-
-        print(player)
 
         self._is_paused = False
 
@@ -179,7 +174,7 @@ class Player:
         else:
             self._is_paused = value
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id, self._ongaku.internal.session_id, paused=self.is_paused
         )
 
@@ -233,7 +228,7 @@ class Player:
 
         if index == 0:
             if len(self.queue) == 0:
-                await self._ongaku.rest.internal.player.update_player(
+                await self._ongaku.rest.player.update(
                     self.guild_id, self._ongaku.internal.session_id, track=None
                 )
             else:
@@ -276,14 +271,14 @@ class Player:
                 self._queue.pop(0)
 
         if len(self.queue) == 0:
-            await self._ongaku.rest.internal.player.update_player(
+            await self._ongaku.rest.player.update(
                 self.guild_id,
                 self._ongaku.internal.session_id,
                 track=None,
             )
             return
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.internal.player.update_player(  # type: ignore
             self.guild_id,
             self._ongaku.internal.session_id,
             track=self._queue[0],
@@ -321,7 +316,7 @@ class Player:
                 f"Volume cannot be above 1000. Volume: {volume}"
             )
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id,
             self._ongaku.internal.session_id,
             volume=volume,
@@ -344,7 +339,7 @@ class Player:
         if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id,
             self._ongaku.internal.session_id,
             track=None,
@@ -379,7 +374,7 @@ class Player:
                 "Length is longer than currently playing song!"
             )
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id, self._ongaku.internal.session_id, position=value
         )
 
@@ -406,8 +401,6 @@ class Player:
                 f"Could not connect to voice channel {channel_id} in guild {self.guild_id}."
             ) from e
 
-        print("session_id: ", state_event.state.session_id)
-
         if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
@@ -416,7 +409,7 @@ class Player:
                 f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}"
             )
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id,
             self._ongaku.internal.session_id,
             voice=PlayerVoice(
@@ -433,7 +426,7 @@ class Player:
         if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        await self._ongaku.rest.internal.player.delete_player(
+        await self._ongaku.rest.player.delete(
             self._ongaku.internal.session_id, self._guild_id
         )
 
@@ -456,7 +449,7 @@ class Player:
                 )
                 return
 
-            await self._ongaku.rest.internal.player.update_player(
+            await self._ongaku.rest.player.update(
                 self.guild_id,
                 self._ongaku.internal.session_id,
                 track=self._queue[0],
@@ -464,7 +457,6 @@ class Player:
             )
 
     async def _voice_server_update_event(self, event: VoiceServerUpdateEvent) -> None:
-        print("vc server update event.")
         if event.endpoint is None:
             raise PlayerException("Endpoint cannot be null.")
         if self._session_id is None:
@@ -473,7 +465,6 @@ class Player:
         self._voice = PlayerVoice(event.token, event.endpoint, self._session_id)
 
     async def _voice_state_update_event(self, event: VoiceStateUpdateEvent) -> None:
-        print("vc state update event started.")
         if not event.state.member.is_bot:
             return
 
@@ -487,5 +478,3 @@ class Player:
             return
 
         self._session_id = event.state.session_id
-
-        print(event.state.channel_id)

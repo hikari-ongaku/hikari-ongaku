@@ -26,7 +26,7 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
     """
 
     @classmethod
-    def from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
+    def _from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
         ...
 
     @property
@@ -60,7 +60,7 @@ class PayloadBaseApp(Payload[PayloadT], abc.ABC):
     """
 
     @classmethod
-    def from_payload(
+    def _from_payload(
         cls, payload: PayloadT, *, app: hikari.RESTAware
     ) -> PayloadBaseApp[PayloadT]:
         ...

@@ -15,9 +15,10 @@ def parse_requirements_file(path: str) -> t.List[str]:
         dependencies = (d.strip() for d in fp.read().split("\n") if d.strip())
         return [d for d in dependencies if not d.startswith("#")]
 
+
 setup(
     name="hikari-ongaku",
-    version="0.2.1",
+    version="0.2.2",
     description="A command handler for hikari with a focus on type-safety and correctness.",
     long_description=long_description(),
     long_description_content_type="text/markdown",

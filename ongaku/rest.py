@@ -18,12 +18,14 @@ if t.TYPE_CHECKING:
 
     OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
+__all__ = ("RestApi",)
 
-class _InternalSession:
+
+class SessionApi:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
-    async def update_session(self, session_id: str) -> Session:
+    async def update(self, session_id: str) -> Session:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self._ongaku.internal.uri + "/sessions/" + session_id,
@@ -33,14 +35,14 @@ class _InternalSession:
                     raise LavalinkException(response.status)
 
                 try:
-                    session_model = Session.from_payload(await response.json())
+                    session_model = Session._from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 
                 return session_model
 
 
-class _InternalPlayer:
+class PlayerApi:
     """
     The Rest based actions for the player.
     """
@@ -48,7 +50,7 @@ class _InternalPlayer:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
-    async def fetch_players(self, session_id: str) -> t.Optional[list[Player]]:
+    async def fetch_all(self, session_id: str) -> t.Optional[list[Player]]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self._ongaku.internal.uri + "/sessions/" + session_id + "/players",
@@ -63,7 +65,7 @@ class _InternalPlayer:
 
                 for player in players:
                     try:
-                        player_model = Player.as_payload(player)
+                        player_model = Player._from_payload(player)
                     except Exception as e:
                         raise BuildException(e)
 
@@ -71,7 +73,7 @@ class _InternalPlayer:
 
         return player_list
 
-    async def fetch_player(
+    async def fetch(
         self, session_id: str, guild_id: hikari.Snowflake
     ) -> t.Optional[Player]:
         async with aiohttp.ClientSession() as session:
@@ -87,13 +89,13 @@ class _InternalPlayer:
                     raise LavalinkException(response.status)
 
                 try:
-                    player_model = Player.as_payload(await response.json())
+                    player_model = Player._from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 
         return player_model
 
-    async def update_player(
+    async def update(
         self,
         guild_id: hikari.Snowflake,
         session_id: str,
@@ -171,10 +173,6 @@ class _InternalPlayer:
         if no_replace:
             params.update({"noReplace": "true"})
 
-        print("here???????????")
-
-        print(patch_data)
-
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.patch(
@@ -191,7 +189,7 @@ class _InternalPlayer:
                         raise LavalinkException(response.status, await response.json())
 
                     try:
-                        player_model = Player.as_payload(await response.json())
+                        player_model = Player._from_payload(await response.json())
                     except Exception as e:
                         raise BuildException(e)
             except Exception as e:
@@ -199,7 +197,7 @@ class _InternalPlayer:
 
         return player_model
 
-    async def delete_player(self, session_id: str, guild_id: hikari.Snowflake) -> None:
+    async def delete(self, session_id: str, guild_id: hikari.Snowflake) -> None:
         """
         Creates a new player for the specified guild. If one already exists, returns that instead.
         """
@@ -216,7 +214,7 @@ class _InternalPlayer:
                     raise LavalinkException(response.status)
 
 
-class _InternalTrack:
+class TrackApi:
     """
     The rest based actions for the track.
     """
@@ -244,7 +242,7 @@ class _InternalTrack:
         else:
             return code[0]
 
-    async def load_track(
+    async def load(
         self, query: str, platform: PlatformType = PlatformType.YOUTUBE
     ) -> SearchResult | Playlist | Track | None:
         async with aiohttp.ClientSession() as session:
@@ -280,11 +278,11 @@ class _InternalTrack:
                     return
 
                 if load_type == "error":
-                    raise LavalinkException(ExceptionError.from_payload(data["data"]))
+                    raise LavalinkException(ExceptionError._from_payload(data["data"]))
 
                 if load_type == "search":
                     try:
-                        search_result = SearchResult.from_payload(data["data"])
+                        search_result = SearchResult._from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -292,7 +290,7 @@ class _InternalTrack:
 
                 if load_type == "track":
                     try:
-                        track = Track.from_payload(data["data"])
+                        track = Track._from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -300,34 +298,11 @@ class _InternalTrack:
 
                 if load_type == "playlist":
                     try:
-                        playlist = Playlist.from_payload(data["data"])
+                        playlist = Playlist._from_payload(data["data"])
                     except Exception as e:
                         raise e
 
                     return playlist
-
-
-class _Internal:
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku: Ongaku = ongaku
-
-        self._internal_session = _InternalSession(self._ongaku)
-
-        self._internal_player = _InternalPlayer(self._ongaku)
-
-        self._internal_track = _InternalTrack(self._ongaku)
-
-    @property
-    def session(self) -> _InternalSession:
-        return self._internal_session
-
-    @property
-    def player(self) -> _InternalPlayer:
-        return self._internal_player
-
-    @property
-    def track(self) -> _InternalTrack:
-        return self._internal_track
 
 
 class RestApi:
@@ -340,11 +315,21 @@ class RestApi:
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku: Ongaku = ongaku
 
-        self._internal = _Internal(self._ongaku)
+        self._track_api = TrackApi(ongaku)
+        self._player_api = PlayerApi(ongaku)
+        self._session_api = SessionApi(ongaku)
 
     @property
-    def internal(self) -> _Internal:
-        return self._internal
+    def track(self) -> TrackApi:
+        return self._track_api
+
+    @property
+    def player(self) -> PlayerApi:
+        return self._player_api
+
+    @property
+    def session(self) -> SessionApi:
+        return self._session_api
 
     async def fetch_info(self) -> Info:
         """
@@ -375,42 +360,11 @@ class RestApi:
                     )
 
                 try:
-                    info_resp = Info.from_payload(await response.json())
+                    info_resp = Info._from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 
         return info_resp
-
-    async def search(
-        self, query: str, platform: PlatformType = PlatformType.YOUTUBE
-    ) -> SearchResult | Playlist | Track | None:
-        """
-        Search for a track
-
-        Search for tracks.
-
-        Parameters
-        ----------
-        platform : enums.PlatformType
-            The platform you wish to choose.
-        query : str
-            The query you wish to provide.
-
-        !!! INFO
-            The following supported platforms are: *Youtube*, *Youtube Music* and *Sound cloud*.
-
-        Raises
-        ------
-        LavalinkException
-            Response was a 400 or 500 error.
-        BuildException
-            Failure to build one or more `abc.Track`
-
-        """
-        try:
-            return await self.internal.track.load_track(query, platform)
-        except Exception as e:
-            raise e
 
 
 # MIT License

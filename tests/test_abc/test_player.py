@@ -73,7 +73,7 @@ class PlayerTest(unittest.TestCase):
             "filters": {},
         }
 
-        test_player = Player.as_payload(payload)
+        test_player = Player._from_payload(payload)
 
         assert test_player.guild_id == hikari.Snowflake(19216868440)
         if test_player.track is not None:
@@ -117,7 +117,7 @@ class PlayerTest(unittest.TestCase):
     def test_player_state_payload(self):
         payload = {"time": 12, "position": 24, "connected": True, "ping": 48}
 
-        test_player_state = PlayerState.as_payload(payload)
+        test_player_state = PlayerState._from_payload(payload)
 
         assert test_player_state.time == 12
         assert test_player_state.position == 24
@@ -142,12 +142,10 @@ class PlayerTest(unittest.TestCase):
             "sessionId": "test_session_id",
         }
 
-        test_player_voice = PlayerVoice.as_payload(payload)
+        test_player_voice = PlayerVoice._from_payload(payload)
 
         assert test_player_voice.token == "test_token"
         assert test_player_voice.endpoint == "test_endpoint"
         assert test_player_voice.session_id == "test_session_id"
-
-        print(test_player_voice.to_payload)
 
         assert test_player_voice.to_payload == payload

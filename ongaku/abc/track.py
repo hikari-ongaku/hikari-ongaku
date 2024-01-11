@@ -1,10 +1,19 @@
+from __future__ import annotations
+
 import attrs
 import typing as t
 from .base import PayloadBase
 
+__all__ = (
+    "TrackInfo",
+    "Track",
+    "PlaylistInfo",
+    "SearchResult",
+)
+
 
 @attrs.define
-class TrackInfo(PayloadBase):
+class TrackInfo(PayloadBase[dict[str, t.Any]]):
     """
     Track information
 
@@ -49,7 +58,7 @@ class TrackInfo(PayloadBase):
     isrc: t.Optional[str] = None
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> TrackInfo:
         """
         Track info parser
 
@@ -102,7 +111,7 @@ class TrackInfo(PayloadBase):
 
 
 @attrs.define
-class Track(PayloadBase):
+class Track(PayloadBase[dict[str, t.Any]]):
     """
     Track
 
@@ -124,11 +133,11 @@ class Track(PayloadBase):
 
     encoded: str
     info: TrackInfo
-    plugin_info: dict[t.Any, t.Any]
-    user_data: dict[t.Any, t.Any] | None = None
+    plugin_info: t.Mapping[str, t.Any]
+    user_data: t.Mapping[str, t.Any] | None = None
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> Track:
         """
         Track parser
 
@@ -144,8 +153,9 @@ class Track(PayloadBase):
         Track
             The Track you parsed.
         """
+
         encoded = payload["encoded"]
-        info = TrackInfo.from_payload(payload["info"])
+        info = TrackInfo._from_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
         try:
             user_data = payload["userData"]
@@ -156,7 +166,7 @@ class Track(PayloadBase):
 
 
 @attrs.define
-class PlaylistInfo(PayloadBase):
+class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
     """
     Playlist info
 
@@ -176,7 +186,7 @@ class PlaylistInfo(PayloadBase):
     selected_track: int
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> PlaylistInfo:
         """
         Playlist Info parser
 
@@ -192,6 +202,7 @@ class PlaylistInfo(PayloadBase):
         PlaylistInfo
             The Playlist Info you parsed.
         """
+
         name = payload["name"]
         selected_track = payload["selectedTrack"]
 
@@ -199,7 +210,7 @@ class PlaylistInfo(PayloadBase):
 
 
 @attrs.define
-class Playlist(PayloadBase):
+class Playlist(PayloadBase[dict[str, t.Any]]):
     """
     Playlist
 
@@ -217,11 +228,11 @@ class Playlist(PayloadBase):
     """
 
     info: PlaylistInfo
-    plugin_info: dict[t.Any, t.Any]
-    tracks: tuple[Track, ...]
+    plugin_info: t.Mapping[str, t.Any]
+    tracks: t.Sequence[Track]
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> Playlist:
         """
         Playlist Info parser
 
@@ -237,13 +248,14 @@ class Playlist(PayloadBase):
         PlaylistInfo
             The Playlist Info you parsed.
         """
+
         info = payload["info"]
         plugin_info = payload["pluginInfo"]
 
         tracks: list[Track] | tuple[Track, ...] = []
         for track in payload["tracks"]:
             try:
-                new_track = Track.from_payload(track)
+                new_track = Track._from_payload(track)
             except Exception as e:
                 raise e
 
@@ -253,11 +265,11 @@ class Playlist(PayloadBase):
 
 
 @attrs.define
-class SearchResult(PayloadBase):
-    tracks: tuple[Track, ...]
+class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
+    tracks: t.Sequence[Track]
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: list[dict[str, t.Any]]) -> SearchResult:
         """
         Playlist Info parser
 
@@ -273,11 +285,12 @@ class SearchResult(PayloadBase):
         PlaylistInfo
             The Playlist Info you parsed.
         """
+
         tracks: list[Track] | tuple[Track, ...] = []
-        print(payload)
+
         for track in payload:
             try:
-                new_track = Track.from_payload(track)
+                new_track = Track._from_payload(track)
             except Exception as e:
                 raise e
 

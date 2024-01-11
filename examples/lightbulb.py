@@ -2,6 +2,7 @@
 import hikari
 import lightbulb
 import ongaku
+import logging
 
 import dotenv
 import os
@@ -19,38 +20,44 @@ lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
 
 @bot.listen(ongaku.ReadyEvent)
 async def ready_event(event: ongaku.ReadyEvent):
-    print("Ready event")
-
-
-@bot.listen(ongaku.StatisticsEvent)
-async def stats_event(event: ongaku.StatisticsEvent):
-    print("Stats event")
+    logging.info(
+        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
+    )
 
 
 @bot.listen(ongaku.TrackStartEvent)
 async def track_start_event(event: ongaku.TrackStartEvent):
-    print("Track start event")
+    logging.info(
+        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
+    )
 
 
 @bot.listen(ongaku.TrackEndEvent)
 async def track_end_event(event: ongaku.TrackEndEvent):
-    print("Track end event")
+    logging.info(
+        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
+    )
 
 
 @bot.listen(ongaku.TrackExceptionEvent)
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
-    print("Track exception event")
+    logging.info(
+        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
+    )
 
 
 @bot.listen(ongaku.TrackStuckEvent)
-async def track_event(event: ongaku.TrackStuckEvent):
-    print("Track stuck event")
+async def track_stuck_event(event: ongaku.TrackStuckEvent):
+    logging.info(
+        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
+    )
 
 
 @bot.listen(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
-    print("Websocket closed event")
-    print(event.code, event.reason)
+    logging.info(
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}"
+    )
 
 
 # The following, is just a bunch of example commands.
@@ -84,7 +91,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
         hikari.ResponseType.DEFERRED_MESSAGE_CREATE, flags=hikari.MessageFlag.EPHEMERAL
     )
 
-    result = await lavalink.rest.search(ongaku.PlatformType.YOUTUBE, query)
+    result = await lavalink.rest.track.load(query)
 
     if result is None:
         await ctx.respond(

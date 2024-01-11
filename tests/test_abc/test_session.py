@@ -12,7 +12,7 @@ class SessionTest(unittest.TestCase):
     def test_session_payload(self):
         payload = {"resuming": True, "timeout": 10}
 
-        test_session = Session.from_payload(payload)
+        test_session = Session._from_payload(payload)
 
         assert test_session.resuming is True
         assert test_session.timeout == 10

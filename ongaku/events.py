@@ -58,7 +58,7 @@ class EventHandler:
         self._ongaku.internal.set_session_id(session_id)
 
         try:
-            event = ReadyEvent.from_payload(payload, app=self._ongaku.bot)
+            event = ReadyEvent._from_payload(payload, app=self._ongaku.bot)
         except Exception as e:
             raise e
 
@@ -67,7 +67,7 @@ class EventHandler:
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            event = StatisticsEvent.from_payload(payload, app=self._ongaku.bot)
+            event = StatisticsEvent._from_payload(payload, app=self._ongaku.bot)
         except Exception as e:
             raise e
 
@@ -81,31 +81,33 @@ class EventHandler:
 
         if event_type == "TrackStartEvent":
             try:
-                event = TrackStartEvent.from_payload(payload, app=self._ongaku.bot)
+                event = TrackStartEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackEndEvent":
             try:
-                event = TrackEndEvent.from_payload(payload, app=self._ongaku.bot)
+                event = TrackEndEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackExceptionEvent":
             try:
-                event = TrackExceptionEvent.from_payload(payload, app=self._ongaku.bot)
+                event = TrackExceptionEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackStuckEvent":
             try:
-                event = TrackStuckEvent.from_payload(payload, app=self._ongaku.bot)
+                event = TrackStuckEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "WebSocketClosedEvent":
             try:
-                event = WebsocketClosedEvent.from_payload(payload, app=self._ongaku.bot)
+                event = WebsocketClosedEvent._from_payload(
+                    payload, app=self._ongaku.bot
+                )
             except Exception as e:
                 raise e
 

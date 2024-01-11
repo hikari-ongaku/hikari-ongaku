@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import attrs
 import typing as t
 
@@ -6,9 +8,15 @@ import hikari
 from .track import Track
 from .base import PayloadBase
 
+__all__ = (
+    "PlayerState",
+    "PlayerVoice",
+    "Player",
+)
+
 
 @attrs.define
-class PlayerState(PayloadBase):
+class PlayerState(PayloadBase[dict[str, t.Any]]):
     """
     Player State
 
@@ -34,7 +42,7 @@ class PlayerState(PayloadBase):
     ping: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerState:
         """
         Player State parser
 
@@ -50,6 +58,7 @@ class PlayerState(PayloadBase):
         PlayerState
             The Player State you parsed.
         """
+
         time = payload["time"]
         position = payload["position"]
         connected = payload["connected"]
@@ -59,7 +68,7 @@ class PlayerState(PayloadBase):
 
 
 @attrs.define
-class PlayerVoice(PayloadBase):
+class PlayerVoice(PayloadBase[dict[str, t.Any]]):
     """
     Player Voice
 
@@ -82,7 +91,7 @@ class PlayerVoice(PayloadBase):
     session_id: str
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerVoice:
         """
         Player Voice parser
 
@@ -98,6 +107,7 @@ class PlayerVoice(PayloadBase):
         PlayerVoice
             The Player Voice you parsed.
         """
+
         token = payload["token"]
         endpoint = payload["endpoint"]
         session_id = payload["sessionId"]
@@ -106,7 +116,7 @@ class PlayerVoice(PayloadBase):
 
 
 @attrs.define
-class Player(PayloadBase):
+class Player(PayloadBase[dict[str, t.Any]]):
     """
     Player Voice
 
@@ -139,7 +149,7 @@ class Player(PayloadBase):
     filters: dict[t.Any, t.Any] | None = None
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> Player:
         """
         Player parser
 
@@ -155,15 +165,16 @@ class Player(PayloadBase):
         Player
             The Player you parsed.
         """
+
         guild_id = hikari.Snowflake(payload["guildId"])
         try:
-            track = Track.from_payload(payload["track"])
+            track = Track._from_payload(payload["track"])
         except Exception:
             track = None
         volume = payload["volume"]
         paused = payload["paused"]
-        state = PlayerState.as_payload(payload["state"])
-        voice = PlayerVoice.as_payload(payload["voice"])
+        state = PlayerState._from_payload(payload["state"])
+        voice = PlayerVoice._from_payload(payload["voice"])
         filters = payload["filters"]
 
         return cls(guild_id, track, volume, paused, state, voice, filters)

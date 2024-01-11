@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import typing as t
@@ -17,6 +19,8 @@ from .player import Player
 from .rest import RestApi
 
 _logger = logging.getLogger("ongaku")
+
+__all__ = ("Ongaku",)
 
 
 class _OngakuInternal:
@@ -95,11 +99,11 @@ class _OngakuInternal:
         )
         return self._remaining_retries
 
-    async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[RestError]:
+    async def check_error(self, payload: dict[str, t.Any]) -> t.Optional[RestError]:
         try:
-            error = RestError.from_payload(payload)
+            error = RestError._from_payload(payload)
         except Exception:
-            return
+            raise
 
         return error
 
@@ -309,8 +313,6 @@ class Ongaku:
         if fetched_player is None:
             raise PlayerMissingException(guild_id)
 
-        if not fetched_player.connected:
-            await fetched_player.join()
         return fetched_player
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
@@ -421,6 +423,8 @@ class Ongaku:
             await player.disconnect()
 
         if event.code == 4006:
+            if player.channel_id is None:
+                return
             await player.disconnect()
             self._players.pop(hikari.Snowflake(event.guild_id))
             await self.create_player(

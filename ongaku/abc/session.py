@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import attrs
 import typing as t
 from .base import PayloadBase
 
+__all__ = ("Session",)
+
 
 @attrs.define
-class Session(PayloadBase):
+class Session(PayloadBase[dict[str, t.Any]]):
     """
     Session
 
@@ -24,7 +28,7 @@ class Session(PayloadBase):
     timeout: int
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> Session:
         """
         Session parser
 
@@ -40,6 +44,7 @@ class Session(PayloadBase):
         Session
             The Session you parsed.
         """
+
         resuming = payload["resuming"]
         timeout = payload["timeout"]
 

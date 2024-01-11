@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import attrs
 import typing as t
-from .base import PayloadBase, PayloadT
+from .base import PayloadBase
 
 from .. import enums
 
@@ -12,11 +12,12 @@ __all__ = (
     "InfoPlugin",
     "Info",
     "RestError",
-    "ExceptionError"
+    "ExceptionError",
 )
 
+
 @attrs.define
-class InfoVersion(PayloadBase[PayloadT]):
+class InfoVersion(PayloadBase[dict[str, t.Any]]):
     """
     All of the Info Version information.
 
@@ -46,22 +47,7 @@ class InfoVersion(PayloadBase[PayloadT]):
     build: t.Optional[str]
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
-        """
-        Info Version parser
-
-        parse a payload of information, to receive a `InfoVersion` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        InfoVersion
-            The Info Version you parsed.
-        """
+    def _from_payload(cls, payload: dict[str, t.Any]) -> InfoVersion:
         semver = payload["semver"]
         major = payload["major"]
         minor = payload["minor"]
@@ -79,7 +65,7 @@ class InfoVersion(PayloadBase[PayloadT]):
 
 
 @attrs.define
-class InfoGit(PayloadBase[PayloadT]):
+class InfoGit(PayloadBase[dict[str, t.Any]]):
     """
     All of the Info Git information.
 
@@ -100,7 +86,7 @@ class InfoGit(PayloadBase[PayloadT]):
     commit_time: int
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> InfoGit:
         """
         Info Git parser
 
@@ -116,6 +102,7 @@ class InfoGit(PayloadBase[PayloadT]):
         InfoGit
             The Info Git you parsed.
         """
+
         branch = payload["branch"]
         commit = payload["commit"]
         commit_time = payload["commitTime"]
@@ -124,7 +111,7 @@ class InfoGit(PayloadBase[PayloadT]):
 
 
 @attrs.define
-class InfoPlugin(PayloadBase[PayloadT]):
+class InfoPlugin(PayloadBase[dict[str, t.Any]]):
     """
     All of the Info Plugin information.
 
@@ -142,7 +129,7 @@ class InfoPlugin(PayloadBase[PayloadT]):
     version: str
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: dict[str, t.Any]) -> InfoPlugin:
         """
         Info Plugin parser
 
@@ -158,6 +145,7 @@ class InfoPlugin(PayloadBase[PayloadT]):
         InfoPlugin
             The Info Plugin you parsed.
         """
+
         name = payload["name"]
         version = payload["version"]
 
@@ -165,7 +153,7 @@ class InfoPlugin(PayloadBase[PayloadT]):
 
 
 @attrs.define
-class Info(PayloadBase[PayloadT]):
+class Info(PayloadBase[dict[str, t.Any]]):
     """
     All of the Info Version information.
 
@@ -201,25 +189,10 @@ class Info(PayloadBase[PayloadT]):
     plugins: list[InfoPlugin]
 
     @classmethod
-    def from_payload(cls, payload: dict[str, t.Any]):
-        """
-        Info parser
-
-        parse a payload of information, to receive a `Info` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        Info
-            The Info you parsed.
-        """
-        version = InfoVersion.from_payload(payload["version"])
+    def _from_payload(cls, payload: dict[str, t.Any]):
+        version = InfoVersion._from_payload(payload["version"])
         build_time = payload["buildTime"]
-        git = InfoGit.from_payload(payload["git"])
+        git = InfoGit._from_payload(payload["git"])
         jvm = payload["jvm"]
         lavaplayer = payload["lavaplayer"]
 
@@ -231,7 +204,7 @@ class Info(PayloadBase[PayloadT]):
 
         for plugin in payload_plugins:
             try:
-                new_plugin = InfoPlugin.from_payload(plugin)
+                new_plugin = InfoPlugin._from_payload(plugin)
             except Exception as e:
                 raise e
 
@@ -243,7 +216,7 @@ class Info(PayloadBase[PayloadT]):
 
 
 @attrs.define
-class RestError(PayloadBase[PayloadT]):
+class RestError(PayloadBase[dict[str, t.Any]]):
     """
     All of the Rest Error information.
 
@@ -274,7 +247,7 @@ class RestError(PayloadBase[PayloadT]):
     path: str
 
     @classmethod
-    def from_payload(cls, payload: PayloadT) -> RestError[PayloadT]:
+    def _from_payload(cls, payload: dict[str, t.Any]) -> RestError:
         """
         Rest Error parser
 
@@ -291,9 +264,6 @@ class RestError(PayloadBase[PayloadT]):
             The Error you parsed.
         """
 
-        if not isinstance(payload, dict):
-            raise ValueError(f"Payload expected type was dict, payload was: {type(payload)}")
-
         timestamp = payload["timestamp"]
         status = payload["status"]
         error = payload["error"]
@@ -308,7 +278,7 @@ class RestError(PayloadBase[PayloadT]):
 
 
 @attrs.define
-class ExceptionError(PayloadBase[PayloadT]):
+class ExceptionError(PayloadBase[dict[str, t.Any]]):
     """
     All of the Exception Error information.
 
@@ -330,7 +300,7 @@ class ExceptionError(PayloadBase[PayloadT]):
     cause: str
 
     @classmethod
-    def from_payload(cls, payload: PayloadT) -> ExceptionError[PayloadT]:
+    def _from_payload(cls, payload: dict[str, t.Any]) -> ExceptionError:
         """
         Exception Error parser
 
@@ -347,9 +317,6 @@ class ExceptionError(PayloadBase[PayloadT]):
             The Error you parsed.
         """
 
-        if not isinstance(payload, dict):
-            raise ValueError(f"Payload expected type was dict, payload was: {type(payload)}")
-        
         message = payload["message"]
         severity = payload["severity"]
         cause = payload["cause"]
