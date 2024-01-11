@@ -18,7 +18,7 @@ def parse_requirements_file(path: str) -> t.List[str]:
 
 setup(
     name="hikari-ongaku",
-    version="0.2.3",
+    version="0.2.4",
     description="A voice library, for hikari.",
     long_description=long_description(),
     long_description_content_type="text/markdown",
