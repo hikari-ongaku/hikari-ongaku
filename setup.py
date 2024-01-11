@@ -18,8 +18,8 @@ def parse_requirements_file(path: str) -> t.List[str]:
 
 setup(
     name="hikari-ongaku",
-    version="0.2.2",
-    description="A command handler for hikari with a focus on type-safety and correctness.",
+    version="0.2.3",
+    description="A voice library, for hikari.",
     long_description=long_description(),
     long_description_content_type="text/markdown",
     author="MPlaty",
@@ -34,7 +34,7 @@ setup(
     extras_require={
         "docs": parse_requirements_file("doc_requirements.txt"),
     },
-    python_requires=">=3.10.0,<3.13",
+    python_requires="=3.11.0",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Framework :: AsyncIO",
