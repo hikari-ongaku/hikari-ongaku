@@ -1,11 +1,14 @@
-from .track import Track
-import hikari
+import attrs
 import typing as t
-import dataclasses
+
+import hikari
+
+from .track import Track
+from .base import PayloadBase
 
 
-@dataclasses.dataclass
-class PlayerState:
+@attrs.define
+class PlayerState(PayloadBase):
     """
     Player State
 
@@ -54,13 +57,9 @@ class PlayerState:
 
         return cls(time, position, connected, ping)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class PlayerVoice:
+@attrs.define
+class PlayerVoice(PayloadBase):
     """
     Player Voice
 
@@ -105,13 +104,9 @@ class PlayerVoice:
 
         return cls(token, endpoint, session_id)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class Player:
+@attrs.define
+class Player(PayloadBase):
     """
     Player Voice
 
@@ -141,6 +136,7 @@ class Player:
     paused: bool
     state: PlayerState
     voice: PlayerVoice
+    filters: dict[t.Any, t.Any] | None = None
 
     @classmethod
     def as_payload(cls, payload: dict[t.Any, t.Any]):
@@ -159,18 +155,38 @@ class Player:
         Player
             The Player you parsed.
         """
-        guild_id = payload["guildId"]
+        guild_id = hikari.Snowflake(payload["guildId"])
         try:
-            track = Track.as_payload(payload["track"])
-        except:
+            track = Track.from_payload(payload["track"])
+        except Exception:
             track = None
         volume = payload["volume"]
         paused = payload["paused"]
         state = PlayerState.as_payload(payload["state"])
         voice = PlayerVoice.as_payload(payload["voice"])
+        filters = payload["filters"]
 
-        return cls(guild_id, track, volume, paused, state, voice)
+        return cls(guild_id, track, volume, paused, state, voice, filters)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

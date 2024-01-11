@@ -1,9 +1,9 @@
+import attrs
 import typing as t
-import dataclasses
+from .base import PayloadBase
 
-
-@dataclasses.dataclass
-class TrackInfo:
+@attrs.define
+class TrackInfo(PayloadBase):
     """
     Track information
 
@@ -48,7 +48,7 @@ class TrackInfo:
     isrc: t.Optional[str] = None
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Track info parser
 
@@ -73,15 +73,15 @@ class TrackInfo:
         title = payload["title"]
         try:  # TODO: This needs to be switched to actually check if it exists first, and if it doesn't set it as none.
             uri = payload["uri"]
-        except:
+        except Exception:
             uri = None
         try:
             artwork_url = payload["artworkUrl"]
-        except:
+        except Exception:
             artwork_url = None
         try:
             isrc = payload["isrc"]
-        except:
+        except Exception:
             isrc = None
         source_name = payload["sourceName"]
 
@@ -99,13 +99,9 @@ class TrackInfo:
             isrc,
         )
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class Track:
+@attrs.define
+class Track(PayloadBase):
     """
     Track
 
@@ -128,10 +124,10 @@ class Track:
     encoded: str
     info: TrackInfo
     plugin_info: dict[t.Any, t.Any]
-    user_data: dict[t.Any, t.Any]
+    user_data: dict[t.Any, t.Any] | None = None
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Track parser
 
@@ -148,19 +144,18 @@ class Track:
             The Track you parsed.
         """
         encoded = payload["encoded"]
-        info = TrackInfo.as_payload(payload["info"])
+        info = TrackInfo.from_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
-        user_data = payload["userData"]
+        try:
+            user_data = payload["userData"]
+        except Exception:
+            user_data = None
 
         return cls(encoded, info, plugin_info, user_data)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class PlaylistInfo:
+@attrs.define
+class PlaylistInfo(PayloadBase):
     """
     Playlist info
 
@@ -180,7 +175,7 @@ class PlaylistInfo:
     selected_track: int
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Playlist Info parser
 
@@ -201,13 +196,9 @@ class PlaylistInfo:
 
         return cls(name, selected_track)
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class Playlist:
+@attrs.define
+class Playlist(PayloadBase):
     """
     Playlist
 
@@ -229,7 +220,7 @@ class Playlist:
     tracks: tuple[Track, ...]
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Playlist Info parser
 
@@ -251,7 +242,7 @@ class Playlist:
         tracks: list[Track] | tuple[Track, ...] = []
         for track in payload["tracks"]:
             try:
-                new_track = Track.as_payload(track)
+                new_track = Track.from_payload(track)
             except Exception as e:
                 raise e
 
@@ -259,17 +250,13 @@ class Playlist:
 
         return cls(info, plugin_info, tuple(tracks))
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
 
-
-@dataclasses.dataclass
-class SearchResult:
+@attrs.define
+class SearchResult(PayloadBase):
     tracks: tuple[Track, ...]
 
     @classmethod
-    def as_payload(cls, payload: dict[t.Any, t.Any]):
+    def from_payload(cls, payload: dict[str, t.Any]):
         """
         Playlist Info parser
 
@@ -286,9 +273,10 @@ class SearchResult:
             The Playlist Info you parsed.
         """
         tracks: list[Track] | tuple[Track, ...] = []
+        print(payload)
         for track in payload:
             try:
-                new_track = Track.as_payload(track)
+                new_track = Track.from_payload(track)
             except Exception as e:
                 raise e
 
@@ -296,6 +284,25 @@ class SearchResult:
 
         return cls(tuple(tracks))
 
-    @property
-    def raw(self) -> dict[str, t.Any]:
-        return dataclasses.asdict(self)
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

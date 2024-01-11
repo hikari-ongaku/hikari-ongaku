@@ -1,14 +1,21 @@
+import asyncio
+import logging
+import typing as t
+
+import aiohttp
+import hikari
+
+from .abc.lavalink import RestError
 from .enums import ConnectionType, VersionType
+from .errors import (
+    PlayerCreateException,
+    PlayerMissingException,
+    RequiredException,
+    SessionError,
+)
 from .events import EventHandler, WebsocketClosedEvent
 from .player import Player
 from .rest import RestApi
-from .abc.lavalink import RestError
-from .errors import PlayerMissingException, SessionError
-import typing as t
-import aiohttp
-import hikari
-import logging
-import asyncio
 
 _logger = logging.getLogger("ongaku")
 
@@ -58,7 +65,7 @@ class _OngakuInternal:
         self, connected: ConnectionType, *, reason: t.Optional[str] = None
     ) -> None:
         self._connected = connected
-        if reason != None:
+        if reason is not None:
             self._failure_reason = reason
 
     def set_session_id(self, session_id: str) -> None:
@@ -91,11 +98,11 @@ class _OngakuInternal:
 
     async def check_error(self, payload: dict[t.Any, t.Any]) -> t.Optional[RestError]:
         try:
-            error = RestError.as_payload(payload)
-        except:
+            error = RestError.from_payload(payload)
+        except Exception:
             return
 
-        return error    
+        return error
 
 
 class Ongaku:
@@ -245,28 +252,47 @@ class Ongaku:
         ------
         PlayerCreateException
             Raised when the player failed to be created.
-        
+
         Returns
         -------
         Player
             The player that is now in the channel you have specified.
         """
-
+        # FIXME: Fix the issue where, if the bot is invited to the channel via this, then kicked by a user, allow the bot to join back without a "already in guild" error
         connection = self.bot.voice.connections.get(guild_id)
 
         if isinstance(connection, Player):
             await self.bot.voice.disconnect(guild_id)
+            await self.bot.update_voice_state(guild_id, None)
             try:
                 self._players.pop(guild_id)
-            except:
+            except Exception:
                 pass
-        
-        new_player = Player(self.bot, self, guild_id)
+
+        bot = self.bot.get_me()
+
+        if bot is None:
+            raise RequiredException(
+                "The bot is required to be able to connect. This is an internal error."
+            )
+
+        bot_state = self.bot.cache.get_voice_state(guild_id, bot.id)
+
+        if bot_state is not None and bot_state.channel_id is not None:
+            await self.bot.voice.disconnect(guild_id)
+            try:
+                self._players.pop(guild_id)
+            except Exception:
+                pass
 
         try:
-            await new_player.connect(channel_id)
+            new_player = await self.bot.voice.connect_to(
+                guild_id, channel_id, Player, bot=self.bot, ongaku=self
+            )
         except Exception as e:
-            raise e
+            raise PlayerCreateException(e)
+
+        connection = self.bot.voice.connections.get(guild_id)
 
         self._players.update({guild_id: new_player})
         return new_player
@@ -294,9 +320,11 @@ class Ongaku:
         """
         fetched_player = self._players.get(guild_id)
 
-        if fetched_player == None:
+        if fetched_player is None:
             raise PlayerMissingException(guild_id)
 
+        if not fetched_player.connected:
+            await fetched_player.join()
         return fetched_player
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
@@ -327,7 +355,7 @@ class Ongaku:
         """
         This is an internal function, that handles the connection, and starting of the websocket.
         """
-        
+
         if (
             self._internal.connected == ConnectionType.CONNECTED
             or self._internal.connected == ConnectionType.FAILURE
@@ -336,7 +364,7 @@ class Ongaku:
 
         try:
             bot = self.bot.get_me()
-        except:
+        except Exception:
             self._internal.remove_retry(-1)
             self._internal.set_connection(
                 ConnectionType.FAILURE, reason="Bot ID could not be found."
@@ -344,7 +372,7 @@ class Ongaku:
             _logger.error("Ongaku could not start, due to the bot ID not being found.")
             return
 
-        if bot == None:
+        if bot is None:
             self._internal.remove_retry(-1)
             self._internal.set_connection(
                 ConnectionType.FAILURE, reason="Bot ID could not be found."
@@ -363,31 +391,30 @@ class Ongaku:
             await asyncio.sleep(3)
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.ws_connect(  # type: ignore
+                    async with session.ws_connect(
                         self._internal.uri + "/websocket", headers=new_header
                     ) as ws:
                         async for msg in ws:
-                            if msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
+                            if msg.type == aiohttp.WSMsgType.ERROR:
+                                self._internal.set_connection(
+                                    ConnectionType.FAILURE,
+                                    reason=msg.data,
+                                )
                                 raise SessionError(_logger.error(msg.json()))
 
-                            if msg.type == aiohttp.WSMsgType.CLOSED:  # type: ignore
+                            if msg.type == aiohttp.WSMsgType.CLOSED:
                                 pass
-                            if msg.type == aiohttp.WSMsgType.TEXT:  # type: ignore
+                            if msg.type == aiohttp.WSMsgType.TEXT:
                                 try:
                                     json_data = msg.json()
-                                except:
+                                except Exception:
                                     _logger.info("Failed to decode json data.")
                                 else:
-
                                     self._internal.set_connection(
                                         ConnectionType.CONNECTED
                                     )
                                     await self._event_handler.handle_payload(json_data)
 
-                            elif msg.type == aiohttp.WSMsgType.ERROR:  # type: ignore
-                                self._internal.set_connection(
-                                    ConnectionType.FAILURE, reason=msg.data # type: ignore
-                                )
                 except Exception as e:
                     self._internal.set_connection(
                         ConnectionType.FAILURE, reason=f"Exception Raised: {e}"
@@ -404,15 +431,35 @@ class Ongaku:
         """
         player = self._players[hikari.Snowflake(event.guild_id)]
 
-        if player.channel_id == None:
-            _logger.debug(f"No channel set, skipping disconnection handling for: {event.guild_id}")
-            return
-
         if event.code == 4014:
             await player.disconnect()
 
         if event.code == 4006:
             await player.disconnect()
             self._players.pop(hikari.Snowflake(event.guild_id))
+            await self.create_player(
+                hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id)
+            )
 
-            await self.create_player(hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id))
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from .enums import PlatformType
-from .abc.session import Session
-from .abc.player import Player, PlayerVoice
-from .abc.track import Track, Playlist, SearchResult
-from .abc.lavalink import Info, ExceptionError
-from .errors import LavalinkException, BuildException
 import typing as t
 
-import hikari
 import aiohttp
+import hikari
+
+from .abc.lavalink import ExceptionError, Info
+from .abc.player import Player, PlayerVoice
+from .abc.session import Session
+from .abc.track import Playlist, SearchResult, Track
+from .enums import PlatformType
+from .errors import BuildException, LavalinkException
+import urllib.parse as urlparse
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -31,7 +33,7 @@ class _InternalSession:
                     raise LavalinkException(response.status)
 
                 try:
-                    session_model = Session.as_payload(await response.json())
+                    session_model = Session.from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 
@@ -120,7 +122,7 @@ class _InternalPlayer:
         patch_data: dict[str, t.Any] = {}
 
         if track != hikari.UNDEFINED:
-            if track == None:
+            if track is None:
                 patch_data.update(
                     {
                         "track": {
@@ -213,6 +215,7 @@ class _InternalPlayer:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
 
+
 class _InternalTrack:
     """
     The rest based actions for the track.
@@ -222,22 +225,34 @@ class _InternalTrack:
         self._ongaku: Ongaku = ongaku
 
     async def _url_handler(self, possible_url: str) -> t.Optional[str]:
-        # TODO: Handle all different url types, spotify, youtube, youtube music, and soundcloud.
-        # TODO: Probably good to convert the query string into arguments, so they are handled correctly.
-        if possible_url.count("youtube.com") > 0:
-            if possible_url.count("list=") > 0:
-                return possible_url.split("list=")[1]
+        try:
+            url = urlparse.parse_qs(possible_url.split("?")[1], strict_parsing=True)
+        except Exception:
+            return
+        
+        try:
+            code = url["list"]
+        except Exception:
+            pass
+        else:
+            return code[0]
+        
+        try:
+            code = url["v"]
+        except Exception:
+            pass
+        else:
+            return code[0]
 
-            elif possible_url.count("v=") > 0:
-                return possible_url.split("v=")[1]
+
 
     async def load_track(
-        self, platform: PlatformType, query: str
+        self, query: str, platform: PlatformType = PlatformType.YOUTUBE
     ) -> SearchResult | Playlist | Track | None:
         async with aiohttp.ClientSession() as session:
             query_sanitize = await self._url_handler(query)
 
-            if query_sanitize != None:
+            if query_sanitize is not None:
                 params = {"identifier": query_sanitize}
             else:
                 if platform == PlatformType.YOUTUBE:
@@ -267,11 +282,11 @@ class _InternalTrack:
                     return
 
                 if load_type == "error":
-                    raise LavalinkException(ExceptionError.as_payload(data["data"]))
+                    raise LavalinkException(ExceptionError.from_payload(data["data"]))
 
                 if load_type == "search":
                     try:
-                        search_result = SearchResult.as_payload(data["data"])
+                        search_result = SearchResult.from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -279,7 +294,7 @@ class _InternalTrack:
 
                 if load_type == "track":
                     try:
-                        track = Track.as_payload(data["data"])
+                        track = Track.from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -287,7 +302,7 @@ class _InternalTrack:
 
                 if load_type == "playlist":
                     try:
-                        playlist = Playlist.as_payload(data["data"])
+                        playlist = Playlist.from_payload(data["data"])
                     except Exception as e:
                         raise e
 
@@ -362,14 +377,14 @@ class RestApi:
                     )
 
                 try:
-                    info_resp = Info.as_payload(await response.json())
+                    info_resp = Info.from_payload(await response.json())
                 except Exception as e:
                     raise BuildException(e)
 
         return info_resp
 
     async def search(
-        self, platform: PlatformType, query: str
+        self, query: str, platform: PlatformType = PlatformType.YOUTUBE
     ) -> SearchResult | Playlist | Track | None:
         """
         Search for a track
@@ -395,6 +410,29 @@ class RestApi:
 
         """
         try:
-            return await self.internal.track.load_track(platform, query)
+            return await self.internal.track.load_track(query, platform)
         except Exception as e:
             raise e
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
