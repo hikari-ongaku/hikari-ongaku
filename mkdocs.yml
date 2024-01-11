@@ -1,5 +1,6 @@
 site_name: Ongaku Docs
 site_url: https://ongaku.mplaty.com/
+repo_url: https://github.com/MPlatypus/hikari-ongaku/
 
 theme:
   name: material
@@ -24,22 +25,34 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+authors:
+  mplaty:
+    name: MPlaty
+    description: Creator
+    avatar: https://github.com/
+
 plugins:
   - search
   - mkdocstrings:
       default_handler: python
       handlers:
         python:
+          import:
+            - https://docs.python.org/3.10/objects.inv
+            - https://docs.hikari-py.dev/en/latest/objects.inv
           options:
-            docstring_style: numpy
+            heading_level: 3
+            annotations_path: source
             docstring_section_style: spacy
-            show_source: false
+            docstring_style: numpy
+            inherited_members: true
             merge_init_into_class: true
-            inherited_members: false
             separate_signature: true
             show_signature_annotations: true
+            show_source: false
             show_submodules: false
-            annotations_path: source
+            signature_crossrefs: true
+            show_symbol_type_heading: true
 
 
 markdown_extensions:
@@ -70,8 +83,8 @@ nav:
   - Getting Started:
     - getting_started/index.md
     - Basics: getting_started/basics.md
-    - Commands: getting_started/commands.md
     - Nodes: getting_started/nodes.md
+    - Filters: getting_started/filters.md
   - API Reference:
     - api_reference/index.md
     - Ongaku: api_reference/ongaku.md
@@ -80,11 +93,13 @@ nav:
     - Enums: api_reference/enums.md
     - Errors: api_reference/errors.md
     - ABC:
+      - Base: api_reference/abc/base.md
       - Events: api_reference/abc/events.md
       - Lavalink: api_reference/abc/lavalink.md
       - Player: api_reference/abc/player.md
       - Session: api_reference/abc/session.md
       - Track: api_reference/abc/track.md
+      - Filters: api_reference/abc/filters.md
 
 
 watch:

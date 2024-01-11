@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import hikari
-from hikari.api import VoiceConnection, VoiceComponent
+from hikari import Snowflake, GatewayBot, UndefinedOr, UNDEFINED
+from hikari.events import VoiceServerUpdateEvent, VoiceStateUpdateEvent
 import typing as t
+import asyncio
 
 from .errors import (
     SessionNotStartedException,
@@ -20,96 +21,54 @@ if t.TYPE_CHECKING:
     OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
 
-class Player(VoiceConnection):
-    @classmethod
-    async def initialize(  # type: ignore
-        cls,
-        channel_id: hikari.Snowflake,
-        endpoint: str,
-        guild_id: hikari.Snowflake,
-        on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
-        owner: VoiceComponent,
-        session_id: str,
-        shard_id: int,
-        token: str,
-        user_id: hikari.Snowflake,
-        *,
-        bot: hikari.GatewayBot,
-        ongaku: Ongaku,
-    ):
-        """
-        Testing
-
-        Testing something
-        """
-
-        init_player = Player(
-            bot=bot,
-            ongaku=ongaku,
-            channel_id=channel_id,
-            endpoint=endpoint,
-            guild_id=guild_id,
-            on_close=on_close,
-            owner=owner,
-            session_id=session_id,
-            shard_id=shard_id,
-            token=token,
-            user_id=user_id,
-        )
-
-        return init_player
-
+class Player:
     def __init__(
         self,
-        *,
-        bot: hikari.GatewayBot,
+        bot: GatewayBot,
         ongaku: Ongaku,
-        channel_id: hikari.Snowflake,
-        endpoint: str,
-        guild_id: hikari.Snowflake,
-        on_close: t.Awaitable[None],  # type: ignore TODO: This needs to be fixed, or I need to make my own player.
-        owner: VoiceComponent,
-        session_id: str,
-        shard_id: int,
-        token: str,
-        user_id: hikari.Snowflake,
+        guild_id: Snowflake,
     ) -> None:
         """
-        GSDS
+        Base player class
 
-        DGHDJHSJDHGFJS
-
-
-        !!! INFO
-            THIS IS A TEST
+        The class that allows the player, to play songs, and more.
         """
         self._bot = bot
         self._ongaku = ongaku
-        self._channel_id = channel_id
-        self._endpoint = endpoint
         self._guild_id = guild_id
-        self._on_close = on_close
-        self._owner = owner
-        self._session_id = session_id
-        self._shard_id = shard_id
-        self._token = token
-        self._user_id = user_id
+        self._channel_id = None
 
+        self._is_alive = False
         self._is_paused = True
 
         self._queue: list[Track] = []
 
+        self._voice: PlayerVoice | None = None
+
+        self._session_id: str | None = None
+
+        self._connected: bool = False
+
         bot.subscribe(TrackEndEvent, self._track_end_event)
+        bot.subscribe(VoiceServerUpdateEvent, self._voice_server_update_event)
+        bot.subscribe(VoiceStateUpdateEvent, self._voice_state_update_event)
 
     @property
-    def channel_id(self) -> hikari.Snowflake:
+    def channel_id(self) -> Snowflake | None:
         """
         ID of the voice channel this voice connection is currently in.
+
+        Returns
+        -------
+        hikari.Snowflake
+            The channel id.
+        None
+            The bot is not currently connected to a channel.
         """
         return self._channel_id
 
     @property
-    def guild_id(self) -> hikari.Snowflake:
+    def guild_id(self) -> Snowflake:
         """
         ID of the guild this voice connection is in.
         """
@@ -123,25 +82,18 @@ class Player(VoiceConnection):
         return self._is_alive
 
     @property
-    def shard_id(self) -> int:
-        """
-        ID of the shard that requested the connection.
-        """
-        return self._shard_id
-
-    @property
-    def owner(self) -> VoiceComponent:
-        """
-        Return the component that is managing this connection.
-        """
-        return self._owner
-
-    @property
     def is_paused(self) -> bool:
         """
         Returns whether the bot is currently paused.
         """
         return self._is_paused
+
+    @property
+    def connected(self) -> bool:
+        """
+        Whether or not the bot is connected to a voice channel.
+        """
+        return self._connected
 
     @property
     def queue(self) -> tuple[Track, ...]:
@@ -169,30 +121,32 @@ class Player(VoiceConnection):
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
         """
-        voice = PlayerVoice(
-            self._token, self._endpoint[6:], self._session_id
-        )  # TODO: Fix the creation of dictionaries, and make sure its sessionId not session_id
+        if self._voice is None or self._channel_id is None:
+            raise PlayerException("Player is not connected to a channel.")
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        if len(self.queue) > 0 and track == None:
+        if len(self.queue) > 0 and track is None:
             raise PlayerQueueException("Empty Queue. Cannot play nothing.")
 
-        if track != None:
+        if track:
             self._queue.insert(0, track)
 
-        await self._ongaku.rest.internal.player.update_player(
-            self.guild_id,
-            self._ongaku.internal.session_id,
-            track=self.queue[0],
-            voice=voice,
-            no_replace=False,
-        )
+        try:
+            await self._ongaku.rest.player.update(
+                self.guild_id,
+                self._ongaku.internal.session_id,
+                track=self.queue[0],
+                voice=self._voice,
+                no_replace=False,
+            )
+        except Exception as e:
+            raise e
 
         self._is_paused = False
 
-    async def pause(self, value: hikari.UndefinedOr[bool] = hikari.UNDEFINED) -> None:
+    async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
         """
         Pause the current track
 
@@ -212,15 +166,15 @@ class Player(VoiceConnection):
             The session id was null, or empty.
 
         """
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        if value == hikari.UNDEFINED:
+        if value == UNDEFINED:
             self._is_paused = not self.is_paused
         else:
             self._is_paused = value
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id, self._ongaku.internal.session_id, paused=self.is_paused
         )
 
@@ -258,7 +212,7 @@ class Player(VoiceConnection):
         if len(self.queue) == 0:
             raise PlayerSettingException("Queue is empty.")
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if isinstance(value, Track):
@@ -274,7 +228,7 @@ class Player(VoiceConnection):
 
         if index == 0:
             if len(self.queue) == 0:
-                await self._ongaku.rest.internal.player.update_player(
+                await self._ongaku.rest.player.update(
                     self.guild_id, self._ongaku.internal.session_id, track=None
                 )
             else:
@@ -300,7 +254,7 @@ class Player(VoiceConnection):
         PlayerQueueException
             The queue is already empty, so no songs can be skipped.
         """
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if amount <= 0:
@@ -317,14 +271,14 @@ class Player(VoiceConnection):
                 self._queue.pop(0)
 
         if len(self.queue) == 0:
-            await self._ongaku.rest.internal.player.update_player(
+            await self._ongaku.rest.player.update(
                 self.guild_id,
                 self._ongaku.internal.session_id,
                 track=None,
             )
             return
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.internal.player.update_player(  # type: ignore
             self.guild_id,
             self._ongaku.internal.session_id,
             track=self._queue[0],
@@ -350,7 +304,7 @@ class Player(VoiceConnection):
             Raised if the value is above, or below 0, or 1000.
         """
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if volume < 0:
@@ -362,7 +316,7 @@ class Player(VoiceConnection):
                 f"Volume cannot be above 1000. Volume: {volume}"
             )
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id,
             self._ongaku.internal.session_id,
             volume=volume,
@@ -382,10 +336,10 @@ class Player(VoiceConnection):
         """
         self._queue.clear()
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id,
             self._ongaku.internal.session_id,
             track=None,
@@ -412,7 +366,7 @@ class Player(VoiceConnection):
         PlayerSettingException
             The queue is empty.
         """
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if self.queue[0].info.length < value:
@@ -420,8 +374,48 @@ class Player(VoiceConnection):
                 "Length is longer than currently playing song!"
             )
 
-        await self._ongaku.rest.internal.player.update_player(
+        await self._ongaku.rest.player.update(
             self.guild_id, self._ongaku.internal.session_id, position=value
+        )
+
+    async def connect(self, channel_id: Snowflake, timeout: int = 5) -> None:
+        self._channel_id = channel_id
+
+        await self._bot.update_voice_state(self.guild_id, self._channel_id)
+
+        try:
+            state_event, server_event = await asyncio.gather(
+                # Voice state update:
+                self._bot.wait_for(
+                    VoiceStateUpdateEvent,
+                    timeout=timeout,
+                ),
+                # Server update:
+                self._bot.wait_for(
+                    VoiceServerUpdateEvent,
+                    timeout=timeout,
+                ),
+            )
+        except asyncio.TimeoutError as e:
+            raise PlayerException(
+                f"Could not connect to voice channel {channel_id} in guild {self.guild_id}."
+            ) from e
+
+        if self._ongaku.internal.session_id is None:
+            raise SessionNotStartedException()
+
+        if server_event.endpoint is None:
+            raise PlayerException(
+                f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}"
+            )
+
+        await self._ongaku.rest.player.update(
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            voice=PlayerVoice(
+                server_event.token, server_event.endpoint, state_event.state.session_id
+            ),
+            no_replace=False,
         )
 
     async def disconnect(self) -> None:
@@ -429,29 +423,21 @@ class Player(VoiceConnection):
         self._is_alive = False
         await self.clear()
 
-        if self._ongaku.internal.session_id == None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
-        await self._ongaku.rest.internal.player.delete_player(
+        await self._ongaku.rest.player.delete(
             self._ongaku.internal.session_id, self._guild_id
         )
 
-    async def join(self) -> None:
-        """Wait for the process to halt before continuing."""
-        print("joined?")
-
-    async def notify(self, event: hikari.VoiceEvent) -> None:
-        """Submit an event to the voice connection to be processed."""
-        pass
-
-    async def _track_end_event(self, event: TrackEndEvent):
-        if self._ongaku.internal.session_id == None:
+    async def _track_end_event(self, event: TrackEndEvent) -> None:
+        if self._ongaku.internal.session_id is None:
             raise SessionNotStartedException()
 
         if int(event.guild_id) == int(self.guild_id):
             try:
                 await self.remove(0)
-            except:
+            except Exception:
                 await self._bot.dispatch(
                     PlayerQueueEmptyEvent(self._bot, self.guild_id)
                 )
@@ -463,9 +449,32 @@ class Player(VoiceConnection):
                 )
                 return
 
-            await self._ongaku.rest.internal.player.update_player(
+            await self._ongaku.rest.player.update(
                 self.guild_id,
                 self._ongaku.internal.session_id,
                 track=self._queue[0],
                 no_replace=False,
             )
+
+    async def _voice_server_update_event(self, event: VoiceServerUpdateEvent) -> None:
+        if event.endpoint is None:
+            raise PlayerException("Endpoint cannot be null.")
+        if self._session_id is None:
+            raise PlayerException("Session id cannot be none.")
+
+        self._voice = PlayerVoice(event.token, event.endpoint, self._session_id)
+
+    async def _voice_state_update_event(self, event: VoiceStateUpdateEvent) -> None:
+        if not event.state.member.is_bot:
+            return
+
+        if event.state.member.id != self._bot.get_me().id:  # type: ignore
+            return
+
+        if event.state.channel_id is None:
+            return
+
+        if self._channel_id is None:
+            return
+
+        self._session_id = event.state.session_id

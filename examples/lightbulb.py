@@ -1,26 +1,18 @@
 # Example for Lightbulb handler.
-
 import hikari
 import lightbulb
 import ongaku
+import logging
 
-bot = lightbulb.BotApp(token="...", banner=None)
+import dotenv
+import os
+
+dotenv.load_dotenv(dotenv_path=".env")
+
+bot = lightbulb.BotApp(token=os.getenv("TOKEN", ""), banner=None)
 
 # You MUST setup the base Ongaku class. Everything starts from here.
 lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
-
-# You then MUST connect the websocket, for events.
-
-
-@bot.listen(hikari.events.StartedEvent)
-async def start_event(event: hikari.events.StartedEvent):
-    me = bot.get_me()
-
-    if me == None:
-        print("bot is none.")
-        return
-
-    await lavalink.connect(me.id)
 
 
 # Events
@@ -28,37 +20,44 @@ async def start_event(event: hikari.events.StartedEvent):
 
 @bot.listen(ongaku.ReadyEvent)
 async def ready_event(event: ongaku.ReadyEvent):
-    print("Ready event")
-
-
-@bot.listen(ongaku.StatisticsEvent)
-async def stats_event(event: ongaku.StatisticsEvent):
-    print("Stats event")
+    logging.info(
+        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
+    )
 
 
 @bot.listen(ongaku.TrackStartEvent)
 async def track_start_event(event: ongaku.TrackStartEvent):
-    print("Track start event")
+    logging.info(
+        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
+    )
 
 
 @bot.listen(ongaku.TrackEndEvent)
 async def track_end_event(event: ongaku.TrackEndEvent):
-    print("Track end event")
+    logging.info(
+        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
+    )
 
 
 @bot.listen(ongaku.TrackExceptionEvent)
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
-    print("Track exception event")
+    logging.info(
+        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
+    )
 
 
 @bot.listen(ongaku.TrackStuckEvent)
-async def track_event(event: ongaku.TrackStuckEvent):
-    print("Track stuck event")
+async def track_stuck_event(event: ongaku.TrackStuckEvent):
+    logging.info(
+        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
+    )
 
 
 @bot.listen(ongaku.WebsocketClosedEvent)
-async def test_stats_event(event: ongaku.WebsocketClosedEvent):
-    print("Websocket closed event")
+async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
+    logging.info(
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}"
+    )
 
 
 # The following, is just a bunch of example commands.
@@ -69,7 +68,7 @@ async def test_stats_event(event: ongaku.WebsocketClosedEvent):
 @lightbulb.command("play", "play a song")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def play_command(ctx: lightbulb.Context) -> None:
-    if ctx.guild_id == None:
+    if ctx.guild_id is None:
         await ctx.respond(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
         )
@@ -84,7 +83,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
 
     query = ctx.options.query
 
-    if query == None or not isinstance(query, str):
+    if query is None or not isinstance(query, str):
         await ctx.respond("A query is required.", flags=hikari.MessageFlag.EPHEMERAL)
         return
 
@@ -92,9 +91,9 @@ async def play_command(ctx: lightbulb.Context) -> None:
         hikari.ResponseType.DEFERRED_MESSAGE_CREATE, flags=hikari.MessageFlag.EPHEMERAL
     )
 
-    results = await lavalink.rest.search(ongaku.models.PlatformType.YOUTUBE, query)
+    result = await lavalink.rest.track.load(query)
 
-    if results == None:
+    if result is None:
         await ctx.respond(
             hikari.ResponseType.DEFERRED_MESSAGE_UPDATE,
             "Sorry, no songs were found.",
@@ -102,21 +101,30 @@ async def play_command(ctx: lightbulb.Context) -> None:
         )
         return
 
+    track: ongaku.Track | None = None
+
+    if isinstance(result, ongaku.SearchResult):
+        track = result.tracks[0]
+
+    elif isinstance(result, ongaku.Track):
+        track = result
+
+    else:
+        track = result.tracks[0]
+
     embed = hikari.Embed(
-        title=f"[{results[0].track.title}]({results[0].track.uri})",
-        description=f"made by: {results[0].track.author}",
+        title=f"[{track.info.title}]({track.info.uri})",
+        description=f"made by: {track.info.author}",
     )
 
-    player = await lavalink.create_player(ctx.guild_id, ctx.channel_id)
-
-    await player.play(results[0])
-
     try:
-        await bot.update_voice_state(
-            ctx.guild_id, voice_state.channel_id, self_deaf=True
-        )
-    except Exception as e:
-        print(e)
+        print("Fetching player")
+        player = await lavalink.fetch_player(ctx.guild_id)
+    except Exception:
+        print("Failed fetching player, creating new player.")
+        player = await lavalink.create_player(ctx.guild_id, voice_state.channel_id)
+
+    await player.play(track)
 
     await ctx.respond(
         hikari.ResponseType.DEFERRED_MESSAGE_UPDATE,
@@ -126,48 +134,29 @@ async def play_command(ctx: lightbulb.Context) -> None:
 
 
 @bot.command
-@lightbulb.command("pause", "pause a song")
+@lightbulb.command("pause", "pause the currently playing song.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def pause_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond("This command does not work.", flags=hikari.MessageFlag.EPHEMERAL)
+    if ctx.guild_id is None:
+        await ctx.respond(
+            "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
+        )
+        return
+    try:
+        current_player = await lavalink.fetch_player(ctx.guild_id)
+    except Exception:
+        await ctx.respond(
+            "You must have a player currently running!",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return
 
+    await current_player.pause()
 
-@bot.command
-@lightbulb.command("skip", "skip a song")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def skip_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond("This command does not work.", flags=hikari.MessageFlag.EPHEMERAL)
-
-
-@bot.command
-@lightbulb.command("queue", "view the current queue.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def queue_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond("This command does not work.", flags=hikari.MessageFlag.EPHEMERAL)
-
-
-@bot.command
-@lightbulb.command("stop", "stop the current song.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def stop_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond("This command does not work.", flags=hikari.MessageFlag.EPHEMERAL)
-
-
-@bot.command
-@lightbulb.command("disconnect", "stop the song, and disconnect the bot.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def disconnect_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond("This command does not work.", flags=hikari.MessageFlag.EPHEMERAL)
-
-
-@bot.command
-@lightbulb.option(
-    "value", "the value of the volume. 0-100.", type=int, min_value=0, max_value=100
-)
-@lightbulb.command("volume", "change the volume of the bot")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def volume_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond("This command does not work.", flags=hikari.MessageFlag.EPHEMERAL)
+    if current_player.is_paused:
+        await ctx.respond("Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL)
+    else:
+        await ctx.respond("Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL)
 
 
 if __name__ == "__main__":

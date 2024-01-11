@@ -1,15 +1,16 @@
 # This file deals with events, from payloads.
 from __future__ import annotations
 
-import typing as t
 import logging
+import typing as t
+
 from . import errors
 from .abc import (
     ReadyEvent,
     StatisticsEvent,
-    TrackStartEvent,
     TrackEndEvent,
     TrackExceptionEvent,
+    TrackStartEvent,
     TrackStuckEvent,
     WebsocketClosedEvent,
 )
@@ -17,7 +18,7 @@ from .abc import (
 if t.TYPE_CHECKING:
     from ..ongaku import Ongaku
 
-    OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
+_logger = logging.getLogger("ongaku.events")
 
 
 class EventHandler:
@@ -48,25 +49,25 @@ class EventHandler:
     async def _ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
             session_id = payload["sessionId"]
-        except:
+        except Exception:
             raise errors.SessionNotStartedException("Missing session id.")
 
-        if session_id == None:
+        if session_id is None:
             raise errors.SessionNotStartedException("Missing session id.")
 
         self._ongaku.internal.set_session_id(session_id)
 
         try:
-            event = ReadyEvent.as_payload(self._ongaku.bot, payload)
+            event = ReadyEvent._from_payload(payload, app=self._ongaku.bot)
         except Exception as e:
-            print(e, e.args)
             raise e
 
+        logging.getLogger("ongaku.info").info("Successfully connected to the server.")
         await self._ongaku.bot.dispatch(event)
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            event = StatisticsEvent.as_payload(self._ongaku.bot, payload)
+            event = StatisticsEvent._from_payload(payload, app=self._ongaku.bot)
         except Exception as e:
             raise e
 
@@ -80,31 +81,33 @@ class EventHandler:
 
         if event_type == "TrackStartEvent":
             try:
-                event = TrackStartEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackStartEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackEndEvent":
             try:
-                event = TrackEndEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackEndEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackExceptionEvent":
             try:
-                event = TrackExceptionEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackExceptionEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackStuckEvent":
             try:
-                event = TrackStuckEvent.as_payload(self._ongaku.bot, payload)
+                event = TrackStuckEvent._from_payload(payload, app=self._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "WebSocketClosedEvent":
             try:
-                event = WebsocketClosedEvent.as_payload(self._ongaku.bot, payload)
+                event = WebsocketClosedEvent._from_payload(
+                    payload, app=self._ongaku.bot
+                )
             except Exception as e:
                 raise e
 
@@ -112,3 +115,26 @@ class EventHandler:
             return
 
         await self._ongaku.bot.dispatch(event)
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
