@@ -42,6 +42,7 @@ from .errors import (
     PlayerSettingException,
     RequiredException,
     SessionNotStartedException,
+    TimeoutException,
 )
 from .ongaku import Ongaku
 
@@ -66,6 +67,7 @@ __all__ = (
     "PlayerQueueException",
     "GatewayOnlyException",
     "RequiredException",
+    "TimeoutException",
     # .abc
     "events",
     "lavalink",

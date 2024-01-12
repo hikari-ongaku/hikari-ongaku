@@ -5,7 +5,7 @@ This will show you how to get started with creating your first music bot.
 ## Basic setup
 
 you must have a gateway bot, like any other hikari discord bot. 
-Ongaku is incompatible with RESTBots. [read more](/getting_started/#qs-and-as)
+Ongaku is incompatible with RESTBots. [read more](index.md#qs-and-as)
 
 First step, is setting up a discord bot. This is the minimum requirement.
 ```python
@@ -84,7 +84,7 @@ The following functions, will allow for you to modify things about the player. T
 ```py
 await player.play(track)
 ```
-this will start playing the track you have fed to it. This must be a valid [track](/api_reference/abc/track/#ongaku.abc.track.Track)
+this will start playing the track you have fed to it. This must be a valid [track](../api_reference/abc/track.md#ongaku.abc.track.Track)
 
 #### Pausing or unpausing the player
 ```py
@@ -108,7 +108,7 @@ This will allow for the user, to change the tracks current playing position.
 ```py
 await player.add(track)
 ```
-This allows for the user to add a list of songs, a singular track, or a [Playlist](/api_reference/abc/track/#ongaku.abc.track.Playlist) to the queue.
+This allows for the user to add a list of songs, a singular track, or a [Playlist](../api_reference/abc/track.md#ongaku.abc.track.Playlist) to the queue.
 
 #### Remove a track from the queue
 ```py

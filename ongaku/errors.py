@@ -10,6 +10,12 @@ class BuildException(OngakuBaseException):
     """
 
 
+class TimeoutException(OngakuBaseException):
+    """
+    Raised when a timeout has exceed its time.
+    """
+
+
 class LavalinkException(OngakuBaseException):
     """
     Raised when an error is returned on the websocket, or a rest command.

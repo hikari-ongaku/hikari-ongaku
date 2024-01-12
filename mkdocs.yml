@@ -25,12 +25,6 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
-authors:
-  mplaty:
-    name: MPlaty
-    description: Creator
-    avatar: https://github.com/
-
 plugins:
   - search
   - mkdocstrings:
@@ -53,6 +47,8 @@ plugins:
             show_submodules: false
             signature_crossrefs: true
             show_symbol_type_heading: true
+            extensions:
+                - griffe_inherited_docstrings
 
 
 markdown_extensions:

@@ -29,22 +29,6 @@ class Session(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Session:
-        """
-        Session parser
-
-        parse a payload of information, to receive a `Session` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        Session
-            The Session you parsed.
-        """
-
         resuming = payload["resuming"]
         timeout = payload["timeout"]
 

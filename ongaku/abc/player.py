@@ -43,22 +43,6 @@ class PlayerState(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerState:
-        """
-        Player State parser
-
-        parse a payload of information, to receive a `PlayerState` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        PlayerState
-            The Player State you parsed.
-        """
-
         time = payload["time"]
         position = payload["position"]
         connected = payload["connected"]
@@ -92,22 +76,6 @@ class PlayerVoice(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerVoice:
-        """
-        Player Voice parser
-
-        parse a payload of information, to receive a `PlayerVoice` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        PlayerVoice
-            The Player Voice you parsed.
-        """
-
         token = payload["token"]
         endpoint = payload["endpoint"]
         session_id = payload["sessionId"]
@@ -150,22 +118,6 @@ class Player(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Player:
-        """
-        Player parser
-
-        parse a payload of information, to receive a `Player` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        Player
-            The Player you parsed.
-        """
-
         guild_id = hikari.Snowflake(payload["guildId"])
         try:
             track = Track._from_payload(payload["track"])

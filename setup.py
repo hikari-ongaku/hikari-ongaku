@@ -34,7 +34,7 @@ setup(
     extras_require={
         "docs": parse_requirements_file("doc_requirements.txt"),
     },
-    python_requires="==3.11.0",
+    python_requires=">=3.11.0, <3.13",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: AsyncIO",

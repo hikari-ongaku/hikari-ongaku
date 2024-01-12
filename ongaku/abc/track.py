@@ -59,21 +59,6 @@ class TrackInfo(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> TrackInfo:
-        """
-        Track info parser
-
-        parse a payload of information, to receive a `TrackInfo` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        TrackInfo
-            The Track Info you parsed.
-        """
         identifier = payload["identifier"]
         is_seekable = payload["isSeekable"]
         author = payload["author"]
@@ -138,22 +123,6 @@ class Track(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Track:
-        """
-        Track parser
-
-        parse a payload of information, to receive a `Track` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        Track
-            The Track you parsed.
-        """
-
         encoded = payload["encoded"]
         info = TrackInfo._from_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
@@ -187,22 +156,6 @@ class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> PlaylistInfo:
-        """
-        Playlist Info parser
-
-        parse a payload of information, to receive a `PlaylistInfo` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        PlaylistInfo
-            The Playlist Info you parsed.
-        """
-
         name = payload["name"]
         selected_track = payload["selectedTrack"]
 
@@ -233,22 +186,6 @@ class Playlist(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Playlist:
-        """
-        Playlist Info parser
-
-        parse a payload of information, to receive a `PlaylistInfo` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        PlaylistInfo
-            The Playlist Info you parsed.
-        """
-
         info = payload["info"]
         plugin_info = payload["pluginInfo"]
 
@@ -270,22 +207,6 @@ class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
 
     @classmethod
     def _from_payload(cls, payload: list[dict[str, t.Any]]) -> SearchResult:
-        """
-        Playlist Info parser
-
-        parse a payload of information, to receive a `PlaylistInfo` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        PlaylistInfo
-            The Playlist Info you parsed.
-        """
-
         tracks: list[Track] | tuple[Track, ...] = []
 
         for track in payload:

@@ -87,22 +87,6 @@ class InfoGit(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> InfoGit:
-        """
-        Info Git parser
-
-        parse a payload of information, to receive a `InfoGit` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        InfoGit
-            The Info Git you parsed.
-        """
-
         branch = payload["branch"]
         commit = payload["commit"]
         commit_time = payload["commitTime"]
@@ -130,22 +114,6 @@ class InfoPlugin(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> InfoPlugin:
-        """
-        Info Plugin parser
-
-        parse a payload of information, to receive a `InfoPlugin` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        InfoPlugin
-            The Info Plugin you parsed.
-        """
-
         name = payload["name"]
         version = payload["version"]
 
@@ -248,22 +216,6 @@ class RestError(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> RestError:
-        """
-        Rest Error parser
-
-        parse a payload of information, to receive a `RestError` dataclass.
-
-        Parameters
-        ----------
-        payload : dict[Any, Any]
-            The payload you wish to pass.
-
-        Returns
-        -------
-        Error
-            The Error you parsed.
-        """
-
         timestamp = payload["timestamp"]
         status = payload["status"]
         error = payload["error"]
@@ -279,22 +231,6 @@ class RestError(PayloadBase[dict[str, t.Any]]):
 
 @attrs.define
 class ExceptionError(PayloadBase[dict[str, t.Any]]):
-    """
-    All of the Exception Error information.
-
-    Find out more [here](https://lavalink.dev/api/websocket.html#exception-object).
-
-    Parameters
-    ----------
-    message : str
-        The message of the exception
-    severity : enums.LavalinkSeverityType
-        The severity of the exception
-    cause : str
-        The cause of the exception
-
-    """
-
     message: str
     severity: enums.SeverityType
     cause: str

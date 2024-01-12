@@ -10,6 +10,8 @@ from .errors import (
     PlayerQueueException,
     PlayerSettingException,
     PlayerException,
+    TimeoutException,
+    BuildException,
 )
 from .abc.track import Track
 from .abc.events import TrackEndEvent, PlayerQueueEmptyEvent
@@ -50,8 +52,6 @@ class Player:
         self._connected: bool = False
 
         bot.subscribe(TrackEndEvent, self._track_end_event)
-        bot.subscribe(VoiceServerUpdateEvent, self._voice_server_update_event)
-        bot.subscribe(VoiceStateUpdateEvent, self._voice_state_update_event)
 
     @property
     def channel_id(self) -> Snowflake | None:
@@ -378,48 +378,90 @@ class Player:
             self.guild_id, self._ongaku.internal.session_id, position=value
         )
 
-    async def connect(self, channel_id: Snowflake, timeout: int = 5) -> None:
-        self._channel_id = channel_id
+    async def connect(self, channel_id: Snowflake, *, mute: UndefinedOr[bool] = UNDEFINED, deaf: UndefinedOr[bool] = UNDEFINED, timeout: int = 5) -> None:
+        """
+        Connect to a channel
 
-        await self._bot.update_voice_state(self.guild_id, self._channel_id)
+        Connect your bot, to a channel, to be able to start playing music.
+
+        Parameters
+        ----------
+        channel_id : Snowflake
+            The channel you wish to connect the bot too.
+        mute : UndefinedOr[bool]
+            Whether or not to mute the bot.
+        deaf : UndefinedOr[bool]
+            Whether or not to deafen the bot.
+        timeout : int
+            The amount of time to wait for the events.
+
+        !!! INFO
+            If you set mute to True, the bot will not be able to transmit audio.
+
+        Raises
+        ------
+        ConnectionError
+            When it fails to connect to the voice server.            
+        SessionNotStartedException
+            When the lavalink session has not yet started.
+        TimeoutException
+            Raised when the events fail to respond in time.
+        PlayerException
+            Raised when the endpoint in the event is none.
+        BuildException
+            When attempting to build the [PlayerVoice][ongaku.abc.player.PlayerVoice] and fails to build.
+        """
+        if self._ongaku.internal.session_id is None:
+            raise SessionNotStartedException()
+
+        self._channel_id = channel_id
+        #voice_state = self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id) #type: ignore
+        
+        #if not voice_state or voice_state.channel_id is None:
+        try:
+            await self._bot.update_voice_state(self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf)
+        except Exception as e:
+            raise ConnectionError(e)
 
         try:
             state_event, server_event = await asyncio.gather(
-                # Voice state update:
                 self._bot.wait_for(
                     VoiceStateUpdateEvent,
                     timeout=timeout,
                 ),
-                # Server update:
                 self._bot.wait_for(
                     VoiceServerUpdateEvent,
                     timeout=timeout,
                 ),
             )
         except asyncio.TimeoutError as e:
-            raise PlayerException(
+            raise TimeoutException(
                 f"Could not connect to voice channel {channel_id} in guild {self.guild_id}."
             ) from e
-
-        if self._ongaku.internal.session_id is None:
-            raise SessionNotStartedException()
 
         if server_event.endpoint is None:
             raise PlayerException(
                 f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}"
             )
 
-        await self._ongaku.rest.player.update(
-            self.guild_id,
-            self._ongaku.internal.session_id,
-            voice=PlayerVoice(
-                server_event.token, server_event.endpoint, state_event.state.session_id
-            ),
-            no_replace=False,
-        )
+        try:
+            self._voice = PlayerVoice(server_event.token, server_event.endpoint, state_event.state.session_id)
+        except Exception as e:
+            raise BuildException(f"Failed to build player voice: {e}")
+
+        try:
+            await self._ongaku.rest.player.update(
+                self.guild_id,
+                self._ongaku.internal.session_id,
+                voice=self._voice,
+                no_replace=False,
+            )
+        except Exception as e:
+            print(e)
+            raise e
 
     async def disconnect(self) -> None:
-        """Signal the process to shut down."""
+        """Do docs"""
         self._is_alive = False
         await self.clear()
 
@@ -455,26 +497,3 @@ class Player:
                 track=self._queue[0],
                 no_replace=False,
             )
-
-    async def _voice_server_update_event(self, event: VoiceServerUpdateEvent) -> None:
-        if event.endpoint is None:
-            raise PlayerException("Endpoint cannot be null.")
-        if self._session_id is None:
-            raise PlayerException("Session id cannot be none.")
-
-        self._voice = PlayerVoice(event.token, event.endpoint, self._session_id)
-
-    async def _voice_state_update_event(self, event: VoiceStateUpdateEvent) -> None:
-        if not event.state.member.is_bot:
-            return
-
-        if event.state.member.id != self._bot.get_me().id:  # type: ignore
-            return
-
-        if event.state.channel_id is None:
-            return
-
-        if self._channel_id is None:
-            return
-
-        self._session_id = event.state.session_id

@@ -14,7 +14,7 @@ from .errors import (
     RequiredException,
     SessionError,
 )
-from .events import EventHandler, WebsocketClosedEvent
+from .events import EventHandler
 from .player import Player
 from .rest import RestApi
 
@@ -155,7 +155,7 @@ class Ongaku:
         self._event_handler = EventHandler(self)
 
         bot.subscribe(hikari.StartedEvent, self._handle_connect)
-        bot.subscribe(WebsocketClosedEvent, self._handle_disconnect)
+        bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
 
     @property
     def players(self) -> t.Sequence[Player]:
@@ -236,8 +236,7 @@ class Ongaku:
 
     async def create_player(
         self,
-        guild_id: hikari.Snowflake,
-        channel_id: hikari.Snowflake,
+        guild_id: hikari.Snowflake
     ) -> Player:
         """
         Create a new player
@@ -248,8 +247,6 @@ class Ongaku:
         ----------
         guild_id : hikari.Snowflake
             The guild id that the bot is in
-        channel_id : hikari.Snowflake
-            The channel id that the bot will join too.
 
         Raises
         ------
@@ -271,18 +268,12 @@ class Ongaku:
         bot_state = self.bot.cache.get_voice_state(guild_id, bot.id)
 
         if bot_state is not None and bot_state.channel_id is not None:
-            await self.bot.voice.disconnect(guild_id)
             try:
                 self._players.pop(guild_id)
             except Exception:
                 pass
 
         new_player = Player(self.bot, self, guild_id)
-
-        try:
-            await new_player.connect(channel_id)
-        except Exception:
-            raise
 
         self._players.update({guild_id: new_player})
         return new_player
@@ -412,25 +403,13 @@ class Ongaku:
             _logger.error(
                 f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}"
             )
-
-    async def _handle_disconnect(self, event: WebsocketClosedEvent):
-        """
-        This is an internal function, that handles the disconnection of a websocket (Discord)
-        """
-        player = self._players[hikari.Snowflake(event.guild_id)]
-
-        if event.code == 4014:
+                
+    async def _handle_shutdown(self, event: hikari.StoppingEvent):
+        _logger.info("Shutting down players...")
+        for player in self.players:
             await player.disconnect()
 
-        if event.code == 4006:
-            if player.channel_id is None:
-                return
-            await player.disconnect()
-            self._players.pop(hikari.Snowflake(event.guild_id))
-            await self.create_player(
-                hikari.Snowflake(player.guild_id), hikari.Snowflake(player.channel_id)
-            )
-
+        _logger.info("Shutdown complete.")
 
 # MIT License
 
