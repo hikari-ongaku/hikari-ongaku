@@ -14,13 +14,11 @@ from .errors import (
     BuildException,
 )
 from .abc.track import Track
-from .abc.events import TrackEndEvent, PlayerQueueEmptyEvent
+from .abc.events import TrackEndEvent, QueueEmptyEvent, QueueNextEvent
 from .abc.player import PlayerVoice
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
-
-    OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
 
 
 class Player:
@@ -102,7 +100,7 @@ class Player:
         """
         return tuple(self._queue)
 
-    async def play(self, track: t.Optional[Track] = None) -> None:
+    async def play(self, track: Track | None = None, requestor: Snowflake | None = None) -> None:
         """
         Play a track
 
@@ -111,8 +109,10 @@ class Player:
 
         Parameters
         ----------
-        track: t.Optional[abc.Track]
+        track : abc.Track | None
             the track you wish to play. If empty, it will pull from the queue.
+        requestor : Snowflake | None
+            The user/member id that requested the song.
 
         Raises
         ------
@@ -131,6 +131,9 @@ class Player:
             raise PlayerQueueException("Empty Queue. Cannot play nothing.")
 
         if track:
+            if requestor:
+                track.requestor = requestor
+
             self._queue.insert(0, track)
 
         try:
@@ -145,6 +148,24 @@ class Player:
             raise e
 
         self._is_paused = False
+
+    async def add(self, tracks: t.Sequence[Track], requestor: Snowflake | None = None) -> None:
+        """
+        Add tracks
+
+        Add tracks to the queue. This will not automatically start playing the songs.
+
+        Parameters
+        ----------
+        tracks : list[abc.Track]
+            The list of tracks you wish to add to the queue.
+        requestor : Snowflake | None
+            The user/member id that requested the song.
+        """
+        for track in tracks:
+            if requestor:
+                track.requestor = requestor
+            self._queue.append(track)
 
     async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
         """
@@ -177,19 +198,6 @@ class Player:
         await self._ongaku.rest.player.update(
             self.guild_id, self._ongaku.internal.session_id, paused=self.is_paused
         )
-
-    async def add(self, tracks: t.Sequence[Track]) -> None:
-        """
-        Add tracks
-
-        Add tracks to the queue. This will not automatically start playing the songs.
-
-        Parameters
-        ----------
-        tracks : list[abc.Track]
-            The list of tracks you wish to add to the queue.
-        """
-        self._queue.extend(tracks)
 
     async def remove(self, value: Track | int) -> None:
         """
@@ -415,9 +423,6 @@ class Player:
             raise SessionNotStartedException()
 
         self._channel_id = channel_id
-        #voice_state = self._bot.cache.get_voice_state(self.guild_id, self._bot.get_me().id) #type: ignore
-        
-        #if not voice_state or voice_state.channel_id is None:
         try:
             await self._bot.update_voice_state(self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf)
         except Exception as e:
@@ -481,13 +486,13 @@ class Player:
                 await self.remove(0)
             except Exception:
                 await self._bot.dispatch(
-                    PlayerQueueEmptyEvent(self._bot, self.guild_id)
+                    QueueEmptyEvent(self._bot, self.guild_id)
                 )
                 return
 
             if len(self.queue) == 0:
                 await self._bot.dispatch(
-                    PlayerQueueEmptyEvent(self._bot, self.guild_id)
+                    QueueEmptyEvent(self._bot, self.guild_id)
                 )
                 return
 
@@ -497,3 +502,5 @@ class Player:
                 track=self._queue[0],
                 no_replace=False,
             )
+
+            await self._bot.dispatch(QueueNextEvent(self._bot, self.guild_id, self._queue[0], event.track))

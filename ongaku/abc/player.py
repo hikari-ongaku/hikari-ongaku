@@ -23,23 +23,16 @@ class PlayerState(PayloadBase[dict[str, t.Any]]):
     All of the Player State information.
 
     Find out more [here](https://lavalink.dev/api/websocket.html#player-state).
-
-    Parameters
-    ----------
-    time : int
-        Unix timestamp in milliseconds
-    position : int
-        The position of the track in milliseconds
-    connected : bool
-        Whether Lavalink is connected to the voice gateway
-    ping : int
-        The ping of the node to the Discord voice server in milliseconds (-1 if not connected)
     """
 
     time: int
+    """Unix timestamp in milliseconds."""
     position: int
+    """The position of the track in milliseconds."""
     connected: bool
+    """Whether Lavalink is connected to the voice gateway."""
     ping: int
+    """The ping of the node to the Discord voice server in milliseconds (-1 if not connected)."""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerState:
@@ -59,20 +52,14 @@ class PlayerVoice(PayloadBase[dict[str, t.Any]]):
     All of the Player Voice information.
 
     Find out more [here](https://lavalink.dev/api/rest.html#voice-state).
-
-    Parameters
-    ----------
-    token : str
-        The Discord voice token to authenticate with
-    endpoint : str
-        The Discord voice endpoint to connect to
-    session_id : str
-        The Discord voice session id to authenticate with
     """
 
     token: str
+    """The Discord voice token to authenticate with."""
     endpoint: str
+    """The Discord voice endpoint to connect to."""
     session_id: str
+    """The Discord voice session id to authenticate with."""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerVoice:
@@ -91,30 +78,22 @@ class Player(PayloadBase[dict[str, t.Any]]):
     All of the Player Voice information.
 
     Find out more [here](https://lavalink.dev/api/rest.html#player).
-
-    Parameters
-    ----------
-    guild_id : hikari.Snowflake
-        The guild id this player is currently in.
-    track : abc.Track | None
-        The track the player is currently playing. None means its not currently playing any track.
-    volume : int
-        The volume of the player.
-    paused : int
-        Whether the player is paused or not.
-    state : PlayerState
-        The `PlayerState` object
-    voice : PlayerVoice
-        The `PlayerVoice` object
     """
 
     guild_id: hikari.Snowflake
+    """The guild id this player is currently in."""
     track: t.Optional[Track]
+    """The track the player is currently playing. None means its not currently playing any track."""
     volume: int
+    """The volume of the player."""
     paused: bool
+    """Whether the player is paused or not."""
     state: PlayerState
+    """The [PlayerState][ongaku.abc.player.PlayerState] object."""
     voice: PlayerVoice
+    """the [PlayerVoice][ongaku.abc.player.PlayerVoice] object."""
     filters: dict[t.Any, t.Any] | None = None
+    """The filters object."""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Player:

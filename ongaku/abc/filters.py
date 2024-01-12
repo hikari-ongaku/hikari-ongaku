@@ -12,7 +12,8 @@ class FilterBase(abc.ABC):
 
     _name: str
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """
         The name of the filter.
@@ -22,7 +23,7 @@ class FilterBase(abc.ABC):
         return self._name
 
     @abc.abstractmethod
-    def build(self) -> t.Mapping[str, t.Any] | None:
+    def _build(self) -> t.Mapping[str, t.Any] | None:
         """
         Function to build the filter.
 
@@ -32,12 +33,6 @@ class FilterBase(abc.ABC):
 
 
 class FilterEqualizer(FilterBase):
-    """
-    Equalizer filter
-
-    Allows for building the equalizer filter to add to your filter object.
-    """
-
     def __init__(
         self,
         *,
@@ -58,9 +53,9 @@ class FilterEqualizer(FilterBase):
         hz16000: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set equalizers
+        Equalizer filter
 
-        Set the equalizer bands. If None is specified, then sets to default, 0.
+        Set the equalizer filter bands. If None is specified, then sets to default, 0.
 
         Parameters
         ----------
@@ -154,7 +149,7 @@ class FilterEqualizer(FilterBase):
 
             self._equalizers.update({band: gain})
 
-    is_plugin: bool = False
+    _is_plugin: bool = False
     """Internal use only."""
 
     _name = "equalizer"
@@ -177,7 +172,7 @@ class FilterEqualizer(FilterBase):
         "hz16000": hikari.UNDEFINED,
     }
 
-    def build(self):
+    def _build(self):
         return_data: list[dict[str, float | int]] = []
         for x in range(len(self._equalizers)):
             items = list(self._equalizers.values())
@@ -196,18 +191,18 @@ class FilterEqualizer(FilterBase):
 
 
 class FilterKaraoke(FilterBase):
-    """
-    Karaoke filter
 
-    Allows for building the karaoke filter to add to your filter object.
-    """
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "karaoke"
 
     _level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
     _mono_level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
     _filter_band: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
     _filter_width: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
 
-    def set(
+    def __init__(
         self,
         *,
         level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
@@ -216,6 +211,10 @@ class FilterKaraoke(FilterBase):
         filter_width: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
+        Karaoke filter
+
+        Allows for building the karaoke filter to add to your filter object.
+        
         Parameters
         ----------
         level : UndefinedNoneOr[float]
@@ -227,6 +226,14 @@ class FilterKaraoke(FilterBase):
         filter_width : UndefinedNoneOr[float]
             The filter width
         """
+        if isinstance(level, float):
+            if 0 > level or level > 1:
+                raise ValueError("Outside of value range for value level.")
+        
+        if isinstance(mono_level, float):
+            if 0 > mono_level or mono_level > 1:
+                raise ValueError("Outside of value range for value mono_level.")
+        
         self._level = level
         self._mono_level = mono_level
         self._filter_band = filter_band
@@ -238,6 +245,91 @@ class FilterKaraoke(FilterBase):
             return_data.update({"level": 0})
 
         return return_data
+
+
+class FilterTimeScale(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "equalizer"
+
+    _speed: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
+    _pitch: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
+    _rate: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
+
+    def __init__(
+            self,
+            speed: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        ) -> None:
+        self._speed = speed
+
+class FilterTremolo(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "tremolo"
+
+    _frequency: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _depth: hikari.UndefinedOr[float] = hikari.UNDEFINED
+
+class FilterVibrato(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "vibrato"
+
+    _frequency: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _depth: hikari.UndefinedOr[float] = hikari.UNDEFINED
+
+class FilterRotation(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "rotation"
+
+    _rotation_hz: hikari.UndefinedOr[float] = hikari.UNDEFINED
+
+class FilterDistortion(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "distortion"
+
+    _sin_offset: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _sin_scale: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _cos_offset: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _cos_scale: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _tan_offset: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _tan_scale: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _offset: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _scale: hikari.UndefinedOr[float] = hikari.UNDEFINED
+
+
+class FilterChannelMix(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "channel_mix"
+
+    _left_to_left: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _left_to_right: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _right_to_left: hikari.UndefinedOr[float] = hikari.UNDEFINED
+    _right_to_right: hikari.UndefinedOr[float] = hikari.UNDEFINED
+
+class FilterLowPass(FilterBase):
+
+    _is_plugin: bool = False
+    """Internal use only."""
+
+    _name = "low_pass"
+
+    _smoothing: hikari.UndefinedOr[float] = hikari.UNDEFINED
 
 
 class FilterBuilder:
@@ -271,8 +363,15 @@ class FilterBuilder:
 
         Add a filter to this filter object.
 
-        !!! WARNING
-            You can only add one of a certain type of filter. Adding more, will override already existing filters.
+        Parameters
+        ----------
+        filters : FilterBase | list[Filter]
+            anything that incorporates the [FilterBase][ongaku.abc.filters.FilterBase] can be added here.
+        override : bool
+            whether to override the existing value or not.
+
+        !!! NOTE
+            If override is True, then all values that you pass, will be overridden, otherwise, the value will be ignored.
         """
 
     def remove(self, filter: FilterBase) -> None:

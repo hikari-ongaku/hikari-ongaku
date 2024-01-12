@@ -1,7 +1,8 @@
 from . import events, filters, lavalink, player, session, track
 
 from .events import (
-    PlayerQueueEmptyEvent,
+    QueueEmptyEvent,
+    QueueNextEvent,
     ReadyEvent,
     StatisticsEvent,
     TrackEndEvent,
@@ -32,7 +33,8 @@ __all__ = (
     "TrackExceptionEvent",
     "TrackStuckEvent",
     "WebsocketClosedEvent",
-    "PlayerQueueEmptyEvent",
+    "QueueEmptyEvent",
+    "QueueNextEvent",
     # .lavalink
     "Info",
     "RestError",

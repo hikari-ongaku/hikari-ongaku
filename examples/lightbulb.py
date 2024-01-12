@@ -122,7 +122,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
         player = await lavalink.fetch_player(ctx.guild_id)
     except Exception:
         print("Failed fetching player, creating new player.")
-        player = await lavalink.create_player(ctx.guild_id, voice_state.channel_id)
+        player = await lavalink.create_player(ctx.guild_id)
 
     await player.play(track)
 

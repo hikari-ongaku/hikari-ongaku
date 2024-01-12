@@ -15,17 +15,12 @@ class Session(PayloadBase[dict[str, t.Any]]):
     All of the Session information.
 
     Find out more [here](https://lavalink.dev/api/rest.html#update-session).
-
-    Parameters
-    ----------
-    resuming : bool
-        Whether resuming is enabled for this session or not
-    timeout : int
-        The timeout in seconds (default is 60s)
     """
 
     resuming: bool
+    """Whether resuming is enabled for this session or not."""
     timeout: int
+    """The timeout in seconds (default is 60s)."""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Session:

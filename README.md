@@ -22,10 +22,9 @@ These are things that are being worked on, and will be created, before 1.0
  - [x] Delete tracks (current, and other, by both position, and Track)
  - [x] Clear tracks
  - [x] Mute (basically sets volume to zero, whilst still playing audio)
+ - [x] Store the user who asked for specific songs.
+ - [ ] Change EQ and Effects (Filters)
  - [ ] Complete Error handling
  - [ ] Nodes
  - [ ] Testing (internal)
- - [ ] Store the user who asked for specific songs.
  - [ ] Support local file playing (mp3, mp4, ogg, wav, etc.)
- - [ ] Resume Sessions
- - [ ] Change EQ and Effects (Filters)

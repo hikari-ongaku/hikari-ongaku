@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import attrs
 import typing as t
+from hikari import Snowflake
 from .base import PayloadBase
 
 __all__ = (
@@ -20,42 +21,30 @@ class TrackInfo(PayloadBase[dict[str, t.Any]]):
     All of the track information.
 
     Find out more [here](https://lavalink.dev/api/rest.html#track-info).
-
-    Parameters
-    ----------
-    identifier : str
-        The track identifier
-    is_seekable : bool
-        Whether the track is seekable
-    author : str
-        The track author
-    length : int
-        The track length in milliseconds
-    is_stream : bool
-        Whether the track is a stream
-    title : str
-        The track position in milliseconds
-    source_name : str
-        The track source name
-    uri : str | None
-        The track uri
-    artwork_url : str | None
-        The track artwork url
-    isrc : str | None
-        The track ISRC
     """
 
     identifier: str
+    """The track identifier."""
     is_seekable: bool
+    """Whether the track is seekable."""
     author: str
+    """The track author."""
     length: int
+    """The track length in milliseconds."""
     is_stream: bool
+    """Whether the track is a stream."""
     position: int
+    """The track position in milliseconds."""
     title: str
+    """The track title."""
     source_name: str
+    """The tracks source name."""
     uri: t.Optional[str] = None
+    """The track uri."""
     artwork_url: t.Optional[str] = None
+    """The track artwork url"""
     isrc: t.Optional[str] = None
+    """The track ISRC"""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> TrackInfo:
@@ -103,23 +92,24 @@ class Track(PayloadBase[dict[str, t.Any]]):
     The base track object.
 
     Find out more [here](https://lavalink.dev/api/rest.html#track).
-
-    Parameters
-    ----------
-    encoded : str
-        The base64 encoded track data
-    info : TrackInfo
-        Information about the track
-    plugin_info : dict[Any, Any]
-        Additional track info provided by plugins
-    user_data : dict[Any, Any]
-        Additional track data.
     """
 
     encoded: str
+    """The base64 encoded track data."""
     info: TrackInfo
+    """Information about the track"""
     plugin_info: t.Mapping[str, t.Any]
+    """Additional track info provided by plugins"""
     user_data: t.Mapping[str, t.Any] | None = None
+    """Additional track data."""
+    requestor: Snowflake | None = None
+    """
+    The person who requested this track.
+
+    !!! NOTE
+        This is an internal feature, not something from lavalink. If this track is apart of a lavalink event, then it will most likely be empty.
+    """
+    
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Track:
@@ -131,7 +121,7 @@ class Track(PayloadBase[dict[str, t.Any]]):
         except Exception:
             user_data = None
 
-        return cls(encoded, info, plugin_info, user_data)
+        return cls(encoded, info, plugin_info, user_data, None)
 
 
 @attrs.define
@@ -142,17 +132,12 @@ class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
     The playlist info object.
 
     Find out more [here](https://lavalink.dev/api/rest.html#track-info).
-
-    Parameters
-    ----------
-    name : str
-        The name of the playlist
-    selected_track : int
-        The selected track of the playlist (`-1` if no track is selected)
     """
 
     name: str
+    """The name of the playlist."""
     selected_track: int
+    """The selected track of the playlist (`-1` if no track is selected)"""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> PlaylistInfo:
@@ -170,19 +155,14 @@ class Playlist(PayloadBase[dict[str, t.Any]]):
     The playlist object.
 
     Find out more [here](https://lavalink.dev/api/rest.html#track-info).
-
-    Parameters
-    ----------
-    info : PlaylistInfo
-        The info of the playlist
-    plugin_info : pluginInfo
-        Addition playlist info provided by plugins
-    tracks : tuple[Track]
     """
 
     info: PlaylistInfo
+    """The info of the playlist."""
     plugin_info: t.Mapping[str, t.Any]
+    """Addition playlist info provided by plugins"""
     tracks: t.Sequence[Track]
+    """The tracks in this playlist."""
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Playlist:
@@ -203,7 +183,13 @@ class Playlist(PayloadBase[dict[str, t.Any]]):
 
 @attrs.define
 class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
+    """
+    Search Result
+
+    A search result, that has a list of tracks, from the search result.
+    """
     tracks: t.Sequence[Track]
+    """The tracks from the search result."""
 
     @classmethod
     def _from_payload(cls, payload: list[dict[str, t.Any]]) -> SearchResult:
