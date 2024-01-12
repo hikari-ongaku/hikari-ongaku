@@ -109,7 +109,6 @@ class Track(PayloadBase[dict[str, t.Any]]):
     !!! NOTE
         This is an internal feature, not something from lavalink. If this track is apart of a lavalink event, then it will most likely be empty.
     """
-    
 
     @classmethod
     def _from_payload(cls, payload: dict[str, t.Any]) -> Track:
@@ -188,6 +187,7 @@ class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
 
     A search result, that has a list of tracks, from the search result.
     """
+
     tracks: t.Sequence[Track]
     """The tracks from the search result."""
 

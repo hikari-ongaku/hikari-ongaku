@@ -100,7 +100,9 @@ class Player:
         """
         return tuple(self._queue)
 
-    async def play(self, track: Track | None = None, requestor: Snowflake | None = None) -> None:
+    async def play(
+        self, track: Track | None = None, requestor: Snowflake | None = None
+    ) -> None:
         """
         Play a track
 
@@ -149,7 +151,9 @@ class Player:
 
         self._is_paused = False
 
-    async def add(self, tracks: t.Sequence[Track], requestor: Snowflake | None = None) -> None:
+    async def add(
+        self, tracks: t.Sequence[Track], requestor: Snowflake | None = None
+    ) -> None:
         """
         Add tracks
 
@@ -386,7 +390,14 @@ class Player:
             self.guild_id, self._ongaku.internal.session_id, position=value
         )
 
-    async def connect(self, channel_id: Snowflake, *, mute: UndefinedOr[bool] = UNDEFINED, deaf: UndefinedOr[bool] = UNDEFINED, timeout: int = 5) -> None:
+    async def connect(
+        self,
+        channel_id: Snowflake,
+        *,
+        mute: UndefinedOr[bool] = UNDEFINED,
+        deaf: UndefinedOr[bool] = UNDEFINED,
+        timeout: int = 5,
+    ) -> None:
         """
         Connect to a channel
 
@@ -409,7 +420,7 @@ class Player:
         Raises
         ------
         ConnectionError
-            When it fails to connect to the voice server.            
+            When it fails to connect to the voice server.
         SessionNotStartedException
             When the lavalink session has not yet started.
         TimeoutException
@@ -424,7 +435,9 @@ class Player:
 
         self._channel_id = channel_id
         try:
-            await self._bot.update_voice_state(self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf)
+            await self._bot.update_voice_state(
+                self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
+            )
         except Exception as e:
             raise ConnectionError(e)
 
@@ -450,7 +463,9 @@ class Player:
             )
 
         try:
-            self._voice = PlayerVoice(server_event.token, server_event.endpoint, state_event.state.session_id)
+            self._voice = PlayerVoice(
+                server_event.token, server_event.endpoint, state_event.state.session_id
+            )
         except Exception as e:
             raise BuildException(f"Failed to build player voice: {e}")
 
@@ -485,15 +500,11 @@ class Player:
             try:
                 await self.remove(0)
             except Exception:
-                await self._bot.dispatch(
-                    QueueEmptyEvent(self._bot, self.guild_id)
-                )
+                await self._bot.dispatch(QueueEmptyEvent(self._bot, self.guild_id))
                 return
 
             if len(self.queue) == 0:
-                await self._bot.dispatch(
-                    QueueEmptyEvent(self._bot, self.guild_id)
-                )
+                await self._bot.dispatch(QueueEmptyEvent(self._bot, self.guild_id))
                 return
 
             await self._ongaku.rest.player.update(
@@ -503,4 +514,6 @@ class Player:
                 no_replace=False,
             )
 
-            await self._bot.dispatch(QueueNextEvent(self._bot, self.guild_id, self._queue[0], event.track))
+            await self._bot.dispatch(
+                QueueNextEvent(self._bot, self.guild_id, self._queue[0], event.track)
+            )

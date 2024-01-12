@@ -234,10 +234,7 @@ class Ongaku:
         """
         return self._internal
 
-    async def create_player(
-        self,
-        guild_id: hikari.Snowflake
-    ) -> Player:
+    async def create_player(self, guild_id: hikari.Snowflake) -> Player:
         """
         Create a new player
 
@@ -403,13 +400,14 @@ class Ongaku:
             _logger.error(
                 f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}"
             )
-                
+
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
         _logger.info("Shutting down players...")
         for player in self.players:
             await player.disconnect()
 
         _logger.info("Shutdown complete.")
+
 
 # MIT License
 

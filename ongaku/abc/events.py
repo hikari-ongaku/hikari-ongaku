@@ -26,6 +26,7 @@ __all__ = (
     "QueueNextEvent",
 )
 
+
 @attrs.define
 class OngakuEvent(hikari.Event):
     """
@@ -56,7 +57,9 @@ class ReadyEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
     """The lavalink session id, for the current session."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware) -> ReadyEvent:
+    def _from_payload(
+        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+    ) -> ReadyEvent:
         resumed = payload["resumed"]
         session_id = payload["sessionId"]
 
@@ -225,9 +228,10 @@ class TrackBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
     guild_id: hikari.Snowflake
     """The guild the track is playing in."""
 
-
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware) -> TrackBase:
+    def _from_payload(
+        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+    ) -> TrackBase:
         track = Track._from_payload(payload["track"])
         guild_id = hikari.Snowflake(payload["guildId"])
 
@@ -243,7 +247,9 @@ class TrackStartEvent(TrackBase, OngakuEvent):
     """
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware) -> TrackStartEvent:
+    def _from_payload(
+        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+    ) -> TrackStartEvent:
         base = TrackBase._from_payload(payload, app=app)
 
         return cls(base.app, base.track, base.guild_id)
@@ -352,19 +358,22 @@ class QueueNextEvent(PlayerBase, OngakuEvent):
 
     The event that is dispatched, when a new song is played in a player, from the queue.
     """
-    
+
     track: Track
     """The track that is now playing."""
     old_track: Track
     """The track that was playing."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware) -> QueueNextEvent:
+    def _from_payload(
+        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+    ) -> QueueNextEvent:
         base = PlayerBase._from_payload(payload, app=app)
         track = Track._from_payload(payload["track"])
         old_track = Track._from_payload(payload["oldTrack"])
 
         return cls(base.app, base.guild_id, track, old_track)
+
 
 # MIT License
 

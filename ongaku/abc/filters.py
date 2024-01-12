@@ -191,7 +191,6 @@ class FilterEqualizer(FilterBase):
 
 
 class FilterKaraoke(FilterBase):
-
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -214,7 +213,7 @@ class FilterKaraoke(FilterBase):
         Karaoke filter
 
         Allows for building the karaoke filter to add to your filter object.
-        
+
         Parameters
         ----------
         level : UndefinedNoneOr[float]
@@ -229,11 +228,11 @@ class FilterKaraoke(FilterBase):
         if isinstance(level, float):
             if 0 > level or level > 1:
                 raise ValueError("Outside of value range for value level.")
-        
+
         if isinstance(mono_level, float):
             if 0 > mono_level or mono_level > 1:
                 raise ValueError("Outside of value range for value mono_level.")
-        
+
         self._level = level
         self._mono_level = mono_level
         self._filter_band = filter_band
@@ -248,7 +247,6 @@ class FilterKaraoke(FilterBase):
 
 
 class FilterTimeScale(FilterBase):
-
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -259,13 +257,13 @@ class FilterTimeScale(FilterBase):
     _rate: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
 
     def __init__(
-            self,
-            speed: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        ) -> None:
+        self,
+        speed: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+    ) -> None:
         self._speed = speed
 
-class FilterTremolo(FilterBase):
 
+class FilterTremolo(FilterBase):
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -274,8 +272,8 @@ class FilterTremolo(FilterBase):
     _frequency: hikari.UndefinedOr[float] = hikari.UNDEFINED
     _depth: hikari.UndefinedOr[float] = hikari.UNDEFINED
 
-class FilterVibrato(FilterBase):
 
+class FilterVibrato(FilterBase):
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -284,8 +282,8 @@ class FilterVibrato(FilterBase):
     _frequency: hikari.UndefinedOr[float] = hikari.UNDEFINED
     _depth: hikari.UndefinedOr[float] = hikari.UNDEFINED
 
-class FilterRotation(FilterBase):
 
+class FilterRotation(FilterBase):
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -293,8 +291,8 @@ class FilterRotation(FilterBase):
 
     _rotation_hz: hikari.UndefinedOr[float] = hikari.UNDEFINED
 
-class FilterDistortion(FilterBase):
 
+class FilterDistortion(FilterBase):
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -311,7 +309,6 @@ class FilterDistortion(FilterBase):
 
 
 class FilterChannelMix(FilterBase):
-
     _is_plugin: bool = False
     """Internal use only."""
 
@@ -322,8 +319,8 @@ class FilterChannelMix(FilterBase):
     _right_to_left: hikari.UndefinedOr[float] = hikari.UNDEFINED
     _right_to_right: hikari.UndefinedOr[float] = hikari.UNDEFINED
 
-class FilterLowPass(FilterBase):
 
+class FilterLowPass(FilterBase):
     _is_plugin: bool = False
     """Internal use only."""
 
