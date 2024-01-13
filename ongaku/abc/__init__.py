@@ -15,7 +15,7 @@ from .lavalink import ExceptionError, Info, RestError
 from .player import Player, PlayerState, PlayerVoice
 from .session import Session
 from .track import Playlist, SearchResult, Track
-
+from .filters import Filter
 
 __all__ = (
     # .
@@ -49,6 +49,8 @@ __all__ = (
     "Track",
     "Playlist",
     "SearchResult",
+    # .filters
+    "Filter",
 )
 
 

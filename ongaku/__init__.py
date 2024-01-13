@@ -29,7 +29,10 @@ from .enums import (
     SeverityType,
     TrackEndReasonType,
     VersionType,
+    BandType,
 )
+from .abc.filters import Filter
+
 from .errors import (
     BuildException,
     GatewayOnlyException,
@@ -55,6 +58,7 @@ __all__ = (
     "PlatformType",
     "VersionType",
     "ConnectionType",
+    "BandType",
     # .errors
     "OngakuBaseException",
     "BuildException",
@@ -96,6 +100,8 @@ __all__ = (
     "Track",
     "Playlist",
     "SearchResult",
+    # .abc.filters
+    "Filter",
     # Other
     "errors",
     "enums",

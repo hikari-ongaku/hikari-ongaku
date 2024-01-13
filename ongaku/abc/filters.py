@@ -3,6 +3,8 @@ from __future__ import annotations
 import hikari
 from ..enums import BandType
 
+__all__ = ("Filter",)
+
 
 class Filter:
     """
@@ -54,10 +56,10 @@ class Filter:
             try:
                 self._equalizer.pop(band)
             except KeyError:
-                raise
+                pass
             return
 
-        if not (-0.25 >= gain <= 1.0):
+        if -0.25 > gain or gain > 1:
             raise ValueError(
                 f"The value {gain} ({band}) must be between -0.25, and 1.0."
             )
@@ -86,6 +88,9 @@ class Filter:
         filter_width : hikari.UndefinedNoneOr[float]
             The filter width
         """
+        print("band:", type(filter_band))
+        print("width:", type(filter_width))
+
         if level is None:
             self._karaoke.pop("level")
 
@@ -93,10 +98,20 @@ class Filter:
             self._karaoke.pop("monoLevel")
 
         if filter_band is None:
+            print("adding filter band")
             self._karaoke.pop("filterBand")
 
         if filter_width is None:
+            print("adding filter width")
             self._karaoke.pop("filterWidth")
+
+        if isinstance(filter_band, float):
+            print("adding filter band")
+            self._karaoke.update({"filterBand": filter_band})
+
+        if isinstance(filter_width, float):
+            print("adding filter width")
+            self._karaoke.update({"filterWidth": filter_width})
 
         if isinstance(level, float):
             if 0 > level or level > 1:
@@ -110,11 +125,7 @@ class Filter:
             else:
                 self._karaoke.update({"monoLevel": mono_level})
 
-        if isinstance(filter_band, float):
-            self._karaoke = {"filterBand": filter_band}
-
-        if isinstance(filter_width, float):
-            self._karaoke = {"filterWidth": filter_width}
+        print("kval:", self._karaoke)
 
     def set_timescale(
         self,
@@ -181,13 +192,13 @@ class Filter:
             if 0 > frequency:
                 raise ValueError("Outside of value range for value level.")
             else:
-                self._karaoke.update({"frequency": frequency})
+                self._tremolo.update({"frequency": frequency})
 
         if isinstance(depth, float):
             if 0 > depth or depth > 1:
                 raise ValueError("Outside of value range for value level.")
             else:
-                self._karaoke.update({"depth": depth})
+                self._tremolo.update({"depth": depth})
 
     def set_vibrato(
         self,
@@ -201,7 +212,7 @@ class Filter:
         Parameters
         ----------
         frequency : hikari.UndefinedNoneOr[float]
-            	The frequency 0.0 < x ≤ 14.0
+                The frequency 0.0 < x ≤ 14.0
         depth : hikari.UndefinedNoneOr[float]
             The tremolo depth 0.0 < x ≤ 1.0
         """
@@ -406,44 +417,47 @@ class Filter:
             else:
                 self._low_pass.update({"smoothing": smoothing})
 
-    def build(self) -> dict[str, float | dict[str, float] | list[dict[str, float | int]]]:
-        build_dict: dict[str, float | dict[str, float] | list[dict[str, float | int]]] = {}
-        
+    def build(
+        self,
+    ) -> dict[str, float | dict[str, float] | list[dict[str, float | int]]]:
+        build_dict: dict[
+            str, float | dict[str, float] | list[dict[str, float | int]]
+        ] = {}
+
         if self._volume:
-            build_dict.update({"volume":self._volume})
+            build_dict.update({"volume": self._volume})
 
         if len(self._equalizer) > 0:
             eq_bands: list[dict[str, float | int]] = []
 
             for key, value in self._equalizer.items():
-                eq_bands.append({"band":key.value, "gain":value})
+                eq_bands.append({"band": key.value, "gain": value})
 
-            build_dict.update({"equalizer":eq_bands})
+            build_dict.update({"equalizer": eq_bands})
 
         if len(self._karaoke) > 0:
-            build_dict.update({"karaoke":self._karaoke})
+            build_dict.update({"karaoke": self._karaoke})
 
         if len(self._timescale) > 0:
-            build_dict.update({"timescale":self._timescale})
+            build_dict.update({"timescale": self._timescale})
 
         if len(self._tremolo) > 0:
-            build_dict.update({"tremolo":self._tremolo})
+            build_dict.update({"tremolo": self._tremolo})
 
         if len(self._vibrato) > 0:
-            build_dict.update({"vibrato":self._vibrato})
+            build_dict.update({"vibrato": self._vibrato})
 
         if len(self._rotation) > 0:
-            build_dict.update({"rotation":self._rotation})
+            build_dict.update({"rotation": self._rotation})
 
         if len(self._distortion) > 0:
-            build_dict.update({"distortion":self._distortion})
+            build_dict.update({"distortion": self._distortion})
 
         if len(self._channel_mix) > 0:
-            build_dict.update({"channelMix":self._channel_mix})
+            build_dict.update({"channelMix": self._channel_mix})
 
         if len(self._low_pass) > 0:
-            build_dict.update({"lowPass":self._low_pass})
-
+            build_dict.update({"lowPass": self._low_pass})
 
         return build_dict
 
