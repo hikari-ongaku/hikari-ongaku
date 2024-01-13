@@ -1,8 +1,8 @@
 hikari
-hikari - ongaku
+hikari-ongaku
 logging
 
-hikari - arc
-hikari - crescent
-hikari - lightbulb
-hikari - tanjun
+hikari-arc
+hikari-crescent
+hikari-lightbulb
+hikari-tanjun

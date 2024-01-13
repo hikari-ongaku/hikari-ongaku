@@ -1,4 +1,3 @@
-# This file deals with events, from payloads.
 from __future__ import annotations
 
 import logging
@@ -16,14 +15,14 @@ from .abc import (
 )
 
 if t.TYPE_CHECKING:
-    from ..ongaku import Ongaku
+    from .node import Node
 
 _logger = logging.getLogger("ongaku.events")
 
 
 class EventHandler:
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku = ongaku
+    def __init__(self, node: Node) -> None:
+        self._node = node
 
     async def handle_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
@@ -55,23 +54,23 @@ class EventHandler:
         if session_id is None:
             raise errors.SessionNotStartedException("Missing session id.")
 
-        self._ongaku.internal.set_session_id(session_id)
+        self._node._internal.session_id = session_id
 
         try:
-            event = ReadyEvent._from_payload(payload, app=self._ongaku.bot)
+            event = ReadyEvent._from_payload(payload, app=self._node._ongaku.bot)
         except Exception as e:
             raise e
 
         logging.getLogger("ongaku.info").info("Successfully connected to the server.")
-        await self._ongaku.bot.dispatch(event)
+        await self._node._ongaku.bot.dispatch(event)
 
     async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            event = StatisticsEvent._from_payload(payload, app=self._ongaku.bot)
+            event = StatisticsEvent._from_payload(payload, app=self._node._ongaku.bot)
         except Exception as e:
             raise e
 
-        await self._ongaku.bot.dispatch(event)
+        await self._node._ongaku.bot.dispatch(event)
 
     async def _event_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
@@ -81,32 +80,38 @@ class EventHandler:
 
         if event_type == "TrackStartEvent":
             try:
-                event = TrackStartEvent._from_payload(payload, app=self._ongaku.bot)
+                event = TrackStartEvent._from_payload(
+                    payload, app=self._node._ongaku.bot
+                )
             except Exception as e:
                 raise e
 
         elif event_type == "TrackEndEvent":
             try:
-                event = TrackEndEvent._from_payload(payload, app=self._ongaku.bot)
+                event = TrackEndEvent._from_payload(payload, app=self._node._ongaku.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackExceptionEvent":
             try:
-                event = TrackExceptionEvent._from_payload(payload, app=self._ongaku.bot)
+                event = TrackExceptionEvent._from_payload(
+                    payload, app=self._node._ongaku.bot
+                )
             except Exception as e:
                 raise e
 
         elif event_type == "TrackStuckEvent":
             try:
-                event = TrackStuckEvent._from_payload(payload, app=self._ongaku.bot)
+                event = TrackStuckEvent._from_payload(
+                    payload, app=self._node._ongaku.bot
+                )
             except Exception as e:
                 raise e
 
         elif event_type == "WebSocketClosedEvent":
             try:
                 event = WebsocketClosedEvent._from_payload(
-                    payload, app=self._ongaku.bot
+                    payload, app=self._node._ongaku.bot
                 )
             except Exception as e:
                 raise e
@@ -114,7 +119,7 @@ class EventHandler:
         else:
             return
 
-        await self._ongaku.bot.dispatch(event)
+        await self._node._ongaku.bot.dispatch(event)
 
 
 # MIT License

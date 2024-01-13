@@ -19,14 +19,14 @@ from .abc.player import PlayerVoice
 from .abc.filters import Filter
 
 if t.TYPE_CHECKING:
-    from .ongaku import Ongaku
+    from .node import Node
 
 
 class Player:
     def __init__(
         self,
         bot: GatewayBot,
-        ongaku: Ongaku,
+        node: Node,
         guild_id: Snowflake,
     ) -> None:
         """
@@ -35,7 +35,7 @@ class Player:
         The class that allows the player, to play songs, and more.
         """
         self._bot = bot
-        self._ongaku = ongaku
+        self._node = node
         self._guild_id = guild_id
         self._channel_id = None
 
@@ -53,6 +53,11 @@ class Player:
         self._filter: Filter | None = None
 
         bot.subscribe(TrackEndEvent, self._track_end_event)
+
+    @property
+    def node(self) -> Node:
+        """The node that this guild is connected too."""
+        return self._node
 
     @property
     def channel_id(self) -> Snowflake | None:
@@ -136,7 +141,7 @@ class Player:
         if self._voice is None or self._channel_id is None:
             raise PlayerException("Player is not connected to a channel.")
 
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if len(self.queue) > 0 and track is None:
@@ -149,9 +154,9 @@ class Player:
             self._queue.insert(0, track)
 
         try:
-            await self._ongaku.rest.player.update(
+            await self.node.ongaku.rest.player.update(
                 self.guild_id,
-                self._ongaku.internal.session_id,
+                self.node._internal.session_id,
                 track=self.queue[0],
                 voice=self._voice,
                 no_replace=False,
@@ -201,7 +206,7 @@ class Player:
             The session id was null, or empty.
 
         """
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if value == UNDEFINED:
@@ -209,8 +214,8 @@ class Player:
         else:
             self._is_paused = value
 
-        await self._ongaku.rest.player.update(
-            self.guild_id, self._ongaku.internal.session_id, paused=self.is_paused
+        await self.node.ongaku.rest.player.update(
+            self.guild_id, self.node._internal.session_id, paused=self.is_paused
         )
 
     async def remove(self, value: Track | int) -> None:
@@ -234,7 +239,7 @@ class Player:
         if len(self.queue) == 0:
             raise PlayerSettingException("Queue is empty.")
 
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if isinstance(value, Track):
@@ -250,8 +255,8 @@ class Player:
 
         if index == 0:
             if len(self.queue) == 0:
-                await self._ongaku.rest.player.update(
-                    self.guild_id, self._ongaku.internal.session_id, track=None
+                await self.node.ongaku.rest.player.update(
+                    self.guild_id, self.node._internal.session_id, track=None
                 )
             else:
                 await self.play()
@@ -276,7 +281,7 @@ class Player:
         PlayerQueueException
             The queue is already empty, so no songs can be skipped.
         """
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if amount <= 0:
@@ -293,19 +298,12 @@ class Player:
                 self._queue.pop(0)
 
         if len(self.queue) == 0:
-            await self._ongaku.rest.player.update(
+            await self.node.ongaku.rest.player.update(
                 self.guild_id,
-                self._ongaku.internal.session_id,
+                self.node._internal.session_id,
                 track=None,
             )
             return
-
-        await self._ongaku.rest.internal.player.update_player(  # type: ignore
-            self.guild_id,
-            self._ongaku.internal.session_id,
-            track=self._queue[0],
-            no_replace=False,
-        )
 
     async def seek(self, value: int) -> None:
         """
@@ -326,9 +324,8 @@ class Player:
             The queue is empty, so no track can be sought.
         ValueError
             Raised when the value, is well beyond how long the track is.
-        PlayerException
         """
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if value < 0:
@@ -337,9 +334,9 @@ class Player:
         if len(self.queue) < 0:
             raise PlayerQueueException("The queue is empty.")
 
-        await self._ongaku.rest.player.update(
+        await self.node.ongaku.rest.player.update(
             self.guild_id,
-            self._ongaku.internal.session_id,
+            self.node._internal.session_id,
             position=value,
             no_replace=False,
         )
@@ -363,7 +360,7 @@ class Player:
             Raised if the value is above, or below 0, or 1000.
         """
 
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if volume < 0:
@@ -375,9 +372,9 @@ class Player:
                 f"Volume cannot be above 1000. Volume: {volume}"
             )
 
-        await self._ongaku.rest.player.update(
+        await self.node.ongaku.rest.player.update(
             self.guild_id,
-            self._ongaku.internal.session_id,
+            self.node._internal.session_id,
             volume=volume,
             no_replace=False,
         )
@@ -395,12 +392,12 @@ class Player:
         """
         self._queue.clear()
 
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
-        await self._ongaku.rest.player.update(
+        await self.node.ongaku.rest.player.update(
             self.guild_id,
-            self._ongaku.internal.session_id,
+            self.node._internal.session_id,
             track=None,
             no_replace=False,
         )
@@ -425,7 +422,7 @@ class Player:
         PlayerSettingException
             The queue is empty.
         """
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if self.queue[0].info.length < value:
@@ -433,8 +430,8 @@ class Player:
                 "Length is longer than currently playing song!"
             )
 
-        await self._ongaku.rest.player.update(
-            self.guild_id, self._ongaku.internal.session_id, position=value
+        await self.node.ongaku.rest.player.update(
+            self.guild_id, self.node._internal.session_id, position=value
         )
 
     async def filter(self, filter: Filter | None = None):
@@ -448,15 +445,15 @@ class Player:
         filter : Filter
             the filter you wish to add.
         """
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         self._filter = filter
 
         try:
-            await self._ongaku.rest.player.update(
+            await self.node.ongaku.rest.player.update(
                 self.guild_id,
-                self._ongaku.internal.session_id,
+                self.node._internal.session_id,
                 filter=filter,
                 no_replace=False,
             )
@@ -503,7 +500,7 @@ class Player:
         BuildException
             When attempting to build the [PlayerVoice][ongaku.abc.player.PlayerVoice] and fails to build.
         """
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         self._channel_id = channel_id
@@ -543,9 +540,9 @@ class Player:
             raise BuildException(f"Failed to build player voice: {e}")
 
         try:
-            await self._ongaku.rest.player.update(
+            await self.node.ongaku.rest.player.update(
                 self.guild_id,
-                self._ongaku.internal.session_id,
+                self.node._internal.session_id,
                 voice=self._voice,
                 no_replace=False,
             )
@@ -557,15 +554,15 @@ class Player:
         self._is_alive = False
         await self.clear()
 
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
-        await self._ongaku.rest.player.delete(
-            self._ongaku.internal.session_id, self._guild_id
+        await self.node.ongaku.rest.player.delete(
+            self.node._internal.session_id, self._guild_id
         )
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
-        if self._ongaku.internal.session_id is None:
+        if self.node._internal.session_id is None:
             raise SessionNotStartedException()
 
         if int(event.guild_id) == int(self.guild_id):
@@ -579,9 +576,9 @@ class Player:
                 await self._bot.dispatch(QueueEmptyEvent(self._bot, self.guild_id))
                 return
 
-            await self._ongaku.rest.player.update(
+            await self.node.ongaku.rest.player.update(
                 self.guild_id,
-                self._ongaku.internal.session_id,
+                self.node._internal.session_id,
                 track=self._queue[0],
                 no_replace=False,
             )

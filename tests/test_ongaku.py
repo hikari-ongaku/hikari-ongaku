@@ -16,11 +16,5 @@ class OngakuTest(unittest.TestCase):
 
         assert test_ongaku.bot == test_bot
 
-        assert test_ongaku.connection_failure_reason is None
-
-        assert test_ongaku.connection_type == ongaku.ConnectionType.LOADING
-
-        assert len(test_ongaku.players) == 0
-
     def test_internal(self):
         pass

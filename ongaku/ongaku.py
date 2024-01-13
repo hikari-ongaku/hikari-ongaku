@@ -1,111 +1,31 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import typing as t
 
-import aiohttp
 import hikari
+import attrs
 
-from .abc.lavalink import RestError
-from .enums import ConnectionType, VersionType
+from .enums import VersionType
 from .errors import (
     PlayerMissingException,
     RequiredException,
-    SessionError,
+    NodeException
 )
-from .events import EventHandler
 from .player import Player
 from .rest import RestApi
+from .node import Node
 
 _logger = logging.getLogger("ongaku")
 
 __all__ = ("Ongaku",)
 
-
+@attrs.define
 class _OngakuInternal:
-    def __init__(self, uri: str, max_retries: int = 3) -> None:
-        """
-        asdf
-        """
-        self._headers: dict[t.Any, t.Any] = {}
-        self._session_id: t.Optional[str] = None
-        self._uri: str = uri
-        self._total_retries = max_retries
-        self._remaining_retries = max_retries
-        self._connected = ConnectionType.LOADING
-        self._failure_reason = None
+    headers: dict[str, t.Any]
+    base_uri: str
+    attempts: int
 
-    @property
-    def headers(self) -> dict[t.Any, t.Any]:
-        return self._headers
-
-    @property
-    def uri(self) -> str:
-        return self._uri
-
-    @property
-    def session_id(self) -> t.Optional[str]:
-        return self._session_id
-
-    @property
-    def total_retries(self) -> int:
-        return self._total_retries
-
-    @property
-    def remaining_retries(self) -> int:
-        return self._remaining_retries
-
-    @property
-    def connected(self) -> ConnectionType:
-        return self._connected
-
-    @property
-    def connection_failure(self) -> t.Optional[str]:
-        return self._failure_reason
-
-    def set_connection(
-        self, connected: ConnectionType, *, reason: t.Optional[str] = None
-    ) -> None:
-        self._connected = connected
-        if reason is not None:
-            self._failure_reason = reason
-
-    def set_session_id(self, session_id: str) -> None:
-        self._session_id = session_id
-
-    def add_headers(self, headers: dict[t.Any, t.Any]) -> None:
-        self._headers.update(headers)
-
-    def remove_headers(self, headers: t.Any) -> None:
-        try:
-            self._headers.pop(headers)
-        except Exception as e:
-            raise e
-
-    def clear_headers(self) -> None:
-        self._headers.clear()
-
-    def remove_retry(self, set: int = 1) -> int:
-        if set == -1:
-            self._remaining_retries = 0
-            _logger.warning("All lavalink attempts used!")
-            return self._remaining_retries
-        if self._remaining_retries == 0 or self._remaining_retries < set:
-            raise ValueError("Already Zero.")
-        self._remaining_retries -= set
-        _logger.warning(
-            f"Lavalink connection attempts used: {set} remaining: {self._remaining_retries}"
-        )
-        return self._remaining_retries
-
-    async def check_error(self, payload: dict[str, t.Any]) -> t.Optional[RestError]:
-        try:
-            error = RestError._from_payload(payload)
-        except Exception:
-            raise
-
-        return error
 
 
 class Ongaku:
@@ -143,33 +63,38 @@ class Ongaku:
 
         self._players: dict[hikari.Snowflake, Player] = {}
 
-        self._internal = _OngakuInternal(
-            f"http://{host}:{port}/{version.value}", max_retries
-        )
+        headers: dict[str, t.Any] = {}
 
         if password:
-            self._internal.add_headers({"Authorization": password})
+            headers.update({"Authorization": password})
+
+        self._internal = _OngakuInternal(
+            headers, f"http://{host}:{port}/{version.value}", max_retries
+        )
 
         self._rest = RestApi(self)
 
-        self._event_handler = EventHandler(self)
+        self._nodes: dict[int, Node] = {}
 
-        bot.subscribe(hikari.StartedEvent, self._handle_connect)
+
+        bot.subscribe(hikari.ShardEvent, self._handle_nodes)
+
+        #bot.subscribe(hikari.StartedEvent, self._handle_connect)
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
 
     @property
-    def players(self) -> t.Sequence[Player]:
+    def nodes(self) -> t.Sequence[Node]:
         """
-        players
+        nodes
 
-        All the currently active players.
+        All the connected nodes.
 
         Returns
         -------
-        list[Player]
+        Sequence[Node]
             A list of players
         """
-        return list(self._players.values())
+        return list(self._nodes.values())
 
     @property
     def rest(self) -> RestApi:
@@ -197,30 +122,6 @@ class Ongaku:
             A Rest aware hikari bot.
         """
         return self._bot
-
-    @property
-    def connection_type(self) -> ConnectionType:
-        """
-        Connected to lavalink.
-
-        Whether or not it is connected to lavalink's websocket.
-
-        Returns
-        -------
-        enums.ConnectionStatus.LOADING
-            Ongaku has not yet attempted to connect to the lavalink server.
-        enums.ConnectionStatus.CONNECTED
-            Ongaku has successfully connected to the lavalink server.
-        enums.ConnectionStatus.FAILURE
-            Ongaku has failed to connect to the lavalink server. Check connection_failure_reason for more information.
-
-
-        """
-        return self._internal.connected
-
-    @property
-    def connection_failure_reason(self) -> t.Optional[str]:
-        return self._internal.connection_failure
 
     @property
     def internal(self) -> _OngakuInternal:
@@ -255,7 +156,10 @@ class Ongaku:
         Player
             The player that is now in the channel you have specified.
         """
-        # FIXME: Fix the issue where, if the bot is invited to the channel via this, then kicked by a user, allow the bot to join back without a "already in guild" error
+
+        shard_id = hikari.snowflakes.calculate_shard_id(self.bot, guild_id)
+
+        print("shard calculated:", shard_id)
 
         bot = self.bot.get_me()
 
@@ -270,7 +174,12 @@ class Ongaku:
             except Exception:
                 pass
 
-        new_player = Player(self.bot, self, guild_id)
+        node = self._nodes.get(shard_id)
+
+        if not node:
+            raise NodeException("Node does not exist.")
+
+        new_player = Player(self.bot, node, guild_id)
 
         self._players.update({guild_id: new_player})
         return new_player
@@ -296,12 +205,13 @@ class Ongaku:
         Player
             The player that belongs to the specified guild.
         """
-        fetched_player = self._players.get(guild_id)
 
-        if fetched_player is None:
-            raise PlayerMissingException(guild_id)
+        for player in self.walk_players():
+            if player.guild_id == guild_id:
+                return player
+        
+        raise PlayerMissingException(guild_id)
 
-        return fetched_player
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
         """
@@ -318,92 +228,35 @@ class Ongaku:
         ------
         PlayerMissingException
             The player was not found for the guild specified.
+        
         """
-
-        try:
-            player = self._players.pop(guild_id)
-        except Exception as e:
-            raise PlayerMissingException(e)
-
+        player = await self.fetch_player(guild_id)
+        
         await player.disconnect()
 
-    async def _handle_connect(self, event: hikari.StartedEvent):
-        """
-        This is an internal function, that handles the connection, and starting of the websocket.
-        """
+        await player.node.delete_player(guild_id)
 
-        if (
-            self._internal.connected == ConnectionType.CONNECTED
-            or self._internal.connected == ConnectionType.FAILURE
-        ):
-            return
+    def walk_players(self) -> t.Iterator[Player]:
+        for node in self._nodes.values():
+            for player in node.players:
+                yield player
 
-        try:
-            bot = self.bot.get_me()
-        except Exception:
-            self._internal.remove_retry(-1)
-            self._internal.set_connection(
-                ConnectionType.FAILURE, reason="Bot ID could not be found."
-            )
-            _logger.error("Ongaku could not start, due to the bot ID not being found.")
-            return
+    async def _handle_nodes(self, event: hikari.ShardEvent) -> None:
+        if isinstance(event, hikari.events.ShardReadyEvent):
+            new_node = Node(self, str(event.shard.id))
+            
+            print("shard set id:", event.shard.id)
+            self._nodes.update({event.shard.id: new_node})
 
-        if bot is None:
-            self._internal.remove_retry(-1)
-            self._internal.set_connection(
-                ConnectionType.FAILURE, reason="Bot ID could not be found."
-            )
-            _logger.error("Ongaku could not start, due to the bot ID not being found.")
-            return
+            try:
+                await new_node.connect()
+            except Exception:
+                raise
 
-        new_header = {
-            "User-Id": str(bot.id),
-            "Client-Name": f"{str(bot.id)}::Unknown",
-        }
-
-        new_header.update(self._internal.headers)
-
-        while self._internal.remaining_retries > 1:
-            await asyncio.sleep(3)
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.ws_connect(
-                        self._internal.uri + "/websocket", headers=new_header
-                    ) as ws:
-                        async for msg in ws:
-                            if msg.type == aiohttp.WSMsgType.ERROR:
-                                self._internal.set_connection(
-                                    ConnectionType.FAILURE,
-                                    reason=msg.data,
-                                )
-                                raise SessionError(_logger.error(msg.json()))
-
-                            if msg.type == aiohttp.WSMsgType.CLOSED:
-                                pass
-                            if msg.type == aiohttp.WSMsgType.TEXT:
-                                try:
-                                    json_data = msg.json()
-                                except Exception:
-                                    _logger.info("Failed to decode json data.")
-                                else:
-                                    self._internal.set_connection(
-                                        ConnectionType.CONNECTED
-                                    )
-                                    await self._event_handler.handle_payload(json_data)
-
-                except Exception as e:
-                    self._internal.set_connection(
-                        ConnectionType.FAILURE, reason=f"Exception Raised: {e}"
-                    )
-                    self._internal.remove_retry(1)
-        else:
-            _logger.error(
-                f"Maximum connection attempts reached. Reason: {self._internal.connection_failure}"
-            )
 
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
         _logger.info("Shutting down players...")
-        for player in self.players:
+        for player in self.walk_players():
             await player.disconnect()
 
         _logger.info("Shutdown complete.")

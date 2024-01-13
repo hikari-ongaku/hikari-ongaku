@@ -3,6 +3,10 @@ class OngakuBaseException(Exception):
     The base exception for all Ongaku exceptions.
     """
 
+class NodeException(OngakuBaseException):
+    """
+    Raised when an exception happens within a node.
+    """
 
 class BuildException(OngakuBaseException):
     """

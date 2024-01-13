@@ -17,8 +17,6 @@ import urllib.parse as urlparse
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
 
-    OngakuT = t.TypeVar("OngakuT", bound="Ongaku")
-
 __all__ = ("RestApi",)
 
 
@@ -29,7 +27,7 @@ class SessionApi:
     async def update(self, session_id: str) -> Session:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.uri + "/sessions/" + session_id,
+                self._ongaku.internal.base_uri + "/sessions/" + session_id,
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
@@ -54,7 +52,7 @@ class PlayerApi:
     async def fetch_all(self, session_id: str) -> t.Optional[list[Player]]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.uri + "/sessions/" + session_id + "/players",
+                self._ongaku.internal.base_uri + "/sessions/" + session_id + "/players",
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
@@ -79,7 +77,7 @@ class PlayerApi:
     ) -> t.Optional[Player]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.uri
+                self._ongaku.internal.base_uri
                 + "/sessions/"
                 + session_id
                 + "/players/"
@@ -184,7 +182,7 @@ class PlayerApi:
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.patch(
-                    self._ongaku.internal.uri
+                    self._ongaku.internal.base_uri
                     + "/sessions/"
                     + session_id
                     + "/players/"
@@ -211,7 +209,7 @@ class PlayerApi:
         """
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                self._ongaku.internal.uri
+                self._ongaku.internal.base_uri
                 + "/sessions/"
                 + session_id
                 + "/players/"
@@ -269,7 +267,7 @@ class TrackApi:
                     params = {"identifier": f"ytsearch:{query}"}
 
             async with session.get(
-                self._ongaku.internal.uri + "/loadtracks",
+                self._ongaku.internal.base_uri + "/loadtracks",
                 headers=self._ongaku.internal.headers,
                 params=params,
             ) as response:
@@ -359,7 +357,7 @@ class RestApi:
         """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.uri + "/info",
+                self._ongaku.internal.base_uri + "/info",
                 headers=self._ongaku.internal.headers,
             ) as response:
                 if response.status >= 400:
