@@ -524,7 +524,7 @@ class Player:
             )
         except asyncio.TimeoutError as e:
             raise TimeoutException(
-                f"Could not connect to voice channel {channel_id} in guild {self.guild_id}."
+                f"Could not connect to voice channel {channel_id} in guild {self.guild_id} due to events not being received."
             ) from e
 
         if server_event.endpoint is None:
