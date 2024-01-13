@@ -1,4 +1,14 @@
+from __future__ import annotations
 import enum
+
+__all__ = (
+    "SeverityType",
+    "TrackEndReasonType",
+    "PlatformType",
+    "VersionType",
+    "ConnectionType",
+    "BandType",
+)
 
 
 class SeverityType(str, enum.Enum):
@@ -75,6 +85,45 @@ class ConnectionType(enum.Enum):
     """The bot has not yet attempted to connect to the server."""
     CONNECTED = 2
     """The bot has successfully connected to the lavalink server"""
+
+
+class BandType(enum.Enum):
+    """
+    The band values, available for use in lavalink
+
+    Read more [here](https://lavalink.dev/api/rest#equalizer).
+    """
+
+    HZ25 = 0
+    """25 Hz"""
+    HZ40 = 1
+    """40 Hz"""
+    HZ63 = 2
+    """63 Hz"""
+    HZ100 = 3
+    """100 Hz"""
+    HZ160 = 4
+    """160 Hz"""
+    HZ250 = 5
+    """250 Hz"""
+    HZ400 = 6
+    """400 Hz"""
+    HZ630 = 7
+    """630 Hz"""
+    HZ1000 = 8
+    """1000 Hz"""
+    HZ1600 = 9
+    """1600 Hz"""
+    HZ2500 = 10
+    """2500 Hz"""
+    HZ4000 = 11
+    """4000 Hz"""
+    HZ6300 = 12
+    """6300 Hz"""
+    HZ10000 = 13
+    """10000 Hz"""
+    HZ16000 = 14
+    """16000 Hz"""
 
 
 # MIT License
