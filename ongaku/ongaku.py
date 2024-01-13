@@ -7,11 +7,7 @@ import hikari
 import attrs
 
 from .enums import VersionType
-from .errors import (
-    PlayerMissingException,
-    RequiredException,
-    NodeException
-)
+from .errors import PlayerMissingException, RequiredException, NodeException
 from .player import Player
 from .rest import RestApi
 from .node import Node
@@ -20,12 +16,12 @@ _logger = logging.getLogger("ongaku")
 
 __all__ = ("Ongaku",)
 
+
 @attrs.define
 class _OngakuInternal:
     headers: dict[str, t.Any]
     base_uri: str
     attempts: int
-
 
 
 class Ongaku:
@@ -76,10 +72,9 @@ class Ongaku:
 
         self._nodes: dict[int, Node] = {}
 
-
         bot.subscribe(hikari.ShardEvent, self._handle_nodes)
 
-        #bot.subscribe(hikari.StartedEvent, self._handle_connect)
+        # bot.subscribe(hikari.StartedEvent, self._handle_connect)
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
 
     @property
@@ -209,9 +204,8 @@ class Ongaku:
         for player in self.walk_players():
             if player.guild_id == guild_id:
                 return player
-        
-        raise PlayerMissingException(guild_id)
 
+        raise PlayerMissingException(guild_id)
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
         """
@@ -228,10 +222,10 @@ class Ongaku:
         ------
         PlayerMissingException
             The player was not found for the guild specified.
-        
+
         """
         player = await self.fetch_player(guild_id)
-        
+
         await player.disconnect()
 
         await player.node.delete_player(guild_id)
@@ -244,7 +238,7 @@ class Ongaku:
     async def _handle_nodes(self, event: hikari.ShardEvent) -> None:
         if isinstance(event, hikari.events.ShardReadyEvent):
             new_node = Node(self, str(event.shard.id))
-            
+
             print("shard set id:", event.shard.id)
             self._nodes.update({event.shard.id: new_node})
 
@@ -252,7 +246,6 @@ class Ongaku:
                 await new_node.connect()
             except Exception:
                 raise
-
 
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
         _logger.info("Shutting down players...")

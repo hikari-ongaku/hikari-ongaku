@@ -41,11 +41,11 @@ Please check out the [docs](https://ongaku.mplaty.com/), and also checkout the [
     - Track Stuck
     - Empty Queue [^2]
     - Next Queue [^2]
+ - Nodes
 
 
 ### Coming soon...
 These features will be added in the near future.
- - [ ] Nodes
  - [ ] Local file playing (mp3, mp4, ogg, wav, etc.)
  - [ ] Custom plugin creation.
 
