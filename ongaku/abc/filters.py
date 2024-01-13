@@ -88,8 +88,6 @@ class Filter:
         filter_width : hikari.UndefinedNoneOr[float]
             The filter width
         """
-        print("band:", type(filter_band))
-        print("width:", type(filter_width))
 
         if level is None:
             self._karaoke.pop("level")
@@ -98,19 +96,15 @@ class Filter:
             self._karaoke.pop("monoLevel")
 
         if filter_band is None:
-            print("adding filter band")
             self._karaoke.pop("filterBand")
 
         if filter_width is None:
-            print("adding filter width")
             self._karaoke.pop("filterWidth")
 
         if isinstance(filter_band, float):
-            print("adding filter band")
             self._karaoke.update({"filterBand": filter_band})
 
         if isinstance(filter_width, float):
-            print("adding filter width")
             self._karaoke.update({"filterWidth": filter_width})
 
         if isinstance(level, float):
@@ -124,8 +118,6 @@ class Filter:
                 raise ValueError("Outside of value range for value mono_level.")
             else:
                 self._karaoke.update({"monoLevel": mono_level})
-
-        print("kval:", self._karaoke)
 
     def set_timescale(
         self,

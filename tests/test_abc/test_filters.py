@@ -53,8 +53,6 @@ class FilterTest(unittest.TestCase):
 
         filter_build = test_filter.build()
 
-        print(filter_build)
-
         assert filter_build["karaoke"]["level"] == 0.89  # type: ignore
         assert filter_build["karaoke"]["monoLevel"] == 0.64  # type: ignore
         assert filter_build["karaoke"]["filterBand"] == 12.1  # type: ignore

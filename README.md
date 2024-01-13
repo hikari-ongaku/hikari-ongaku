@@ -11,20 +11,44 @@ A voice library for Hikari.
 
 </div>
 
-### Features
-These are things that are being worked on, and will be created, before 1.0
+This is a library, written in asynchronous python, that is designed to take a lavalink server connection, and allow for users, to be able to play music (using [hikari](https://hikari-py.dev/)) and control the players.
 
- - [x] Volume
- - [x] Playlist (youtube/ytmusic)
- - [x] Skip
- - [x] Load and view queue
- - [x] Retries
- - [x] Delete tracks (current, and other, by both position, and Track)
- - [x] Clear tracks
- - [x] Mute (basically sets volume to zero, whilst still playing audio)
- - [x] Store the user who asked for specific songs.
- - [ ] Change EQ and Effects (Filters)
- - [ ] Complete Error handling
+
+### More Information
+
+Please check out the [docs](https://ongaku.mplaty.com/), and also checkout the [examples](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples).
+
+
+### Features
+ - Player control
+    - Volume
+    - Playlists
+    - Queuing
+        - Deleting (via position, and Track)
+        - Clearing
+        - Adding
+    - Skipping
+    - Seeking/Reversing
+    - Filters
+    - Muting
+    - Requestor [^1]
+ - Events
+    - Ready
+    - Statistics
+    - Track Start
+    - Track End
+    - Track Exception
+    - Track Stuck
+    - Empty Queue [^2]
+    - Next Queue [^2]
+
+
+### Coming soon...
+These features will be added in the near future.
  - [ ] Nodes
- - [ ] Testing (internal)
- - [ ] Support local file playing (mp3, mp4, ogg, wav, etc.)
+ - [ ] Local file playing (mp3, mp4, ogg, wav, etc.)
+ - [ ] Custom plugin creation.
+
+
+[^1]: The requestor, is the user who asked for the specific song.
+[^2]: The next song in the queue, or if the queue has ended.

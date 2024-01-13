@@ -16,6 +16,7 @@ from .errors import (
 from .abc.track import Track
 from .abc.events import TrackEndEvent, QueueEmptyEvent, QueueNextEvent
 from .abc.player import PlayerVoice
+from .abc.filters import Filter
 
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
@@ -48,6 +49,8 @@ class Player:
         self._session_id: str | None = None
 
         self._connected: bool = False
+
+        self._filter: Filter | None = None
 
         bot.subscribe(TrackEndEvent, self._track_end_event)
 
@@ -99,6 +102,13 @@ class Player:
         Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one.
         """
         return tuple(self._queue)
+
+    @property
+    def audio_filter(self) -> Filter | None:
+        """
+        The current filter applied to this bot.
+        """
+        return self._filter
 
     async def play(
         self, track: Track | None = None, requestor: Snowflake | None = None
@@ -297,6 +307,43 @@ class Player:
             no_replace=False,
         )
 
+    async def seek(self, value: int) -> None:
+        """
+        Seek the track
+
+        Allows for seeking the track, by a certain amount
+
+        Parameters
+        ----------
+        value : int
+            The value, in milliseconds of how far into the track you wish to seek
+
+        Raises
+        ------
+        SessionNotStartedException
+            The session has not been yet started.
+        PlayerQueueException
+            The queue is empty, so no track can be sought.
+        ValueError
+            Raised when the value, is well beyond how long the track is.
+        PlayerException
+        """
+        if self._ongaku.internal.session_id is None:
+            raise SessionNotStartedException()
+
+        if value < 0:
+            raise ValueError("Sorry, but a negative value is not allowed.")
+
+        if len(self.queue) < 0:
+            raise PlayerQueueException("The queue is empty.")
+
+        await self._ongaku.rest.player.update(
+            self.guild_id,
+            self._ongaku.internal.session_id,
+            position=value,
+            no_replace=False,
+        )
+
     async def volume(self, volume: int) -> None:
         """
         change the volume
@@ -390,6 +437,32 @@ class Player:
             self.guild_id, self._ongaku.internal.session_id, position=value
         )
 
+    async def filter(self, filter: Filter | None = None):
+        """
+        Filter
+
+        Set, or remove a filter.
+
+        Parameters
+        ----------
+        filter : Filter
+            the filter you wish to add.
+        """
+        if self._ongaku.internal.session_id is None:
+            raise SessionNotStartedException()
+
+        self._filter = filter
+
+        try:
+            await self._ongaku.rest.player.update(
+                self.guild_id,
+                self._ongaku.internal.session_id,
+                filter=filter,
+                no_replace=False,
+            )
+        except Exception:
+            raise
+
     async def connect(
         self,
         channel_id: Snowflake,
@@ -476,9 +549,8 @@ class Player:
                 voice=self._voice,
                 no_replace=False,
             )
-        except Exception as e:
-            print(e)
-            raise e
+        except Exception:
+            raise
 
     async def disconnect(self) -> None:
         """Do docs"""

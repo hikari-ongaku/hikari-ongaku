@@ -11,7 +11,6 @@ dotenv.load_dotenv(dotenv_path=".env")
 
 bot = lightbulb.BotApp(token=os.getenv("TOKEN", ""), banner=None)
 
-# You MUST setup the base Ongaku class. Everything starts from here.
 lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
 
 
@@ -118,10 +117,8 @@ async def play_command(ctx: lightbulb.Context) -> None:
     )
 
     try:
-        print("Fetching player")
         player = await lavalink.fetch_player(ctx.guild_id)
     except Exception:
-        print("Failed fetching player, creating new player.")
         player = await lavalink.create_player(ctx.guild_id)
 
     await player.play(track)

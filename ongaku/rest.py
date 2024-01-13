@@ -9,6 +9,7 @@ from .abc.lavalink import ExceptionError, Info
 from .abc.player import Player, PlayerVoice
 from .abc.session import Session
 from .abc.track import Playlist, SearchResult, Track
+from .abc.filters import Filter
 from .enums import PlatformType
 from .errors import BuildException, LavalinkException
 import urllib.parse as urlparse
@@ -105,6 +106,7 @@ class PlayerApi:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
+        filter: hikari.UndefinedNoneOr[Filter] = hikari.UNDEFINED,
         voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> Player:
@@ -163,6 +165,12 @@ class PlayerApi:
                     }
                 }
             )
+
+        if filter != hikari.UNDEFINED:
+            if filter is None:
+                patch_data.update({"filters": None})
+            else:
+                patch_data.update({"filters": filter.build()})
 
         new_headers = self._ongaku.internal.headers.copy()
 
