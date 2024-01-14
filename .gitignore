@@ -162,3 +162,4 @@ cython_debug/
 testing.py
 testing_*.py
 .vscode/
+testing.txt

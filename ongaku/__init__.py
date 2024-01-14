@@ -35,16 +35,15 @@ from .abc.filters import Filter
 
 from .errors import (
     BuildException,
-    GatewayOnlyException,
+    GatewayRequiredException,
     LavalinkConnectionException,
     LavalinkException,
     OngakuBaseException,
     PlayerException,
     PlayerMissingException,
     PlayerQueueException,
-    PlayerSettingException,
     RequiredException,
-    SessionNotStartedException,
+    SessionStartException,
     TimeoutException,
 )
 from .ongaku import Ongaku
@@ -64,12 +63,11 @@ __all__ = (
     "BuildException",
     "LavalinkException",
     "LavalinkConnectionException",
-    "SessionNotStartedException",
+    "SessionStartException",
     "PlayerException",
-    "PlayerSettingException",
     "PlayerMissingException",
     "PlayerQueueException",
-    "GatewayOnlyException",
+    "GatewayRequiredException",
     "RequiredException",
     "TimeoutException",
     # .abc

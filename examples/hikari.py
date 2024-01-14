@@ -355,7 +355,7 @@ async def volume_event(event: hikari.MessageCreateEvent):
 
     try:
         await player.volume(volume * 10)
-    except ongaku.PlayerSettingException:
+    except ValueError:
         await bot.rest.create_message(
             event.channel_id,
             "Sorry, but you have entered an invalid number.",

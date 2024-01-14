@@ -1,12 +1,27 @@
+from __future__ import annotations
+
+__all__ = (
+    "OngakuBaseException",
+    "GatewayRequiredException",
+    "BuildException",
+    "NodeException",
+    "TimeoutException",
+    "RequiredException",
+    "PlayerException",
+    "PlayerCreateException",
+    "PlayerMissingException"
+)
+
+
 class OngakuBaseException(Exception):
     """
-    The base exception for all Ongaku exceptions.
+    The base exception for all Ongaku related exceptions.
     """
 
 
-class NodeException(OngakuBaseException):
+class GatewayRequiredException(OngakuBaseException):
     """
-    Raised when an exception happens within a node.
+    Raised when Gateway bot is not used. [more info](https://ongaku.mplaty.com/getting_started/#qs-and-as)
     """
 
 
@@ -16,45 +31,29 @@ class BuildException(OngakuBaseException):
     """
 
 
+class NodeException(OngakuBaseException):
+    """
+    Raised when an exception happens within a node.
+    """
+
+
 class TimeoutException(OngakuBaseException):
     """
-    Raised when a timeout has exceed its time.
+    Raised when a timeout has exceed its timer.
     """
 
 
-class LavalinkException(OngakuBaseException):
+class RequiredException(OngakuBaseException):
     """
-    Raised when an error is returned on the websocket, or a rest command.
-    """
-
-
-class LavalinkConnectionException(LavalinkException):
-    """
-    Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server.
+    Raised when a value is required, but is None, or missing.
     """
 
 
-class SessionNotStartedException(LavalinkException):
-    """
-    Raised when the session id is needed, but is null.
-    """
-
-
-class SessionError(LavalinkException):
-    """
-    Raised when an error occurs with the Lavalink websocket connection.
-    """
-
+# Player related:
 
 class PlayerException(OngakuBaseException):
     """
-    Base player related exceptions
-    """
-
-
-class PlayerSettingException(PlayerException):
-    """
-    Raised when a setting is set wrong.
+    Base player related exceptions.
     """
 
 
@@ -76,15 +75,29 @@ class PlayerQueueException(PlayerException):
     """
 
 
-class GatewayOnlyException(OngakuBaseException):
+# Lavalink related:
+
+
+class LavalinkException(OngakuBaseException):
     """
-    Raised when Gateway bot is not used.
+    Raised when an error is returned on the websocket, or a rest action.
     """
 
 
-class RequiredException(OngakuBaseException):
+class LavalinkConnectionException(LavalinkException):
     """
-    Raised when a value is required, but is None, or missing.
+    Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server.
+    """
+
+
+class SessionException(LavalinkException):
+    """
+    Raised when an error occurs with the Lavalink websocket connection.
+    """
+
+class SessionStartException(SessionException):
+    """
+    Raised when a session has not been started yet.
     """
 
 

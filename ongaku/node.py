@@ -7,7 +7,7 @@ import aiohttp
 import hikari
 import typing as t
 from .enums import ConnectionType
-from .errors import SessionError
+from .errors import SessionException
 from .events import EventHandler
 from .player import Player
 
@@ -123,7 +123,7 @@ class Node(abc.ABC):
                                     ConnectionType.FAILURE
                                 )
                                 self._internal.connection_failure_reason = msg.data
-                                raise SessionError(_logger.error(msg.json()))
+                                raise SessionException(_logger.error(msg.json()))
 
                             if msg.type == aiohttp.WSMsgType.CLOSED:
                                 pass

@@ -267,7 +267,7 @@ class Volume:
 
         try:
             await player.volume(self.volume * 10)
-        except ongaku.PlayerSettingException:
+        except ValueError:
             await ctx.respond("Sorry, but you have entered an invalid number.")
             return
 

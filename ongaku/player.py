@@ -6,9 +6,8 @@ import typing as t
 import asyncio
 
 from .errors import (
-    SessionNotStartedException,
+    SessionStartException,
     PlayerQueueException,
-    PlayerSettingException,
     PlayerException,
     TimeoutException,
     BuildException,
@@ -133,7 +132,7 @@ class Player:
 
         Raises
         ------
-        SessionNotStartedException
+        SessionStartException
             The session id was null, or empty.
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
@@ -142,7 +141,7 @@ class Player:
             raise PlayerException("Player is not connected to a channel.")
 
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if len(self.queue) > 0 and track is None:
             raise PlayerQueueException("Empty Queue. Cannot play nothing.")
@@ -202,12 +201,12 @@ class Player:
 
         Raises
         ------
-        SessionNotStartedException
+        SessionStartException
             The session id was null, or empty.
 
         """
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if value == UNDEFINED:
             self._is_paused = not self.is_paused
@@ -231,16 +230,16 @@ class Player:
 
         Raises
         ------
-        PlayerSettingException
+        ValueError
             The queue is empty.
-        SessionNotStartedException
+        SessionStartException
             No session id provided, or the session id is null.
         """
         if len(self.queue) == 0:
-            raise PlayerSettingException("Queue is empty.")
+            raise ValueError("Queue is empty.")
 
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if isinstance(value, Track):
             index = self._queue.index(value)
@@ -274,18 +273,18 @@ class Player:
 
         Raises
         ------
-        SessionNotStartedException
+        SessionStartException
             The session id was null, or empty.
-        PlayerSettingException
+        ValueError
             The amount was 0 or a negative number.
         PlayerQueueException
             The queue is already empty, so no songs can be skipped.
         """
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if amount <= 0:
-            raise PlayerSettingException(
+            raise ValueError(
                 f"Skip amount cannot be 0 or negative. Value: {amount}"
             )
         if len(self.queue) == 0:
@@ -318,7 +317,7 @@ class Player:
 
         Raises
         ------
-        SessionNotStartedException
+        SessionStartException
             The session has not been yet started.
         PlayerQueueException
             The queue is empty, so no track can be sought.
@@ -326,7 +325,7 @@ class Player:
             Raised when the value, is well beyond how long the track is.
         """
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if value < 0:
             raise ValueError("Sorry, but a negative value is not allowed.")
@@ -354,21 +353,21 @@ class Player:
 
         Raises
         ------
-        SessionNotStartedException
+        SessionStartException
             The session has not been yet started.
-        PlayerSettingException
+        ValueError
             Raised if the value is above, or below 0, or 1000.
         """
 
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if volume < 0:
-            raise PlayerSettingException(
+            raise ValueError(
                 f"Volume cannot be below zero. Volume: {volume}"
             )
         if volume > 1000:
-            raise PlayerSettingException(
+            raise ValueError(
                 f"Volume cannot be above 1000. Volume: {volume}"
             )
 
@@ -393,7 +392,7 @@ class Player:
         self._queue.clear()
 
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         await self.node.ongaku.rest.player.update(
             self.guild_id,
@@ -415,7 +414,7 @@ class Player:
 
         Raises
         ------
-        SessionNotStartedException
+        SessionStartException
             The session is not yet started.
         PlayerSettingException
             When the track position selected is not a valid position.
@@ -423,10 +422,10 @@ class Player:
             The queue is empty.
         """
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if self.queue[0].info.length < value:
-            raise PlayerSettingException(
+            raise ValueError(
                 "Length is longer than currently playing song!"
             )
 
@@ -446,7 +445,7 @@ class Player:
             the filter you wish to add.
         """
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         self._filter = filter
 
@@ -491,7 +490,7 @@ class Player:
         ------
         ConnectionError
             When it fails to connect to the voice server.
-        SessionNotStartedException
+        SessionStartException
             When the lavalink session has not yet started.
         TimeoutException
             Raised when the events fail to respond in time.
@@ -501,7 +500,7 @@ class Player:
             When attempting to build the [PlayerVoice][ongaku.abc.player.PlayerVoice] and fails to build.
         """
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         self._channel_id = channel_id
         try:
@@ -555,7 +554,7 @@ class Player:
         await self.clear()
 
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         await self.node.ongaku.rest.player.delete(
             self.node._internal.session_id, self._guild_id
@@ -563,7 +562,7 @@ class Player:
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         if self.node._internal.session_id is None:
-            raise SessionNotStartedException()
+            raise SessionStartException()
 
         if int(event.guild_id) == int(self.guild_id):
             try:

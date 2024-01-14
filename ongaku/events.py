@@ -49,10 +49,10 @@ class EventHandler:
         try:
             session_id = payload["sessionId"]
         except Exception:
-            raise errors.SessionNotStartedException("Missing session id.")
+            raise errors.SessionStartException("Missing session id.")
 
         if session_id is None:
-            raise errors.SessionNotStartedException("Missing session id.")
+            raise errors.SessionStartException("Missing session id.")
 
         self._node._internal.session_id = session_id
 

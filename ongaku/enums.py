@@ -10,7 +10,6 @@ __all__ = (
     "BandType",
 )
 
-
 class SeverityType(str, enum.Enum):
     """
     Track error severity type.
@@ -47,11 +46,11 @@ class TrackEndReasonType(str, enum.Enum):
     """The track was cleaned up"""
 
 
-class PlatformType(int, enum.Enum):
+class PlatformType(enum.IntEnum):
     YOUTUBE = 0
     """Youtube search"""
     YOUTUBE_MUSIC = 1
-    """Youtube music search"""
+    """Youtube Music search"""
     SPOTIFY = 2
     """
     Spotify search
@@ -63,7 +62,7 @@ class PlatformType(int, enum.Enum):
     """Soundcloud search"""
 
 
-class VersionType(enum.Enum):
+class VersionType(str, enum.Enum):
     """
     The lavalink server version.
     """
@@ -74,7 +73,7 @@ class VersionType(enum.Enum):
     """V4 Servers"""
 
 
-class ConnectionType(enum.Enum):
+class ConnectionType(enum.IntEnum):
     """
     The connection status for the bot.
     """
@@ -87,7 +86,7 @@ class ConnectionType(enum.Enum):
     """The bot has successfully connected to the lavalink server"""
 
 
-class BandType(enum.Enum):
+class BandType(enum.IntEnum):
     """
     The band values, available for use in lavalink
 

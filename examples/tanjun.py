@@ -268,7 +268,7 @@ async def volume_command(
 
     try:
         await player.volume(volume * 10)
-    except ongaku.PlayerSettingException:
+    except ValueError:
         await ctx.create_initial_response(
             "Sorry, but you have entered an invalid number."
         )
