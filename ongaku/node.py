@@ -7,7 +7,7 @@ import aiohttp
 import hikari
 import typing as t
 from .enums import ConnectionType
-from .errors import SessionException
+from .errors import SessionException, NodeException
 from .events import EventHandler
 from .player import Player
 
@@ -16,7 +16,7 @@ if t.TYPE_CHECKING:
 
 __all__ = ("Node",)
 
-_logger = logging.getLogger("ongaku.node")
+INTERNAL_LOGGER = logging.getLogger(__name__)
 
 
 @attrs.define
@@ -43,9 +43,9 @@ class Node(abc.ABC):
     Parameters
     ----------
     ongaku : Ongaku
-        The ongaku object that it will always connect to.
+        The ongaku object that it will be connected too.
     name : str
-        The name of the node.
+        The name of the node. This can be anything.
     """
 
     def __init__(self, ongaku: Ongaku, name: str) -> None:
@@ -55,28 +55,50 @@ class Node(abc.ABC):
         self._players: dict[hikari.Snowflake, Player] = {}
 
         self._internal = _NodeInternal.build(
-            self.ongaku.internal.base_uri,
-            self.ongaku.internal.headers,
-            self.ongaku.internal.attempts,
+            self.ongaku._internal.base_uri,
+            self.ongaku._internal.headers,
+            self.ongaku._internal.attempts,
         )
 
         self._event_handler = EventHandler(self)
 
     @property
+    def name(self) -> str:
+        """The name of the node."""
+        return self._name
+
+    @property
     def ongaku(self) -> Ongaku:
+        """The [Ongaku][ongaku.Ongaku] object that this node has attached to."""
         return self._ongaku
 
     @property
     def players(self) -> t.Sequence[Player]:
+        """The players, that are attached to this node."""
         return list(self._players.values())
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
+        """
+        Delete player
+
+        Delete a specific player, via it's guild ID.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The guild ID that the player is for.
+
+        Raises
+        ------
+        KeyError
+            If the guild does not exist.
+        """
         try:
             self._players.pop(guild_id)
-        except Exception:
-            raise
+        except KeyError:
+            raise KeyError("The guild id's player was not found.")
 
-    async def connect(self):
+    async def _connect(self):
         """
         This is an internal function, that handles the connection, and starting of the websocket.
         """
@@ -85,7 +107,9 @@ class Node(abc.ABC):
             self._internal.connection_status == ConnectionType.CONNECTED
             or self._internal.connection_status == ConnectionType.FAILURE
         ):
-            return
+            raise NodeException(
+                "This node has failed its connection attempts. Please check your lavalink connection."
+            )
 
         try:
             bot = self._ongaku.bot.get_me()
@@ -93,15 +117,17 @@ class Node(abc.ABC):
             self._internal.remaining_attempts = -1
             self._internal.connection_status = ConnectionType.FAILURE
             self._internal.connection_failure_reason = "Bot ID could not be found."
-            _logger.error("Ongaku could not start, due to the bot ID not being found.")
-            return
+            raise NodeException(
+                "Ongaku could not start, due to the bot ID not being found."
+            )
 
         if bot is None:
             self._internal.remaining_attempts = -1
             self._internal.connection_status = ConnectionType.FAILURE
             self._internal.connection_failure_reason = "Bot ID could not be found."
-            _logger.error("Ongaku could not start, due to the bot ID not being found.")
-            return
+            raise NodeException(
+                "Ongaku could not start, due to the bot ID not being found."
+            )
 
         new_header = {
             "User-Id": str(bot.id),
@@ -123,15 +149,21 @@ class Node(abc.ABC):
                                     ConnectionType.FAILURE
                                 )
                                 self._internal.connection_failure_reason = msg.data
-                                raise SessionException(_logger.error(msg.json()))
+                                raise SessionException(
+                                    "An internal error has happened to this lavalink connection: "
+                                    + msg.data
+                                )
 
                             if msg.type == aiohttp.WSMsgType.CLOSED:
                                 pass
+
                             if msg.type == aiohttp.WSMsgType.TEXT:
                                 try:
                                     json_data = msg.json()
                                 except Exception:
-                                    _logger.info("Failed to decode json data.")
+                                    raise SessionException(
+                                        "Failed to decode payload: " + msg.data
+                                    )
                                 else:
                                     self._internal.connection_status = (
                                         ConnectionType.CONNECTED
@@ -143,8 +175,9 @@ class Node(abc.ABC):
                     self._internal.remaining_attempts -= 1
                     self._internal.connection_status = ConnectionType.FAILURE
                     self._internal.connection_failure_reason = f"Exception Raised: {e}"
+                    raise
         else:
-            _logger.error(
+            raise NodeException(
                 f"Maximum connection attempts reached. Reason: {self._internal.connection_failure_reason}"
             )
 

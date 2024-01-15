@@ -105,7 +105,7 @@ class Info(PayloadBase[dict[str, t.Any]]):
     """
     All of the Info Version information.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#version-object).
+    Find out more [here](https://lavalink.dev/api/rest.html#info-response).
     """
 
     version: InfoVersion

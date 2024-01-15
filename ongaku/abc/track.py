@@ -106,7 +106,7 @@ class Track(PayloadBase[dict[str, t.Any]]):
     """
     The person who requested this track.
 
-    !!! NOTE
+    !!! INFO
         This is an internal feature, not something from lavalink. If this track is apart of a lavalink event, then it will most likely be empty.
     """
 
@@ -130,7 +130,7 @@ class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
 
     The playlist info object.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#track-info).
+    Find out more [here](https://lavalink.dev/api/rest#playlist-info).
     """
 
     name: str
@@ -153,7 +153,7 @@ class Playlist(PayloadBase[dict[str, t.Any]]):
 
     The playlist object.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#track-info).
+    Find out more [here](https://lavalink.dev/api/rest.html#playlist-result-data).
     """
 
     info: PlaylistInfo
@@ -186,6 +186,8 @@ class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
     Search Result
 
     A search result, that has a list of tracks, from the search result.
+
+    Find out more [here](https://lavalink.dev/api/rest.html#search-result-data).
     """
 
     tracks: t.Sequence[Track]

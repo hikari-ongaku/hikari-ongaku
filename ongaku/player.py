@@ -22,18 +22,24 @@ if t.TYPE_CHECKING:
 
 
 class Player:
+    """
+    Base player class
+
+    The class that allows the player, to play songs, and more.
+
+    Parameters
+    ----------
+    node : Node
+        The node that the player is attached too.
+    guild_id : hikari.Snowflake
+        The Guild ID the bot is attached too.
+    """
+
     def __init__(
         self,
-        bot: GatewayBot,
         node: Node,
         guild_id: Snowflake,
-    ) -> None:
-        """
-        Base player class
-
-        The class that allows the player, to play songs, and more.
-        """
-        self._bot = bot
+    ):
         self._node = node
         self._guild_id = guild_id
         self._channel_id = None
@@ -51,12 +57,17 @@ class Player:
 
         self._filter: Filter | None = None
 
-        bot.subscribe(TrackEndEvent, self._track_end_event)
+        self.bot.subscribe(TrackEndEvent, self._track_end_event)
 
     @property
     def node(self) -> Node:
-        """The node that this guild is connected too."""
+        """The node that this guild is attached to."""
         return self._node
+
+    @property
+    def bot(self) -> GatewayBot:
+        """The bot that the server is on."""
+        return self.node.ongaku.bot
 
     @property
     def channel_id(self) -> Snowflake | None:
@@ -81,23 +92,19 @@ class Player:
 
     @property
     def is_alive(self) -> bool:
-        """
-        Whether the current connection is alive.
-        """
+        """Whether the current connection is alive."""
         return self._is_alive
 
     @property
     def is_paused(self) -> bool:
         """
-        Returns whether the bot is currently paused.
+        Whether the bot is paused or not.
         """
         return self._is_paused
 
     @property
     def connected(self) -> bool:
-        """
-        Whether or not the bot is connected to a voice channel.
-        """
+        """Whether or not the bot is connected to a voice channel."""
         return self._connected
 
     @property
@@ -110,7 +117,7 @@ class Player:
     @property
     def audio_filter(self) -> Filter | None:
         """
-        The current filter applied to this bot.
+        The current filter applied to this player.
         """
         return self._filter
 
@@ -160,7 +167,9 @@ class Player:
                 voice=self._voice,
                 no_replace=False,
             )
-        except Exception as e:
+        except (
+            Exception
+        ) as e:  # FIXME: This must be changed, to match the correct return types.
             raise e
 
         self._is_paused = False
@@ -185,6 +194,8 @@ class Player:
                 track.requestor = requestor
             self._queue.append(track)
 
+        # TODO: Maybe make it so it automatically starts the track, so that the play method does not need none?
+
     async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
         """
         Pause the current track
@@ -197,7 +208,7 @@ class Player:
             How you wish to pause the bot.
 
         !!! INFO
-            `True` will force pause the bot, `False` will force unpause the bot, and `undefined` will toggle.
+            `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it.
 
         Raises
         ------
@@ -213,9 +224,12 @@ class Player:
         else:
             self._is_paused = value
 
-        await self.node.ongaku.rest.player.update(
-            self.guild_id, self.node._internal.session_id, paused=self.is_paused
-        )
+        try:
+            await self.node.ongaku.rest.player.update(
+                self.guild_id, self.node._internal.session_id, paused=self.is_paused
+            )
+        except Exception:  # FIXME: another one.
+            raise
 
     async def remove(self, value: Track | int) -> None:
         """
@@ -226,20 +240,22 @@ class Player:
         Parameters
         ----------
         value : abc.Track | int
-            Remove a selected track. If `abc.Track`, then it will remove the first occurrence of that track. If `int`, it will remove the track at that number (starts at 0).
+            Remove a selected track. If [Track][ongaku.abc.track.Track], then it will remove the first occurrence of that track. If an integer, it will remove the track at that number.
 
         Raises
         ------
+        SessionStartException
+            The session id was null, or empty.
         ValueError
             The queue is empty.
-        SessionStartException
-            No session id provided, or the session id is null.
+        PlayerException
+            The song did not exist, or the position was out of the length of the queue.
         """
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
 
         if self.node._internal.session_id is None:
-            raise SessionStartException()
+            raise SessionStartException("Session has not been started for this player.")
 
         if isinstance(value, Track):
             index = self._queue.index(value)
@@ -249,14 +265,20 @@ class Player:
 
         try:
             self._queue.pop(index)
-        except Exception as e:
-            raise PlayerException(f"Failed to remove a song: {e}")
+        except KeyError:
+            if isinstance(value, Track):
+                raise PlayerException(f"Failed to remove a song: {value.info.title}")
+            else:
+                raise PlayerException(f"Failed to remove song in position {value}")
 
         if index == 0:
             if len(self.queue) == 0:
-                await self.node.ongaku.rest.player.update(
-                    self.guild_id, self.node._internal.session_id, track=None
-                )
+                try:
+                    await self.node.ongaku.rest.player.update(
+                        self.guild_id, self.node._internal.session_id, track=None
+                    )
+                except Exception:  # FIXME: Another one.
+                    raise
             else:
                 await self.play()
 
@@ -264,7 +286,7 @@ class Player:
         """
         skip songs
 
-        skip a selected amount of songs.
+        skip a selected amount of songs in the queue.
 
         Parameters
         ----------
@@ -284,9 +306,7 @@ class Player:
             raise SessionStartException()
 
         if amount <= 0:
-            raise ValueError(
-                f"Skip amount cannot be 0 or negative. Value: {amount}"
-            )
+            raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
             raise PlayerQueueException("No tracks in queue.")
 
@@ -297,11 +317,14 @@ class Player:
                 self._queue.pop(0)
 
         if len(self.queue) == 0:
-            await self.node.ongaku.rest.player.update(
-                self.guild_id,
-                self.node._internal.session_id,
-                track=None,
-            )
+            try:
+                await self.node.ongaku.rest.player.update(
+                    self.guild_id,
+                    self.node._internal.session_id,
+                    track=None,
+                )
+            except Exception:  # FIXME: another one.
+                raise
             return
 
     async def seek(self, value: int) -> None:
@@ -344,7 +367,7 @@ class Player:
         """
         change the volume
 
-        The volume you wish to set for the bot.
+        The volume you wish to set for the player.
 
         Parameters
         ----------
@@ -363,30 +386,29 @@ class Player:
             raise SessionStartException()
 
         if volume < 0:
-            raise ValueError(
-                f"Volume cannot be below zero. Volume: {volume}"
-            )
+            raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
         if volume > 1000:
-            raise ValueError(
-                f"Volume cannot be above 1000. Volume: {volume}"
-            )
+            raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
 
-        await self.node.ongaku.rest.player.update(
-            self.guild_id,
-            self.node._internal.session_id,
-            volume=volume,
-            no_replace=False,
-        )
+        try:
+            await self.node.ongaku.rest.player.update(
+                self.guild_id,
+                self.node._internal.session_id,
+                volume=volume,
+                no_replace=False,
+            )
+        except Exception:  # FIXME: another one.
+            raise
 
     async def clear(self) -> None:
         """
         Clear the queue
 
-        Clear the current queue, and also stop the audio from the bot.
+        Clear the current queue, and also stop the audio from the player.
 
         Raises
         ------
-        SessionNotStarted
+        SessionStartException
             The session is not yet started.
         """
         self._queue.clear()
@@ -394,12 +416,15 @@ class Player:
         if self.node._internal.session_id is None:
             raise SessionStartException()
 
-        await self.node.ongaku.rest.player.update(
-            self.guild_id,
-            self.node._internal.session_id,
-            track=None,
-            no_replace=False,
-        )
+        try:
+            await self.node.ongaku.rest.player.update(
+                self.guild_id,
+                self.node._internal.session_id,
+                track=None,
+                no_replace=False,
+            )
+        except Exception:  # FIXME: another one uwu
+            raise
 
     async def position(self, value: int) -> None:
         """
@@ -416,33 +441,39 @@ class Player:
         ------
         SessionStartException
             The session is not yet started.
-        PlayerSettingException
+        PlayerException
             When the track position selected is not a valid position.
-        PlayerSettingException
+        PlayerException
             The queue is empty.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
 
         if self.queue[0].info.length < value:
-            raise ValueError(
-                "Length is longer than currently playing song!"
-            )
+            raise ValueError("Length is longer than currently playing song!")
 
-        await self.node.ongaku.rest.player.update(
-            self.guild_id, self.node._internal.session_id, position=value
-        )
+        try:
+            await self.node.ongaku.rest.player.update(
+                self.guild_id, self.node._internal.session_id, position=value
+            )
+        except Exception:  # FIXME: another one.
+            raise
 
     async def filter(self, filter: Filter | None = None):
         """
         Filter
 
-        Set, or remove a filter.
+        Set, or remove a filter for the player.
 
         Parameters
         ----------
         filter : Filter
             the filter you wish to add.
+
+        Raises
+        ------
+        SessionStartException
+            The session id was null, or empty.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
@@ -456,7 +487,7 @@ class Player:
                 filter=filter,
                 no_replace=False,
             )
-        except Exception:
+        except Exception:  # FIXME: another one.
             raise
 
     async def connect(
@@ -483,15 +514,15 @@ class Player:
         timeout : int
             The amount of time to wait for the events.
 
-        !!! INFO
+        !!! WARNING
             If you set mute to True, the bot will not be able to transmit audio.
 
         Raises
         ------
+        SessionStartException
+            The session id was null, or empty.
         ConnectionError
             When it fails to connect to the voice server.
-        SessionStartException
-            When the lavalink session has not yet started.
         TimeoutException
             Raised when the events fail to respond in time.
         PlayerException
@@ -504,7 +535,7 @@ class Player:
 
         self._channel_id = channel_id
         try:
-            await self._bot.update_voice_state(
+            await self.bot.update_voice_state(
                 self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
             )
         except Exception as e:
@@ -512,11 +543,11 @@ class Player:
 
         try:
             state_event, server_event = await asyncio.gather(
-                self._bot.wait_for(
+                self.bot.wait_for(
                     VoiceStateUpdateEvent,
                     timeout=timeout,
                 ),
-                self._bot.wait_for(
+                self.bot.wait_for(
                     VoiceServerUpdateEvent,
                     timeout=timeout,
                 ),
@@ -545,20 +576,34 @@ class Player:
                 voice=self._voice,
                 no_replace=False,
             )
-        except Exception:
+        except Exception:  # FIXME: fix this as well.
             raise
 
     async def disconnect(self) -> None:
-        """Do docs"""
+        """
+        Disconnect player
+
+        Disconnect the player from the lavalink server, and discord.
+
+        Raises
+        ------
+        SessionStartException
+            The session id was null, or empty.
+        """
         self._is_alive = False
         await self.clear()
 
         if self.node._internal.session_id is None:
             raise SessionStartException()
 
-        await self.node.ongaku.rest.player.delete(
-            self.node._internal.session_id, self._guild_id
-        )
+        try:
+            await self.node.ongaku.rest.player.delete(
+                self.node._internal.session_id, self._guild_id
+            )
+        except Exception:  # FIXME: fix this.
+            raise
+
+        await self.bot.update_voice_state(self.guild_id, None)
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         if self.node._internal.session_id is None:
@@ -568,20 +613,23 @@ class Player:
             try:
                 await self.remove(0)
             except Exception:
-                await self._bot.dispatch(QueueEmptyEvent(self._bot, self.guild_id))
+                await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 
             if len(self.queue) == 0:
-                await self._bot.dispatch(QueueEmptyEvent(self._bot, self.guild_id))
+                await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 
-            await self.node.ongaku.rest.player.update(
-                self.guild_id,
-                self.node._internal.session_id,
-                track=self._queue[0],
-                no_replace=False,
-            )
+            try:
+                await self.node.ongaku.rest.player.update(
+                    self.guild_id,
+                    self.node._internal.session_id,
+                    track=self._queue[0],
+                    no_replace=False,
+                )
+            except Exception:  # FIXME: fix this
+                raise
 
-            await self._bot.dispatch(
-                QueueNextEvent(self._bot, self.guild_id, self._queue[0], event.track)
+            await self.bot.dispatch(
+                QueueNextEvent(self.bot, self.guild_id, self._queue[0], event.track)
             )

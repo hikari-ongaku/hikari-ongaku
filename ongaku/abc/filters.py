@@ -409,7 +409,7 @@ class Filter:
             else:
                 self._low_pass.update({"smoothing": smoothing})
 
-    def build(
+    def _build(
         self,
     ) -> dict[str, float | dict[str, float] | list[dict[str, float | int]]]:
         build_dict: dict[

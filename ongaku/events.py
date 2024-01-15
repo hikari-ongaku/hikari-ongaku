@@ -3,7 +3,9 @@ from __future__ import annotations
 import logging
 import typing as t
 
-from . import errors
+from .errors import (
+    SessionStartException,
+)
 from .abc import (
     ReadyEvent,
     StatisticsEvent,
@@ -17,7 +19,7 @@ from .abc import (
 if t.TYPE_CHECKING:
     from .node import Node
 
-_logger = logging.getLogger("ongaku.events")
+INTERNAL_LOGGER = logging.getLogger(__name__)
 
 
 class EventHandler:
@@ -31,13 +33,13 @@ class EventHandler:
             raise e
 
         if op_code == "ready":
-            await self._ready_payload(payload)
+            await self.ready_payload(payload)
 
         elif op_code == "stats":
-            await self._stats_payload(payload)
+            await self.stats_payload(payload)
 
         elif op_code == "event":
-            await self._event_payload(payload)
+            await self.event_payload(payload)
 
         elif op_code == "playerUpdate":
             pass
@@ -45,14 +47,14 @@ class EventHandler:
         else:
             logging.warning(f"OP code not recognized: {op_code}")
 
-    async def _ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            session_id = payload["sessionId"]
+            session_id = str(payload["sessionId"])
         except Exception:
-            raise errors.SessionStartException("Missing session id.")
+            raise SessionStartException("Session id does not exist in ready payload.")
 
-        if session_id is None:
-            raise errors.SessionStartException("Missing session id.")
+        if session_id.strip() == "":
+            raise SessionStartException("Session ID cannot be none.")
 
         self._node._internal.session_id = session_id
 
@@ -61,10 +63,10 @@ class EventHandler:
         except Exception as e:
             raise e
 
-        logging.getLogger("ongaku.info").info("Successfully connected to the server.")
+        INTERNAL_LOGGER.info("Successfully connected to the server.")
         await self._node._ongaku.bot.dispatch(event)
 
-    async def _stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
             event = StatisticsEvent._from_payload(payload, app=self._node._ongaku.bot)
         except Exception as e:
@@ -72,7 +74,7 @@ class EventHandler:
 
         await self._node._ongaku.bot.dispatch(event)
 
-    async def _event_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def event_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
             event_type = payload["type"]
         except Exception as e:

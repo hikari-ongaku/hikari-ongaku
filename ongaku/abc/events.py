@@ -150,6 +150,7 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
     """
 
     _app: hikari.RESTAware
+
     players: int
     """The amount of players connected to the node."""
     playing_players: int
@@ -191,6 +192,7 @@ class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
     """
 
     _app: hikari.RESTAware
+
     guild_id: hikari.Snowflake
     """The guild that had their websocket closed in."""
     code: int
@@ -210,9 +212,6 @@ class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
         by_remote = payload["byRemote"]
 
         return cls(app, guild_id, code, reason, by_remote)
-
-
-# Track Events:
 
 
 @attrs.define
@@ -311,9 +310,6 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
         threshold_ms = payload["thresholdMs"]
 
         return cls(base.app, base.track, base.guild_id, threshold_ms)
-
-
-# Player Events:
 
 
 @attrs.define

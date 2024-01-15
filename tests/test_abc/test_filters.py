@@ -9,7 +9,7 @@ class FilterTest(unittest.TestCase):
 
         test_filter.volume(30.2)
 
-        filter_build = test_filter.build()
+        filter_build = test_filter._build()
 
         assert filter_build["volume"] == 30.2
 
@@ -24,7 +24,7 @@ class FilterTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             test_filter.set_equalizer(ongaku.BandType.HZ100, 1.1)
 
-        filter_build = test_filter.build()
+        filter_build = test_filter._build()
 
         assert filter_build["equalizer"][0]["band"] == ongaku.BandType.HZ40.value  # type: ignore
         assert filter_build["equalizer"][0]["gain"] == 0.54  # type: ignore
@@ -51,7 +51,7 @@ class FilterTest(unittest.TestCase):
             filter_width=3.2,
         )
 
-        filter_build = test_filter.build()
+        filter_build = test_filter._build()
 
         assert filter_build["karaoke"]["level"] == 0.89  # type: ignore
         assert filter_build["karaoke"]["monoLevel"] == 0.64  # type: ignore

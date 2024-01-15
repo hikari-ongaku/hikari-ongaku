@@ -10,6 +10,7 @@ __all__ = (
     "BandType",
 )
 
+
 class SeverityType(str, enum.Enum):
     """
     Track error severity type.

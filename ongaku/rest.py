@@ -17,18 +17,113 @@ import urllib.parse as urlparse
 if t.TYPE_CHECKING:
     from .ongaku import Ongaku
 
-__all__ = ("RestApi",)
+__all__ = ("Rest",)
 
 
-class SessionApi:
+class Rest:
+    """
+    Base rest class
+
+    The base rest class, for all rest related actions.
+
+    !!! WARNING
+        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
+    """
+
+    def __init__(self, ongaku: Ongaku) -> None:
+        self._ongaku: Ongaku = ongaku
+
+        self._rest_track = RestTrack(ongaku)
+        self._rest_player = RestPlayer(ongaku)
+        self._rest_session = RestSession(ongaku)
+
+    @property
+    def track(self) -> RestTrack:
+        """The track related rest actions"""
+        return self._rest_track
+
+    @property
+    def player(self) -> RestPlayer:
+        """The player related rest actions"""
+        return self._rest_player
+
+    @property
+    def session(self) -> RestSession:
+        """The session related rest actions"""
+        return self._rest_session
+
+    async def fetch_info(self) -> Info:
+        """
+        Fetch info
+
+        Fetch the information about the Lavalink server.
+
+        Raises
+        ------
+        LavalinkException
+            Response was a 400 or 500 error.
+        BuildException
+            Failure to build `abc.Info`
+
+        Returns
+        -------
+        Info
+            Returns an information object.
+        """
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                self._ongaku._internal.base_uri + "/info",
+                headers=self._ongaku._internal.headers,
+            ) as response:
+                if response.status >= 400:
+                    raise LavalinkException(
+                        f"status: {response.status} message: {response.text()}"
+                    )
+
+                try:
+                    info_resp = Info._from_payload(await response.json())
+                except Exception as e:
+                    raise BuildException(e)
+
+        return info_resp
+
+
+class RestSession:
+    """
+    !!! WARNING
+        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
+    """
+
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
     async def update(self, session_id: str) -> Session:
+        """
+        Session Update
+
+        Update the current session.
+
+        Parameters
+        ----------
+        session_id : str
+            The Session ID connected to the update.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
+        BuildException
+            Failure to build the session object.
+
+        Returns
+        -------
+        Session
+            The session object information.
+        """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.base_uri + "/sessions/" + session_id,
-                headers=self._ongaku.internal.headers,
+                self._ongaku._internal.base_uri + "/sessions/" + session_id,
+                headers=self._ongaku._internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
@@ -41,19 +136,45 @@ class SessionApi:
                 return session_model
 
 
-class PlayerApi:
+class RestPlayer:
     """
-    The Rest based actions for the player.
+    !!! WARNING
+        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
     """
 
     def __init__(self, ongaku: Ongaku) -> None:
         self._ongaku = ongaku
 
-    async def fetch_all(self, session_id: str) -> t.Optional[list[Player]]:
+    async def fetch_all(self, session_id: str) -> t.Sequence[Player] | None:
+        """
+        Fetch all players
+
+        Fetch all of the players in the current session.
+
+        Parameters
+        ----------
+        session_id : str
+            The Session ID that the players are attached too.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
+        BuildException
+            Failure to build the player object.
+
+        Returns
+        -------
+        typing.Sequence[Player]
+            The players that are attached to the session.
+        """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.base_uri + "/sessions/" + session_id + "/players",
-                headers=self._ongaku.internal.headers,
+                self._ongaku._internal.base_uri
+                + "/sessions/"
+                + session_id
+                + "/players",
+                headers=self._ongaku._internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
@@ -72,17 +193,39 @@ class PlayerApi:
 
         return player_list
 
-    async def fetch(
-        self, session_id: str, guild_id: hikari.Snowflake
-    ) -> t.Optional[Player]:
+    async def fetch(self, session_id: str, guild_id: hikari.Snowflake) -> Player | None:
+        """
+        Fetch a player.
+
+        Fetch a specific player, for the specified Guild ID.
+
+        Parameters
+        ----------
+        session_id : str
+            The Session ID that the players are attached too.
+        guild_id : hikari.Snowflake
+            The Guild ID that the player is attached to.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
+        BuildException
+            Failure to build the player object.
+
+        Returns
+        -------
+        Player
+            The player that was found for the specified guild.
+        """
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                self._ongaku.internal.base_uri
+                self._ongaku._internal.base_uri
                 + "/sessions/"
                 + session_id
                 + "/players/"
                 + str(guild_id),
-                headers=self._ongaku.internal.headers,
+                headers=self._ongaku._internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
@@ -109,17 +252,47 @@ class PlayerApi:
         no_replace: bool = True,
     ) -> Player:
         """
-        Update a player
+        Update a player.
 
-        Updates a player with the new parameters, or creates a new one if none exist.
+        Update a specific player, for the specified Guild ID.
 
         Parameters
         ----------
-        guild_id : hikari.Snowflake
-            The guild id that the bot is playing in.
         session_id : str
-            The session_id for the lavalink server session.
+            The Session ID that the players are attached too.
+        guild_id : hikari.Snowflake
+            The Guild ID that the player is attached to.
+        track : hikari.UndefinedNoneOr[Track]
+            The track you wish to set.
+        position : hikari.UndefinedNoneOr[int]
+            The new position for the track.
+        end_time : hikari.UndefinedNoneOr[int]
+            The end time for the track.
+        volume : hikari.UndefinedNoneOr[int]
+            The volume of the player.
+        paused : hikari.UndefinedNoneOr[bool]
+            Whether or not to pause the player.
+        filter : hikari.UndefinedNoneOr[Filter]
+            The filter you wish to set, or remove.
+        voice : hikari.UndefinedNoneOr[PlayerVoice]
+            The player voice object you wish to set.
+        no_replace : bool
+            Whether or not the track can be replaced.
 
+        !!! INFO
+            If no_replace is true, then setting a track to the track option, will not do anything.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
+        BuildException
+            Failure to build the player object.
+
+        Returns
+        -------
+        Player
+            The player that was found for the specified guild.
         """
         patch_data: dict[str, t.Any] = {}
 
@@ -168,9 +341,9 @@ class PlayerApi:
             if filter is None:
                 patch_data.update({"filters": None})
             else:
-                patch_data.update({"filters": filter.build()})
+                patch_data.update({"filters": filter._build()})
 
-        new_headers = self._ongaku.internal.headers.copy()
+        new_headers = self._ongaku._internal.headers.copy()
 
         new_headers.update({"Content-Type": "application/json"})
 
@@ -182,7 +355,7 @@ class PlayerApi:
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.patch(
-                    self._ongaku.internal.base_uri
+                    self._ongaku._internal.base_uri
                     + "/sessions/"
                     + session_id
                     + "/players/"
@@ -205,24 +378,39 @@ class PlayerApi:
 
     async def delete(self, session_id: str, guild_id: hikari.Snowflake) -> None:
         """
-        Creates a new player for the specified guild. If one already exists, returns that instead.
+        Delete player
+
+        Delete a specific player, from the specified guild.
+
+        Parameters
+        ----------
+        session_id : str
+            The Session ID that the players are attached too.
+        guild_id : hikari.Snowflake
+            The Guild ID that the player is attached to.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
         """
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                self._ongaku.internal.base_uri
+                self._ongaku._internal.base_uri
                 + "/sessions/"
                 + session_id
                 + "/players/"
                 + str(guild_id),
-                headers=self._ongaku.internal.headers,
+                headers=self._ongaku._internal.headers,
             ) as response:
                 if response.status >= 400:
                     raise LavalinkException(response.status)
 
 
-class TrackApi:
+class RestTrack:
     """
-    The rest based actions for the track.
+    !!! WARNING
+        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
     """
 
     def __init__(self, ongaku: Ongaku) -> None:
@@ -251,6 +439,37 @@ class TrackApi:
     async def load(
         self, query: str, platform: PlatformType = PlatformType.YOUTUBE
     ) -> SearchResult | Playlist | Track | None:
+        """
+        Load tracks
+
+        Load tracks to be able to play on a player.
+
+        Parameters
+        ----------
+        query : str
+            The query for a track/url
+        platform : PlatformType
+            The platform type for the query
+
+        !!! INFO
+            If the query is a url, it will use that to search. If not, it will use the [PlatformType][ongaku.enums.PlatformType] you set in the platform parameter.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
+        BuildException
+            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+
+        Returns
+        -------
+        SearchResult
+            If it was not a url, you will always receive this.
+        Playlist
+            If a playlist url is sent, you will receive this option.
+        Track
+            If a song/track url is sent, you will receive this option.
+        """
         async with aiohttp.ClientSession() as session:
             query_sanitize = await self._url_handler(query)
 
@@ -267,8 +486,8 @@ class TrackApi:
                     params = {"identifier": f"ytsearch:{query}"}
 
             async with session.get(
-                self._ongaku.internal.base_uri + "/loadtracks",
-                headers=self._ongaku.internal.headers,
+                self._ongaku._internal.base_uri + "/loadtracks",
+                headers=self._ongaku._internal.headers,
                 params=params,
             ) as response:
                 if response.status >= 400:
@@ -290,7 +509,7 @@ class TrackApi:
                     try:
                         search_result = SearchResult._from_payload(data["data"])
                     except Exception as e:
-                        raise e
+                        raise BuildException(e)
 
                     return search_result
 
@@ -298,7 +517,7 @@ class TrackApi:
                     try:
                         track = Track._from_payload(data["data"])
                     except Exception as e:
-                        raise e
+                        raise BuildException(e)
 
                     return track
 
@@ -306,71 +525,9 @@ class TrackApi:
                     try:
                         playlist = Playlist._from_payload(data["data"])
                     except Exception as e:
-                        raise e
+                        raise BuildException(e)
 
                     return playlist
-
-
-class RestApi:
-    """
-    Base rest class
-
-    The base rest class, for all rest related actions.
-    """
-
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku: Ongaku = ongaku
-
-        self._track_api = TrackApi(ongaku)
-        self._player_api = PlayerApi(ongaku)
-        self._session_api = SessionApi(ongaku)
-
-    @property
-    def track(self) -> TrackApi:
-        return self._track_api
-
-    @property
-    def player(self) -> PlayerApi:
-        return self._player_api
-
-    @property
-    def session(self) -> SessionApi:
-        return self._session_api
-
-    async def fetch_info(self) -> Info:
-        """
-        Fetch info
-
-        Fetch the information about the Lavalink server.
-
-        Returns
-        -------
-        abc.Info
-            Returns an information object.
-
-        Raises
-        ------
-        LavalinkException
-            Response was a 400 or 500 error.
-        BuildException
-            Failure to build `abc.Info`
-        """
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                self._ongaku.internal.base_uri + "/info",
-                headers=self._ongaku.internal.headers,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(
-                        f"status: {response.status} message: {response.text()}"
-                    )
-
-                try:
-                    info_resp = Info._from_payload(await response.json())
-                except Exception as e:
-                    raise BuildException(e)
-
-        return info_resp
 
 
 # MIT License

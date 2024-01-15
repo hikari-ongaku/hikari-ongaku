@@ -9,10 +9,10 @@ import attrs
 from .enums import VersionType
 from .errors import PlayerMissingException, RequiredException, NodeException
 from .player import Player
-from .rest import RestApi
+from .rest import Rest
 from .node import Node
 
-_logger = logging.getLogger("ongaku")
+INTERNAL_LOGGER = logging.getLogger(__name__)
 
 __all__ = ("Ongaku",)
 
@@ -25,6 +25,27 @@ class _OngakuInternal:
 
 
 class Ongaku:
+    """
+    Base Ongaku class
+
+    The base Ongaku class, where everything starts from.
+
+    Parameters
+    ----------
+    bot : hikari.GatewayBot
+        The bot that ongaku will attach to.
+    host : str
+        The host, or IP that your lavalink server is running on.
+    port : int
+        The port your lavalink server runs on.
+    password : str | None
+        The password for your lavalink server.
+    version : models.VersionType
+        The version of lavalink you are running. Currently only supports V3, or V4.
+    max_retries : int
+        The maximum amount of retries for the Websocket.
+    """
+
     def __init__(
         self,
         bot: hikari.GatewayBot,
@@ -35,26 +56,6 @@ class Ongaku:
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
     ) -> None:
-        """
-        Base Ongaku class
-
-        The base Ongaku class, where everything starts from.
-
-        Parameters
-        ----------
-        bot : hikari.GatewayBot
-            The bot that ongaku will attach to.
-        host : str
-            The host, or IP that your lavalink server is running on.
-        port : int
-            The port your lavalink server runs on.
-        password : str | None
-            The password for your lavalink server.
-        version : models.VersionType
-            The version of lavalink you are running. Currently only supports V3, or V4.
-        max_retries : int
-            The maximum amount of retries for the Websocket.
-        """
         self._bot = bot
 
         self._players: dict[hikari.Snowflake, Player] = {}
@@ -68,93 +69,53 @@ class Ongaku:
             headers, f"http://{host}:{port}/{version.value}", max_retries
         )
 
-        self._rest = RestApi(self)
+        self._rest = Rest(self)
 
         self._nodes: dict[int, Node] = {}
 
         bot.subscribe(hikari.ShardEvent, self._handle_nodes)
-
-        # bot.subscribe(hikari.StartedEvent, self._handle_connect)
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
 
     @property
     def nodes(self) -> t.Sequence[Node]:
-        """
-        nodes
-
-        All the connected nodes.
-
-        Returns
-        -------
-        Sequence[Node]
-            A list of players
-        """
+        """The nodes, that are attached to this lavalink server."""
         return list(self._nodes.values())
 
     @property
-    def rest(self) -> RestApi:
-        """
-        Rest
-
-        The REST API for the Lavalink server.
-
-        Returns
-        -------
-        rest.RestApi
-            The rest api for lavalink
-        """
+    def rest(self) -> Rest:
+        """The REST access. For the lavalink server."""
         return self._rest
 
     @property
     def bot(self) -> hikari.GatewayBot:
-        """
-        Gateway bot.
-
-        The gateway bot the server is attached to.
-
-        Returns:
-        hikari.RESTAware
-            A Rest aware hikari bot.
-        """
+        """The App or Bot that lavalink is connected too."""
         return self._bot
-
-    @property
-    def internal(self) -> _OngakuInternal:
-        """
-        For internal information about the bot.
-
-        Returns
-        -------
-        OngakuInternal
-            An internal class for ongaku.
-        """
-        return self._internal
 
     async def create_player(self, guild_id: hikari.Snowflake) -> Player:
         """
         Create a new player
 
-        Creates a new player for the specified guild, and places it in the specified channel.
+        Creates a new player for the specified guild, and places it in the specified channel. It will attach itself to the correct node as well.
 
         Parameters
         ----------
         guild_id : hikari.Snowflake
-            The guild id that the bot is in
+            The Guild ID the player will be in.
 
         Raises
         ------
-        PlayerCreateException
+        PlayerException
             Raised when the player failed to be created.
+        NodeException
+            The node tht the bot needs to connect too, has not been created.
 
         Returns
         -------
         Player
-            The player that is now in the channel you have specified.
+            The player that has been successfully created.
         """
 
         shard_id = hikari.snowflakes.calculate_shard_id(self.bot, guild_id)
-
-        print("shard calculated:", shard_id)
 
         bot = self.bot.get_me()
 
@@ -166,15 +127,17 @@ class Ongaku:
         if bot_state is not None and bot_state.channel_id is not None:
             try:
                 self._players.pop(guild_id)
-            except Exception:
-                pass
+            except KeyError:
+                raise NodeException(
+                    "The node this player needs to attach too, has not yet been created."
+                )
 
         node = self._nodes.get(shard_id)
 
         if not node:
             raise NodeException("Node does not exist.")
 
-        new_player = Player(self.bot, node, guild_id)
+        new_player = Player(node, guild_id)
 
         self._players.update({guild_id: new_player})
         return new_player
@@ -211,7 +174,7 @@ class Ongaku:
         """
         delete a player
 
-        Deletes a player from the specified guild, and disconnect it if it has not been disconnected already.
+        Deletes a player from the specified guild, and disconnects it, if it has not been disconnected already.
 
         Parameters
         ----------
@@ -231,6 +194,16 @@ class Ongaku:
         await player.node.delete_player(guild_id)
 
     def walk_players(self) -> t.Iterator[Player]:
+        """
+        Walk Players
+
+        This method, allows you to go through, every player, on the entire lavalink connection.
+
+        Returns
+        -------
+        typing.Iterator[Player]
+            the players from all of the nodes.
+        """
         for node in self._nodes.values():
             for player in node.players:
                 yield player
@@ -239,20 +212,19 @@ class Ongaku:
         if isinstance(event, hikari.events.ShardReadyEvent):
             new_node = Node(self, str(event.shard.id))
 
-            print("shard set id:", event.shard.id)
             self._nodes.update({event.shard.id: new_node})
 
             try:
-                await new_node.connect()
+                await new_node._connect()
             except Exception:
                 raise
 
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
-        _logger.info("Shutting down players...")
+        INTERNAL_LOGGER.info("Shutting down players...")
         for player in self.walk_players():
             await player.disconnect()
 
-        _logger.info("Shutdown complete.")
+        INTERNAL_LOGGER.info("Shutdown complete.")
 
 
 # MIT License

@@ -9,7 +9,7 @@ __all__ = (
     "RequiredException",
     "PlayerException",
     "PlayerCreateException",
-    "PlayerMissingException"
+    "PlayerMissingException",
 )
 
 
@@ -50,6 +50,7 @@ class RequiredException(OngakuBaseException):
 
 
 # Player related:
+
 
 class PlayerException(OngakuBaseException):
     """
@@ -94,6 +95,7 @@ class SessionException(LavalinkException):
     """
     Raised when an error occurs with the Lavalink websocket connection.
     """
+
 
 class SessionStartException(SessionException):
     """

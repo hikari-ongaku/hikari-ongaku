@@ -31,6 +31,9 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
 
     @property
     def to_payload(self) -> dict[str, t.Any]:
+        """
+        Converts the entire object, into a payload.
+        """
         new_data: dict[str, t.Any] = {}
         for key, value in attrs.asdict(self).items():
             if key.count("_") > 0:
