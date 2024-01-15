@@ -42,12 +42,14 @@ Please check out the [docs](https://ongaku.mplaty.com/), and also checkout the [
     - Empty Queue [^2]
     - Next Queue [^2]
  - Nodes
+    - Automatic nodes
 
 
 ### Coming soon...
 These features will be added in the near future.
  - [ ] Local file playing (mp3, mp4, ogg, wav, etc.)
  - [ ] Custom plugin creation.
+ - [ ] Custom nodes.
 
 
 [^1]: The requestor, is the user who asked for the specific song.
