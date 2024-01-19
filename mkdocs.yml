@@ -53,7 +53,6 @@ plugins:
             extensions:
                 - griffe_inherited_docstrings
 
-
 markdown_extensions:
   - toc:
       permalink: "#"
