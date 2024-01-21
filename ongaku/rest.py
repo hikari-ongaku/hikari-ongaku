@@ -4,8 +4,9 @@ import typing as t
 
 import aiohttp
 import hikari
+import enum
 
-from .abc.lavalink import ExceptionError, Info
+from .abc.lavalink import Info, RestError, ExceptionError
 from .abc.player import Player, PlayerVoice
 from .abc.session import Session
 from .abc.track import Playlist, SearchResult, Track
@@ -15,41 +16,52 @@ from .errors import BuildException, LavalinkException
 import urllib.parse as urlparse
 
 if t.TYPE_CHECKING:
-    from .ongaku import Ongaku
+    from .client import Client
 
-__all__ = ("Rest",)
+__all__ = ("RESTClient",)
+
+# FIXME: Make sure to add the rest actions, like fetch, get, post and delete.
+# FIXME: Support lists returning, and None.
+# FIXME: Support query params for search and update.
 
 
-class Rest:
+class _HttpMethod(enum.Enum):
+    GET = 0
+    POST = 1
+    PATCH = 3
+    DELETE = 4
+
+
+class RESTClient:
     """
     Base rest class
 
     The base rest class, for all rest related actions.
 
     !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
+        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
 
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku: Ongaku = ongaku
+    def __init__(self, client: Client) -> None:
+        self._client = client
 
-        self._rest_track = RestTrack(ongaku)
-        self._rest_player = RestPlayer(ongaku)
-        self._rest_session = RestSession(ongaku)
+        self._rest_track = RESTTrack(self)
+        self._rest_player = RESTPlayer(self)
+        self._rest_session = RESTSession(self)
 
     @property
-    def track(self) -> RestTrack:
-        """The track related rest actions"""
+    def track(self) -> RESTTrack:
+        """The track related rest actions."""
         return self._rest_track
 
     @property
-    def player(self) -> RestPlayer:
-        """The player related rest actions"""
+    def player(self) -> RESTPlayer:
+        """The player related rest actions."""
         return self._rest_player
 
     @property
-    def session(self) -> RestSession:
-        """The session related rest actions"""
+    def session(self) -> RESTSession:
+        """The session related rest actions."""
         return self._rest_session
 
     async def fetch_info(self) -> Info:
@@ -62,6 +74,8 @@ class Rest:
         ------
         LavalinkException
             Response was a 400 or 500 error.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
             Failure to build `abc.Info`
 
@@ -70,32 +84,115 @@ class Rest:
         Info
             Returns an information object.
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                self._ongaku._internal.base_uri + "/info",
-                headers=self._ongaku._internal.headers,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(
-                        f"status: {response.status} message: {response.text()}"
-                    )
+        try:
+            resp = await self._rest_handler(
+                "/info", self._client._internal.headers, _HttpMethod.GET
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
 
-                try:
-                    info_resp = Info._from_payload(await response.json())
-                except Exception as e:
-                    raise BuildException(e)
+        try:
+            info_resp = Info._from_payload(resp)
+        except Exception as e:
+            raise BuildException(e)
 
         return info_resp
 
+    async def _rest_handler(
+        self,
+        url: str,
+        headers: dict[str, t.Any],
+        type: _HttpMethod,
+        **kwargs: dict[str, t.Any],
+    ) -> dict[str, t.Any]:
+        async with aiohttp.ClientSession() as session:
+            if type == _HttpMethod.GET:
+                try:
+                    async with session.get(
+                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                    ) as response:
+                        try:
+                            payload = await response.json()
+                        except Exception:
+                            raise ValueError(
+                                "Json data was not received from the response."
+                            )
 
-class RestSession:
+                        if response.status >= 400:
+                            raise LavalinkException(RestError._from_payload(payload))
+
+                        return payload
+                except Exception as e:
+                    raise LavalinkException(e)
+
+            if type == _HttpMethod.POST:
+                try:
+                    async with session.post(
+                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                    ) as response:
+                        try:
+                            payload = await response.json()
+                        except Exception:
+                            raise ValueError(
+                                "Json data was not received from the response."
+                            )
+
+                        if response.status >= 400:
+                            raise LavalinkException(RestError._from_payload(payload))
+
+                        return payload
+                except Exception as e:
+                    raise LavalinkException(e)
+
+            if type == _HttpMethod.PATCH:
+                try:
+                    async with session.patch(
+                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                    ) as response:
+                        try:
+                            payload = await response.json()
+                        except Exception:
+                            raise ValueError(
+                                "Json data was not received from the response."
+                            )
+
+                        if response.status >= 400:
+                            raise LavalinkException(RestError._from_payload(payload))
+
+                        return payload
+                except Exception as e:
+                    raise LavalinkException(e)
+
+            if type == _HttpMethod.DELETE:
+                try:
+                    async with session.delete(
+                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                    ) as response:
+                        try:
+                            payload = await response.json()
+                        except Exception:
+                            raise ValueError(
+                                "Json data was not received from the response."
+                            )
+
+                        if response.status >= 400:
+                            raise LavalinkException(RestError._from_payload(payload))
+
+                        return payload
+                except Exception as e:
+                    raise LavalinkException(e)
+
+
+class RESTSession:
     """
     !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
+        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
 
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku = ongaku
+    def __init__(self, rest: RESTClient) -> None:
+        self._rest = rest
 
     async def update(self, session_id: str) -> Session:
         """
@@ -112,6 +209,8 @@ class RestSession:
         ------
         LavalinkException
             If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
             Failure to build the session object.
 
@@ -120,30 +219,33 @@ class RestSession:
         Session
             The session object information.
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                self._ongaku._internal.base_uri + "/sessions/" + session_id,
-                headers=self._ongaku._internal.headers,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(response.status)
+        try:
+            resp = await self._rest._rest_handler(
+                "/sessions/" + session_id,
+                self._rest._client._internal.headers,
+                _HttpMethod.PATCH,
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
 
-                try:
-                    session_model = Session._from_payload(await response.json())
-                except Exception as e:
-                    raise BuildException(e)
+        try:
+            session_model = Session._from_payload(resp)
+        except Exception as e:
+            raise BuildException(e)
 
-                return session_model
+        return session_model
 
 
-class RestPlayer:
+class RESTPlayer:
     """
     !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
+        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
 
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku = ongaku
+    def __init__(self, rest: RESTClient) -> None:
+        self._rest = rest
 
     async def fetch_all(self, session_id: str) -> t.Sequence[Player] | None:
         """
@@ -160,6 +262,8 @@ class RestPlayer:
         ------
         LavalinkException
             If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
             Failure to build the player object.
 
@@ -168,28 +272,27 @@ class RestPlayer:
         typing.Sequence[Player]
             The players that are attached to the session.
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                self._ongaku._internal.base_uri
-                + "/sessions/"
-                + session_id
-                + "/players",
-                headers=self._ongaku._internal.headers,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(response.status)
 
-                players = await response.json()
+        try:
+            resp = await self._rest._rest_handler(
+                "/sessions/" + session_id + "/players",
+                self._rest._client._internal.headers,
+                _HttpMethod.GET,
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
 
-                player_list: list[Player] = []
+        player_list: list[Player] = []
 
-                for player in players:
-                    try:
-                        player_model = Player._from_payload(player)
-                    except Exception as e:
-                        raise BuildException(e)
+        for _, value in resp.items():
+            try:
+                player_model = Player._from_payload(value)
+            except Exception as e:
+                raise BuildException(e)
 
-                    player_list.append(player_model)
+            player_list.append(player_model)
 
         return player_list
 
@@ -210,6 +313,8 @@ class RestPlayer:
         ------
         LavalinkException
             If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
             Failure to build the player object.
 
@@ -218,22 +323,22 @@ class RestPlayer:
         Player
             The player that was found for the specified guild.
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                self._ongaku._internal.base_uri
-                + "/sessions/"
-                + session_id
-                + "/players/"
-                + str(guild_id),
-                headers=self._ongaku._internal.headers,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(response.status)
 
-                try:
-                    player_model = Player._from_payload(await response.json())
-                except Exception as e:
-                    raise BuildException(e)
+        try:
+            resp = await self._rest._rest_handler(
+                "/sessions/" + session_id + "/players/" + str(guild_id),
+                self._rest._client._internal.headers,
+                _HttpMethod.GET,
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
+
+        try:
+            player_model = Player._from_payload(resp)
+        except Exception as e:
+            raise BuildException(e)
 
         return player_model
 
@@ -280,12 +385,14 @@ class RestPlayer:
             Whether or not the track can be replaced.
 
         !!! INFO
-            If no_replace is true, then setting a track to the track option, will not do anything.
+            If no_replace is True, then setting a track to the track option, will not do anything.
 
         Raises
         ------
         LavalinkException
             If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
             Failure to build the player object.
 
@@ -294,6 +401,7 @@ class RestPlayer:
         Player
             The player that was found for the specified guild.
         """
+
         patch_data: dict[str, t.Any] = {}
 
         if track != hikari.UNDEFINED:
@@ -343,7 +451,7 @@ class RestPlayer:
             else:
                 patch_data.update({"filters": filter._build()})
 
-        new_headers = self._ongaku._internal.headers.copy()
+        new_headers = self._rest._client._internal.headers.copy()
 
         new_headers.update({"Content-Type": "application/json"})
 
@@ -352,27 +460,22 @@ class RestPlayer:
         if no_replace:
             params.update({"noReplace": "true"})
 
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.patch(
-                    self._ongaku._internal.base_uri
-                    + "/sessions/"
-                    + session_id
-                    + "/players/"
-                    + str(guild_id),
-                    headers=new_headers,
-                    params=params,
-                    json=patch_data,
-                ) as response:
-                    if response.status >= 400:
-                        raise LavalinkException(response.status, await response.json())
+        try:
+            resp = await self._rest._rest_handler(
+                "/sessions/" + session_id + "/players/" + str(guild_id),
+                params,
+                _HttpMethod.PATCH,
+                json=patch_data,
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
 
-                    try:
-                        player_model = Player._from_payload(await response.json())
-                    except Exception as e:
-                        raise BuildException(e)
-            except Exception as e:
-                raise e
+        try:
+            player_model = Player._from_payload(resp)
+        except Exception as e:
+            raise BuildException(e)
 
         return player_model
 
@@ -386,6 +489,8 @@ class RestPlayer:
         ----------
         session_id : str
             The Session ID that the players are attached too.
+        ValueError
+            Json data could not be found or decoded.
         guild_id : hikari.Snowflake
             The Guild ID that the player is attached to.
 
@@ -394,27 +499,27 @@ class RestPlayer:
         LavalinkException
             If an error code of 4XX or 5XX is received.
         """
-        async with aiohttp.ClientSession() as session:
-            async with session.delete(
-                self._ongaku._internal.base_uri
-                + "/sessions/"
-                + session_id
-                + "/players/"
-                + str(guild_id),
-                headers=self._ongaku._internal.headers,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(response.status)
+
+        try:
+            await self._rest._rest_handler(
+                "/sessions/" + session_id + "/players/" + str(guild_id),
+                self._rest._client._internal.headers,
+                _HttpMethod.DELETE,
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
 
 
-class RestTrack:
+class RESTTrack:
     """
     !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base ongaku object you created.
+        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
 
-    def __init__(self, ongaku: Ongaku) -> None:
-        self._ongaku: Ongaku = ongaku
+    def __init__(self, rest: RESTClient) -> None:
+        self._rest = rest
 
     async def _url_handler(self, possible_url: str) -> t.Optional[str]:
         try:
@@ -452,14 +557,16 @@ class RestTrack:
             The platform type for the query
 
         !!! INFO
-            If the query is a url, it will use that to search. If not, it will use the [PlatformType][ongaku.enums.PlatformType] you set in the platform parameter.
+            If the query is a url, it will use that to search. If not, it will use the [PlatformType][client.enums.PlatformType] you set in the platform parameter.
 
         Raises
         ------
         LavalinkException
             If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
-            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+            If it fails to build the [SearchResult][client.abc.track.SearchResult], [Playlist][client.abc.track.Playlist] or [Track][client.abc.track.Track]
 
         Returns
         -------
@@ -470,64 +577,65 @@ class RestTrack:
         Track
             If a song/track url is sent, you will receive this option.
         """
-        async with aiohttp.ClientSession() as session:
-            query_sanitize = await self._url_handler(query)
+        query_sanitize = await self._url_handler(query)
 
-            if query_sanitize is not None:
-                params = {"identifier": query_sanitize}
+        params: dict[str, t.Any] = {}
+
+        if query_sanitize is not None:
+            params = {"identifier": query_sanitize}
+        else:
+            if platform == PlatformType.YOUTUBE:
+                params = {"identifier": f"ytsearch:{query}"}
+            elif platform == PlatformType.YOUTUBE_MUSIC:
+                params = {"identifier": f"ytmsearch:{query}"}
+            elif platform == PlatformType.SOUNDCLOUD:
+                params = {"identifier": f"scsearch:{query}"}
             else:
-                if platform == PlatformType.YOUTUBE:
-                    params = {"identifier": f"ytsearch:{query}"}
-                elif platform == PlatformType.YOUTUBE_MUSIC:
-                    params = {"identifier": f"ytmsearch:{query}"}
-                elif platform == PlatformType.SOUNDCLOUD:
-                    params = {"identifier": f"scsearch:{query}"}
-                else:
-                    params = {"identifier": f"ytsearch:{query}"}
+                params = {"identifier": f"ytsearch:{query}"}
 
-            async with session.get(
-                self._ongaku._internal.base_uri + "/loadtracks",
-                headers=self._ongaku._internal.headers,
+        try:
+            resp = await self._rest._rest_handler(
+                "/info",
+                self._rest._client._internal.headers,
+                _HttpMethod.GET,
                 params=params,
-            ) as response:
-                if response.status >= 400:
-                    raise LavalinkException(
-                        f"status: {response.status} message: {response.text()}"
-                    )
+            )
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
 
-                data = await response.json()
+        load_type = resp["loadType"]
 
-                load_type = data["loadType"]
+        if load_type == "empty":
+            return
 
-                if load_type == "empty":
-                    return
+        if load_type == "error":
+            raise LavalinkException(ExceptionError._from_payload(resp["data"]))
 
-                if load_type == "error":
-                    raise LavalinkException(ExceptionError._from_payload(data["data"]))
+        if load_type == "search":
+            try:
+                search_result = SearchResult._from_payload(resp["data"])
+            except Exception as e:
+                raise BuildException(e)
 
-                if load_type == "search":
-                    try:
-                        search_result = SearchResult._from_payload(data["data"])
-                    except Exception as e:
-                        raise BuildException(e)
+            return search_result
 
-                    return search_result
+        if load_type == "track":
+            try:
+                track = Track._from_payload(resp["data"])
+            except Exception as e:
+                raise BuildException(e)
 
-                if load_type == "track":
-                    try:
-                        track = Track._from_payload(data["data"])
-                    except Exception as e:
-                        raise BuildException(e)
+            return track
 
-                    return track
+        if load_type == "playlist":
+            try:
+                playlist = Playlist._from_payload(resp["data"])
+            except Exception as e:
+                raise BuildException(e)
 
-                if load_type == "playlist":
-                    try:
-                        playlist = Playlist._from_payload(data["data"])
-                    except Exception as e:
-                        raise BuildException(e)
-
-                    return playlist
+            return playlist
 
 
 # MIT License

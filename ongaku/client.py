@@ -9,22 +9,22 @@ import attrs
 from .enums import VersionType
 from .errors import PlayerMissingException, RequiredException, NodeException
 from .player import Player
-from .rest import Rest
+from .rest import RESTClient
 from .node import Node
 
 INTERNAL_LOGGER = logging.getLogger(__name__)
 
-__all__ = ("Ongaku",)
+__all__ = ("Client",)
 
 
 @attrs.define
-class _OngakuInternal:
+class _ClientInternal:
     headers: dict[str, t.Any]
     base_uri: str
     attempts: int
 
 
-class Ongaku:
+class Client:
     """
     Base Ongaku class
 
@@ -65,11 +65,11 @@ class Ongaku:
         if password:
             headers.update({"Authorization": password})
 
-        self._internal = _OngakuInternal(
+        self._internal = _ClientInternal(
             headers, f"http://{host}:{port}/{version.value}", max_retries
         )
 
-        self._rest = Rest(self)
+        self._rest = RESTClient(self)
 
         self._nodes: dict[int, Node] = {}
 
@@ -82,7 +82,7 @@ class Ongaku:
         return list(self._nodes.values())
 
     @property
-    def rest(self) -> Rest:
+    def rest(self) -> RESTClient:
         """The REST access. For the lavalink server."""
         return self._rest
 

@@ -1,3 +1,0 @@
-# Ongaku
-
-::: ongaku.ongaku

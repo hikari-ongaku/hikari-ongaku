@@ -12,7 +12,7 @@ from .events import EventHandler
 from .player import Player
 
 if t.TYPE_CHECKING:
-    from .ongaku import Ongaku
+    from .client import Client
 
 __all__ = ("Node",)
 
@@ -42,22 +42,22 @@ class Node(abc.ABC):
 
     Parameters
     ----------
-    ongaku : Ongaku
-        The ongaku object that it will be connected too.
+    client : Client
+        The Ongaku client that it will be connected too.
     name : str
         The name of the node. This can be anything.
     """
 
-    def __init__(self, ongaku: Ongaku, name: str) -> None:
-        self._ongaku = ongaku
+    def __init__(self, client: Client, name: str) -> None:
+        self._client = client
         self._name = name
 
         self._players: dict[hikari.Snowflake, Player] = {}
 
         self._internal = _NodeInternal.build(
-            self.ongaku._internal.base_uri,
-            self.ongaku._internal.headers,
-            self.ongaku._internal.attempts,
+            self.client._internal.base_uri,
+            self.client._internal.headers,
+            self.client._internal.attempts,
         )
 
         self._event_handler = EventHandler(self)
@@ -68,9 +68,9 @@ class Node(abc.ABC):
         return self._name
 
     @property
-    def ongaku(self) -> Ongaku:
-        """The [Ongaku][ongaku.Ongaku] object that this node has attached to."""
-        return self._ongaku
+    def client(self) -> Client:
+        """The [client][client.client] object that this node has attached to."""
+        return self._client
 
     @property
     def players(self) -> t.Sequence[Player]:
@@ -112,7 +112,7 @@ class Node(abc.ABC):
             )
 
         try:
-            bot = self._ongaku.bot.get_me()
+            bot = self._client.bot.get_me()
         except Exception:
             self._internal.remaining_attempts = -1
             self._internal.connection_status = ConnectionType.FAILURE

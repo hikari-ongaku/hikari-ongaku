@@ -85,7 +85,7 @@ nav:
     - Nodes: getting_started/nodes.md
   - API Reference:
     - api_reference/index.md
-    - Ongaku: api_reference/ongaku.md
+    - Client: api_reference/client.md
     - Node: api_reference/node.md
     - Player: api_reference/player.md
     - Rest: api_reference/rest.md

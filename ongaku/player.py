@@ -67,7 +67,7 @@ class Player:
     @property
     def bot(self) -> GatewayBot:
         """The bot that the server is on."""
-        return self.node.ongaku.bot
+        return self.node.client.bot
 
     @property
     def channel_id(self) -> Snowflake | None:
@@ -160,7 +160,7 @@ class Player:
             self._queue.insert(0, track)
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 track=self.queue[0],
@@ -225,7 +225,7 @@ class Player:
             self._is_paused = value
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id, self.node._internal.session_id, paused=self.is_paused
             )
         except Exception:  # FIXME: another one.
@@ -274,7 +274,7 @@ class Player:
         if index == 0:
             if len(self.queue) == 0:
                 try:
-                    await self.node.ongaku.rest.player.update(
+                    await self.node.client.rest.player.update(
                         self.guild_id, self.node._internal.session_id, track=None
                     )
                 except Exception:  # FIXME: Another one.
@@ -318,7 +318,7 @@ class Player:
 
         if len(self.queue) == 0:
             try:
-                await self.node.ongaku.rest.player.update(
+                await self.node.client.rest.player.update(
                     self.guild_id,
                     self.node._internal.session_id,
                     track=None,
@@ -356,7 +356,7 @@ class Player:
         if len(self.queue) < 0:
             raise PlayerQueueException("The queue is empty.")
 
-        await self.node.ongaku.rest.player.update(
+        await self.node.client.rest.player.update(
             self.guild_id,
             self.node._internal.session_id,
             position=value,
@@ -391,7 +391,7 @@ class Player:
             raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 volume=volume,
@@ -417,7 +417,7 @@ class Player:
             raise SessionStartException()
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 track=None,
@@ -453,7 +453,7 @@ class Player:
             raise ValueError("Length is longer than currently playing song!")
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id, self.node._internal.session_id, position=value
             )
         except Exception:  # FIXME: another one.
@@ -481,7 +481,7 @@ class Player:
         self._filter = filter
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 filter=filter,
@@ -570,7 +570,7 @@ class Player:
             raise BuildException(f"Failed to build player voice: {e}")
 
         try:
-            await self.node.ongaku.rest.player.update(
+            await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 voice=self._voice,
@@ -597,7 +597,7 @@ class Player:
             raise SessionStartException()
 
         try:
-            await self.node.ongaku.rest.player.delete(
+            await self.node.client.rest.player.delete(
                 self.node._internal.session_id, self._guild_id
             )
         except Exception:  # FIXME: fix this.
@@ -621,7 +621,7 @@ class Player:
                 return
 
             try:
-                await self.node.ongaku.rest.player.update(
+                await self.node.client.rest.player.update(
                     self.guild_id,
                     self.node._internal.session_id,
                     track=self._queue[0],

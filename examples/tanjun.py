@@ -7,7 +7,7 @@ bot = hikari.GatewayBot("...")
 
 client = tanjun.Client.from_gateway_bot(bot)
 
-lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
+lavalink = ongaku.Client(bot, password="youshallnotpass")
 
 
 # Events

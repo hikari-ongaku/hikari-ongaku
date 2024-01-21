@@ -8,7 +8,7 @@ bot = hikari.GatewayBot("...")
 
 client = arc.GatewayClient(bot)
 
-lavalink = ongaku.Ongaku(bot, password="youshallnotpass")
+lavalink = ongaku.Client(bot, password="youshallnotpass")
 
 
 # Events

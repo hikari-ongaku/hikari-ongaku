@@ -59,20 +59,20 @@ class EventHandler:
         self._node._internal.session_id = session_id
 
         try:
-            event = ReadyEvent._from_payload(payload, app=self._node._ongaku.bot)
+            event = ReadyEvent._from_payload(payload, app=self._node.client.bot)
         except Exception as e:
             raise e
 
         INTERNAL_LOGGER.info("Successfully connected to the server.")
-        await self._node._ongaku.bot.dispatch(event)
+        await self._node.client.bot.dispatch(event)
 
     async def stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
-            event = StatisticsEvent._from_payload(payload, app=self._node._ongaku.bot)
+            event = StatisticsEvent._from_payload(payload, app=self._node.client.bot)
         except Exception as e:
             raise e
 
-        await self._node._ongaku.bot.dispatch(event)
+        await self._node.client.bot.dispatch(event)
 
     async def event_payload(self, payload: dict[t.Any, t.Any]) -> None:
         try:
@@ -83,21 +83,21 @@ class EventHandler:
         if event_type == "TrackStartEvent":
             try:
                 event = TrackStartEvent._from_payload(
-                    payload, app=self._node._ongaku.bot
+                    payload, app=self._node.client.bot
                 )
             except Exception as e:
                 raise e
 
         elif event_type == "TrackEndEvent":
             try:
-                event = TrackEndEvent._from_payload(payload, app=self._node._ongaku.bot)
+                event = TrackEndEvent._from_payload(payload, app=self._node.client.bot)
             except Exception as e:
                 raise e
 
         elif event_type == "TrackExceptionEvent":
             try:
                 event = TrackExceptionEvent._from_payload(
-                    payload, app=self._node._ongaku.bot
+                    payload, app=self._node.client.bot
                 )
             except Exception as e:
                 raise e
@@ -105,7 +105,7 @@ class EventHandler:
         elif event_type == "TrackStuckEvent":
             try:
                 event = TrackStuckEvent._from_payload(
-                    payload, app=self._node._ongaku.bot
+                    payload, app=self._node.client.bot
                 )
             except Exception as e:
                 raise e
@@ -113,7 +113,7 @@ class EventHandler:
         elif event_type == "WebSocketClosedEvent":
             try:
                 event = WebsocketClosedEvent._from_payload(
-                    payload, app=self._node._ongaku.bot
+                    payload, app=self._node.client.bot
                 )
             except Exception as e:
                 raise e
@@ -121,7 +121,7 @@ class EventHandler:
         else:
             return
 
-        await self._node._ongaku.bot.dispatch(event)
+        await self._node.client.bot.dispatch(event)
 
 
 # MIT License

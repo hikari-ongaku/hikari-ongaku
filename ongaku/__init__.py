@@ -46,11 +46,11 @@ from .errors import (
     SessionStartException,
     TimeoutException,
 )
-from .ongaku import Ongaku
+from .client import Client
 
 __all__ = (
-    # .ongaku
-    "Ongaku",
+    # .client
+    "Client",
     # .enums
     "SeverityType",
     "TrackEndReasonType",
