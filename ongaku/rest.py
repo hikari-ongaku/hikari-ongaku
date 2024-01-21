@@ -361,6 +361,9 @@ class RESTPlayer:
 
         Update a specific player, for the specified Guild ID.
 
+        !!! INFO
+            If no_replace is True, then setting a track to the track option, will not do anything.
+
         Parameters
         ----------
         session_id : str
@@ -383,9 +386,6 @@ class RESTPlayer:
             The player voice object you wish to set.
         no_replace : bool
             Whether or not the track can be replaced.
-
-        !!! INFO
-            If no_replace is True, then setting a track to the track option, will not do anything.
 
         Raises
         ------
@@ -489,8 +489,6 @@ class RESTPlayer:
         ----------
         session_id : str
             The Session ID that the players are attached too.
-        ValueError
-            Json data could not be found or decoded.
         guild_id : hikari.Snowflake
             The Guild ID that the player is attached to.
 
@@ -498,6 +496,8 @@ class RESTPlayer:
         ------
         LavalinkException
             If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         """
 
         try:
@@ -549,15 +549,16 @@ class RESTTrack:
 
         Load tracks to be able to play on a player.
 
+
+        !!! INFO
+            If the query is a url, it will use that to search. If not, it will use the [PlatformType][ongaku.enums.PlatformType] you set in the `platform` parameter.
+
         Parameters
         ----------
         query : str
             The query for a track/url
         platform : PlatformType
             The platform type for the query
-
-        !!! INFO
-            If the query is a url, it will use that to search. If not, it will use the [PlatformType][client.enums.PlatformType] you set in the platform parameter.
 
         Raises
         ------
@@ -566,7 +567,7 @@ class RESTTrack:
         ValueError
             Json data could not be found or decoded.
         BuildException
-            If it fails to build the [SearchResult][client.abc.track.SearchResult], [Playlist][client.abc.track.Playlist] or [Track][client.abc.track.Track]
+            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
 
         Returns
         -------

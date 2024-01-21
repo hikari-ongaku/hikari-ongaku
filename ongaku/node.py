@@ -69,7 +69,7 @@ class Node(abc.ABC):
 
     @property
     def client(self) -> Client:
-        """The [client][client.client] object that this node has attached to."""
+        """The [client][ongaku.Client] object that this node has attached to."""
         return self._client
 
     @property

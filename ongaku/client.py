@@ -30,6 +30,9 @@ class Client:
 
     The base Ongaku class, where everything starts from.
 
+    !!! WARNING
+        Do not change `max_retries` unless you know what you are doing. If your websocket does not stay connected/doesn't connect on the first try, do not use this as a fix.
+
     Parameters
     ----------
     bot : hikari.GatewayBot

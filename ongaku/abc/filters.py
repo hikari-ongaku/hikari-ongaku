@@ -38,6 +38,9 @@ class Filter:
         """
         Set the equalizer value.
 
+        !!! note
+            If the gain is set to `None`, then the gain band will be removed, if `UNDEFINED` is used (leaving it empty), it will return the value, if it exists.
+
         Parameters
         ----------
         band : BandType
@@ -45,8 +48,7 @@ class Filter:
         gain : hikari.UndefinedNoneOr[float]
             The gain of the band.
 
-        !!! NOTE
-            If the gain is set to None, then the gain band will be removed, if undefined is used, it will return the value, if it exists.
+
         """
 
         if gain == hikari.UNDEFINED:
