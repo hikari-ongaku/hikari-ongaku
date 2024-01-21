@@ -1,3 +1,3 @@
-# Ongaku
+# Client
 
 ::: ongaku.client
