@@ -1,15 +1,15 @@
-import hikari
-import arc
-import ongaku
 import logging
 
+import arc
+import hikari
+
+import ongaku
 
 bot = hikari.GatewayBot("...")
 
 client = arc.GatewayClient(bot)
 
 lavalink = ongaku.Client(bot, password="youshallnotpass")
-
 
 # Events
 

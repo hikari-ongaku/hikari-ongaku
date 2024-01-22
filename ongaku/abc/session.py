@@ -1,18 +1,24 @@
+"""Session ABC's.
+
+The session abstract classes. [more here](https://ongaku.mplaty.com/api/abc/session)
+"""
+
 from __future__ import annotations
 
-import attrs
 import typing as t
+
+import attrs
+
 from .base import PayloadBase
 
 __all__ = ("Session",)
 
 
 @attrs.define
-class Session(PayloadBase[dict[str, t.Any]]):
-    """
-    Session
+class Session(PayloadBase[t.Mapping[str, t.Any]]):
+    """Session information.
 
-    All of the Session information.
+    All of the specified session information.
 
     Find out more [here](https://lavalink.dev/api/rest.html#update-session).
     """
@@ -23,7 +29,7 @@ class Session(PayloadBase[dict[str, t.Any]]):
     """The timeout in seconds (default is 60s)."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> Session:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Session:
         resuming = payload["resuming"]
         timeout = payload["timeout"]
 

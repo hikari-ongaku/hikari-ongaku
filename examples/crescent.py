@@ -1,8 +1,9 @@
-import hikari
-import crescent
-import ongaku
 import logging
 
+import crescent
+import hikari
+
+import ongaku
 
 bot = hikari.GatewayBot("...")
 

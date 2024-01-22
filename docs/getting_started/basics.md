@@ -42,7 +42,7 @@ tracks =  await lavalink.rest.search(
 )
 ```
 
-The first argument parsed, is the [platform type](../api_reference/enums.md#ongaku.enums.PlatformType).
+The first argument parsed, is the [platform type](../api/enums.md#ongaku.enums.PlatformType).
 The second argument parsed, is the query, or the song/link you wish to search.
 
 The method, will then return one of the following:
@@ -84,7 +84,7 @@ The following functions, will allow for you to modify things about the player. T
 ```py
 await player.play(track)
 ```
-this will start playing the track you have fed to it. This must be a valid [track](../api_reference/abc/track.md#ongaku.abc.track.Track)
+this will start playing the track you have fed to it. This must be a valid [track](../api/abc/track.md#ongaku.abc.track.Track)
 
 #### Pausing or unpausing the player
 ```py
@@ -108,7 +108,7 @@ This will allow for the user, to change the tracks current playing position.
 ```py
 await player.add(track)
 ```
-This allows for the user to add a list of songs, a singular track, or a [Playlist](../api_reference/abc/track.md#ongaku.abc.track.Playlist) to the queue.
+This allows for the user to add a list of songs, a singular track, or a [Playlist](../api/abc/track.md#ongaku.abc.track.Playlist) to the queue.
 
 #### Remove a track from the queue
 ```py

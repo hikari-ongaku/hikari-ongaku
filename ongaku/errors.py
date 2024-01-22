@@ -1,3 +1,8 @@
+"""Errors.
+
+All of the ongaku errors.
+"""
+
 from __future__ import annotations
 
 __all__ = (
@@ -14,93 +19,65 @@ __all__ = (
 
 
 class OngakuBaseException(Exception):
-    """
-    The base exception for all Ongaku related exceptions.
-    """
+    """The base exception for all Ongaku related exceptions."""
 
 
 class GatewayRequiredException(OngakuBaseException):
-    """
-    Raised when Gateway bot is not used. [more info](https://ongaku.mplaty.com/getting_started/#qs-and-as)
-    """
+    """Raised when Gateway bot is not used. [more info](https://ongaku.mplaty.com/getting_started/#qs-and-as)."""
 
 
 class BuildException(OngakuBaseException):
-    """
-    Raised when a model fails to build correctly.
-    """
+    """Raised when a model fails to build correctly."""
 
 
 class NodeException(OngakuBaseException):
-    """
-    Raised when an exception happens within a node.
-    """
+    """Raised when an exception happens within a node."""
 
 
 class TimeoutException(OngakuBaseException):
-    """
-    Raised when a timeout has exceed its timer.
-    """
+    """Raised when a timeout has exceed its timer."""
 
 
 class RequiredException(OngakuBaseException):
-    """
-    Raised when a value is required, but is None, or missing.
-    """
+    """Raised when a value is required, but is None, or missing."""
 
 
 # Player related:
 
 
 class PlayerException(OngakuBaseException):
-    """
-    Base player related exceptions.
-    """
+    """Base player related exceptions."""
 
 
 class PlayerCreateException(PlayerException):
-    """
-    Raised when ongaku failed to build a new player, or connect to the channel.
-    """
+    """Raised when ongaku failed to build a new player, or connect to the channel."""
 
 
 class PlayerMissingException(PlayerException):
-    """
-    Raised when the player does not exist.
-    """
+    """Raised when the player does not exist."""
 
 
 class PlayerQueueException(PlayerException):
-    """
-    Raised when there is a problem with the queue.
-    """
+    """Raised when there is a problem with the queue."""
 
 
 # Lavalink related:
 
 
 class LavalinkException(OngakuBaseException):
-    """
-    Raised when an error is returned on the websocket, or a rest action.
-    """
+    """Raised when an error is returned on the websocket, or a rest action."""
 
 
 class LavalinkConnectionException(LavalinkException):
-    """
-    Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server.
-    """
+    """Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server."""
 
 
 class SessionException(LavalinkException):
-    """
-    Raised when an error occurs with the Lavalink websocket connection.
-    """
+    """Raised when an error occurs with the Lavalink websocket connection."""
 
 
 class SessionStartException(SessionException):
-    """
-    Raised when a session has not been started yet.
-    """
+    """Raised when a session has not been started yet."""
 
 
 # MIT License

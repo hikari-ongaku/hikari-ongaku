@@ -1,8 +1,15 @@
+"""Track ABC's.
+
+The player's abstract classes.
+"""
+
 from __future__ import annotations
 
-import attrs
 import typing as t
+
+import attrs
 from hikari import Snowflake
+
 from .base import PayloadBase
 
 __all__ = (
@@ -15,8 +22,7 @@ __all__ = (
 
 @attrs.define
 class TrackInfo(PayloadBase[dict[str, t.Any]]):
-    """
-    Track information
+    """Track information.
 
     All of the track information.
 
@@ -47,7 +53,7 @@ class TrackInfo(PayloadBase[dict[str, t.Any]]):
     """The track ISRC"""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> TrackInfo:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> TrackInfo:
         identifier = payload["identifier"]
         is_seekable = payload["isSeekable"]
         author = payload["author"]
@@ -86,10 +92,9 @@ class TrackInfo(PayloadBase[dict[str, t.Any]]):
 
 @attrs.define
 class Track(PayloadBase[dict[str, t.Any]]):
-    """
-    Track
+    """Base track.
 
-    The base track object.
+    The base track data.
 
     Find out more [here](https://lavalink.dev/api/rest.html#track).
     """
@@ -111,7 +116,7 @@ class Track(PayloadBase[dict[str, t.Any]]):
     """
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> Track:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Track:
         encoded = payload["encoded"]
         info = TrackInfo._from_payload(payload["info"])
         plugin_info = payload["pluginInfo"]
@@ -124,9 +129,8 @@ class Track(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
-    """
-    Playlist info
+class PlaylistInfo(PayloadBase[t.Mapping[str, t.Any]]):
+    """Playlist information.
 
     The playlist info object.
 
@@ -139,7 +143,7 @@ class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
     """The selected track of the playlist (`-1` if no track is selected)"""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> PlaylistInfo:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> PlaylistInfo:
         name = payload["name"]
         selected_track = payload["selectedTrack"]
 
@@ -147,9 +151,8 @@ class PlaylistInfo(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class Playlist(PayloadBase[dict[str, t.Any]]):
-    """
-    Playlist
+class Playlist(PayloadBase[t.Mapping[str, t.Any]]):
+    """Playlist.
 
     The playlist object.
 
@@ -164,7 +167,7 @@ class Playlist(PayloadBase[dict[str, t.Any]]):
     """The tracks in this playlist."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> Playlist:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Playlist:
         info = payload["info"]
         plugin_info = payload["pluginInfo"]
 
@@ -181,9 +184,8 @@ class Playlist(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
-    """
-    Search Result
+class SearchResult(PayloadBase[t.Sequence[t.Mapping[str, t.Any]]]):
+    """Search result.
 
     A search result, that has a list of tracks, from the search result.
 
@@ -194,7 +196,7 @@ class SearchResult(PayloadBase[list[dict[str, t.Any]]]):
     """The tracks from the search result."""
 
     @classmethod
-    def _from_payload(cls, payload: list[dict[str, t.Any]]) -> SearchResult:
+    def _from_payload(cls, payload: t.Sequence[t.Mapping[str, t.Any]]) -> SearchResult:
         tracks: list[Track] | tuple[Track, ...] = []
 
         for track in payload:

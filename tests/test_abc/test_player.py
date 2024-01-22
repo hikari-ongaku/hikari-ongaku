@@ -1,7 +1,12 @@
 import unittest
+
 import hikari
-from ongaku.abc.player import Player, PlayerState, PlayerVoice
-from ongaku.abc.track import Track, TrackInfo
+
+from ongaku.abc.player import Player
+from ongaku.abc.player import PlayerState
+from ongaku.abc.player import PlayerVoice
+from ongaku.abc.track import Track
+from ongaku.abc.track import TrackInfo
 
 _test_info = TrackInfo(
     "test_identifier",

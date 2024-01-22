@@ -1,6 +1,11 @@
-import unittest
 import typing as t
-from ongaku.abc.track import Track, TrackInfo, Playlist, PlaylistInfo, SearchResult
+import unittest
+
+from ongaku.abc.track import Playlist
+from ongaku.abc.track import PlaylistInfo
+from ongaku.abc.track import SearchResult
+from ongaku.abc.track import Track
+from ongaku.abc.track import TrackInfo
 
 
 class TrackTest(unittest.TestCase):

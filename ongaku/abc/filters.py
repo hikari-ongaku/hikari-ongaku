@@ -1,9 +1,22 @@
+"""Filter ABC.
+
+All of the filter related functions.
+"""
+
 from __future__ import annotations
 
+import typing as t
+
 import hikari
+
 from ..enums import BandType
 
 __all__ = ("Filter",)
+
+if t.TYPE_CHECKING:
+    BuildT = dict[
+        str, float | t.Mapping[str, float] | t.Sequence[dict[str, float | int]]
+    ]
 
 
 class Filter:
@@ -25,8 +38,7 @@ class Filter:
     _low_pass: dict[str, float] = {}
 
     def volume(self, value: float | None = None) -> None:
-        """
-        Set the volume
+        """Set the volume.
 
         Set the volume for the player.
         """
@@ -50,7 +62,6 @@ class Filter:
 
 
         """
-
         if gain == hikari.UNDEFINED:
             return self._equalizer.get(band)
 
@@ -90,7 +101,6 @@ class Filter:
         filter_width : hikari.UndefinedNoneOr[float]
             The filter width
         """
-
         if level is None:
             self._karaoke.pop("level")
 
@@ -129,7 +139,7 @@ class Filter:
         rate: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Timescale
+        Set timescale.
 
         Parameters
         ----------
@@ -140,7 +150,6 @@ class Filter:
         rate : hikari.UndefinedNoneOr[float]
             The rate 0.0 ≤ x
         """
-
         if speed is None:
             self._timescale.pop("speed")
 
@@ -166,7 +175,7 @@ class Filter:
         depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Tremolo
+        Set tremolo.
 
         Parameters
         ----------
@@ -175,7 +184,6 @@ class Filter:
         depth : hikari.UndefinedNoneOr[float]
             The tremolo depth 0.0 < x ≤ 1.0
         """
-
         if frequency is None:
             self._tremolo.pop("frequency")
 
@@ -201,7 +209,7 @@ class Filter:
         depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Vibrato
+        Set vibrato.
 
         Parameters
         ----------
@@ -210,7 +218,6 @@ class Filter:
         depth : hikari.UndefinedNoneOr[float]
             The tremolo depth 0.0 < x ≤ 1.0
         """
-
         if frequency is None:
             self._vibrato.pop("frequency")
 
@@ -235,7 +242,7 @@ class Filter:
         rotation_hz: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Rotation
+        Set rotation.
 
         Parameters
         ----------
@@ -261,7 +268,7 @@ class Filter:
         scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Distortion
+        Set distortion.
 
         Parameters
         ----------
@@ -282,7 +289,6 @@ class Filter:
         scale : hikari.UndefinedNoneOr[float]
             The scale
         """
-
         if sin_offset is None:
             self._distortion.pop("sinOffset")
 
@@ -340,7 +346,7 @@ class Filter:
         right_to_right: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Channel Mix
+        Set channel mix.
 
         Parameters
         ----------
@@ -395,7 +401,7 @@ class Filter:
         smoothing: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> None:
         """
-        Set Low Pass
+        Set low pass.
 
         Parameters
         ----------
@@ -413,10 +419,8 @@ class Filter:
 
     def _build(
         self,
-    ) -> dict[str, float | dict[str, float] | list[dict[str, float | int]]]:
-        build_dict: dict[
-            str, float | dict[str, float] | list[dict[str, float | int]]
-        ] = {}
+    ) -> BuildT:
+        build_dict: BuildT = {}
 
         if self._volume:
             build_dict.update({"volume": self._volume})

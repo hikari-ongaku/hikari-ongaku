@@ -1,6 +1,8 @@
 import unittest
-import ongaku
+
 import hikari
+
+import ongaku
 
 
 class OngakuTest(unittest.TestCase):
@@ -11,7 +13,7 @@ class OngakuTest(unittest.TestCase):
             host="test_host",
             port=1234,
             password="test_password",
-            version=ongaku.VersionType.V3,
+            version=ongaku.VersionType.V4,
         )
 
         assert test_ongaku.bot == test_bot

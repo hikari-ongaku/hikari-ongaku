@@ -1,21 +1,34 @@
-from . import events, filters, lavalink, player, session, track
+"""Abstract classes.
 
-from .events import (
-    QueueEmptyEvent,
-    QueueNextEvent,
-    ReadyEvent,
-    StatisticsEvent,
-    TrackEndEvent,
-    TrackExceptionEvent,
-    TrackStartEvent,
-    TrackStuckEvent,
-    WebsocketClosedEvent,
-)
-from .lavalink import ExceptionError, Info, RestError
-from .player import Player, PlayerState, PlayerVoice
-from .session import Session
-from .track import Playlist, SearchResult, Track
+All of the abstract classes for Ongaku.
+"""
+
+from . import events
+from . import filters
+from . import lavalink
+from . import player
+from . import session
+from . import track
+from .events import QueueEmptyEvent
+from .events import QueueNextEvent
+from .events import ReadyEvent
+from .events import StatisticsEvent
+from .events import TrackEndEvent
+from .events import TrackExceptionEvent
+from .events import TrackStartEvent
+from .events import TrackStuckEvent
+from .events import WebsocketClosedEvent
 from .filters import Filter
+from .lavalink import ExceptionError
+from .lavalink import Info
+from .lavalink import RestError
+from .player import Player
+from .player import PlayerState
+from .player import PlayerVoice
+from .session import Session
+from .track import Playlist
+from .track import SearchResult
+from .track import Track
 
 __all__ = (
     # .

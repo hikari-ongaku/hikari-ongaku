@@ -1,29 +1,38 @@
+"""Player.
+
+The player function, for all player related things.
+"""
+
 from __future__ import annotations
 
-from hikari import Snowflake, GatewayBot, UndefinedOr, UNDEFINED
-from hikari.events import VoiceServerUpdateEvent, VoiceStateUpdateEvent
-import typing as t
 import asyncio
+import typing as t
 
-from .errors import (
-    SessionStartException,
-    PlayerQueueException,
-    PlayerException,
-    TimeoutException,
-    BuildException,
-)
-from .abc.track import Track
-from .abc.events import TrackEndEvent, QueueEmptyEvent, QueueNextEvent
-from .abc.player import PlayerVoice
+from hikari import UNDEFINED
+from hikari import GatewayBot
+from hikari import Snowflake
+from hikari import UndefinedOr
+from hikari.events import VoiceServerUpdateEvent
+from hikari.events import VoiceStateUpdateEvent
+
+from .abc.events import QueueEmptyEvent
+from .abc.events import QueueNextEvent
+from .abc.events import TrackEndEvent
 from .abc.filters import Filter
+from .abc.player import PlayerVoice
+from .abc.track import Track
+from .errors import BuildException
+from .errors import PlayerException
+from .errors import PlayerQueueException
+from .errors import SessionStartException
+from .errors import TimeoutException
 
 if t.TYPE_CHECKING:
     from .node import Node
 
 
 class Player:
-    """
-    Base player class
+    """Base player.
 
     The class that allows the player, to play songs, and more.
 
@@ -85,9 +94,7 @@ class Player:
 
     @property
     def guild_id(self) -> Snowflake:
-        """
-        ID of the guild this voice connection is in.
-        """
+        """The guild id, that this player is playing in."""
         return self._guild_id
 
     @property
@@ -97,9 +104,7 @@ class Player:
 
     @property
     def is_paused(self) -> bool:
-        """
-        Whether the bot is paused or not.
-        """
+        """Whether the bot is paused or not."""
         return self._is_paused
 
     @property
@@ -109,16 +114,12 @@ class Player:
 
     @property
     def queue(self) -> tuple[Track, ...]:
-        """
-        Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one.
-        """
+        """Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one, if not paused."""
         return tuple(self._queue)
 
     @property
     def audio_filter(self) -> Filter | None:
-        """
-        The current filter applied to this player.
-        """
+        """The current filter applied to this player."""
         return self._filter
 
     async def connect(
@@ -129,8 +130,7 @@ class Player:
         deaf: UndefinedOr[bool] = UNDEFINED,
         timeout: int = 5,
     ) -> None:
-        """
-        Connect to a channel
+        """Connect to a channel.
 
         Connect your bot, to a channel, to be able to start playing music.
 
@@ -158,8 +158,12 @@ class Player:
             Raised when the events fail to respond in time.
         PlayerException
             Raised when the endpoint in the event is none.
+        LavalinkException
+            If an error code of 4XX or 5XX is received.
+        ValueError
+            Json data could not be found or decoded.
         BuildException
-            When attempting to build the [PlayerVoice][ongaku.abc.player.PlayerVoice] and fails to build.
+            Failure to build the player object.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
@@ -207,12 +211,13 @@ class Player:
                 voice=self._voice,
                 no_replace=False,
             )
-        except Exception:  # FIXME: fix this as well.
+        except (
+            Exception
+        ):  # FIXME: Fix it so, it both updates the player, or returns the error.
             raise
 
     async def disconnect(self) -> None:
-        """
-        Disconnect player
+        """Disconnect player.
 
         Disconnect the player from the lavalink server, and discord.
 
@@ -239,8 +244,7 @@ class Player:
     async def play(
         self, track: Track | None = None, requestor: Snowflake | None = None
     ) -> None:
-        """
-        Play a track
+        """Play a track.
 
         Allows for the user to play a track.
         The current track will be stopped, and this will replace it.
@@ -292,14 +296,13 @@ class Player:
     async def add(
         self, tracks: t.Sequence[Track], requestor: Snowflake | None = None
     ) -> None:
-        """
-        Add tracks
+        """Add tracks.
 
         Add tracks to the queue. This will not automatically start playing the songs.
 
         Parameters
         ----------
-        tracks : list[abc.Track]
+        tracks : t.Sequence[abc.Track]
             The list of tracks you wish to add to the queue.
         requestor : Snowflake | None
             The user/member id that requested the song.
@@ -312,10 +315,9 @@ class Player:
         # TODO: Maybe make it so it automatically starts the track, so that the play method does not need none?
 
     async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
-        """
-        Pause the current track
+        """Pause the player.
 
-        Allows for the user to pause the currently playing track.
+        Allows for the user to pause the currently playing track on this player.
 
         !!! INFO
             `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it.
@@ -347,10 +349,9 @@ class Player:
             raise
 
     async def position(self, value: int) -> None:
-        """
-        Change the track position
+        """Change the track position.
 
-        Change the current track position
+        Change the currently playing track's position.
 
         Parameters
         ----------
@@ -383,8 +384,7 @@ class Player:
         )
 
     async def skip(self, amount: int = 1) -> None:
-        """
-        skip songs
+        """Skip songs.
 
         skip a selected amount of songs in the queue.
 
@@ -428,8 +428,7 @@ class Player:
             return
 
     async def volume(self, volume: int) -> None:
-        """
-        change the volume
+        """Change the volume.
 
         The volume you wish to set for the player.
 
@@ -445,7 +444,6 @@ class Player:
         ValueError
             Raised if the value is above, or below 0, or 1000.
         """
-
         if self.node._internal.session_id is None:
             raise SessionStartException()
 
@@ -516,8 +514,7 @@ class Player:
                 await self.play()
 
     async def clear(self) -> None:
-        """
-        Clear the queue
+        """Clear the queue.
 
         Clear the current queue, and also stop the audio from the player.
 
@@ -542,8 +539,7 @@ class Player:
             raise
 
     async def filter(self, filter: Filter | None = None):
-        """
-        Filter
+        """Filter.
 
         Set, or remove a filter for the player.
 

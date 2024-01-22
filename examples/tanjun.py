@@ -1,7 +1,9 @@
+import logging
+
 import hikari
 import tanjun
+
 import ongaku
-import logging
 
 bot = hikari.GatewayBot("...")
 

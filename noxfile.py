@@ -12,7 +12,7 @@ SCRIPT_PATHS = [
     os.path.join(".", "tests"),
 ]
 
-options.sessions = ["format_fix", "pyright", "pytest", "docs"]
+options.sessions = ["format_fix", "import_fix", "pyright", "pytest", "docs"]
 
 
 @nox.session()
@@ -20,6 +20,15 @@ def format_fix(session: nox.Session) -> None:
     session.install("-U", "ruff")
     session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS)
     session.run("python", "-m", "ruff", *SCRIPT_PATHS, "--fix")
+
+
+@nox.session()
+def import_fix(session: nox.Session) -> None:
+    session.install("-U", "ruff")
+    session.run(
+        "python", "-m", "ruff", "check", "--select", "I", *SCRIPT_PATHS, "--fix"
+    )
+    session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS)
 
 
 @nox.session()

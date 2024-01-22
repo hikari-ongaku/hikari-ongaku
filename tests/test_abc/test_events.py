@@ -1,21 +1,23 @@
 import unittest
+
 import hikari
-from ongaku.abc.events import (
-    ReadyEvent,
-    StatisticsEvent,
-    StatsMemory,
-    StatsCpu,
-    StatsFrameStatistics,
-    TrackBase,
-    TrackStartEvent,
-    TrackEndEvent,
-    TrackExceptionEvent,
-    TrackStuckEvent,
-    WebsocketClosedEvent,
-)
+
+from ongaku.abc.events import ReadyEvent
+from ongaku.abc.events import StatisticsEvent
+from ongaku.abc.events import StatsCpu
+from ongaku.abc.events import StatsFrameStatistics
+from ongaku.abc.events import StatsMemory
+from ongaku.abc.events import TrackBase
+from ongaku.abc.events import TrackEndEvent
+from ongaku.abc.events import TrackExceptionEvent
+from ongaku.abc.events import TrackStartEvent
+from ongaku.abc.events import TrackStuckEvent
+from ongaku.abc.events import WebsocketClosedEvent
 from ongaku.abc.lavalink import ExceptionError
-from ongaku.enums import TrackEndReasonType, SeverityType
-from ongaku.abc.track import Track, TrackInfo
+from ongaku.abc.track import Track
+from ongaku.abc.track import TrackInfo
+from ongaku.enums import SeverityType
+from ongaku.enums import TrackEndReasonType
 
 # TODO: make sure to fix, and add, _from_payload for all items.
 # TODO: Fix user data error.

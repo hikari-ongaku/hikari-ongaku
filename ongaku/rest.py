@@ -1,28 +1,33 @@
+"""Rest client.
+
+All REST based actions, happen in here.
+"""
+
 from __future__ import annotations
 
+import enum
 import typing as t
 
 import aiohttp
 import hikari
-import enum
 
-from .abc.lavalink import Info, RestError, ExceptionError
-from .abc.player import Player, PlayerVoice
-from .abc.session import Session
-from .abc.track import Playlist, SearchResult, Track
 from .abc.filters import Filter
-from .enums import PlatformType
-from .errors import BuildException, LavalinkException
-import urllib.parse as urlparse
+from .abc.lavalink import ExceptionError
+from .abc.lavalink import Info
+from .abc.lavalink import RestError
+from .abc.player import Player
+from .abc.player import PlayerVoice
+from .abc.session import Session
+from .abc.track import Playlist
+from .abc.track import SearchResult
+from .abc.track import Track
+from .errors import BuildException
+from .errors import LavalinkException
 
 if t.TYPE_CHECKING:
     from .client import Client
 
 __all__ = ("RESTClient",)
-
-# FIXME: Make sure to add the rest actions, like fetch, get, post and delete.
-# FIXME: Support lists returning, and None.
-# FIXME: Support query params for search and update.
 
 
 class _HttpMethod(enum.Enum):
@@ -33,10 +38,9 @@ class _HttpMethod(enum.Enum):
 
 
 class RESTClient:
-    """
-    Base rest class
+    """Base REST Client.
 
-    The base rest class, for all rest related actions.
+    The base REST client, for all rest related actions.
 
     !!! WARNING
         Please do not create this on your own. Please use the rest attribute, in the base client object you created.
@@ -65,8 +69,7 @@ class RESTClient:
         return self._rest_session
 
     async def fetch_info(self) -> Info:
-        """
-        Fetch info
+        """Fetch information.
 
         Fetch the information about the Lavalink server.
 
@@ -186,7 +189,8 @@ class RESTClient:
 
 
 class RESTSession:
-    """
+    """REST Session.
+
     !!! WARNING
         Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
@@ -195,8 +199,7 @@ class RESTSession:
         self._rest = rest
 
     async def update(self, session_id: str) -> Session:
-        """
-        Session Update
+        """Session Update.
 
         Update the current session.
 
@@ -239,7 +242,8 @@ class RESTSession:
 
 
 class RESTPlayer:
-    """
+    """REST Player.
+
     !!! WARNING
         Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
@@ -248,8 +252,7 @@ class RESTPlayer:
         self._rest = rest
 
     async def fetch_all(self, session_id: str) -> t.Sequence[Player] | None:
-        """
-        Fetch all players
+        """Fetch all players.
 
         Fetch all of the players in the current session.
 
@@ -272,7 +275,6 @@ class RESTPlayer:
         typing.Sequence[Player]
             The players that are attached to the session.
         """
-
         try:
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players",
@@ -297,10 +299,9 @@ class RESTPlayer:
         return player_list
 
     async def fetch(self, session_id: str, guild_id: hikari.Snowflake) -> Player | None:
-        """
-        Fetch a player.
+        """Fetch a player.
 
-        Fetch a specific player, for the specified Guild ID.
+        Fetch a specific player, for the specified Guild id.
 
         Parameters
         ----------
@@ -323,7 +324,6 @@ class RESTPlayer:
         Player
             The player that was found for the specified guild.
         """
-
         try:
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players/" + str(guild_id),
@@ -356,10 +356,9 @@ class RESTPlayer:
         voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> Player:
-        """
-        Update a player.
+        """Update a player.
 
-        Update a specific player, for the specified Guild ID.
+        Update a specific player, for the specified Guild id.
 
         !!! INFO
             If no_replace is True, then setting a track to the track option, will not do anything.
@@ -401,7 +400,6 @@ class RESTPlayer:
         Player
             The player that was found for the specified guild.
         """
-
         patch_data: dict[str, t.Any] = {}
 
         if track != hikari.UNDEFINED:
@@ -480,8 +478,7 @@ class RESTPlayer:
         return player_model
 
     async def delete(self, session_id: str, guild_id: hikari.Snowflake) -> None:
-        """
-        Delete player
+        """Delete player.
 
         Delete a specific player, from the specified guild.
 
@@ -499,7 +496,6 @@ class RESTPlayer:
         ValueError
             Json data could not be found or decoded.
         """
-
         try:
             await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players/" + str(guild_id),
@@ -513,7 +509,8 @@ class RESTPlayer:
 
 
 class RESTTrack:
-    """
+    """REST Track.
+
     !!! WARNING
         Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
@@ -521,44 +518,15 @@ class RESTTrack:
     def __init__(self, rest: RESTClient) -> None:
         self._rest = rest
 
-    async def _url_handler(self, possible_url: str) -> t.Optional[str]:
-        try:
-            url = urlparse.parse_qs(possible_url.split("?")[1], strict_parsing=True)
-        except Exception:
-            return
-
-        try:
-            code = url["list"]
-        except Exception:
-            pass
-        else:
-            return code[0]
-
-        try:
-            code = url["v"]
-        except Exception:
-            pass
-        else:
-            return code[0]
-
-    async def load(
-        self, query: str, platform: PlatformType = PlatformType.YOUTUBE
-    ) -> SearchResult | Playlist | Track | None:
-        """
-        Load tracks
+    async def load(self, query: str) -> SearchResult | Playlist | Track | None:
+        """Load tracks.
 
         Load tracks to be able to play on a player.
-
-
-        !!! INFO
-            If the query is a url, it will use that to search. If not, it will use the [PlatformType][ongaku.enums.PlatformType] you set in the `platform` parameter.
 
         Parameters
         ----------
         query : str
             The query for a track/url
-        platform : PlatformType
-            The platform type for the query
 
         Raises
         ------
@@ -578,21 +546,7 @@ class RESTTrack:
         Track
             If a song/track url is sent, you will receive this option.
         """
-        query_sanitize = await self._url_handler(query)
-
-        params: dict[str, t.Any] = {}
-
-        if query_sanitize is not None:
-            params = {"identifier": query_sanitize}
-        else:
-            if platform == PlatformType.YOUTUBE:
-                params = {"identifier": f"ytsearch:{query}"}
-            elif platform == PlatformType.YOUTUBE_MUSIC:
-                params = {"identifier": f"ytmsearch:{query}"}
-            elif platform == PlatformType.SOUNDCLOUD:
-                params = {"identifier": f"scsearch:{query}"}
-            else:
-                params = {"identifier": f"ytsearch:{query}"}
+        params: dict[str, t.Any] = {"identifier": query}
 
         try:
             resp = await self._rest._rest_handler(

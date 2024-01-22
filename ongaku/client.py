@@ -1,16 +1,23 @@
+"""Ongaku Client.
+
+Ongaku base client where everything is started from.
+"""
+
 from __future__ import annotations
 
 import logging
 import typing as t
 
-import hikari
 import attrs
+import hikari
 
 from .enums import VersionType
-from .errors import PlayerMissingException, RequiredException, NodeException
+from .errors import NodeException
+from .errors import PlayerMissingException
+from .errors import RequiredException
+from .node import Node
 from .player import Player
 from .rest import RESTClient
-from .node import Node
 
 INTERNAL_LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +32,7 @@ class _ClientInternal:
 
 
 class Client:
-    """
-    Base Ongaku class
+    """Base Ongaku class.
 
     The base Ongaku class, where everything starts from.
 
@@ -59,6 +65,10 @@ class Client:
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
     ) -> None:
+        """Initialise Client.
+
+        Initialise the ongaku client.
+        """
         self._bot = bot
 
         self._players: dict[hikari.Snowflake, Player] = {}
@@ -95,8 +105,7 @@ class Client:
         return self._bot
 
     async def create_player(self, guild_id: hikari.Snowflake) -> Player:
-        """
-        Create a new player
+        """Create a new player.
 
         Creates a new player for the specified guild, and places it in the specified channel. It will attach itself to the correct node as well.
 
@@ -107,17 +116,13 @@ class Client:
 
         Raises
         ------
-        PlayerException
-            Raised when the player failed to be created.
-        NodeException
-            The node tht the bot needs to connect too, has not been created.
+        PlayerException : Raised when the player failed to be created.
+        NodeException : The node tht the bot needs to connect too, has not been created.
 
         Returns
         -------
-        Player
-            The player that has been successfully created.
+        Player : The player that has been successfully created
         """
-
         shard_id = hikari.snowflakes.calculate_shard_id(self.bot, guild_id)
 
         bot = self.bot.get_me()
@@ -146,8 +151,7 @@ class Client:
         return new_player
 
     async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
-        """
-        Fetch a player
+        """Fetch a player.
 
         Fetch a player for the specified guild.
 
@@ -166,7 +170,6 @@ class Client:
         Player
             The player that belongs to the specified guild.
         """
-
         for player in self.walk_players():
             if player.guild_id == guild_id:
                 return player
@@ -174,8 +177,7 @@ class Client:
         raise PlayerMissingException(guild_id)
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        """
-        delete a player
+        """Delete a player.
 
         Deletes a player from the specified guild, and disconnects it, if it has not been disconnected already.
 
@@ -197,10 +199,9 @@ class Client:
         await player.node.delete_player(guild_id)
 
     def walk_players(self) -> t.Iterator[Player]:
-        """
-        Walk Players
+        """Walk players.
 
-        This method, allows you to go through, every player, on the entire lavalink connection.
+        Walk through all players, on all the currently working nodes.
 
         Returns
         -------

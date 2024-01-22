@@ -1,11 +1,12 @@
 # Example for Lightbulb handler.
-import hikari
-import lightbulb
-import ongaku
 import logging
+import os
 
 import dotenv
-import os
+import hikari
+import lightbulb
+
+import ongaku
 
 dotenv.load_dotenv(dotenv_path=".env")
 

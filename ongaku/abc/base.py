@@ -1,18 +1,25 @@
+"""Payload bases.
+
+All of the payload base related objects.
+"""
+
 from __future__ import annotations
 
 import abc
+import typing as t
+
 import attrs
 import hikari
-import typing as t
 
 __all__ = ("PayloadT", "PayloadBase", "PayloadBaseApp")
 
-PayloadT = t.TypeVar("PayloadT", list[t.Any], dict[str, t.Any])
+if t.TYPE_CHECKING:
+    PayloadT = t.TypeVar("PayloadT", t.Sequence[t.Any], t.Mapping[str, t.Any])
 
 
 class Payload(abc.ABC, t.Generic[PayloadT]):
     """
-    Main payload
+    Main payload.
 
     The main payload, that all payload types are inherited from.
     """
@@ -20,7 +27,7 @@ class Payload(abc.ABC, t.Generic[PayloadT]):
 
 class PayloadBase(Payload[PayloadT], abc.ABC):
     """
-    Payload Base
+    Payload base.
 
     The payload base, that allows for converting back into payloads to transfer.
     """
@@ -31,9 +38,7 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
 
     @property
     def to_payload(self) -> dict[str, t.Any]:
-        """
-        Converts the entire object, into a payload.
-        """
+        """Converts the entire object, into a payload."""
         new_data: dict[str, t.Any] = {}
         for key, value in attrs.asdict(self).items():
             if key.count("_") > 0:
@@ -54,7 +59,7 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
 
 class PayloadBaseApp(Payload[PayloadT], abc.ABC):
     """
-    Payload base app
+    Payload base application.
 
     The payload base, that supports an application/bot.
 

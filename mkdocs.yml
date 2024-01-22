@@ -84,21 +84,22 @@ nav:
     - Filters: getting_started/filters.md
     - Nodes: getting_started/nodes.md
   - API Reference:
-    - api_reference/index.md
-    - Client: api_reference/client.md
-    - Node: api_reference/node.md
-    - Player: api_reference/player.md
-    - Rest: api_reference/rest.md
-    - Enums: api_reference/enums.md
-    - Errors: api_reference/errors.md
+    - api/index.md
+    - Client: api/client.md
+    - Node: api/node.md
+    - Player: api/player.md
+    - Rest: api/rest.md
+    - Enums: api/enums.md
+    - Errors: api/errors.md
     - ABC:
-      - Base: api_reference/abc/base.md
-      - Events: api_reference/abc/events.md
-      - Lavalink: api_reference/abc/lavalink.md
-      - Player: api_reference/abc/player.md
-      - Session: api_reference/abc/session.md
-      - Track: api_reference/abc/track.md
-      - Filters: api_reference/abc/filters.md
+      - Base: api/abc/base.md
+      - Events: api/abc/events.md
+      - Lavalink: api/abc/lavalink.md
+      - Player: api/abc/player.md
+      - Session: api/abc/session.md
+      - Track: api/abc/track.md
+      - Filters: api/abc/filters.md
+  - Changelog: changelog.md
 
 
 watch:

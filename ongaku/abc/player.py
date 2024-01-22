@@ -1,12 +1,17 @@
+"""# Player ABC's.
+
+The player Abstract classes. [more here](https://ongaku.mplaty.com/api/abc/player)
+"""
+
 from __future__ import annotations
 
-import attrs
 import typing as t
 
+import attrs
 import hikari
 
-from .track import Track
 from .base import PayloadBase
+from .track import Track
 
 __all__ = (
     "PlayerState",
@@ -16,12 +21,10 @@ __all__ = (
 
 
 @attrs.define
-class PlayerState(PayloadBase[dict[str, t.Any]]):
-    """
-    Player State
+class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
+    """Players State.
 
-    All of the Player State information.
-
+    All the information for the players current state.
     Find out more [here](https://lavalink.dev/api/websocket.html#player-state).
     """
 
@@ -35,7 +38,7 @@ class PlayerState(PayloadBase[dict[str, t.Any]]):
     """The ping of the node to the Discord voice server in milliseconds (-1 if not connected)."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerState:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> PlayerState:
         time = payload["time"]
         position = payload["position"]
         connected = payload["connected"]
@@ -45,12 +48,10 @@ class PlayerState(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class PlayerVoice(PayloadBase[dict[str, t.Any]]):
-    """
-    Player Voice
+class PlayerVoice(PayloadBase[t.Mapping[str, t.Any]]):
+    """Players Voice state.
 
     All of the Player Voice information.
-
     Find out more [here](https://lavalink.dev/api/rest.html#voice-state).
     """
 
@@ -62,7 +63,7 @@ class PlayerVoice(PayloadBase[dict[str, t.Any]]):
     """The Discord voice session id to authenticate with."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> PlayerVoice:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> PlayerVoice:
         token = payload["token"]
         endpoint = payload["endpoint"]
         session_id = payload["sessionId"]
@@ -72,10 +73,9 @@ class PlayerVoice(PayloadBase[dict[str, t.Any]]):
 
 @attrs.define
 class Player(PayloadBase[dict[str, t.Any]]):
-    """
-    Player Voice
+    """Player information.
 
-    All of the Player Voice information.
+    All of the information about the player, for the specified guild.
 
     Find out more [here](https://lavalink.dev/api/rest.html#player).
     """
@@ -96,7 +96,7 @@ class Player(PayloadBase[dict[str, t.Any]]):
     """The filters object."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> Player:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Player:
         guild_id = hikari.Snowflake(payload["guildId"])
         try:
             track = Track._from_payload(payload["track"])

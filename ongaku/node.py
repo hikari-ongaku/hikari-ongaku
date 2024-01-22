@@ -1,13 +1,22 @@
+"""Nodes.
+
+The base hikari node.
+"""
+
 from __future__ import annotations
+
 import abc
-import attrs
 import asyncio
 import logging
-import aiohttp
-import hikari
 import typing as t
+
+import aiohttp
+import attrs
+import hikari
+
 from .enums import ConnectionType
-from .errors import SessionException, NodeException
+from .errors import NodeException
+from .errors import SessionException
 from .events import EventHandler
 from .player import Player
 
@@ -35,8 +44,7 @@ class _NodeInternal:
 
 
 class Node(abc.ABC):
-    """
-    Node
+    """Node.
 
     A base node item, for sharding the sets of players.
 
@@ -78,8 +86,7 @@ class Node(abc.ABC):
         return list(self._players.values())
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        """
-        Delete player
+        """Delete player.
 
         Delete a specific player, via it's guild ID.
 
@@ -99,10 +106,7 @@ class Node(abc.ABC):
             raise KeyError("The guild id's player was not found.")
 
     async def _connect(self):
-        """
-        This is an internal function, that handles the connection, and starting of the websocket.
-        """
-
+        """Connect to the lavalink websocket."""
         if (
             self._internal.connection_status == ConnectionType.CONNECTED
             or self._internal.connection_status == ConnectionType.FAILURE

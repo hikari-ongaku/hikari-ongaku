@@ -1,10 +1,16 @@
+"""Enums.
+
+All of the enums for the entire library.
+"""
+
+
 from __future__ import annotations
+
 import enum
 
 __all__ = (
     "SeverityType",
     "TrackEndReasonType",
-    "PlatformType",
     "VersionType",
     "ConnectionType",
     "BandType",
@@ -47,50 +53,34 @@ class TrackEndReasonType(str, enum.Enum):
     """The track was cleaned up"""
 
 
-class PlatformType(enum.IntEnum):
-    YOUTUBE = 0
-    """Youtube search"""
-    YOUTUBE_MUSIC = 1
-    """Youtube Music search"""
-    SPOTIFY = 2
-    """
-    Spotify search
-
-    !!! WARNING
-        Not currently supported, or working. Uses Youtube if selected.
-    """
-    SOUNDCLOUD = 3
-    """Soundcloud search"""
-
-
 class VersionType(str, enum.Enum):
-    """
-    The lavalink server version.
+    """The lavalink server version.
+
+    The lavalink server version you wish to use.
     """
 
-    V3 = "v3"
-    """V3 Servers"""
     V4 = "v4"
     """V4 Servers"""
 
 
 class ConnectionType(enum.IntEnum):
-    """
-    The connection status for the bot.
+    """Connection type.
+
+    The connection type, or status for the node.
     """
 
     FAILURE = 0
-    """The bot has failed to connect to the lavalink server."""
+    """The node has failed to connect to the lavalink server."""
     LOADING = 1
-    """The bot has not yet attempted to connect to the server."""
+    """The node has not yet attempted to connect to the server."""
     CONNECTED = 2
-    """The bot has successfully connected to the lavalink server"""
+    """The node has successfully connected to the lavalink server"""
 
 
 class BandType(enum.IntEnum):
-    """
-    The band values, available for use in lavalink
+    """Band type.
 
+    The band values, available for use in lavalink
     Read more [here](https://lavalink.dev/api/rest#equalizer).
     """
 

@@ -1,14 +1,20 @@
+"""Events.
+
+All of the hikari events for ongaku, are here!
+"""
+
 from __future__ import annotations
 
-import attrs
 import typing as t
 
+import attrs
 import hikari
 
 from .. import enums
+from .base import PayloadBase
+from .base import PayloadBaseApp
 from .lavalink import ExceptionError
 from .track import Track
-from .base import PayloadBaseApp, PayloadBase
 
 __all__ = (
     "OngakuEvent",
@@ -29,10 +35,9 @@ __all__ = (
 
 @attrs.define
 class OngakuEvent(hikari.Event):
-    """
-    Ongaku Event
+    """Ongaku Event.
 
-    The base event, that all events are attached too.
+    The base event, that all other Ongaku events are attached too.
     """
 
     _app: hikari.RESTAware
@@ -45,10 +50,9 @@ class OngakuEvent(hikari.Event):
 
 @attrs.define
 class ReadyEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
-    """
-    Ready Event
+    """Ready event.
 
-    The event that is dispatched, when lavalink is ready for discord connections.
+    The event that is dispatched, when lavalink is ready for new players, discord connections, and song requests.
     """
 
     resumed: bool
@@ -58,7 +62,7 @@ class ReadyEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+        cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware
     ) -> ReadyEvent:
         resumed = payload["resumed"]
         session_id = payload["sessionId"]
@@ -84,7 +88,7 @@ class StatsMemory(PayloadBase[dict[str, t.Any]]):
     """The amount of reservable memory in bytes"""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> StatsMemory:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> StatsMemory:
         free = payload["free"]
         used = payload["used"]
         allocated = payload["allocated"]
@@ -109,7 +113,7 @@ class StatsCpu(PayloadBase[dict[str, t.Any]]):
     """The load of Lavalink on the node."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> StatsCpu:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> StatsCpu:
         cores = payload["cores"]
         system_load = payload["systemLoad"]
         lavalink_load = payload["lavalinkLoad"]
@@ -133,7 +137,7 @@ class StatsFrameStatistics(PayloadBase[dict[str, t.Any]]):
     """The difference between sent frames and the expected amount of frames."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> StatsFrameStatistics:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> StatsFrameStatistics:
         sent = payload["sent"]
         nulled = payload["nulled"]
         deficit = payload["deficit"]
@@ -165,7 +169,7 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
     """The frame stats of the node."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
+    def _from_payload(cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware):
         players = payload["players"]
         playing_players = payload["playingPlayers"]
         uptime = payload["uptime"]
@@ -185,10 +189,9 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
 @attrs.define
 class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
-    """
-    Websocket Closed Event
+    """Websocket closed event.
 
-    The event that is sent out, when a websocket happens to be closed.
+    The event that is sent out, when a websocket closes.
     """
 
     _app: hikari.RESTAware
@@ -204,7 +207,7 @@ class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+        cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware
     ) -> WebsocketClosedEvent:
         guild_id = payload["guildId"]
         code = payload["code"]
@@ -216,10 +219,9 @@ class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
 @attrs.define
 class TrackBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
-    """
-    Base track class
+    """Base track class.
 
-    The class that all tracks inherit.
+    The class that all Track based classes, inherit.
     """
 
     track: Track
@@ -229,7 +231,7 @@ class TrackBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+        cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware
     ) -> TrackBase:
         track = Track._from_payload(payload["track"])
         guild_id = hikari.Snowflake(payload["guildId"])
@@ -239,15 +241,14 @@ class TrackBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
 @attrs.define
 class TrackStartEvent(TrackBase, OngakuEvent):
-    """
-    Track Start Event
+    """Track start event.
 
-    The track start event that is dispatched when a track starts.
+    The track start event that is dispatched when a track starts on a player.
     """
 
     @classmethod
     def _from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+        cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware
     ) -> TrackStartEvent:
         base = TrackBase._from_payload(payload, app=app)
 
@@ -256,8 +257,7 @@ class TrackStartEvent(TrackBase, OngakuEvent):
 
 @attrs.define
 class TrackEndEvent(TrackBase, OngakuEvent):
-    """
-    Track End Event
+    """Track end event.
 
     The track end event that is dispatched when a track ends.
     """
@@ -266,7 +266,7 @@ class TrackEndEvent(TrackBase, OngakuEvent):
     """The reason for the track ending."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
+    def _from_payload(cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware):
         base = TrackBase._from_payload(payload, app=app)
         reason = enums.TrackEndReasonType(payload["reason"])
 
@@ -275,8 +275,7 @@ class TrackEndEvent(TrackBase, OngakuEvent):
 
 @attrs.define
 class TrackExceptionEvent(TrackBase, OngakuEvent):
-    """
-    Track Stuck Event
+    """Track exception event.
 
     This event is dispatched when a track gets stuck.
     """
@@ -285,7 +284,7 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
     """The exception error that was returned."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
+    def _from_payload(cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware):
         track = Track._from_payload(payload["track"])
         guild_id = hikari.Snowflake(payload["guildId"])
         reason = ExceptionError._from_payload(payload["exception"])
@@ -295,8 +294,7 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
 
 @attrs.define
 class TrackStuckEvent(TrackBase, OngakuEvent):
-    """
-    Track Stuck Event
+    """Track stuck event.
 
     This event is dispatched when a track gets stuck.
     """
@@ -305,7 +303,7 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
     """The threshold in milliseconds that was exceeded."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
+    def _from_payload(cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware):
         base = TrackBase._from_payload(payload, app=app)
         threshold_ms = payload["thresholdMs"]
 
@@ -314,10 +312,9 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
 
 @attrs.define
 class PlayerBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
-    """
-    Player Base
+    """Player base.
 
-    This is the base player object for player events.
+    This is the base player object for all Ongaku player events.
     """
 
     guild_id: hikari.Snowflake
@@ -325,7 +322,7 @@ class PlayerBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+        cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware
     ) -> PlayerBase:
         guild_id = hikari.Snowflake(payload["guildId"])
 
@@ -334,14 +331,13 @@ class PlayerBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
 
 @attrs.define
 class QueueEmptyEvent(PlayerBase, OngakuEvent):
-    """
-    Player Queue Empty Event
+    """Queue empty event.
 
     This event is dispatched when the player queue is empty, and no more songs are available.
     """
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any], *, app: hikari.RESTAware):
+    def _from_payload(cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware):
         base = PlayerBase._from_payload(payload, app=app)
 
         return cls(base.app, base.guild_id)
@@ -349,8 +345,7 @@ class QueueEmptyEvent(PlayerBase, OngakuEvent):
 
 @attrs.define
 class QueueNextEvent(PlayerBase, OngakuEvent):
-    """
-    Player Queue Next Event
+    """Queue next event.
 
     The event that is dispatched, when a new song is played in a player, from the queue.
     """
@@ -362,7 +357,7 @@ class QueueNextEvent(PlayerBase, OngakuEvent):
 
     @classmethod
     def _from_payload(
-        cls, payload: dict[str, t.Any], *, app: hikari.RESTAware
+        cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware
     ) -> QueueNextEvent:
         base = PlayerBase._from_payload(payload, app=app)
         track = Track._from_payload(payload["track"])

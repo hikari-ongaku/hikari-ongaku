@@ -1,20 +1,21 @@
+"""Events.
+
+The event handler for ongaku's nodes.
+"""
+
 from __future__ import annotations
 
 import logging
 import typing as t
 
-from .errors import (
-    SessionStartException,
-)
-from .abc import (
-    ReadyEvent,
-    StatisticsEvent,
-    TrackEndEvent,
-    TrackExceptionEvent,
-    TrackStartEvent,
-    TrackStuckEvent,
-    WebsocketClosedEvent,
-)
+from .abc import ReadyEvent
+from .abc import StatisticsEvent
+from .abc import TrackEndEvent
+from .abc import TrackExceptionEvent
+from .abc import TrackStartEvent
+from .abc import TrackStuckEvent
+from .abc import WebsocketClosedEvent
+from .errors import SessionStartException
 
 if t.TYPE_CHECKING:
     from .node import Node
@@ -23,10 +24,17 @@ INTERNAL_LOGGER = logging.getLogger(__name__)
 
 
 class EventHandler:
+    """The base event handler.
+
+    !!! warning
+        Please do not build this on your own. This is built internally.
+    """
+
     def __init__(self, node: Node) -> None:
         self._node = node
 
-    async def handle_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def handle_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
+        """Handle all incoming payloads."""
         try:
             op_code = payload["op"]
         except Exception as e:
@@ -47,7 +55,8 @@ class EventHandler:
         else:
             logging.warning(f"OP code not recognized: {op_code}")
 
-    async def ready_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def ready_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
+        """Handle ready payload."""
         try:
             session_id = str(payload["sessionId"])
         except Exception:
@@ -66,7 +75,8 @@ class EventHandler:
         INTERNAL_LOGGER.info("Successfully connected to the server.")
         await self._node.client.bot.dispatch(event)
 
-    async def stats_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def stats_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
+        """Handle statistics payload."""
         try:
             event = StatisticsEvent._from_payload(payload, app=self._node.client.bot)
         except Exception as e:
@@ -74,7 +84,8 @@ class EventHandler:
 
         await self._node.client.bot.dispatch(event)
 
-    async def event_payload(self, payload: dict[t.Any, t.Any]) -> None:
+    async def event_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
+        """Handle event payloads."""
         try:
             event_type = payload["type"]
         except Exception as e:

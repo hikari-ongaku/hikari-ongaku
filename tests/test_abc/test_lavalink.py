@@ -1,12 +1,11 @@
 import unittest
-from ongaku.abc.lavalink import (
-    Info,
-    InfoVersion,
-    InfoGit,
-    InfoPlugin,
-    RestError,
-    ExceptionError,
-)
+
+from ongaku.abc.lavalink import ExceptionError
+from ongaku.abc.lavalink import Info
+from ongaku.abc.lavalink import InfoGit
+from ongaku.abc.lavalink import InfoPlugin
+from ongaku.abc.lavalink import InfoVersion
+from ongaku.abc.lavalink import RestError
 from ongaku.enums import SeverityType
 
 

@@ -1,10 +1,16 @@
+"""Lavalink ABC.
+
+All of the information about the lavalink connection.
+"""
+
 from __future__ import annotations
 
-import attrs
 import typing as t
-from .base import PayloadBase
+
+import attrs
 
 from .. import enums
+from .base import PayloadBase
 
 __all__ = (
     "InfoVersion",
@@ -18,9 +24,9 @@ __all__ = (
 
 @attrs.define
 class InfoVersion(PayloadBase[dict[str, t.Any]]):
-    """
-    All of the Info Version information.
+    """Version information.
 
+    All information, about the version of lavalink that is running.
     Find out more [here](https://lavalink.dev/api/rest.html#version-object).
     """
 
@@ -38,7 +44,7 @@ class InfoVersion(PayloadBase[dict[str, t.Any]]):
     """The build metadata according to semver as a `.` separated list of identifiers"""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> InfoVersion:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> InfoVersion:
         semver = payload["semver"]
         major = payload["major"]
         minor = payload["minor"]
@@ -56,10 +62,10 @@ class InfoVersion(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class InfoGit(PayloadBase[dict[str, t.Any]]):
-    """
-    All of the Info Git information.
+class InfoGit(PayloadBase[t.Mapping[str, t.Any]]):
+    """Git information.
 
+    All of the information about the lavalink git information.
     Find out more [here](https://lavalink.dev/api/rest.html#git-object).
     """
 
@@ -71,7 +77,7 @@ class InfoGit(PayloadBase[dict[str, t.Any]]):
     """The millisecond unix timestamp for when the commit was created."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> InfoGit:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> InfoGit:
         branch = payload["branch"]
         commit = payload["commit"]
         commit_time = payload["commitTime"]
@@ -80,10 +86,10 @@ class InfoGit(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class InfoPlugin(PayloadBase[dict[str, t.Any]]):
-    """
-    All of the Info Plugin information.
+class InfoPlugin(PayloadBase[t.Mapping[str, t.Any]]):
+    """Plugin information.
 
+    All of the Information about the currently loaded plugins.
     Find out more [here](https://lavalink.dev/api/rest.html#plugin-object).
     """
 
@@ -93,7 +99,7 @@ class InfoPlugin(PayloadBase[dict[str, t.Any]]):
     """The version of the plugin."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> InfoPlugin:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> InfoPlugin:
         name = payload["name"]
         version = payload["version"]
 
@@ -126,7 +132,7 @@ class Info(PayloadBase[dict[str, t.Any]]):
     """The enabled plugins for this server."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]):
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]):
         version = InfoVersion._from_payload(payload["version"])
         build_time = payload["buildTime"]
         git = InfoGit._from_payload(payload["git"])
@@ -153,9 +159,8 @@ class Info(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class RestError(PayloadBase[dict[str, t.Any]]):
-    """
-    All of the Rest Error information.
+class RestError(PayloadBase[t.Mapping[str, t.Any]]):
+    """Rest error information.
 
     This is the error that is formed, when a call to a rest method fails.
     Find out more [here](https://lavalink.dev/api/rest.html#error-responses).
@@ -175,7 +180,7 @@ class RestError(PayloadBase[dict[str, t.Any]]):
     """The request path."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> RestError:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> RestError:
         timestamp = payload["timestamp"]
         status = payload["status"]
         error = payload["error"]
@@ -190,9 +195,8 @@ class RestError(PayloadBase[dict[str, t.Any]]):
 
 
 @attrs.define
-class ExceptionError(PayloadBase[dict[str, t.Any]]):
-    """
-    Exception Error
+class ExceptionError(PayloadBase[t.Mapping[str, t.Any]]):
+    """Exception error.
 
     The exception error lavalink returns when a track has an exception.
     """
@@ -205,7 +209,7 @@ class ExceptionError(PayloadBase[dict[str, t.Any]]):
     """The cause of the exception."""
 
     @classmethod
-    def _from_payload(cls, payload: dict[str, t.Any]) -> ExceptionError:
+    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> ExceptionError:
         message = payload["message"]
         severity = payload["severity"]
         cause = payload["cause"]

@@ -1,6 +1,8 @@
-import hikari
-import ongaku
 import logging
+
+import hikari
+
+import ongaku
 
 bot = hikari.GatewayBot(token="...", intents=hikari.Intents.ALL)
 

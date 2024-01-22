@@ -1,4 +1,4 @@
-"""A voice handling library for hikari
+"""A voice handling library for hikari.
 
 GitHub: 
 https://github.com/MPlatypus/hikari-ongaku
@@ -8,45 +8,49 @@ https://ongaku.mplaty.com/
 
 from __future__ import annotations
 
-from . import abc, enums, errors
-from .abc import events, lavalink, player, session, track
-from .abc.events import (
-    ReadyEvent,
-    StatisticsEvent,
-    TrackEndEvent,
-    TrackExceptionEvent,
-    TrackStartEvent,
-    TrackStuckEvent,
-    WebsocketClosedEvent,
-)
-from .abc.lavalink import ExceptionError, Info, RestError
-from .abc.player import Player, PlayerState, PlayerVoice
-from .abc.session import Session
-from .abc.track import Playlist, SearchResult, Track
-from .enums import (
-    ConnectionType,
-    PlatformType,
-    SeverityType,
-    TrackEndReasonType,
-    VersionType,
-    BandType,
-)
+from . import abc
+from . import enums
+from . import errors
+from .abc import events
+from .abc import lavalink
+from .abc import player
+from .abc import session
+from .abc import track
+from .abc.events import ReadyEvent
+from .abc.events import StatisticsEvent
+from .abc.events import TrackEndEvent
+from .abc.events import TrackExceptionEvent
+from .abc.events import TrackStartEvent
+from .abc.events import TrackStuckEvent
+from .abc.events import WebsocketClosedEvent
 from .abc.filters import Filter
-
-from .errors import (
-    BuildException,
-    GatewayRequiredException,
-    LavalinkConnectionException,
-    LavalinkException,
-    OngakuBaseException,
-    PlayerException,
-    PlayerMissingException,
-    PlayerQueueException,
-    RequiredException,
-    SessionStartException,
-    TimeoutException,
-)
+from .abc.lavalink import ExceptionError
+from .abc.lavalink import Info
+from .abc.lavalink import RestError
+from .abc.player import Player
+from .abc.player import PlayerState
+from .abc.player import PlayerVoice
+from .abc.session import Session
+from .abc.track import Playlist
+from .abc.track import SearchResult
+from .abc.track import Track
 from .client import Client
+from .enums import BandType
+from .enums import ConnectionType
+from .enums import SeverityType
+from .enums import TrackEndReasonType
+from .enums import VersionType
+from .errors import BuildException
+from .errors import GatewayRequiredException
+from .errors import LavalinkConnectionException
+from .errors import LavalinkException
+from .errors import OngakuBaseException
+from .errors import PlayerException
+from .errors import PlayerMissingException
+from .errors import PlayerQueueException
+from .errors import RequiredException
+from .errors import SessionStartException
+from .errors import TimeoutException
 
 __all__ = (
     # .client
@@ -54,7 +58,6 @@ __all__ = (
     # .enums
     "SeverityType",
     "TrackEndReasonType",
-    "PlatformType",
     "VersionType",
     "ConnectionType",
     "BandType",
