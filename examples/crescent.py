@@ -267,7 +267,7 @@ class Volume:
             return
 
         try:
-            await player.volume(self.volume * 10)
+            await player.set_volume(self.volume * 10)
         except ValueError:
             await ctx.respond("Sorry, but you have entered an invalid number.")
             return

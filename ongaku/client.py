@@ -53,6 +53,8 @@ class Client:
         The version of lavalink you are running. Currently only supports V3, or V4.
     max_retries : int
         The maximum amount of retries for the Websocket.
+    auto_nodes : bool
+        Whether or not auto nodes are enabled.
     """
 
     def __init__(
@@ -64,11 +66,8 @@ class Client:
         password: str | None = None,
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
+        auto_nodes: bool = True
     ) -> None:
-        """Initialise Client.
-
-        Initialise the ongaku client.
-        """
         self._bot = bot
 
         self._players: dict[hikari.Snowflake, Player] = {}
@@ -84,9 +83,10 @@ class Client:
 
         self._rest = RESTClient(self)
 
-        self._nodes: dict[int, Node] = {}
+        self._nodes: dict[int | str, Node] = {}
 
-        bot.subscribe(hikari.ShardEvent, self._handle_nodes)
+        if auto_nodes:
+            bot.subscribe(hikari.ShardEvent, self._handle_nodes)
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
 
     @property
@@ -196,7 +196,7 @@ class Client:
 
         await player.disconnect()
 
-        await player.node.delete_player(guild_id)
+        player.node._players.pop(guild_id)
 
     def walk_players(self) -> t.Iterator[Player]:
         """Walk players.
@@ -211,6 +211,94 @@ class Client:
         for node in self._nodes.values():
             for player in node.players:
                 yield player
+
+    async def create_node(self, name: str) -> Node:
+        """Create a node.
+        
+        Create a new node for the server.
+
+        Parameters
+        ----------
+        name : str
+            The name you wish to attach to the node.
+
+        Raises
+        ------
+        ValueError
+            When that name already exists as a node.
+
+        Returns
+        -------
+        Node
+            The new node that has been created.
+        """
+        if self._nodes.get(name) is not None:
+            raise ValueError("Sorry, but this name already exists.")
+
+        new_node = Node(
+            self, name
+        )
+
+        try:
+            await new_node._connect()
+        except:
+            raise
+
+        self._nodes.update({name: new_node})
+
+        return new_node
+
+    async def fetch_node(self, name: str) -> Node:
+        """Fetch a node.
+        
+        Fetch a specific node by its name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the node.
+
+        Raises
+        ------
+        ValueError
+            When the node does not exist.
+
+        Returns
+        -------
+        Node
+            The node that has been found.
+        """
+        node = self._nodes.get(name)
+        
+        if node:
+            return node
+        
+        raise ValueError("That node does not exist.")
+    
+    async def delete_node(self, name: str) -> None:
+        """Delete a node.
+        
+        Delete a specific node by its name.
+
+        Parameters
+        ----------
+        name : str
+            The name of the node.
+
+        Raises
+        ------
+        ValueError
+            When the node does not exist.
+        """
+        node = self._nodes.get(name)
+        
+        if node:
+            for player in node.players:
+                await player.disconnect()
+
+            await node._disconnect()
+        
+        raise ValueError("That node does not exist.")
 
     async def _handle_nodes(self, event: hikari.ShardEvent) -> None:
         if isinstance(event, hikari.events.ShardReadyEvent):

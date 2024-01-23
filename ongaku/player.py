@@ -20,9 +20,11 @@ from .abc.events import QueueNextEvent
 from .abc.events import TrackEndEvent
 from .abc.filters import Filter
 from .abc.player import PlayerVoice
+from .abc import player
 from .abc.track import Track
 from .errors import BuildException
 from .errors import PlayerException
+from .errors import LavalinkException
 from .errors import PlayerQueueException
 from .errors import SessionStartException
 from .errors import TimeoutException
@@ -66,6 +68,8 @@ class Player:
 
         self._filter: Filter | None = None
 
+        self._volume: int = -1
+
         self.bot.subscribe(TrackEndEvent, self._track_end_event)
 
     @property
@@ -103,6 +107,15 @@ class Player:
         return self._is_alive
 
     @property
+    def volume(self) -> int:
+        """The volume of the player.
+        
+        !!! warning 
+            If volume is -1, it has either not been updated, or connected to lavalink.
+        """
+        return self._volume
+
+    @property
     def is_paused(self) -> bool:
         """Whether the bot is paused or not."""
         return self._is_paused
@@ -113,10 +126,10 @@ class Player:
         return self._connected
 
     @property
-    def queue(self) -> tuple[Track, ...]:
+    def queue(self) -> t.Sequence[Track]:
         """Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one, if not paused."""
-        return tuple(self._queue)
-
+        return self._queue
+    
     @property
     def audio_filter(self) -> Filter | None:
         """The current filter applied to this player."""
@@ -159,9 +172,7 @@ class Player:
         PlayerException
             Raised when the endpoint in the event is none.
         LavalinkException
-            If an error code of 4XX or 5XX is received.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
         """
@@ -205,16 +216,18 @@ class Player:
             raise BuildException(f"Failed to build player voice: {e}")
 
         try:
-            await self.node.client.rest.player.update(
+            player = await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 voice=self._voice,
                 no_replace=False,
             )
-        except (
-            Exception
-        ):  # FIXME: Fix it so, it both updates the player, or returns the error.
+        except LavalinkException:
             raise
+        except BuildException:
+            raise
+        
+        await self._update(player)
 
     async def disconnect(self) -> None:
         """Disconnect player.
@@ -236,7 +249,11 @@ class Player:
             await self.node.client.rest.player.delete(
                 self.node._internal.session_id, self._guild_id
             )
-        except Exception:  # FIXME: fix this.
+        except LavalinkException:
+            raise
+        except ValueError:
+            raise
+        except BuildException:
             raise
 
         await self.bot.update_voice_state(self.guild_id, None)
@@ -262,6 +279,10 @@ class Player:
             The session id was null, or empty.
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         if self._voice is None or self._channel_id is None:
             raise PlayerException("Player is not connected to a channel.")
@@ -279,19 +300,21 @@ class Player:
             self._queue.insert(0, track)
 
         try:
-            await self.node.client.rest.player.update(
+            player = await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 track=self.queue[0],
                 voice=self._voice,
                 no_replace=False,
             )
-        except (
-            Exception
-        ) as e:  # FIXME: This must be changed, to match the correct return types.
-            raise e
+        except LavalinkException:
+            raise
+        except BuildException:
+            raise
 
         self._is_paused = False
+        
+        await self._update(player)
 
     async def add(
         self, tracks: t.Sequence[Track], requestor: Snowflake | None = None
@@ -306,13 +329,37 @@ class Player:
             The list of tracks you wish to add to the queue.
         requestor : Snowflake | None
             The user/member id that requested the song.
+
+        Raises
+        ------
+        SessionStartException
+            The session id was null, or empty.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         for track in tracks:
             if requestor:
                 track.requestor = requestor
             self._queue.append(track)
 
-        # TODO: Maybe make it so it automatically starts the track, so that the play method does not need none?
+        if self.node._internal.session_id is None:
+            raise SessionStartException()
+
+        try:
+            player = await self.node.client.rest.player.update(
+                self.guild_id,
+                self.node._internal.session_id,
+                track=self.queue[0],
+                no_replace=False,
+            )
+        except LavalinkException:
+            raise
+        except BuildException:
+            raise
+
+        await self._update(player)
 
     async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
         """Pause the player.
@@ -331,7 +378,10 @@ class Player:
         ------
         SessionStartException
             The session id was null, or empty.
-
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
@@ -342,11 +392,15 @@ class Player:
             self._is_paused = value
 
         try:
-            await self.node.client.rest.player.update(
+            player = await self.node.client.rest.player.update(
                 self.guild_id, self.node._internal.session_id, paused=self.is_paused
             )
-        except Exception:  # FIXME: another one.
+        except LavalinkException:
             raise
+        except BuildException:
+            raise
+        
+        await self._update(player)
 
     async def position(self, value: int) -> None:
         """Change the track position.
@@ -376,12 +430,19 @@ class Player:
         if len(self.queue) <= 0:
             raise PlayerQueueException("The queue is empty.")
 
-        await self.node.client.rest.player.update(
-            self.guild_id,
-            self.node._internal.session_id,
-            position=value,
-            no_replace=False,
-        )
+        try:
+            player = await self.node.client.rest.player.update(
+                self.guild_id,
+                self.node._internal.session_id,
+                position=value,
+                no_replace=False,
+            )
+        except LavalinkException:
+            raise
+        except BuildException:
+            raise
+
+        await self._update(player)
 
     async def skip(self, amount: int = 1) -> None:
         """Skip songs.
@@ -401,6 +462,10 @@ class Player:
             The amount was 0 or a negative number.
         PlayerQueueException
             The queue is already empty, so no songs can be skipped.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
@@ -418,17 +483,20 @@ class Player:
 
         if len(self.queue) == 0:
             try:
-                await self.node.client.rest.player.update(
+                player = await self.node.client.rest.player.update(
                     self.guild_id,
                     self.node._internal.session_id,
                     track=None,
                 )
-            except Exception:  # FIXME: another one.
+            except LavalinkException:
                 raise
-            return
+            except BuildException:
+                raise
+        
+            await self._update(player)
 
-    async def volume(self, volume: int) -> None:
-        """Change the volume.
+    async def set_volume(self, volume: int) -> None:
+        """Set the volume.
 
         The volume you wish to set for the player.
 
@@ -443,6 +511,10 @@ class Player:
             The session has not been yet started.
         ValueError
             Raised if the value is above, or below 0, or 1000.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
@@ -453,14 +525,18 @@ class Player:
             raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
 
         try:
-            await self.node.client.rest.player.update(
+            player = await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 volume=volume,
                 no_replace=False,
             )
-        except Exception:  # FIXME: another one.
+        except LavalinkException:
             raise
+        except BuildException:
+            raise
+        
+        await self._update(player)
 
     async def remove(self, value: Track | int) -> None:
         """
@@ -481,6 +557,10 @@ class Player:
             The queue is empty.
         PlayerException
             The song did not exist, or the position was out of the length of the queue.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
@@ -505,11 +585,14 @@ class Player:
         if index == 0:
             if len(self.queue) == 0:
                 try:
-                    await self.node.client.rest.player.update(
+                    player = await self.node.client.rest.player.update(
                         self.guild_id, self.node._internal.session_id, track=None
                     )
-                except Exception:  # FIXME: Another one.
+                except LavalinkException:
                     raise
+                except BuildException:
+                    raise
+                await self._update(player)
             else:
                 await self.play()
 
@@ -522,6 +605,10 @@ class Player:
         ------
         SessionStartException
             The session is not yet started.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         self._queue.clear()
 
@@ -529,14 +616,18 @@ class Player:
             raise SessionStartException()
 
         try:
-            await self.node.client.rest.player.update(
+            player = await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 track=None,
                 no_replace=False,
             )
-        except Exception:  # FIXME: another one uwu
+        except LavalinkException:
             raise
+        except BuildException:
+            raise
+
+        await self._update(player)
 
     async def filter(self, filter: Filter | None = None):
         """Filter.
@@ -552,6 +643,10 @@ class Player:
         ------
         SessionStartException
             The session id was null, or empty.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the player object.
         """
         if self.node._internal.session_id is None:
             raise SessionStartException()
@@ -559,14 +654,26 @@ class Player:
         self._filter = filter
 
         try:
-            await self.node.client.rest.player.update(
+            player = await self.node.client.rest.player.update(
                 self.guild_id,
                 self.node._internal.session_id,
                 filter=filter,
                 no_replace=False,
             )
-        except Exception:  # FIXME: another one.
+        except LavalinkException:
             raise
+        except BuildException:
+            raise
+
+        await self._update(player)
+
+    async def _update(self, player: player.Player) -> None:
+        # TODO: Somehow do the filter and the track.
+    
+        self._is_paused = player.paused
+        self._voice = player.voice
+        self._volume = player.volume
+
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         if self.node._internal.session_id is None:
@@ -584,14 +691,18 @@ class Player:
                 return
 
             try:
-                await self.node.client.rest.player.update(
+                player = await self.node.client.rest.player.update(
                     self.guild_id,
                     self.node._internal.session_id,
                     track=self._queue[0],
                     no_replace=False,
                 )
-            except Exception:  # FIXME: fix this
+            except LavalinkException:
                 raise
+            except BuildException:
+                raise
+            
+            await self._update(player)
 
             await self.bot.dispatch(
                 QueueNextEvent(self.bot, self.guild_id, self._queue[0], event.track)

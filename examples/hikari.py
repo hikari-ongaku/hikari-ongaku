@@ -356,7 +356,7 @@ async def volume_event(event: hikari.MessageCreateEvent):
         return
 
     try:
-        await player.volume(volume * 10)
+        await player.set_volume(volume * 10)
     except ValueError:
         await bot.rest.create_message(
             event.channel_id,

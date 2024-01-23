@@ -259,7 +259,7 @@ async def volume_command(
         return
 
     try:
-        await player.volume(volume * 10)
+        await player.set_volume(volume * 10)
     except ValueError:
         await ctx.respond("Sorry, but you have entered an invalid number.")
         return

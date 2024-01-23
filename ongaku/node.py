@@ -70,6 +70,8 @@ class Node(abc.ABC):
 
         self._event_handler = EventHandler(self)
 
+        self._connection: asyncio.Task[t.Any] | None = None
+
     @property
     def name(self) -> str:
         """The name of the node."""
@@ -85,25 +87,51 @@ class Node(abc.ABC):
         """The players, that are attached to this node."""
         return list(self._players.values())
 
-    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        """Delete player.
+    async def _websocket(self, new_headers: dict[str, t.Any]):
+        while self._internal.remaining_attempts > 1:
+            await asyncio.sleep(3)
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.ws_connect(
+                        self._internal.base_uri + "/websocket", headers=new_headers
+                    ) as ws:
+                        async for msg in ws:
+                            if msg.type == aiohttp.WSMsgType.ERROR:
+                                self._internal.connection_status = (
+                                    ConnectionType.FAILURE
+                                )
+                                self._internal.connection_failure_reason = msg.data
+                                raise SessionException(
+                                    "An internal error has happened to this lavalink connection: "
+                                    + msg.data
+                                )
 
-        Delete a specific player, via it's guild ID.
+                            if msg.type == aiohttp.WSMsgType.CLOSED:
+                                pass
 
-        Parameters
-        ----------
-        guild_id : hikari.Snowflake
-            The guild ID that the player is for.
+                            if msg.type == aiohttp.WSMsgType.TEXT:
+                                try:
+                                    json_data = msg.json()
+                                except Exception:
+                                    raise SessionException(
+                                        "Failed to decode payload: " + msg.data
+                                    )
+                                else:
+                                    self._internal.connection_status = (
+                                        ConnectionType.CONNECTED
+                                    )
+                                    self._internal.connection_failure_reason = ""
+                                    await self._event_handler.handle_payload(json_data)
 
-        Raises
-        ------
-        KeyError
-            If the guild does not exist.
-        """
-        try:
-            self._players.pop(guild_id)
-        except KeyError:
-            raise KeyError("The guild id's player was not found.")
+                except Exception as e:
+                    self._internal.remaining_attempts -= 1
+                    self._internal.connection_status = ConnectionType.FAILURE
+                    self._internal.connection_failure_reason = f"Exception Raised: {e}"
+                    raise
+
+        raise NodeException(
+            f"Maximum connection attempts reached. Reason: {self._internal.connection_failure_reason}"
+        )
 
     async def _connect(self):
         """Connect to the lavalink websocket."""
@@ -140,51 +168,13 @@ class Node(abc.ABC):
 
         new_header.update(self._internal.headers)
 
-        while self._internal.remaining_attempts > 1:
-            await asyncio.sleep(3)
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.ws_connect(
-                        self._internal.base_uri + "/websocket", headers=new_header
-                    ) as ws:
-                        async for msg in ws:
-                            if msg.type == aiohttp.WSMsgType.ERROR:
-                                self._internal.connection_status = (
-                                    ConnectionType.FAILURE
-                                )
-                                self._internal.connection_failure_reason = msg.data
-                                raise SessionException(
-                                    "An internal error has happened to this lavalink connection: "
-                                    + msg.data
-                                )
+        task = asyncio.create_task(self._websocket(new_header))
 
-                            if msg.type == aiohttp.WSMsgType.CLOSED:
-                                pass
+        self._connection = task
 
-                            if msg.type == aiohttp.WSMsgType.TEXT:
-                                try:
-                                    json_data = msg.json()
-                                except Exception:
-                                    raise SessionException(
-                                        "Failed to decode payload: " + msg.data
-                                    )
-                                else:
-                                    self._internal.connection_status = (
-                                        ConnectionType.CONNECTED
-                                    )
-                                    self._internal.connection_failure_reason = ""
-                                    await self._event_handler.handle_payload(json_data)
-
-                except Exception as e:
-                    self._internal.remaining_attempts -= 1
-                    self._internal.connection_status = ConnectionType.FAILURE
-                    self._internal.connection_failure_reason = f"Exception Raised: {e}"
-                    raise
-        else:
-            raise NodeException(
-                f"Maximum connection attempts reached. Reason: {self._internal.connection_failure_reason}"
-            )
-
+    async def _disconnect(self) -> None:
+        if self._connection:
+            self._connection.cancel()
 
 # MIT License
 

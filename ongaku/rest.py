@@ -76,9 +76,7 @@ class RESTClient:
         Raises
         ------
         LavalinkException
-            Response was a 400 or 500 error.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build `abc.Info`
 
@@ -93,8 +91,8 @@ class RESTClient:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
         try:
             info_resp = Info._from_payload(resp)
@@ -107,11 +105,11 @@ class RESTClient:
         self,
         url: str,
         headers: dict[str, t.Any],
-        type: _HttpMethod,
-        **kwargs: dict[str, t.Any],
-    ) -> dict[str, t.Any]:
+        method: _HttpMethod,
+        **kwargs: t.Any,
+    ) -> t.Mapping[str, t.Any]:
         async with aiohttp.ClientSession() as session:
-            if type == _HttpMethod.GET:
+            if method == _HttpMethod.GET:
                 try:
                     async with session.get(
                         self._client._internal.base_uri + url, headers=headers, *kwargs
@@ -130,7 +128,7 @@ class RESTClient:
                 except Exception as e:
                     raise LavalinkException(e)
 
-            if type == _HttpMethod.POST:
+            if method == _HttpMethod.POST:
                 try:
                     async with session.post(
                         self._client._internal.base_uri + url, headers=headers, *kwargs
@@ -149,7 +147,7 @@ class RESTClient:
                 except Exception as e:
                     raise LavalinkException(e)
 
-            if type == _HttpMethod.PATCH:
+            if method == _HttpMethod.PATCH:
                 try:
                     async with session.patch(
                         self._client._internal.base_uri + url, headers=headers, *kwargs
@@ -168,7 +166,7 @@ class RESTClient:
                 except Exception as e:
                     raise LavalinkException(e)
 
-            if type == _HttpMethod.DELETE:
+            if method == _HttpMethod.DELETE:
                 try:
                     async with session.delete(
                         self._client._internal.base_uri + url, headers=headers, *kwargs
@@ -211,9 +209,7 @@ class RESTSession:
         Raises
         ------
         LavalinkException
-            If an error code of 4XX or 5XX is received.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the session object.
 
@@ -230,8 +226,8 @@ class RESTSession:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
         try:
             session_model = Session._from_payload(resp)
@@ -264,9 +260,7 @@ class RESTPlayer:
         Raises
         ------
         LavalinkException
-            If an error code of 4XX or 5XX is received.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
 
@@ -283,8 +277,8 @@ class RESTPlayer:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
         player_list: list[Player] = []
 
@@ -313,9 +307,7 @@ class RESTPlayer:
         Raises
         ------
         LavalinkException
-            If an error code of 4XX or 5XX is received.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
 
@@ -332,8 +324,8 @@ class RESTPlayer:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
         try:
             player_model = Player._from_payload(resp)
@@ -389,9 +381,7 @@ class RESTPlayer:
         Raises
         ------
         LavalinkException
-            If an error code of 4XX or 5XX is received.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
 
@@ -467,8 +457,8 @@ class RESTPlayer:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
         try:
             player_model = Player._from_payload(resp)
@@ -492,7 +482,7 @@ class RESTPlayer:
         Raises
         ------
         LavalinkException
-            If an error code of 4XX or 5XX is received.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         ValueError
             Json data could not be found or decoded.
         """
@@ -504,8 +494,8 @@ class RESTPlayer:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
 
 class RESTTrack:
@@ -531,9 +521,7 @@ class RESTTrack:
         Raises
         ------
         LavalinkException
-            If an error code of 4XX or 5XX is received.
-        ValueError
-            Json data could not be found or decoded.
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
 
@@ -557,8 +545,8 @@ class RESTTrack:
             )
         except LavalinkException:
             raise
-        except ValueError:
-            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
         load_type = resp["loadType"]
 
@@ -592,6 +580,81 @@ class RESTTrack:
 
             return playlist
 
+    async def decode(self, code: str) -> Track:
+        """Decode a track.
+
+        Decode a track, from its BASE64 Object.
+
+        Parameters
+        ----------
+        code : str
+            The BASE64 code, of the specified track.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+
+        Returns
+        -------
+        Track
+            The track that came from the encoded code.
+        """
+        try:
+            resp = await self._rest._rest_handler(self._rest._client._internal.base_uri + "/decodetrack", self._rest._client._internal.headers, _HttpMethod.GET, params={"encodedTrack":code})
+        except LavalinkException:
+            raise
+        except ValueError as e:
+            raise LavalinkException(e)
+
+        try:
+            track = Track._from_payload(resp)
+        except Exception as e:
+            raise BuildException(e)
+        
+        return track
+
+    async def decode_many(self, codes: t.Sequence[str]) -> t.Sequence[Track]:
+        """Decode multiple tracks.
+
+        Decode multiple tracks, via their BASE64 codes.
+
+        Parameters
+        ----------
+        codes : typing.Sequence[str]
+            The BASE64 codes, of the specified tracks.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+
+        Returns
+        -------
+        typing.Sequence[Track]
+            The track that came from the encoded code.
+        """
+        try:
+            resp = await self._rest._rest_handler(self._rest._client._internal.base_uri + "/decodetracks", self._rest._client._internal.headers, _HttpMethod.GET, json=[*codes])
+        except LavalinkException:
+            raise
+        except ValueError as e:
+            raise LavalinkException(e)
+        
+        tracks: list[Track] = []
+        for t in resp.values():
+            try:
+                track = Track._from_payload(t)
+            except Exception as e:
+                raise BuildException(e)
+            
+            tracks.append(track)
+        
+        return tracks
 
 # MIT License
 
