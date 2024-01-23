@@ -60,7 +60,7 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
 
 
 @client.include
-@arc.slash_command("play", "Play a song, or a playlist.")
+@arc.slash_command("play", "Play a song. (must be a name, not a url.)")
 async def play_command(
     ctx: arc.GatewayContext,
     query: arc.Option[str, arc.StrParams("The song you wish to play.")],
@@ -123,7 +123,7 @@ async def play_command(
 
 
 @client.include
-@arc.slash_command("add", "add a song to the queue")
+@arc.slash_command("add", "Add a song. (must be a name, not a url.)")
 async def add_command(
     ctx: arc.GatewayContext,
     query: arc.Option[str, arc.StrParams("The song you wish to add.")],

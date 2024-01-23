@@ -176,6 +176,7 @@ class Node(abc.ABC):
         if self._connection:
             self._connection.cancel()
 
+
 # MIT License
 
 # Copyright (c) 2023 MPlatypus

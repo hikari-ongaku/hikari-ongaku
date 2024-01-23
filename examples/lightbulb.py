@@ -64,7 +64,7 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
 
 
 @bot.command
-@lightbulb.option("query", "The song you wish to play (or a playlist link.)")
+@lightbulb.option("query", "Play a song. (must be a name, not a url.)")
 @lightbulb.command("play", "play a song")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def play_command(ctx: lightbulb.Context) -> None:

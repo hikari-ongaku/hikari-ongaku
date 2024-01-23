@@ -66,7 +66,7 @@ class Client:
         password: str | None = None,
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
-        auto_nodes: bool = True
+        auto_nodes: bool = True,
     ) -> None:
         self._bot = bot
 
@@ -214,7 +214,7 @@ class Client:
 
     async def create_node(self, name: str) -> Node:
         """Create a node.
-        
+
         Create a new node for the server.
 
         Parameters
@@ -235,9 +235,7 @@ class Client:
         if self._nodes.get(name) is not None:
             raise ValueError("Sorry, but this name already exists.")
 
-        new_node = Node(
-            self, name
-        )
+        new_node = Node(self, name)
 
         try:
             await new_node._connect()
@@ -250,7 +248,7 @@ class Client:
 
     async def fetch_node(self, name: str) -> Node:
         """Fetch a node.
-        
+
         Fetch a specific node by its name.
 
         Parameters
@@ -269,15 +267,15 @@ class Client:
             The node that has been found.
         """
         node = self._nodes.get(name)
-        
+
         if node:
             return node
-        
+
         raise ValueError("That node does not exist.")
-    
+
     async def delete_node(self, name: str) -> None:
         """Delete a node.
-        
+
         Delete a specific node by its name.
 
         Parameters
@@ -291,13 +289,13 @@ class Client:
             When the node does not exist.
         """
         node = self._nodes.get(name)
-        
+
         if node:
             for player in node.players:
                 await player.disconnect()
 
             await node._disconnect()
-        
+
         raise ValueError("That node does not exist.")
 
     async def _handle_nodes(self, event: hikari.ShardEvent) -> None:

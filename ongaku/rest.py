@@ -603,7 +603,12 @@ class RESTTrack:
             The track that came from the encoded code.
         """
         try:
-            resp = await self._rest._rest_handler(self._rest._client._internal.base_uri + "/decodetrack", self._rest._client._internal.headers, _HttpMethod.GET, params={"encodedTrack":code})
+            resp = await self._rest._rest_handler(
+                self._rest._client._internal.base_uri + "/decodetrack",
+                self._rest._client._internal.headers,
+                _HttpMethod.GET,
+                params={"encodedTrack": code},
+            )
         except LavalinkException:
             raise
         except ValueError as e:
@@ -613,7 +618,7 @@ class RESTTrack:
             track = Track._from_payload(resp)
         except Exception as e:
             raise BuildException(e)
-        
+
         return track
 
     async def decode_many(self, codes: t.Sequence[str]) -> t.Sequence[Track]:
@@ -639,22 +644,28 @@ class RESTTrack:
             The track that came from the encoded code.
         """
         try:
-            resp = await self._rest._rest_handler(self._rest._client._internal.base_uri + "/decodetracks", self._rest._client._internal.headers, _HttpMethod.GET, json=[*codes])
+            resp = await self._rest._rest_handler(
+                self._rest._client._internal.base_uri + "/decodetracks",
+                self._rest._client._internal.headers,
+                _HttpMethod.GET,
+                json=[*codes],
+            )
         except LavalinkException:
             raise
         except ValueError as e:
             raise LavalinkException(e)
-        
+
         tracks: list[Track] = []
         for t in resp.values():
             try:
                 track = Track._from_payload(t)
             except Exception as e:
                 raise BuildException(e)
-            
+
             tracks.append(track)
-        
+
         return tracks
+
 
 # MIT License
 

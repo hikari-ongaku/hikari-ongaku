@@ -15,16 +15,16 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
+from .abc import player
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
 from .abc.events import TrackEndEvent
 from .abc.filters import Filter
 from .abc.player import PlayerVoice
-from .abc import player
 from .abc.track import Track
 from .errors import BuildException
-from .errors import PlayerException
 from .errors import LavalinkException
+from .errors import PlayerException
 from .errors import PlayerQueueException
 from .errors import SessionStartException
 from .errors import TimeoutException
@@ -109,8 +109,8 @@ class Player:
     @property
     def volume(self) -> int:
         """The volume of the player.
-        
-        !!! warning 
+
+        !!! warning
             If volume is -1, it has either not been updated, or connected to lavalink.
         """
         return self._volume
@@ -129,7 +129,7 @@ class Player:
     def queue(self) -> t.Sequence[Track]:
         """Returns a queue, of the current tracks that are waiting to be played. The top one is the currently playing one, if not paused."""
         return self._queue
-    
+
     @property
     def audio_filter(self) -> Filter | None:
         """The current filter applied to this player."""
@@ -226,7 +226,7 @@ class Player:
             raise
         except BuildException:
             raise
-        
+
         await self._update(player)
 
     async def disconnect(self) -> None:
@@ -313,7 +313,7 @@ class Player:
             raise
 
         self._is_paused = False
-        
+
         await self._update(player)
 
     async def add(
@@ -399,7 +399,7 @@ class Player:
             raise
         except BuildException:
             raise
-        
+
         await self._update(player)
 
     async def position(self, value: int) -> None:
@@ -492,7 +492,7 @@ class Player:
                 raise
             except BuildException:
                 raise
-        
+
             await self._update(player)
 
     async def set_volume(self, volume: int) -> None:
@@ -535,7 +535,7 @@ class Player:
             raise
         except BuildException:
             raise
-        
+
         await self._update(player)
 
     async def remove(self, value: Track | int) -> None:
@@ -669,11 +669,10 @@ class Player:
 
     async def _update(self, player: player.Player) -> None:
         # TODO: Somehow do the filter and the track.
-    
+
         self._is_paused = player.paused
         self._voice = player.voice
         self._volume = player.volume
-
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         if self.node._internal.session_id is None:
@@ -701,7 +700,7 @@ class Player:
                 raise
             except BuildException:
                 raise
-            
+
             await self._update(player)
 
             await self.bot.dispatch(

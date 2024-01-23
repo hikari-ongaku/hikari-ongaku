@@ -65,7 +65,7 @@ component = tanjun.Component()
 
 @component.with_slash_command
 @tanjun.with_str_slash_option("query", "query to search")
-@tanjun.as_slash_command("play", "Play a song, or a playlist.")
+@tanjun.as_slash_command("play", "Play a song. (must be a name, not a url.)")
 async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
@@ -128,7 +128,7 @@ async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
 
 @component.with_slash_command
 @tanjun.with_str_slash_option("query", "query to search")
-@tanjun.as_slash_command("add", "add a song to the queue")
+@tanjun.as_slash_command("add", "Add a song. (must be a name, not a url.)")
 async def add_command(
     ctx: tanjun.abc.SlashContext,
     query: str,
