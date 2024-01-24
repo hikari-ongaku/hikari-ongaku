@@ -11,11 +11,14 @@ from __future__ import annotations
 from . import abc
 from . import enums
 from . import errors
+from . import ext
 from .abc import events
 from .abc import lavalink
 from .abc import player
 from .abc import session
 from .abc import track
+from .abc.events import QueueEmptyEvent
+from .abc.events import QueueNextEvent
 from .abc.events import ReadyEvent
 from .abc.events import StatisticsEvent
 from .abc.events import TrackEndEvent
@@ -25,7 +28,6 @@ from .abc.events import TrackStuckEvent
 from .abc.events import WebsocketClosedEvent
 from .abc.filters import Filter
 from .abc.lavalink import ExceptionError
-from .abc.lavalink import Info
 from .abc.lavalink import RestError
 from .abc.player import Player
 from .abc.player import PlayerState
@@ -87,8 +89,9 @@ __all__ = (
     "TrackExceptionEvent",
     "TrackStuckEvent",
     "WebsocketClosedEvent",
+    "QueueEmptyEvent",
+    "QueueNextEvent",
     # .abc.lavalink
-    "Info",
     "RestError",
     "ExceptionError",
     # .abc.player
@@ -107,6 +110,7 @@ __all__ = (
     "errors",
     "enums",
     "abc",
+    "ext",
 )
 
 

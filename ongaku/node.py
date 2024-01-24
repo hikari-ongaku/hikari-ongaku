@@ -16,6 +16,8 @@ import hikari
 
 from .enums import ConnectionType
 from .errors import NodeException
+from .errors import PlayerMissingException
+from .errors import RequiredException
 from .errors import SessionException
 from .events import EventHandler
 from .player import Player
@@ -86,6 +88,92 @@ class Node(abc.ABC):
     def players(self) -> t.Sequence[Player]:
         """The players, that are attached to this node."""
         return list(self._players.values())
+
+    async def create_player(self, guild_id: hikari.Snowflake) -> Player:
+        """Create a new player.
+
+        Creates a new player for the specified guild, and places it in the specified channel.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The Guild ID the player will be in.
+
+        Raises
+        ------
+        PlayerException : Raised when the player failed to be created.
+
+        Returns
+        -------
+        Player : The player that has been successfully created
+        """
+        bot = self.client.bot.get_me()
+
+        if bot is None:
+            raise RequiredException("The bot is required to be able to connect.")
+
+        bot_state = self.client.bot.cache.get_voice_state(guild_id, bot.id)
+
+        if bot_state is not None and bot_state.channel_id is not None:
+            try:
+                self._players.pop(guild_id)
+            except KeyError:
+                raise NodeException(
+                    "The node this player needs to attach too, has not yet been created."
+                )
+
+        new_player = Player(self, guild_id)
+
+        self._players.update({guild_id: new_player})
+        return new_player
+
+    async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
+        """Fetch a player.
+
+        Fetch a player for the specified guild.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The guild id that the player belongs to.
+
+        Raises
+        ------
+        PlayerMissingException
+            The player was not found for the guild specified.
+
+        Returns
+        -------
+        Player
+            The player that belongs to the specified guild.
+        """
+        for player in self._players.values():
+            if player.guild_id == guild_id:
+                return player
+
+        raise PlayerMissingException(guild_id)
+
+    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
+        """Delete a player.
+
+        Deletes a player from the specified guild, and disconnects it, if it has not been disconnected already.
+
+        Parameters
+        ----------
+        guild_id : hikari.Snowflake
+            The guild id that the player belongs to.
+
+        Raises
+        ------
+        PlayerMissingException
+            The player was not found for the guild specified.
+
+        """
+        player = await self.fetch_player(guild_id)
+
+        await player.disconnect()
+
+        self._players.pop(guild_id)
 
     async def _websocket(self, new_headers: dict[str, t.Any]):
         while self._internal.remaining_attempts > 1:

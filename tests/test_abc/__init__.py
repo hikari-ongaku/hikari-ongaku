@@ -1,3 +1,4 @@
+# ruff: noqa
 from .test_events import ReadyEventTest
 
 __all__ = (

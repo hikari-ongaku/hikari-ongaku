@@ -13,8 +13,7 @@ import hikari
 
 __all__ = ("PayloadT", "PayloadBase", "PayloadBaseApp")
 
-if t.TYPE_CHECKING:
-    PayloadT = t.TypeVar("PayloadT", t.Sequence[t.Any], t.Mapping[str, t.Any])
+PayloadT = t.TypeVar("PayloadT", t.Sequence[t.Any], t.Mapping[str, t.Any])
 
 
 class Payload(abc.ABC, t.Generic[PayloadT]):

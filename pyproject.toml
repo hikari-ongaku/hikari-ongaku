@@ -11,8 +11,6 @@ reportShadowedImports = "warning"
 force-single-line = true
 
 [tool.ruff.lint]
-# Enable all `pydocstyle` rules, limiting to those that adhere to the
-# Google convention via `convention = "google"`, below.
 select = ["D"]
 
 [tool.ruff.lint.pydocstyle]

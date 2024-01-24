@@ -14,7 +14,6 @@ import hikari
 from .abc.filters import Filter
 from .abc.lavalink import ExceptionError
 from .abc.lavalink import Info
-from .abc.lavalink import RestError
 from .abc.player import Player
 from .abc.player import PlayerVoice
 from .abc.session import Session
@@ -112,17 +111,19 @@ class RESTClient:
             if method == _HttpMethod.GET:
                 try:
                     async with session.get(
-                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                        self._client._internal.base_uri + url, headers=headers, **kwargs
                     ) as response:
+                        if response.status >= 400:
+                            raise LavalinkException(
+                                f"A {response.status} error has occurred."
+                            )
+
                         try:
                             payload = await response.json()
                         except Exception:
                             raise ValueError(
                                 "Json data was not received from the response."
                             )
-
-                        if response.status >= 400:
-                            raise LavalinkException(RestError._from_payload(payload))
 
                         return payload
                 except Exception as e:
@@ -131,17 +132,19 @@ class RESTClient:
             if method == _HttpMethod.POST:
                 try:
                     async with session.post(
-                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                        self._client._internal.base_uri + url, headers=headers, **kwargs
                     ) as response:
+                        if response.status >= 400:
+                            raise LavalinkException(
+                                f"A {response.status} error has occurred."
+                            )
+
                         try:
                             payload = await response.json()
                         except Exception:
                             raise ValueError(
                                 "Json data was not received from the response."
                             )
-
-                        if response.status >= 400:
-                            raise LavalinkException(RestError._from_payload(payload))
 
                         return payload
                 except Exception as e:
@@ -150,17 +153,17 @@ class RESTClient:
             if method == _HttpMethod.PATCH:
                 try:
                     async with session.patch(
-                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                        self._client._internal.base_uri + url, headers=headers, **kwargs
                     ) as response:
-                        try:
-                            payload = await response.json()
-                        except Exception:
-                            raise ValueError(
-                                "Json data was not received from the response."
+                        if response.status >= 400:
+                            raise LavalinkException(
+                                f"A {response.status} error has occurred."
                             )
 
-                        if response.status >= 400:
-                            raise LavalinkException(RestError._from_payload(payload))
+                        try:
+                            payload = await response.json()
+                        except Exception as e:
+                            raise ValueError(f"Data was not received: {e}")
 
                         return payload
                 except Exception as e:
@@ -169,17 +172,19 @@ class RESTClient:
             if method == _HttpMethod.DELETE:
                 try:
                     async with session.delete(
-                        self._client._internal.base_uri + url, headers=headers, *kwargs
+                        self._client._internal.base_uri + url, headers=headers, **kwargs
                     ) as response:
+                        if response.status >= 400:
+                            raise LavalinkException(
+                                f"A {response.status} error has occurred."
+                            )
+
                         try:
                             payload = await response.json()
                         except Exception:
                             raise ValueError(
                                 "Json data was not received from the response."
                             )
-
-                        if response.status >= 400:
-                            raise LavalinkException(RestError._from_payload(payload))
 
                         return payload
                 except Exception as e:
@@ -352,7 +357,7 @@ class RESTPlayer:
 
         Update a specific player, for the specified Guild id.
 
-        !!! INFO
+        !!! info
             If no_replace is True, then setting a track to the track option, will not do anything.
 
         Parameters
@@ -438,7 +443,6 @@ class RESTPlayer:
                 patch_data.update({"filters": None})
             else:
                 patch_data.update({"filters": filter._build()})
-
         new_headers = self._rest._client._internal.headers.copy()
 
         new_headers.update({"Content-Type": "application/json"})
@@ -451,9 +455,10 @@ class RESTPlayer:
         try:
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players/" + str(guild_id),
-                params,
+                self._rest._client._internal.headers,
                 _HttpMethod.PATCH,
                 json=patch_data,
+                params=params,
             )
         except LavalinkException:
             raise
@@ -538,7 +543,7 @@ class RESTTrack:
 
         try:
             resp = await self._rest._rest_handler(
-                "/info",
+                "/loadtracks",
                 self._rest._client._internal.headers,
                 _HttpMethod.GET,
                 params=params,

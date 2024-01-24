@@ -21,7 +21,7 @@ You then must create an ongaku class, that attaches to that bot.
 ```python
 import ongaku
 
-lavalink = ongaku.Ongaku(
+client = ongaku.Client(
     bot,
     password="youshallnotpass"
 )
@@ -36,13 +36,9 @@ bot.run()
 ## Searching for tracks
 
 ```py
-tracks =  await lavalink.rest.search(
-    ongaku.PlatformType.YOUTUBE,
-    "AJR"
-)
+tracks =  await client.rest.search("AJR")
 ```
 
-The first argument parsed, is the [platform type](../api/enums.md#ongaku.enums.PlatformType).
 The second argument parsed, is the query, or the song/link you wish to search.
 
 The method, will then return one of the following:
@@ -61,7 +57,7 @@ The method, will then return one of the following:
 Then, with the track above, you want to create a player, for the guild that you wish to play music from.
 
 ```py
-player = await lavalink.create_player(guild_id)
+player = await client.player.create(guild_id)
 ```
 
 This will return an existing player, or, will create a new player if no player exists.

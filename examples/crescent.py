@@ -9,7 +9,7 @@ bot = hikari.GatewayBot("...")
 
 client = crescent.Client(bot)
 
-lavalink = ongaku.Client(bot, password="youshallnotpass")
+ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
 
 # Events
@@ -57,6 +57,18 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     )
 
 
+@bot.listen(ongaku.QueueNextEvent)
+async def queue_next_event(event: ongaku.QueueNextEvent):
+    logging.info(
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
+    )
+
+
+@bot.listen(ongaku.QueueEmptyEvent)
+async def queue_empty_event(event: ongaku.QueueEmptyEvent):
+    logging.info(f"Queue is empty in guild: {event.guild_id}")
+
+
 # Commands
 
 
@@ -80,7 +92,7 @@ class Play:
             )
             return
 
-        result = await lavalink.rest.track.load(self.query)
+        result = await ongaku_client.rest.track.load(self.query)
 
         if result is None:
             await ctx.respond(
@@ -105,9 +117,9 @@ class Play:
         )
 
         try:
-            player = await lavalink.fetch_player(ctx.guild_id)
+            player = await ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
-            player = await lavalink.create_player(ctx.guild_id)
+            player = await ongaku_client.player.create(ctx.guild_id)
 
         if player.connected is False:
             await player.connect(voice_state.channel_id)
@@ -133,7 +145,7 @@ class Add:
             )
             return
         try:
-            current_player = await lavalink.fetch_player(ctx.guild_id)
+            current_player = await ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "You must have a player currently running!",
@@ -141,7 +153,7 @@ class Add:
             )
             return
 
-        result = await lavalink.rest.track.load(self.query)
+        result = await ongaku_client.rest.track.load(self.query)
 
         if result is None:
             await ctx.respond(
@@ -180,7 +192,7 @@ class Pause:
             )
             return
         try:
-            current_player = await lavalink.fetch_player(ctx.guild_id)
+            current_player = await ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "You must have a player currently running!",
@@ -212,7 +224,7 @@ class Queue:
             return
 
         try:
-            player = await lavalink.fetch_player(ctx.guild_id)
+            player = await ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
@@ -258,7 +270,7 @@ class Volume:
             return
 
         try:
-            player = await lavalink.fetch_player(ctx.guild_id)
+            player = await ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
@@ -291,7 +303,7 @@ class Skip:
             return
 
         try:
-            player = await lavalink.fetch_player(ctx.guild_id)
+            player = await ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
@@ -324,7 +336,7 @@ class Stop:
             return
 
         try:
-            await lavalink.delete_player(ctx.guild_id)
+            await ongaku_client.player.delete(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",

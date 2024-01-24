@@ -70,6 +70,8 @@ class Player:
 
         self._volume: int = -1
 
+        self._autoplay = True
+
         self.bot.subscribe(TrackEndEvent, self._track_end_event)
 
     @property
@@ -119,6 +121,11 @@ class Player:
     def is_paused(self) -> bool:
         """Whether the bot is paused or not."""
         return self._is_paused
+
+    @property
+    def autoplay(self) -> bool:
+        """Whether or not the next song will play, when this song ends."""
+        return self._autoplay
 
     @property
     def connected(self) -> bool:
@@ -304,8 +311,7 @@ class Player:
                 self.guild_id,
                 self.node._internal.session_id,
                 track=self.queue[0],
-                voice=self._voice,
-                no_replace=False,
+                no_replace=True,
             )
         except LavalinkException:
             raise
@@ -321,7 +327,7 @@ class Player:
     ) -> None:
         """Add tracks.
 
-        Add tracks to the queue. This will not automatically start playing the songs.
+        Add tracks to the queue. This will not automatically start playing the songs. please call `.play()` after, with no track.
 
         Parameters
         ----------
@@ -343,23 +349,6 @@ class Player:
             if requestor:
                 track.requestor = requestor
             self._queue.append(track)
-
-        if self.node._internal.session_id is None:
-            raise SessionStartException()
-
-        try:
-            player = await self.node.client.rest.player.update(
-                self.guild_id,
-                self.node._internal.session_id,
-                track=self.queue[0],
-                no_replace=False,
-            )
-        except LavalinkException:
-            raise
-        except BuildException:
-            raise
-
-        await self._update(player)
 
     async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
         """Pause the player.
@@ -582,20 +571,6 @@ class Player:
             else:
                 raise PlayerException(f"Failed to remove song in position {value}")
 
-        if index == 0:
-            if len(self.queue) == 0:
-                try:
-                    player = await self.node.client.rest.player.update(
-                        self.guild_id, self.node._internal.session_id, track=None
-                    )
-                except LavalinkException:
-                    raise
-                except BuildException:
-                    raise
-                await self._update(player)
-            else:
-                await self.play()
-
     async def clear(self) -> None:
         """Clear the queue.
 
@@ -667,6 +642,23 @@ class Player:
 
         await self._update(player)
 
+    async def set_autoplay(self, toggle: UndefinedOr[bool] = UNDEFINED) -> bool:
+        """Set autoplay.
+
+        whether or not to enable or disable autoplay.
+
+        Parameters
+        ----------
+        toggle : hikari.UndefinedOr[bool]
+            Whether or not to toggle the autoplay on or off. If left empty, it will toggle the current status.
+        """
+        if toggle == UNDEFINED:
+            self._autoplay = not self._autoplay
+            return self._autoplay
+
+        self._autoplay = toggle
+        return self._autoplay
+
     async def _update(self, player: player.Player) -> None:
         # TODO: Somehow do the filter and the track.
 
@@ -678,14 +670,18 @@ class Player:
         if self.node._internal.session_id is None:
             raise SessionStartException()
 
+        if not self._autoplay:
+            return
+
         if int(event.guild_id) == int(self.guild_id):
             try:
                 await self.remove(0)
-            except Exception:
+            except Exception as e:
+                print(f"Exception: {e}")
                 await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 
-            if len(self.queue) == 0:
+            if len(self.queue) <= 0:
                 await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 

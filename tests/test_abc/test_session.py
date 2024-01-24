@@ -1,3 +1,4 @@
+# ruff: noqa
 import unittest
 
 from ongaku.abc.session import Session

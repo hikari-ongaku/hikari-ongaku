@@ -1,3 +1,4 @@
+# ruff: noqa
 import unittest
 
 import hikari

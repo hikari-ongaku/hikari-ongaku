@@ -1,3 +1,4 @@
+# ruff: noqa
 import unittest
 
 import hikari
@@ -36,15 +37,15 @@ _test_info = TrackInfo(
 _test_track = Track("test_encoded", _test_info, {}, {})
 
 
-class ReadyEventTest(unittest.TestCase):
-    def test_base(self):
+class ReadyEventTest(unittest.TestCase):  # noqa: D101
+    def test_base(self):  # noqa: D102
         test_ready_event = ReadyEvent(_test_bot, False, "test_session_id")
 
         assert test_ready_event.app == _test_bot
         assert test_ready_event.resumed is False
         assert test_ready_event.session_id == "test_session_id"
 
-    def test_base_payload(self):
+    def test_base_payload(self):  # noqa: D102
         test_ready_event = ReadyEvent._from_payload(
             {"resumed": True, "sessionId": "test_session_id_payload"}, app=_test_bot
         )
@@ -54,8 +55,8 @@ class ReadyEventTest(unittest.TestCase):
         assert test_ready_event.session_id == "test_session_id_payload"
 
 
-class StatsEventTest(unittest.TestCase):
-    def test_base(self):
+class StatsEventTest(unittest.TestCase):  # noqa: D101
+    def test_base(self):  # noqa: D102
         test_memory = StatsMemory(1, 2, 3, 4)
         test_cpu = StatsCpu(1, 2.3, 4.5)
         test_frame_stats = StatsFrameStatistics(68, 12, -5)
@@ -80,7 +81,7 @@ class StatsEventTest(unittest.TestCase):
             assert test_stats_event.frame_statistics.nulled == 12
             assert test_stats_event.frame_statistics.deficit == -5
 
-    def test_base_payload(self):
+    def test_base_payload(self):  # noqa: D102
         payload = {
             "op": "stats",
             "players": 1,
@@ -114,7 +115,7 @@ class StatsEventTest(unittest.TestCase):
             assert test_stats_event.frame_statistics.nulled == 10
             assert test_stats_event.frame_statistics.deficit == -3010
 
-    def test_memory(self):
+    def test_memory(self):  # noqa: D102
         test_memory = StatsMemory(1, 2, 3, 4)
 
         assert test_memory.free == 1
@@ -122,7 +123,7 @@ class StatsEventTest(unittest.TestCase):
         assert test_memory.allocated == 3
         assert test_memory.reservable == 4
 
-    def test_memory_payload(self):
+    def test_memory_payload(self):  # noqa: D102
         payload = {
             "free": 123456789,
             "used": 123456789,
@@ -137,14 +138,14 @@ class StatsEventTest(unittest.TestCase):
         assert test_memory.allocated == 123456789
         assert test_memory.reservable == 123456789
 
-    def test_cpu(self):
+    def test_cpu(self):  # noqa: D102
         test_cpu = StatsCpu(1, 2.3, 4)
 
         assert test_cpu.cores == 1
         assert test_cpu.system_load == 2.3
         assert test_cpu.lavalink_load == 4
 
-    def test_cpu_payload(self):
+    def test_cpu_payload(self):  # noqa: D102
         payload = {"cores": 4, "systemLoad": 0.5, "lavalinkLoad": 0.5}
 
         test_cpu = StatsCpu._from_payload(payload)
@@ -153,7 +154,7 @@ class StatsEventTest(unittest.TestCase):
         assert test_cpu.system_load == 0.5
         assert test_cpu.lavalink_load == 0.5
 
-    def test_frame_stats(self):
+    def test_frame_stats(self):  # noqa: D102
         test_frame_stats = StatsFrameStatistics(1, 2, -3)
 
         assert test_frame_stats.sent == 1

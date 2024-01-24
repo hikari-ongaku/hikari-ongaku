@@ -31,7 +31,7 @@ player_filter.set_karaoke(mono_level=None)
 And finally, you want to set that filter, to the player.
 
 ```python
-player = lavalink.fetch_player(guild_id)
+player = client.fetch_player(guild_id)
 
 player.filter(player_filter)
 ```

@@ -9,7 +9,7 @@ theme:
     primary: custom
     accent: custom
   font:
-    text: Open Sans
+    text: Quicksand
   features:
     - navigation.tabs
     - navigation.tabs.sticky
@@ -83,6 +83,7 @@ nav:
     - Basics: getting_started/basics.md
     - Filters: getting_started/filters.md
     - Nodes: getting_started/nodes.md
+    - Plugins: getting_started/plugins.md
   - API Reference:
     - api/index.md
     - Client: api/client.md
@@ -99,6 +100,9 @@ nav:
       - Session: api/abc/session.md
       - Track: api/abc/track.md
       - Filters: api/abc/filters.md
+  - Extensions:
+    - ext/index.md
+    - Creation: ext/creation.md
   - Changelog: changelog.md
 
 

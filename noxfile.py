@@ -1,3 +1,4 @@
+# ruff: noqa
 import os
 
 import nox
@@ -12,7 +13,13 @@ SCRIPT_PATHS = [
     os.path.join(".", "tests"),
 ]
 
-options.sessions = ["format_fix", "import_fix", "pyright", "pytest", "docs"]
+options.sessions = [
+    "format_fix",
+    "import_fix",
+    "pyright",
+    "pytest",
+    "docs",
+]
 
 
 @nox.session()

@@ -1,3 +1,4 @@
+# ruff: noqa
 import typing as t
 import unittest
 

@@ -1,3 +1,4 @@
+# ruff: noqa
 import unittest
 
 from ongaku.abc.lavalink import ExceptionError

@@ -6,7 +6,7 @@ import ongaku
 
 bot = hikari.GatewayBot(token="...", intents=hikari.Intents.ALL)
 
-lavalink = ongaku.Client(bot, password="youshallnotpass")
+ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
 
 # Events
@@ -54,6 +54,18 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     )
 
 
+@bot.listen(ongaku.QueueNextEvent)
+async def queue_next_event(event: ongaku.QueueNextEvent):
+    logging.info(
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
+    )
+
+
+@bot.listen(ongaku.QueueEmptyEvent)
+async def queue_empty_event(event: ongaku.QueueEmptyEvent):
+    logging.info(f"Queue is empty in guild: {event.guild_id}")
+
+
 # Commands
 
 prefix = "!"
@@ -97,7 +109,7 @@ async def play_event(event: hikari.MessageCreateEvent):
         )
         return
 
-    result = await lavalink.rest.track.load(query)
+    result = await ongaku_client.rest.track.load(query)
 
     if result is None:
         await bot.rest.create_message(
@@ -122,9 +134,9 @@ async def play_event(event: hikari.MessageCreateEvent):
     )
 
     try:
-        player = await lavalink.fetch_player(event.message.guild_id)
+        player = await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
-        player = await lavalink.create_player(event.message.guild_id)
+        player = await ongaku_client.player.create(event.message.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -167,7 +179,7 @@ async def add_event(event: hikari.MessageCreateEvent):
     query = split_content[1]
 
     try:
-        current_player = await lavalink.fetch_player(event.message.guild_id)
+        current_player = await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -176,7 +188,7 @@ async def add_event(event: hikari.MessageCreateEvent):
         )
         return
 
-    result = await lavalink.rest.track.load(query)
+    result = await ongaku_client.rest.track.load(query)
 
     if result is None:
         await bot.rest.create_message(
@@ -225,7 +237,7 @@ async def pause_event(event: hikari.MessageCreateEvent):
         return
 
     try:
-        current_player = await lavalink.fetch_player(event.message.guild_id)
+        current_player = await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -266,7 +278,7 @@ async def queue_event(event: hikari.MessageCreateEvent):
         return
 
     try:
-        player = await lavalink.fetch_player(event.message.guild_id)
+        player = await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -346,7 +358,7 @@ async def volume_event(event: hikari.MessageCreateEvent):
         return
 
     try:
-        player = await lavalink.fetch_player(event.message.guild_id)
+        player = await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -416,7 +428,7 @@ async def skip_event(event: hikari.MessageCreateEvent):
         return
 
     try:
-        player = await lavalink.fetch_player(event.message.guild_id)
+        player = await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -462,7 +474,7 @@ async def stop_event(event: hikari.MessageCreateEvent):
         return
 
     try:
-        await lavalink.delete_player(event.message.guild_id)
+        await ongaku_client.player.fetch(event.message.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,

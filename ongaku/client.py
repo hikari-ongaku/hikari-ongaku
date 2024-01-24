@@ -13,6 +13,7 @@ import hikari
 
 from .enums import VersionType
 from .errors import NodeException
+from .errors import OngakuBaseException
 from .errors import PlayerMissingException
 from .errors import RequiredException
 from .node import Node
@@ -37,7 +38,7 @@ class Client:
     The base Ongaku class, where everything starts from.
 
     !!! WARNING
-        Do not change `max_retries` unless you know what you are doing. If your websocket does not stay connected/doesn't connect on the first try, do not use this as a fix.
+        Do not change `max_retries` unless you know what you are doing. If your websocket does not stay connected/doesn't connect on the first try, do not use this as a fix. Try and solve the issue first.
 
     Parameters
     ----------
@@ -70,8 +71,6 @@ class Client:
     ) -> None:
         self._bot = bot
 
-        self._players: dict[hikari.Snowflake, Player] = {}
-
         headers: dict[str, t.Any] = {}
 
         if password:
@@ -85,9 +84,14 @@ class Client:
 
         self._nodes: dict[int | str, Node] = {}
 
+        self._auto_nodes = auto_nodes
         if auto_nodes:
             bot.subscribe(hikari.ShardEvent, self._handle_nodes)
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
+
+        self._player_client = PlayerClient(self)
+
+        self._node_client = NodeClient(self)
 
     @property
     def nodes(self) -> t.Sequence[Node]:
@@ -104,7 +108,40 @@ class Client:
         """The App or Bot that lavalink is connected too."""
         return self._bot
 
-    async def create_player(self, guild_id: hikari.Snowflake) -> Player:
+    @property
+    def player(self) -> PlayerClient:
+        """The player functions."""
+        return self._player_client
+
+    @property
+    def node(self) -> NodeClient:
+        """The node functions."""
+        return self._node_client
+
+    async def _handle_nodes(self, event: hikari.ShardEvent) -> None:
+        if isinstance(event, hikari.events.ShardReadyEvent):
+            new_node = Node(self, str(event.shard.id))
+
+            self._nodes.update({event.shard.id: new_node})
+
+            try:
+                await new_node._connect()
+            except Exception:
+                raise
+
+    async def _handle_shutdown(self, event: hikari.StoppingEvent):
+        INTERNAL_LOGGER.info("Shutting down players...")
+        for player in self.player.walk():
+            await player.disconnect()
+
+        INTERNAL_LOGGER.info("Shutdown complete.")
+
+
+class PlayerClient:
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    async def create(self, guild_id: hikari.Snowflake) -> Player:
         """Create a new player.
 
         Creates a new player for the specified guild, and places it in the specified channel. It will attach itself to the correct node as well.
@@ -116,41 +153,50 @@ class Client:
 
         Raises
         ------
-        PlayerException : Raised when the player failed to be created.
-        NodeException : The node tht the bot needs to connect too, has not been created.
+        PlayerException
+            Raised when the player failed to be created.
+        NodeException
+            The node tht the bot needs to connect too, has not been created.
+        OngakuBaseException
+            Auto nodes is disabled. For this method to work, it must be enabled.
 
         Returns
         -------
         Player : The player that has been successfully created
         """
-        shard_id = hikari.snowflakes.calculate_shard_id(self.bot, guild_id)
+        if not self._client._auto_nodes:
+            OngakuBaseException(
+                "Sorry, but this method does not work if auto nodes is disabled."
+            )
 
-        bot = self.bot.get_me()
+        shard_id = hikari.snowflakes.calculate_shard_id(self._client.bot, guild_id)
+
+        node = self._client._nodes.get(shard_id)
+
+        if not node:
+            raise NodeException("Node does not exist.")
+
+        bot = self._client.bot.get_me()
 
         if bot is None:
             raise RequiredException("The bot is required to be able to connect.")
 
-        bot_state = self.bot.cache.get_voice_state(guild_id, bot.id)
+        bot_state = self._client.bot.cache.get_voice_state(guild_id, bot.id)
 
         if bot_state is not None and bot_state.channel_id is not None:
             try:
-                self._players.pop(guild_id)
+                node._players.pop(guild_id)
             except KeyError:
                 raise NodeException(
                     "The node this player needs to attach too, has not yet been created."
                 )
 
-        node = self._nodes.get(shard_id)
-
-        if not node:
-            raise NodeException("Node does not exist.")
-
         new_player = Player(node, guild_id)
 
-        self._players.update({guild_id: new_player})
+        node._players.update({guild_id: new_player})
         return new_player
 
-    async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
+    async def fetch(self, guild_id: hikari.Snowflake) -> Player:
         """Fetch a player.
 
         Fetch a player for the specified guild.
@@ -170,13 +216,13 @@ class Client:
         Player
             The player that belongs to the specified guild.
         """
-        for player in self.walk_players():
+        for player in self.walk():
             if player.guild_id == guild_id:
                 return player
 
         raise PlayerMissingException(guild_id)
 
-    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
+    async def delete(self, guild_id: hikari.Snowflake) -> None:
         """Delete a player.
 
         Deletes a player from the specified guild, and disconnects it, if it has not been disconnected already.
@@ -192,27 +238,32 @@ class Client:
             The player was not found for the guild specified.
 
         """
-        player = await self.fetch_player(guild_id)
+        player = await self.fetch(guild_id)
 
         await player.disconnect()
 
         player.node._players.pop(guild_id)
 
-    def walk_players(self) -> t.Iterator[Player]:
+    def walk(self) -> t.Iterator[Player]:
         """Walk players.
 
-        Walk through all players, on all the currently working nodes.
+        Walk through all players, on all the nodes attached to this client.
 
         Returns
         -------
         typing.Iterator[Player]
             the players from all of the nodes.
         """
-        for node in self._nodes.values():
+        for node in self._client._nodes.values():
             for player in node.players:
                 yield player
 
-    async def create_node(self, name: str) -> Node:
+
+class NodeClient:
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    async def create(self, name: str) -> Node:
         """Create a node.
 
         Create a new node for the server.
@@ -232,21 +283,21 @@ class Client:
         Node
             The new node that has been created.
         """
-        if self._nodes.get(name) is not None:
+        if self._client._nodes.get(name) is not None:
             raise ValueError("Sorry, but this name already exists.")
 
-        new_node = Node(self, name)
+        new_node = Node(self._client, name)
 
         try:
             await new_node._connect()
         except:
             raise
 
-        self._nodes.update({name: new_node})
+        self._client._nodes.update({name: new_node})
 
         return new_node
 
-    async def fetch_node(self, name: str) -> Node:
+    async def fetch(self, name: str) -> Node:
         """Fetch a node.
 
         Fetch a specific node by its name.
@@ -266,14 +317,14 @@ class Client:
         Node
             The node that has been found.
         """
-        node = self._nodes.get(name)
+        node = self._client._nodes.get(name)
 
         if node:
             return node
 
         raise ValueError("That node does not exist.")
 
-    async def delete_node(self, name: str) -> None:
+    async def delete(self, name: str) -> None:
         """Delete a node.
 
         Delete a specific node by its name.
@@ -288,7 +339,7 @@ class Client:
         ValueError
             When the node does not exist.
         """
-        node = self._nodes.get(name)
+        node = self._client._nodes.get(name)
 
         if node:
             for player in node.players:
@@ -297,24 +348,6 @@ class Client:
             await node._disconnect()
 
         raise ValueError("That node does not exist.")
-
-    async def _handle_nodes(self, event: hikari.ShardEvent) -> None:
-        if isinstance(event, hikari.events.ShardReadyEvent):
-            new_node = Node(self, str(event.shard.id))
-
-            self._nodes.update({event.shard.id: new_node})
-
-            try:
-                await new_node._connect()
-            except Exception:
-                raise
-
-    async def _handle_shutdown(self, event: hikari.StoppingEvent):
-        INTERNAL_LOGGER.info("Shutting down players...")
-        for player in self.walk_players():
-            await player.disconnect()
-
-        INTERNAL_LOGGER.info("Shutdown complete.")
 
 
 # MIT License
