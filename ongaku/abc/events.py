@@ -106,11 +106,11 @@ class StatsCpu(PayloadBase[dict[str, t.Any]]):
     """
 
     cores: int
-    """The amount of cores the node has."""
+    """The amount of cores the server has."""
     system_load: float
-    """The system load of the node."""
+    """The system load of the server."""
     lavalink_load: float
-    """The load of Lavalink on the node."""
+    """The load of Lavalink on the server."""
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> StatsCpu:
@@ -156,17 +156,17 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
     _app: hikari.RESTAware
 
     players: int
-    """The amount of players connected to the node."""
+    """The amount of players connected to the session."""
     playing_players: int
     """The amount of players playing a track."""
     uptime: int
-    """The uptime of the node in milliseconds."""
+    """The uptime of the session in milliseconds."""
     memory: StatsMemory
-    """The memory stats of the node."""
+    """The memory stats of the session."""
     cpu: StatsCpu
-    """The cpu stats of the node."""
+    """The cpu stats of the session."""
     frame_statistics: t.Optional[StatsFrameStatistics]
-    """The frame stats of the node."""
+    """The frame stats of the session."""
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any], *, app: hikari.RESTAware):

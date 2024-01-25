@@ -12,13 +12,13 @@ import attrs
 import hikari
 
 from .enums import VersionType
-from .errors import NodeException
 from .errors import OngakuBaseException
 from .errors import PlayerMissingException
 from .errors import RequiredException
-from .node import Node
+from .errors import SessionException
 from .player import Player
 from .rest import RESTClient
+from .session import Session
 
 INTERNAL_LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +54,8 @@ class Client:
         The version of lavalink you are running. Currently only supports V3, or V4.
     max_retries : int
         The maximum amount of retries for the Websocket.
-    auto_nodes : bool
-        Whether or not auto nodes are enabled.
+    auto_sessions : bool
+        Whether or not auto sessions are enabled.
     """
 
     def __init__(
@@ -67,7 +67,7 @@ class Client:
         password: str | None = None,
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
-        auto_nodes: bool = True,
+        auto_sessions: bool = True,
     ) -> None:
         self._bot = bot
 
@@ -82,21 +82,21 @@ class Client:
 
         self._rest = RESTClient(self)
 
-        self._nodes: dict[int | str, Node] = {}
+        self._sessions: dict[int | str, Session] = {}
 
-        self._auto_nodes = auto_nodes
-        if auto_nodes:
-            bot.subscribe(hikari.ShardEvent, self._handle_nodes)
+        self._auto_sessions = auto_sessions
+        if auto_sessions:
+            bot.subscribe(hikari.ShardEvent, self._handle_sessions)
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
 
         self._player_client = PlayerClient(self)
 
-        self._node_client = NodeClient(self)
+        self._session_client = SessionClient(self)
 
     @property
-    def nodes(self) -> t.Sequence[Node]:
-        """The nodes, that are attached to this lavalink server."""
-        return list(self._nodes.values())
+    def sessions(self) -> t.Sequence[Session]:
+        """The sessions, that are attached to this lavalink server."""
+        return list(self._sessions.values())
 
     @property
     def rest(self) -> RESTClient:
@@ -114,18 +114,18 @@ class Client:
         return self._player_client
 
     @property
-    def node(self) -> NodeClient:
-        """The node functions."""
-        return self._node_client
+    def session(self) -> SessionClient:
+        """The session functions."""
+        return self._session_client
 
-    async def _handle_nodes(self, event: hikari.ShardEvent) -> None:
+    async def _handle_sessions(self, event: hikari.ShardEvent) -> None:
         if isinstance(event, hikari.events.ShardReadyEvent):
-            new_node = Node(self, str(event.shard.id))
+            new_session = Session(self, str(event.shard.id))
 
-            self._nodes.update({event.shard.id: new_node})
+            self._sessions.update({event.shard.id: new_session})
 
             try:
-                await new_node._connect()
+                await new_session._connect()
             except Exception:
                 raise
 
@@ -138,13 +138,18 @@ class Client:
 
 
 class PlayerClient:
+    """Player functions.
+
+    All of the player functions, like create, fetch, delete and walk.
+    """
+
     def __init__(self, client: Client) -> None:
         self._client = client
 
     async def create(self, guild_id: hikari.Snowflake) -> Player:
         """Create a new player.
 
-        Creates a new player for the specified guild, and places it in the specified channel. It will attach itself to the correct node as well.
+        Creates a new player for the specified guild, and places it in the specified channel. It will attach itself to the correct session as well.
 
         Parameters
         ----------
@@ -155,26 +160,26 @@ class PlayerClient:
         ------
         PlayerException
             Raised when the player failed to be created.
-        NodeException
-            The node tht the bot needs to connect too, has not been created.
+        SessionException
+            The session tht the bot needs to connect too, has not been created.
         OngakuBaseException
-            Auto nodes is disabled. For this method to work, it must be enabled.
+            Auto sessions is disabled. For this method to work, it must be enabled.
 
         Returns
         -------
         Player : The player that has been successfully created
         """
-        if not self._client._auto_nodes:
+        if not self._client._auto_sessions:
             OngakuBaseException(
-                "Sorry, but this method does not work if auto nodes is disabled."
+                "Sorry, but this method does not work if auto sessions is disabled."
             )
 
         shard_id = hikari.snowflakes.calculate_shard_id(self._client.bot, guild_id)
 
-        node = self._client._nodes.get(shard_id)
+        session = self._client._sessions.get(shard_id)
 
-        if not node:
-            raise NodeException("Node does not exist.")
+        if not session:
+            raise SessionException("Session does not exist.")
 
         bot = self._client.bot.get_me()
 
@@ -185,15 +190,15 @@ class PlayerClient:
 
         if bot_state is not None and bot_state.channel_id is not None:
             try:
-                node._players.pop(guild_id)
+                session._players.pop(guild_id)
             except KeyError:
-                raise NodeException(
-                    "The node this player needs to attach too, has not yet been created."
+                raise SessionException(
+                    "The session this player needs to attach too, has not yet been created."
                 )
 
-        new_player = Player(node, guild_id)
+        new_player = Player(session, guild_id)
 
-        node._players.update({guild_id: new_player})
+        session._players.update({guild_id: new_player})
         return new_player
 
     async def fetch(self, guild_id: hikari.Snowflake) -> Player:
@@ -242,112 +247,117 @@ class PlayerClient:
 
         await player.disconnect()
 
-        player.node._players.pop(guild_id)
+        player.session._players.pop(guild_id)
 
     def walk(self) -> t.Iterator[Player]:
         """Walk players.
 
-        Walk through all players, on all the nodes attached to this client.
+        Walk through all players, on all the sessions attached to this client.
 
         Returns
         -------
         typing.Iterator[Player]
-            the players from all of the nodes.
+            the players from all of the sessions.
         """
-        for node in self._client._nodes.values():
-            for player in node.players:
+        for session in self._client._sessions.values():
+            for player in session.players:
                 yield player
 
 
-class NodeClient:
+class SessionClient:
+    """Session functions.
+
+    All of the session related functions, like create, fetch and delete.
+    """
+
     def __init__(self, client: Client) -> None:
         self._client = client
 
-    async def create(self, name: str) -> Node:
-        """Create a node.
+    async def create(self, name: str) -> Session:
+        """Create a session.
 
-        Create a new node for the server.
+        Create a new session for the server.
 
         Parameters
         ----------
         name : str
-            The name you wish to attach to the node.
+            The name you wish to attach to the session.
 
         Raises
         ------
         ValueError
-            When that name already exists as a node.
+            When that name already exists as a session.
 
         Returns
         -------
-        Node
-            The new node that has been created.
+        Session
+            The new session that has been created.
         """
-        if self._client._nodes.get(name) is not None:
+        if self._client._sessions.get(name) is not None:
             raise ValueError("Sorry, but this name already exists.")
 
-        new_node = Node(self._client, name)
+        new_session = Session(self._client, name)
 
         try:
-            await new_node._connect()
+            await new_session._connect()
         except:
             raise
 
-        self._client._nodes.update({name: new_node})
+        self._client._sessions.update({name: new_session})
 
-        return new_node
+        return new_session
 
-    async def fetch(self, name: str) -> Node:
-        """Fetch a node.
+    async def fetch(self, name: str) -> Session:
+        """Fetch a session.
 
-        Fetch a specific node by its name.
+        Fetch a specific session by its name.
 
         Parameters
         ----------
         name : str
-            The name of the node.
+            The name of the session.
 
         Raises
         ------
         ValueError
-            When the node does not exist.
+            When the session does not exist.
 
         Returns
         -------
-        Node
-            The node that has been found.
+        Session
+            The session that has been found.
         """
-        node = self._client._nodes.get(name)
+        session = self._client._sessions.get(name)
 
-        if node:
-            return node
+        if session:
+            return session
 
-        raise ValueError("That node does not exist.")
+        raise ValueError("That session does not exist.")
 
     async def delete(self, name: str) -> None:
-        """Delete a node.
+        """Delete a session.
 
-        Delete a specific node by its name.
+        Delete a specific session by its name.
 
         Parameters
         ----------
         name : str
-            The name of the node.
+            The name of the session.
 
         Raises
         ------
         ValueError
-            When the node does not exist.
+            When the session does not exist.
         """
-        node = self._client._nodes.get(name)
+        session = self._client._sessions.get(name)
 
-        if node:
-            for player in node.players:
+        if session:
+            for player in session.players:
                 await player.disconnect()
 
-            await node._disconnect()
+            await session._disconnect()
 
-        raise ValueError("That node does not exist.")
+        raise ValueError("That session does not exist.")
 
 
 # MIT License

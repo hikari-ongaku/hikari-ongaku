@@ -16,11 +16,11 @@ class ClientTest(unittest.TestCase):
             port=1234,
             password="test_password",
             version=ongaku.VersionType.V4,
-            auto_nodes=False,
+            auto_sessions=False,
         )
 
         assert test_client.bot == test_bot
-        assert len(test_client.nodes) == 0
+        assert len(test_client.sessions) == 0
         assert isinstance(test_client.rest, RESTClient)
 
         with self.assertRaises(ValueError):

@@ -66,15 +66,15 @@ class VersionType(str, enum.Enum):
 class ConnectionType(enum.IntEnum):
     """Connection type.
 
-    The connection type, or status for the node.
+    The connection type, or status for the session.
     """
 
     FAILURE = 0
-    """The node has failed to connect to the lavalink server."""
+    """The session has failed to connect to the lavalink server."""
     LOADING = 1
-    """The node has not yet attempted to connect to the server."""
+    """The session has not yet attempted to connect to the server."""
     CONNECTED = 2
-    """The node has successfully connected to the lavalink server"""
+    """The session has successfully connected to the lavalink server"""
 
 
 class BandType(enum.IntEnum):

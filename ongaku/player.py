@@ -30,7 +30,7 @@ from .errors import SessionStartException
 from .errors import TimeoutException
 
 if t.TYPE_CHECKING:
-    from .node import Node
+    from .session import Session
 
 
 class Player:
@@ -40,18 +40,18 @@ class Player:
 
     Parameters
     ----------
-    node : Node
-        The node that the player is attached too.
+    session : Session
+        The session that the player is attached too.
     guild_id : hikari.Snowflake
         The Guild ID the bot is attached too.
     """
 
     def __init__(
         self,
-        node: Node,
+        session: Session,
         guild_id: Snowflake,
     ):
-        self._node = node
+        self._session = session
         self._guild_id = guild_id
         self._channel_id = None
 
@@ -75,14 +75,14 @@ class Player:
         self.bot.subscribe(TrackEndEvent, self._track_end_event)
 
     @property
-    def node(self) -> Node:
-        """The node that this guild is attached to."""
-        return self._node
+    def session(self) -> Session:
+        """The session that this guild is attached to."""
+        return self._session
 
     @property
     def bot(self) -> GatewayBot:
         """The bot that the server is on."""
-        return self.node.client.bot
+        return self.session.client.bot
 
     @property
     def channel_id(self) -> Snowflake | None:
@@ -183,7 +183,7 @@ class Player:
         BuildException
             Failure to build the player object.
         """
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         self._channel_id = channel_id
@@ -223,9 +223,9 @@ class Player:
             raise BuildException(f"Failed to build player voice: {e}")
 
         try:
-            player = await self.node.client.rest.player.update(
+            player = await self.session.client.rest.player.update(
                 self.guild_id,
-                self.node._internal.session_id,
+                self.session._internal.session_id,
                 voice=self._voice,
                 no_replace=False,
             )
@@ -249,12 +249,12 @@ class Player:
         self._is_alive = False
         await self.clear()
 
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         try:
-            await self.node.client.rest.player.delete(
-                self.node._internal.session_id, self._guild_id
+            await self.session.client.rest.player.delete(
+                self.session._internal.session_id, self._guild_id
             )
         except LavalinkException:
             raise
@@ -294,7 +294,7 @@ class Player:
         if self._voice is None or self._channel_id is None:
             raise PlayerException("Player is not connected to a channel.")
 
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if len(self.queue) > 0 and track is None:
@@ -307,9 +307,9 @@ class Player:
             self._queue.insert(0, track)
 
         try:
-            player = await self.node.client.rest.player.update(
+            player = await self.session.client.rest.player.update(
                 self.guild_id,
-                self.node._internal.session_id,
+                self.session._internal.session_id,
                 track=self.queue[0],
                 no_replace=True,
             )
@@ -372,7 +372,7 @@ class Player:
         BuildException
             Failure to build the player object.
         """
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if value == UNDEFINED:
@@ -381,8 +381,8 @@ class Player:
             self._is_paused = value
 
         try:
-            player = await self.node.client.rest.player.update(
-                self.guild_id, self.node._internal.session_id, paused=self.is_paused
+            player = await self.session.client.rest.player.update(
+                self.guild_id, self.session._internal.session_id, paused=self.is_paused
             )
         except LavalinkException:
             raise
@@ -410,7 +410,7 @@ class Player:
         ValueError
             When the track position selected is not a valid position.
         """
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if value < 0:
@@ -420,9 +420,9 @@ class Player:
             raise PlayerQueueException("The queue is empty.")
 
         try:
-            player = await self.node.client.rest.player.update(
+            player = await self.session.client.rest.player.update(
                 self.guild_id,
-                self.node._internal.session_id,
+                self.session._internal.session_id,
                 position=value,
                 no_replace=False,
             )
@@ -456,7 +456,7 @@ class Player:
         BuildException
             Failure to build the player object.
         """
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if amount <= 0:
@@ -472,9 +472,9 @@ class Player:
 
         if len(self.queue) == 0:
             try:
-                player = await self.node.client.rest.player.update(
+                player = await self.session.client.rest.player.update(
                     self.guild_id,
-                    self.node._internal.session_id,
+                    self.session._internal.session_id,
                     track=None,
                 )
             except LavalinkException:
@@ -505,7 +505,7 @@ class Player:
         BuildException
             Failure to build the player object.
         """
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if volume < 0:
@@ -514,9 +514,9 @@ class Player:
             raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
 
         try:
-            player = await self.node.client.rest.player.update(
+            player = await self.session.client.rest.player.update(
                 self.guild_id,
-                self.node._internal.session_id,
+                self.session._internal.session_id,
                 volume=volume,
                 no_replace=False,
             )
@@ -554,7 +554,7 @@ class Player:
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
 
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException("Session has not been started for this player.")
 
         if isinstance(value, Track):
@@ -587,13 +587,13 @@ class Player:
         """
         self._queue.clear()
 
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         try:
-            player = await self.node.client.rest.player.update(
+            player = await self.session.client.rest.player.update(
                 self.guild_id,
-                self.node._internal.session_id,
+                self.session._internal.session_id,
                 track=None,
                 no_replace=False,
             )
@@ -623,15 +623,15 @@ class Player:
         BuildException
             Failure to build the player object.
         """
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         self._filter = filter
 
         try:
-            player = await self.node.client.rest.player.update(
+            player = await self.session.client.rest.player.update(
                 self.guild_id,
-                self.node._internal.session_id,
+                self.session._internal.session_id,
                 filter=filter,
                 no_replace=False,
             )
@@ -667,7 +667,7 @@ class Player:
         self._volume = player.volume
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
-        if self.node._internal.session_id is None:
+        if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if not self._autoplay:
@@ -686,9 +686,9 @@ class Player:
                 return
 
             try:
-                player = await self.node.client.rest.player.update(
+                player = await self.session.client.rest.player.update(
                     self.guild_id,
-                    self.node._internal.session_id,
+                    self.session._internal.session_id,
                     track=self._queue[0],
                     no_replace=False,
                 )

@@ -1,6 +1,6 @@
 """Events.
 
-The event handler for ongaku's nodes.
+The event handler for ongaku's sessions.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from .abc import WebsocketClosedEvent
 from .errors import SessionStartException
 
 if t.TYPE_CHECKING:
-    from .node import Node
+    from .session import Session
 
 INTERNAL_LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ class EventHandler:
         Please do not build this on your own. This is built internally.
     """
 
-    def __init__(self, node: Node) -> None:
-        self._node = node
+    def __init__(self, session: Session) -> None:
+        self._session = session
 
     async def handle_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle all incoming payloads."""
@@ -65,24 +65,24 @@ class EventHandler:
         if session_id.strip() == "":
             raise SessionStartException("Session ID cannot be none.")
 
-        self._node._internal.session_id = session_id
+        self._session._internal.session_id = session_id
 
         try:
-            event = ReadyEvent._from_payload(payload, app=self._node.client.bot)
+            event = ReadyEvent._from_payload(payload, app=self._session.client.bot)
         except Exception as e:
             raise e
 
         INTERNAL_LOGGER.info("Successfully connected to the server.")
-        await self._node.client.bot.dispatch(event)
+        await self._session.client.bot.dispatch(event)
 
     async def stats_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle statistics payload."""
         try:
-            event = StatisticsEvent._from_payload(payload, app=self._node.client.bot)
+            event = StatisticsEvent._from_payload(payload, app=self._session.client.bot)
         except Exception as e:
             raise e
 
-        await self._node.client.bot.dispatch(event)
+        await self._session.client.bot.dispatch(event)
 
     async def event_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle event payloads."""
@@ -94,21 +94,23 @@ class EventHandler:
         if event_type == "TrackStartEvent":
             try:
                 event = TrackStartEvent._from_payload(
-                    payload, app=self._node.client.bot
+                    payload, app=self._session.client.bot
                 )
             except Exception as e:
                 raise e
 
         elif event_type == "TrackEndEvent":
             try:
-                event = TrackEndEvent._from_payload(payload, app=self._node.client.bot)
+                event = TrackEndEvent._from_payload(
+                    payload, app=self._session.client.bot
+                )
             except Exception as e:
                 raise e
 
         elif event_type == "TrackExceptionEvent":
             try:
                 event = TrackExceptionEvent._from_payload(
-                    payload, app=self._node.client.bot
+                    payload, app=self._session.client.bot
                 )
             except Exception as e:
                 raise e
@@ -116,7 +118,7 @@ class EventHandler:
         elif event_type == "TrackStuckEvent":
             try:
                 event = TrackStuckEvent._from_payload(
-                    payload, app=self._node.client.bot
+                    payload, app=self._session.client.bot
                 )
             except Exception as e:
                 raise e
@@ -124,7 +126,7 @@ class EventHandler:
         elif event_type == "WebSocketClosedEvent":
             try:
                 event = WebsocketClosedEvent._from_payload(
-                    payload, app=self._node.client.bot
+                    payload, app=self._session.client.bot
                 )
             except Exception as e:
                 raise e
@@ -132,7 +134,7 @@ class EventHandler:
         else:
             return
 
-        await self._node.client.bot.dispatch(event)
+        await self._session.client.bot.dispatch(event)
 
 
 # MIT License

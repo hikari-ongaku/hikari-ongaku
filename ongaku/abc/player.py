@@ -35,7 +35,7 @@ class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
     connected: bool
     """Whether Lavalink is connected to the voice gateway."""
     ping: int
-    """The ping of the node to the Discord voice server in milliseconds (-1 if not connected)."""
+    """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> PlayerState:
