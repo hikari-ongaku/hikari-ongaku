@@ -9,7 +9,7 @@ __all__ = (
     "OngakuBaseException",
     "GatewayRequiredException",
     "BuildException",
-    "NodeException",
+    "SessionException",
     "TimeoutException",
     "RequiredException",
     "PlayerException",
@@ -28,10 +28,6 @@ class GatewayRequiredException(OngakuBaseException):
 
 class BuildException(OngakuBaseException):
     """Raised when a model fails to build correctly."""
-
-
-class NodeException(OngakuBaseException):
-    """Raised when an exception happens within a node."""
 
 
 class TimeoutException(OngakuBaseException):
