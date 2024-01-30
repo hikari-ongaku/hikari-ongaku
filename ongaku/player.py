@@ -456,6 +456,8 @@ class Player:
         BuildException
             Failure to build the player object.
         """
+        # TODO: Fix me.
+
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
@@ -465,7 +467,7 @@ class Player:
             raise PlayerQueueException("No tracks in queue.")
 
         for _ in range(amount):
-            if len(self._queue) == 0:
+            if len(self._queue) == 0: 
                 break
             else:
                 self._queue.pop(0)
