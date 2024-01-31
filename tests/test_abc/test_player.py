@@ -35,12 +35,13 @@ class PlayerTest(unittest.TestCase):
             False,
             test_player_state,
             test_player_voice,
+            {}
         )
 
         assert test_player.guild_id == hikari.Snowflake(19216868440)
         assert test_player.track == _test_track
         assert test_player.volume == 100
-        assert test_player.paused is False
+        assert test_player.is_paused is False
         assert test_player.state.time == 12
         assert test_player.state.position == 24
         assert test_player.state.connected is True
@@ -48,6 +49,7 @@ class PlayerTest(unittest.TestCase):
         assert test_player.voice.token == "test_token"
         assert test_player.voice.endpoint == "test_endpoint"
         assert test_player.voice.session_id == "test_session_id"
+        assert test_player.filters == {}
 
     def test_player_payload(self):
         payload = {
@@ -85,8 +87,7 @@ class PlayerTest(unittest.TestCase):
         if test_player.track is not None:
             assert test_player.track.encoded == "test_encoded"
             assert test_player.track.plugin_info == {}
-            if test_player.track.user_data is not None:
-                assert test_player.track.user_data == {}
+            assert test_player.track.user_data == {}
 
             assert test_player.track.info.identifier == "test_identifier"
             assert test_player.track.info.is_seekable is True
@@ -101,7 +102,7 @@ class PlayerTest(unittest.TestCase):
             assert test_player.track.info.source_name == "test_source_name"
 
         assert test_player.volume == 100
-        assert test_player.paused is False
+        assert test_player.is_paused is False
         assert test_player.state.time == 12
         assert test_player.state.position == 24
         assert test_player.state.connected is True
@@ -109,7 +110,6 @@ class PlayerTest(unittest.TestCase):
         assert test_player.voice.token == "test_token"
         assert test_player.voice.endpoint == "test_endpoint"
         assert test_player.voice.session_id == "test_session_id"
-
         assert test_player.to_payload == payload
 
     def test_player_state(self):

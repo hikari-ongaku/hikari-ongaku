@@ -174,7 +174,9 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 class TrackBaseTest(unittest.TestCase):
     def test_track_base(self):
         test_track_base = TrackBase(
-            _test_bot, _test_track, hikari.Snowflake(19216868440)
+            _test_bot,
+            hikari.Snowflake(19216868440),
+            _test_track,
         )
 
         assert test_track_base.app == _test_bot
@@ -208,8 +210,7 @@ class TrackBaseTest(unittest.TestCase):
         assert test_track_base.guild_id == hikari.Snowflake(19216868440)
         assert test_track_base.track.encoded == "test_encoded"
         assert test_track_base.track.plugin_info == {}
-        if test_track_base.track.user_data is not None:
-            assert test_track_base.track.user_data == {}
+        assert test_track_base.track.user_data == {}
 
         assert test_track_base.track.info.identifier == "test_identifier"
         assert test_track_base.track.info.is_seekable is True
@@ -227,7 +228,7 @@ class TrackBaseTest(unittest.TestCase):
 class TrackStartTest(unittest.TestCase):
     def test_base(self):
         test_start_event = TrackStartEvent(
-            _test_bot, _test_track, hikari.Snowflake(19216868440)
+            _test_bot, hikari.Snowflake(19216868440), _test_track,
         )
 
         assert test_start_event.app == _test_bot
@@ -262,8 +263,7 @@ class TrackStartTest(unittest.TestCase):
         assert test_start_event.guild_id == hikari.Snowflake(19216868440)
         assert test_start_event.track.encoded == "test_encoded"
         assert test_start_event.track.plugin_info == {}
-        if test_start_event.track.user_data is not None:
-            assert test_start_event.track.user_data == {}
+        assert test_start_event.track.user_data == {}
 
         assert test_start_event.track.info.identifier == "test_identifier"
         assert test_start_event.track.info.is_seekable is True
@@ -282,8 +282,8 @@ class TrackEndTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackEndEvent(
             _test_bot,
-            _test_track,
             hikari.Snowflake(19216868440),
+            _test_track,
             TrackEndReasonType.FINISHED,
         )
 
@@ -321,8 +321,7 @@ class TrackEndTest(unittest.TestCase):
         assert test_end_event.guild_id == hikari.Snowflake(19216868440)
         assert test_end_event.track.encoded == "test_encoded"
         assert test_end_event.track.plugin_info == {}
-        if test_end_event.track.user_data is not None:
-            assert test_end_event.track.user_data == {}
+        assert test_end_event.track.user_data == {}
 
         assert test_end_event.track.info.identifier == "test_identifier"
         assert test_end_event.track.info.is_seekable is True
@@ -342,8 +341,8 @@ class TrackExceptionTest(unittest.TestCase):
     def test_base(self):
         test_exception_event = TrackExceptionEvent(
             _test_bot,
-            _test_track,
             hikari.Snowflake(19216868440),
+            _test_track,
             ExceptionError("test_message", SeverityType.COMMON, "test_cause"),
         )
 
@@ -387,8 +386,7 @@ class TrackExceptionTest(unittest.TestCase):
         assert test_exception_event.guild_id == hikari.Snowflake(19216868440)
         assert test_exception_event.track.encoded == "test_encoded"
         assert test_exception_event.track.plugin_info == {}
-        if test_exception_event.track.user_data is not None:
-            assert test_exception_event.track.user_data == {}
+        assert test_exception_event.track.user_data == {}
 
         assert test_exception_event.track.info.identifier == "test_identifier"
         assert test_exception_event.track.info.is_seekable is True
@@ -409,7 +407,10 @@ class TrackExceptionTest(unittest.TestCase):
 class TrackStuckTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackStuckEvent(
-            _test_bot, _test_track, hikari.Snowflake(19216868440), 60
+            _test_bot,
+            hikari.Snowflake(19216868440),
+            _test_track,
+            60,
         )
 
         assert test_end_event.app == _test_bot
@@ -446,8 +447,7 @@ class TrackStuckTest(unittest.TestCase):
         assert test_end_event.guild_id == hikari.Snowflake(19216868440)
         assert test_end_event.track.encoded == "test_encoded"
         assert test_end_event.track.plugin_info == {}
-        if test_end_event.track.user_data is not None:
-            assert test_end_event.track.user_data == {}
+        assert test_end_event.track.user_data == {}
 
         assert test_end_event.track.info.identifier == "test_identifier"
         assert test_end_event.track.info.is_seekable is True

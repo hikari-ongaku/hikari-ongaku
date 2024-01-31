@@ -23,6 +23,26 @@ class Payload(abc.ABC, t.Generic[PayloadT]):
     The main payload, that all payload types are inherited from.
     """
 
+def _to_payload(payload: t.Mapping[str, t.Any]) -> dict[str, t.Any]:
+    fixed_data: dict[str, t.Any] = {}
+    for key, value in payload.items():
+        if key.count("_") > 0:
+            split = key.split("_")
+            new_name_list: list[str] = []
+            for x in range(len(split)):
+                if x == 0:
+                    new_name_list.append(split[x])
+                else:
+                    new_name_list.append(split[x].capitalize())
+            key = "".join(new_name_list)
+        
+        if isinstance(value, t.Mapping):
+            fixed_data.update({key:_to_payload(value)}) #type: ignore
+        
+        else:
+            fixed_data.update({key:value})
+    
+    return fixed_data
 
 class PayloadBase(Payload[PayloadT], abc.ABC):
     """
@@ -33,27 +53,26 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
 
     @classmethod
     def _from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
+        """From payload.
+        
+        Converts the payload, into the current object.
+
+        Raises
+        ------
+        TypeError
+            When the type the value wanted, is incorrect.
+        ValueError
+            When the value is none.
+        """
         ...
 
     @property
     def to_payload(self) -> dict[str, t.Any]:
-        """Converts the entire object, into a payload."""
-        new_data: dict[str, t.Any] = {}
-        for key, value in attrs.asdict(self).items():
-            if key.count("_") > 0:
-                split = key.split("_")
-                new_name_list: list[str] = []
-                for x in range(len(split)):
-                    if x == 0:
-                        new_name_list.append(split[x])
-                    else:
-                        new_name_list.append(split[x].capitalize())
-
-                key = "".join(new_name_list)
-
-            new_data.update({key: value})
-
-        return new_data
+        """To payload.
+        
+        Converts your object, to a payload.
+        """
+        return _to_payload(attrs.asdict(self))
 
 
 class PayloadBaseApp(Payload[PayloadT], abc.ABC):

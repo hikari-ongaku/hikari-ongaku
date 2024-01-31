@@ -288,8 +288,6 @@ class Player:
             The queue is empty and no track was given, so it cannot play songs.
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
-        BuildException
-            Failure to build the player object.
         """
         if self._voice is None or self._channel_id is None:
             raise PlayerException("Player is not connected to a channel.")
@@ -311,7 +309,7 @@ class Player:
                 self.guild_id,
                 self.session._internal.session_id,
                 track=self.queue[0],
-                no_replace=True,
+                no_replace=False,
             )
         except LavalinkException:
             raise
@@ -391,6 +389,42 @@ class Player:
 
         await self._update(player)
 
+    async def stop(self) -> None:
+        """
+        Stop current track.
+
+        Stops the audio, by setting the song to none.
+        This does not touch the queue.
+        To start playing again, run .play() without a track.
+
+        Raises
+        ------
+        SessionStartException
+            The session id was null, or empty.
+        PlayerQueueException
+            The queue is empty and no track was given, so it cannot play songs.
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        """
+        if self.session._internal.session_id is None:
+            raise SessionStartException()
+
+        try:
+            player = await self.session.client.rest.player.update(
+                self.guild_id,
+                self.session._internal.session_id,
+                track=None,
+                no_replace=False,
+            )
+        except LavalinkException:
+            raise
+        except BuildException:
+            raise
+
+        self._is_paused = True
+
+        await self._update(player)
+
     async def position(self, value: int) -> None:
         """Change the track position.
 
@@ -449,22 +483,18 @@ class Player:
             The session id was null, or empty.
         ValueError
             The amount was 0 or a negative number.
-        PlayerQueueException
+        PlayerException
             The queue is already empty, so no songs can be skipped.
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
-        BuildException
-            Failure to build the player object.
         """
-        # TODO: Fix me.
-
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
         if amount <= 0:
             raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
-            raise PlayerQueueException("No tracks in queue.")
+            raise PlayerException("No tracks in queue.")
 
         for _ in range(amount):
             if len(self._queue) == 0: 
@@ -472,12 +502,27 @@ class Player:
             else:
                 self._queue.pop(0)
 
-        if len(self.queue) == 0:
+        if len(self.queue) <= 0:
             try:
                 player = await self.session.client.rest.player.update(
                     self.guild_id,
                     self.session._internal.session_id,
                     track=None,
+                    no_replace=False
+                )
+            except LavalinkException:
+                raise
+            except BuildException:
+                raise
+
+            await self._update(player)
+        else:
+            try:
+                player = await self.session.client.rest.player.update(
+                    self.guild_id,
+                    self.session._internal.session_id,
+                    track=self.queue[0],
+                    no_replace=False
                 )
             except LavalinkException:
                 raise
@@ -664,7 +709,7 @@ class Player:
     async def _update(self, player: player.Player) -> None:
         # TODO: Somehow do the filter and the track.
 
-        self._is_paused = player.paused
+        self._is_paused = player.is_paused
         self._voice = player.voice
         self._volume = player.volume
 
@@ -678,8 +723,7 @@ class Player:
         if int(event.guild_id) == int(self.guild_id):
             try:
                 await self.remove(0)
-            except Exception as e:
-                print(f"Exception: {e}")
+            except ValueError:
                 await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 
@@ -687,19 +731,7 @@ class Player:
                 await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 
-            try:
-                player = await self.session.client.rest.player.update(
-                    self.guild_id,
-                    self.session._internal.session_id,
-                    track=self._queue[0],
-                    no_replace=False,
-                )
-            except LavalinkException:
-                raise
-            except BuildException:
-                raise
-
-            await self._update(player)
+            await self.play(self.queue[0])
 
             await self.bot.dispatch(
                 QueueNextEvent(self.bot, self.guild_id, self._queue[0], event.track)

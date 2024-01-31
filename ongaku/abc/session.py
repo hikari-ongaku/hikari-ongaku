@@ -30,8 +30,17 @@ class Session(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Session:
-        resuming = payload["resuming"]
-        timeout = payload["timeout"]
+        resuming = payload.get("resuming")
+        if resuming is None:
+            raise ValueError("resuming cannot be none.")
+        if not isinstance(resuming, bool):
+            raise TypeError("resuming must be a boolean.")
+        
+        timeout = payload.get("timeout")
+        if timeout is None:
+            raise ValueError("timeout cannot be none.")
+        if not isinstance(timeout, int):
+            raise TypeError("timeout must be a int.")
 
         return cls(resuming, timeout)
 

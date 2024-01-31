@@ -49,8 +49,7 @@ class TrackTest(unittest.TestCase):
 
         assert test_track.encoded == "test_encoded"
         assert test_track.plugin_info == {}
-        if test_track.user_data is not None:
-            assert test_track.user_data == {}
+        assert test_track.user_data == {}
 
         assert test_track.info == test_info
 
@@ -60,8 +59,7 @@ class TrackTest(unittest.TestCase):
 
         assert test_track.encoded == "test_encoded"
         assert test_track.plugin_info == {}
-        if test_track.user_data is not None:
-            assert test_track.user_data == {}
+        assert test_track.user_data == {}
 
         assert test_track.info == test_track_info
 
@@ -79,7 +77,7 @@ class TrackTest(unittest.TestCase):
             "test_source_name",
             "test_uri",
             "test_artwork",
-            "test_isrc",
+            None,
         )
 
         assert test_info.identifier == "test_identifier"
@@ -91,7 +89,7 @@ class TrackTest(unittest.TestCase):
         assert test_info.title == "test_title"
         assert test_info.uri == "test_uri"
         assert test_info.artwork_url == "test_artwork"
-        assert test_info.isrc == "test_isrc"
+        assert test_info.isrc is None
         assert test_info.source_name == "test_source_name"
 
         assert test_info.to_payload == self.track_info_payload
@@ -116,12 +114,9 @@ class TrackTest(unittest.TestCase):
 
 class PlaylistTest(unittest.TestCase):
     playlist_payload: dict[str, t.Any] = {
-        "loadType": "playlist",
-        "data": {
-            "info": {"name": "test_playlist_name", "selectedTrack": -1},
-            "pluginInfo": {},
-            "tracks": [TrackTest.track_payload],
-        },
+        "info": {"name": "test_playlist_name", "selectedTrack": -1},
+        "pluginInfo": {},
+        "tracks": [TrackTest.track_payload],
     }
 
     playlist_info_payload: dict[str, t.Any] = playlist_payload["data"]["info"]
@@ -133,15 +128,15 @@ class PlaylistTest(unittest.TestCase):
             "test_author",
             246,
             True,
-            200,
+            0,
             "test_title",
             "test_source_name",
             "test_uri",
-            "test_artwork_url",
-            "test_isrc",
+            "test_artwork",
+            None,
         )
         test_track = Track("test_encoded", test_info, {}, {})
-        test_playlist_info = PlaylistInfo("beans", 0)
+        test_playlist_info = PlaylistInfo("test_playlist_name", -1)
         test_playlist = Playlist(test_playlist_info, {}, (test_track,))
 
         assert test_playlist.info == test_playlist_info
@@ -157,15 +152,15 @@ class PlaylistTest(unittest.TestCase):
             "test_author",
             246,
             True,
-            200,
+            0,
             "test_title",
             "test_source_name",
             "test_uri",
-            "test_artwork_url",
-            "test_isrc",
+            "test_artwork",
+            None,
         )
         test_track = Track("test_encoded", test_info, {}, {})
-        test_playlist_info = PlaylistInfo("beans", 0)
+        test_playlist_info = PlaylistInfo("test_playlist_name", -1)
         test_playlist = Playlist._from_payload(self.playlist_payload)
 
         assert test_playlist.info == test_playlist_info
@@ -175,18 +170,18 @@ class PlaylistTest(unittest.TestCase):
         assert test_playlist.to_payload == self.playlist_payload
 
     def test_playlist_info(self):
-        test_playlist_info = PlaylistInfo("beans", 0)
+        test_playlist_info = PlaylistInfo("test_playlist_name",-1)
 
-        assert test_playlist_info.name == "beans"
-        assert test_playlist_info.selected_track == 0
+        assert test_playlist_info.name == "test_playlist_name"
+        assert test_playlist_info.selected_track == -1
 
         assert test_playlist_info.to_payload == self.playlist_info_payload
 
     def test_playlist_info_payload(self):
         test_playlist_info = PlaylistInfo._from_payload(self.playlist_info_payload)
 
-        assert test_playlist_info.name == "beans"
-        assert test_playlist_info.selected_track == 0
+        assert test_playlist_info.name == "test_playlist_name"
+        assert test_playlist_info.selected_track == -1
 
         assert test_playlist_info.to_payload == self.playlist_info_payload
 

@@ -54,26 +54,68 @@ class TrackInfo(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> TrackInfo:
-        identifier = payload["identifier"]
-        is_seekable = payload["isSeekable"]
-        author = payload["author"]
-        length = payload["length"]
-        is_stream = payload["isStream"]
-        position = payload["position"]
-        title = payload["title"]
-        try:  # TODO: This needs to be switched to actually check if it exists first, and if it doesn't set it as none.
-            uri = payload["uri"]
-        except Exception:
-            uri = None
-        try:
-            artwork_url = payload["artworkUrl"]
-        except Exception:
-            artwork_url = None
-        try:
-            isrc = payload["isrc"]
-        except Exception:
-            isrc = None
-        source_name = payload["sourceName"]
+        identifier = payload.get("identifier")
+        if identifier is None:
+            raise ValueError("identifier cannot be none.")
+        if not isinstance(identifier, str):
+            raise TypeError("identifier must be a string.")
+        
+        is_seekable = payload.get("isSeekable")
+        if is_seekable is None:
+            raise ValueError("isSeekable cannot be none.")
+        if not isinstance(is_seekable, bool):
+            raise TypeError("isSeekable must be a boolean.")
+        
+        author = payload.get("author")
+        if author is None:
+            raise ValueError("author cannot be none.")
+        if not isinstance(author, str):
+            raise TypeError("author must be a string.")
+        
+        length = payload.get("length")
+        if length is None:
+            raise ValueError("length cannot be none.")
+        if not isinstance(length, int):
+            raise TypeError("length must be a integer.")
+        
+        is_stream = payload.get("isStream")
+        if is_stream is None:
+            raise ValueError("isStream cannot be none.")
+        if not isinstance(is_stream, bool):
+            raise TypeError("isStream must be a boolean.")
+        
+        position = payload.get("position")
+        if position is None:
+            raise ValueError("position cannot be none.")
+        if not isinstance(position, int):
+            raise TypeError("position must be a integer.")
+        
+        title = payload.get("title")
+        if title is None:
+            raise ValueError("title cannot be none.")
+        if not isinstance(title, str):
+            raise TypeError("title must be a string.")
+        
+        uri = payload.get("uri")
+        if uri is not None:
+            if not isinstance(uri, str):
+                raise TypeError("artworkUrl must be a string, or none.")
+        
+        artwork_url = payload.get("artworkUrl")
+        if artwork_url is not None:
+            if not isinstance(artwork_url, str):
+                raise TypeError("artworkUrl must be a string, or none.")
+        
+        isrc = payload.get("isrc")
+        if isrc is not None:
+            if not isinstance(isrc, str):
+                raise TypeError("isrc must be a string, or none.")
+
+        source_name = payload.get("sourceName")
+        if source_name is None:
+            raise ValueError("sourceName cannot be none.")
+        if not isinstance(source_name, str):
+            raise TypeError("sourceName must be a string.")
 
         return cls(
             identifier,
@@ -103,9 +145,9 @@ class Track(PayloadBase[dict[str, t.Any]]):
     """The base64 encoded track data."""
     info: TrackInfo
     """Information about the track"""
-    plugin_info: t.Mapping[str, t.Any]
+    plugin_info: t.Mapping[t.Any, t.Any]
     """Additional track info provided by plugins"""
-    user_data: t.Mapping[str, t.Any] | None = None
+    user_data: t.Mapping[t.Any, t.Any]
     """Additional track data."""
     requestor: Snowflake | None = None
     """
@@ -117,15 +159,34 @@ class Track(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Track:
-        encoded = payload["encoded"]
-        info = TrackInfo._from_payload(payload["info"])
-        plugin_info = payload["pluginInfo"]
+        
+        encoded = payload.get("encoded")
+        if encoded is None:
+            raise ValueError("encoded cannot be none.")
+        if not isinstance(encoded, str):
+            raise TypeError("encoded must be a string.")
+        
+        track_info = payload.get("info")
+        if track_info is None:
+            raise ValueError("info cannot be none.")
         try:
-            user_data = payload["userData"]
-        except Exception:
-            user_data = None
+            info = TrackInfo._from_payload(track_info)
+        except TypeError:
+            raise
+        except ValueError:
+            raise
+        
+        #TODO: These might need checks, however, I am unsure.
+        plugin_info = payload.get("pluginInfo", {})
+        user_data = payload.get("userData", {})
 
-        return cls(encoded, info, plugin_info, user_data, None)
+        return cls(
+            encoded, 
+            info, 
+            plugin_info, 
+            user_data,
+            None,
+        )
 
 
 @attrs.define
@@ -144,10 +205,22 @@ class PlaylistInfo(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> PlaylistInfo:
-        name = payload["name"]
-        selected_track = payload["selectedTrack"]
+        name = payload.get("name")
+        if name is None:
+            raise ValueError("name cannot be none.")
+        if not isinstance(name, str):
+            raise TypeError("name must be a string.")
+        
+        selected_track = payload.get("selectedTrack")
+        if selected_track is None:
+            raise ValueError("selectedTrack cannot be none.")
+        if not isinstance(selected_track, int):
+            raise TypeError("selectedTrack must be a integer.")
 
-        return cls(name, selected_track)
+        return cls(
+            name, 
+            selected_track,
+        )
 
 
 @attrs.define
@@ -168,19 +241,36 @@ class Playlist(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Playlist:
-        info = payload["info"]
-        plugin_info = payload["pluginInfo"]
+        info = payload.get("info")
+        print(info)
+        if info is None:
+            raise ValueError("info cannot be none.")
+        try:
+            info = PlaylistInfo._from_payload(info)
+        except TypeError:
+            raise
+        except ValueError:
+            raise
 
-        tracks: list[Track] | tuple[Track, ...] = []
+        #TODO: These might need checks, however, I am unsure.
+        plugin_info = payload.get("pluginInfo", {})
+
+        tracks: list[Track] = []
         for track in payload["tracks"]:
             try:
                 new_track = Track._from_payload(track)
-            except Exception as e:
-                raise e
+            except TypeError:
+                raise
+            except ValueError:
+                raise
 
             tracks.append(new_track)
 
-        return cls(info, plugin_info, tuple(tracks))
+        return cls(
+            info, 
+            plugin_info, 
+            tuple(tracks),
+        )
 
 
 @attrs.define
@@ -197,17 +287,18 @@ class SearchResult(PayloadBase[t.Sequence[t.Mapping[str, t.Any]]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Sequence[t.Mapping[str, t.Any]]) -> SearchResult:
-        tracks: list[Track] | tuple[Track, ...] = []
-
+        tracks: list[Track] = []
         for track in payload:
             try:
                 new_track = Track._from_payload(track)
-            except Exception as e:
-                raise e
+            except TypeError:
+                raise
+            except ValueError:
+                raise
 
             tracks.append(new_track)
 
-        return cls(tuple(tracks))
+        return cls(tracks)
 
 
 # MIT License

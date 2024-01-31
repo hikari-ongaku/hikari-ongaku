@@ -45,18 +45,40 @@ class InfoVersion(PayloadBase[dict[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> InfoVersion:
-        semver = payload["semver"]
-        major = payload["major"]
-        minor = payload["minor"]
-        patch = payload["patch"]
-        try:
-            pre_release = payload["preRelease"]
-        except Exception:
-            pre_release = None
-        try:
-            build = payload["build"]
-        except Exception:
-            build = None
+        semver = payload.get("semver")
+        if semver is None:
+            raise ValueError("semver cannot be none.")
+        if not isinstance(semver, str):
+            raise TypeError("semver must be a string.")
+
+        major = payload.get("major")
+        if major is None:
+            raise ValueError("major cannot be none.")
+        if not isinstance(major, int):
+            raise TypeError("major must be a integer.")
+
+        minor = payload.get("minor")
+        if minor is None:
+            raise ValueError("minor cannot be none.")
+        if not isinstance(minor, int):
+            raise TypeError("minor must be a integer.")
+
+        patch = payload.get("patch")
+        if patch is None:
+            raise ValueError("patch cannot be none.")
+        if not isinstance(patch, int):
+            raise TypeError("patch must be a integer.")
+
+        pre_release = payload.get("preRelease")
+        if pre_release is not None:
+            if not isinstance(pre_release, str):
+                raise TypeError("preRelease must be a string.")
+        
+        build = payload.get("build")
+        if build is not None:
+            if not isinstance(build, str):
+                raise TypeError("build must be a string.")
+
 
         return cls(semver, major, minor, patch, pre_release, build)
 
@@ -78,11 +100,29 @@ class InfoGit(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> InfoGit:
-        branch = payload["branch"]
-        commit = payload["commit"]
-        commit_time = payload["commitTime"]
-
-        return cls(branch, commit, commit_time)
+        branch = payload.get("branch")
+        if branch is None:
+            raise ValueError("branch cannot be none.")
+        if not isinstance(branch, str):
+            raise TypeError("branch must be a string.")
+        
+        commit = payload.get("commit")
+        if commit is None:
+            raise ValueError("commit cannot be none.")
+        if not isinstance(commit, str):
+            raise TypeError("commit must be a string.")
+        
+        commit_time = payload.get("commitTime")
+        if commit_time is None:
+            raise ValueError("commitTime cannot be none.")
+        if not isinstance(commit_time, int):
+            raise TypeError("commitTime must be a integer.")
+        
+        return cls(
+            branch, 
+            commit, 
+            commit_time
+        )
 
 
 @attrs.define
@@ -100,10 +140,22 @@ class InfoPlugin(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> InfoPlugin:
-        name = payload["name"]
-        version = payload["version"]
+        name = payload.get("name")
+        if name is None:
+            raise ValueError("name cannot be none.")
+        if not isinstance(name, str):
+            raise TypeError("name must be a string.")
+        
+        version = payload.get("version")
+        if version is None:
+            raise ValueError("version cannot be none.")
+        if not isinstance(version, str):
+            raise TypeError("version must be a string.")
 
-        return cls(name, version)
+        return cls(
+            name, 
+            version,
+        )
 
 
 @attrs.define
@@ -124,37 +176,77 @@ class Info(PayloadBase[dict[str, t.Any]]):
     """The JVM version this Lavalink server runs on."""
     lavaplayer: str
     """The Lavaplayer version being used by this server."""
-    source_managers: list[str]
+    source_managers: t.Sequence[str]
     """The enabled source managers for this server."""
-    filters: list[str]
+    filters: t.Sequence[str]
     """The enabled filters for this server."""
-    plugins: list[InfoPlugin]
+    plugins: t.Sequence[InfoPlugin]
     """The enabled plugins for this server."""
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]):
-        version = InfoVersion._from_payload(payload["version"])
-        build_time = payload["buildTime"]
-        git = InfoGit._from_payload(payload["git"])
-        jvm = payload["jvm"]
-        lavaplayer = payload["lavaplayer"]
+        version = payload.get("version")
+        if version is None:
+            raise ValueError("version cannot be none.")
+        try:
+            version = InfoVersion._from_payload(version)
+        except TypeError:
+            raise
+        except ValueError:
+            raise
 
-        source_managers = payload["sourceManagers"]
-        filters = payload["filters"]
+        build_time = payload.get("buildTime")
+        if build_time is None:
+            raise ValueError("buildTime cannot be none.")
+        if not isinstance(build_time, int):
+            raise TypeError("buildTime must be a integer.")
+
+        git = payload.get("git")
+        if git is None:
+            raise ValueError("git cannot be none.")
+        try:
+            git = InfoGit._from_payload(git)
+        except TypeError:
+            raise
+        except ValueError:
+            raise
+
+        jvm = payload.get("jvm")
+        if jvm is None:
+            raise ValueError("jvm cannot be none.")
+        if not isinstance(jvm, str):
+            raise TypeError("jvm must be a string.")
+
+        lavaplayer = payload.get("lavaplayer")
+        if lavaplayer is None:
+            raise ValueError("lavaplayer cannot be none.")
+        if not isinstance(lavaplayer, str):
+            raise TypeError("lavaplayer must be a string.")
+
+        #FIXME: This needs to be changed to the new method.
+        source_managers = payload.get("sourceManagers", [])
+        filters = payload.get("filters", [])
+
         plugins: list[InfoPlugin] = []
-
-        payload_plugins = payload["plugins"]
-
-        for plugin in payload_plugins:
+        for plugin in payload.get("plugins", []):
             try:
                 new_plugin = InfoPlugin._from_payload(plugin)
-            except Exception as e:
-                raise e
+            except TypeError:
+                raise
+            except ValueError:
+                raise
 
             plugins.append(new_plugin)
 
         return cls(
-            version, build_time, git, jvm, lavaplayer, source_managers, filters, plugins
+            version, 
+            build_time, 
+            git, 
+            jvm, 
+            lavaplayer, 
+            source_managers, 
+            filters, 
+            plugins,
         )
 
 
@@ -172,7 +264,7 @@ class RestError(PayloadBase[t.Mapping[str, t.Any]]):
     """The HTTP status code."""
     error: str
     """The HTTP status code message."""
-    trace: t.Optional[str]
+    trace: str | None
     """The stack trace of the error."""
     message: str
     """The error message."""
@@ -181,17 +273,49 @@ class RestError(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> RestError:
-        timestamp = payload["timestamp"]
-        status = payload["status"]
-        error = payload["error"]
-        try:
-            trace = payload["trace"]
-        except Exception:
-            trace = None
-        message = payload["message"]
-        path = payload["path"]
+        timestamp = payload.get("timestamp")
+        if timestamp is None:
+            raise ValueError("timestamp cannot be none.")
+        if not isinstance(timestamp, int):
+            raise TypeError("timestamp must be a integer.")
 
-        return cls(timestamp, status, error, trace, message, path)
+        status = payload.get("status")
+        if status is None:
+            raise ValueError("status cannot be none.")
+        if not isinstance(status, int):
+            raise TypeError("status must be a integer.")
+
+        error = payload.get("error")
+        if error is None:
+            raise ValueError("error cannot be none.")
+        if not isinstance(error, str):
+            raise TypeError("error must be a string.")
+
+        trace = payload.get("trace")
+        if trace is not None:
+            if not isinstance(trace, str):
+                raise TypeError("trace must be a string.")
+
+        message = payload.get("message")
+        if message is None:
+            raise ValueError("message cannot be none.")
+        if not isinstance(message, str):
+            raise TypeError("message must be a string.")
+
+        path = payload.get("path")
+        if path is None:
+            raise ValueError("path cannot be none.")
+        if not isinstance(path, str):
+            raise TypeError("path must be a string.")
+
+        return cls(
+            timestamp, 
+            status, 
+            error, 
+            trace, 
+            message, 
+            path
+        )
 
 
 @attrs.define
@@ -210,11 +334,29 @@ class ExceptionError(PayloadBase[t.Mapping[str, t.Any]]):
 
     @classmethod
     def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> ExceptionError:
-        message = payload["message"]
-        severity = payload["severity"]
-        cause = payload["cause"]
+        message = payload.get("message")
+        if message is None:
+            raise ValueError("message cannot be none.")
+        if not isinstance(message, str):
+            raise TypeError("message must be a string.")
+        
+        severity = payload.get("severity")
+        if severity is None:
+            raise ValueError("severity cannot be none.")
+        if not isinstance(severity, str):
+            raise TypeError("severity must be a string.")
+        
+        cause = payload.get("cause")
+        if cause is None:
+            raise ValueError("cause cannot be none.")
+        if not isinstance(cause, str):
+            raise TypeError("cause must be a string.")
 
-        return cls(message, severity, cause)
+        return cls(
+            message, 
+            enums.SeverityType(severity), 
+            cause
+        )
 
 
 # MIT License
