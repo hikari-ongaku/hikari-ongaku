@@ -8,6 +8,14 @@ hide:
 
 All the changelogs for `hikari-ongaku`.
 
+## **v0.4.1**
+ - Extensions:
+   - Added the ability to create extensions for ongaku.
+   - Checker: Checks if a link, contains a video/playlist.
+ - Fixes:
+   - player skip: Fixed an issue where the skip function would not work.
+   - player stop: Added a new function, to stop the current track, via removing it from the guilds session.
+
 ## **v0.4.0**
  - Ongaku -> Client: `ongaku.Ongaku()` has been replaced by `ongaku.Client()`.
  - Client:
