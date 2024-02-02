@@ -228,7 +228,9 @@ class TrackBaseTest(unittest.TestCase):
 class TrackStartTest(unittest.TestCase):
     def test_base(self):
         test_start_event = TrackStartEvent(
-            _test_bot, hikari.Snowflake(19216868440), _test_track,
+            _test_bot,
+            hikari.Snowflake(19216868440),
+            _test_track,
         )
 
         assert test_start_event.app == _test_bot

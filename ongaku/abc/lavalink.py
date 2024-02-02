@@ -73,12 +73,11 @@ class InfoVersion(PayloadBase[dict[str, t.Any]]):
         if pre_release is not None:
             if not isinstance(pre_release, str):
                 raise TypeError("preRelease must be a string.")
-        
+
         build = payload.get("build")
         if build is not None:
             if not isinstance(build, str):
                 raise TypeError("build must be a string.")
-
 
         return cls(semver, major, minor, patch, pre_release, build)
 
@@ -105,24 +104,20 @@ class InfoGit(PayloadBase[t.Mapping[str, t.Any]]):
             raise ValueError("branch cannot be none.")
         if not isinstance(branch, str):
             raise TypeError("branch must be a string.")
-        
+
         commit = payload.get("commit")
         if commit is None:
             raise ValueError("commit cannot be none.")
         if not isinstance(commit, str):
             raise TypeError("commit must be a string.")
-        
+
         commit_time = payload.get("commitTime")
         if commit_time is None:
             raise ValueError("commitTime cannot be none.")
         if not isinstance(commit_time, int):
             raise TypeError("commitTime must be a integer.")
-        
-        return cls(
-            branch, 
-            commit, 
-            commit_time
-        )
+
+        return cls(branch, commit, commit_time)
 
 
 @attrs.define
@@ -145,7 +140,7 @@ class InfoPlugin(PayloadBase[t.Mapping[str, t.Any]]):
             raise ValueError("name cannot be none.")
         if not isinstance(name, str):
             raise TypeError("name must be a string.")
-        
+
         version = payload.get("version")
         if version is None:
             raise ValueError("version cannot be none.")
@@ -153,7 +148,7 @@ class InfoPlugin(PayloadBase[t.Mapping[str, t.Any]]):
             raise TypeError("version must be a string.")
 
         return cls(
-            name, 
+            name,
             version,
         )
 
@@ -223,7 +218,7 @@ class Info(PayloadBase[dict[str, t.Any]]):
         if not isinstance(lavaplayer, str):
             raise TypeError("lavaplayer must be a string.")
 
-        #FIXME: This needs to be changed to the new method.
+        # FIXME: This needs to be changed to the new method.
         source_managers = payload.get("sourceManagers", [])
         filters = payload.get("filters", [])
 
@@ -239,13 +234,13 @@ class Info(PayloadBase[dict[str, t.Any]]):
             plugins.append(new_plugin)
 
         return cls(
-            version, 
-            build_time, 
-            git, 
-            jvm, 
-            lavaplayer, 
-            source_managers, 
-            filters, 
+            version,
+            build_time,
+            git,
+            jvm,
+            lavaplayer,
+            source_managers,
+            filters,
             plugins,
         )
 
@@ -308,14 +303,7 @@ class RestError(PayloadBase[t.Mapping[str, t.Any]]):
         if not isinstance(path, str):
             raise TypeError("path must be a string.")
 
-        return cls(
-            timestamp, 
-            status, 
-            error, 
-            trace, 
-            message, 
-            path
-        )
+        return cls(timestamp, status, error, trace, message, path)
 
 
 @attrs.define
@@ -339,24 +327,20 @@ class ExceptionError(PayloadBase[t.Mapping[str, t.Any]]):
             raise ValueError("message cannot be none.")
         if not isinstance(message, str):
             raise TypeError("message must be a string.")
-        
+
         severity = payload.get("severity")
         if severity is None:
             raise ValueError("severity cannot be none.")
         if not isinstance(severity, str):
             raise TypeError("severity must be a string.")
-        
+
         cause = payload.get("cause")
         if cause is None:
             raise ValueError("cause cannot be none.")
         if not isinstance(cause, str):
             raise TypeError("cause must be a string.")
 
-        return cls(
-            message, 
-            enums.SeverityType(severity), 
-            cause
-        )
+        return cls(message, enums.SeverityType(severity), cause)
 
 
 # MIT License

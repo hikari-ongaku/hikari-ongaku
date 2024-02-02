@@ -1,8 +1,11 @@
 # noqa: D100
 from __future__ import annotations
 
-from .abc import Checked, CheckedType
 import urllib.parse as urlparse
+
+from .abc import Checked
+from .abc import CheckedType
+
 
 async def check(query: str) -> Checked:
     """
@@ -18,19 +21,24 @@ async def check(query: str) -> Checked:
     url = urlparse.urlparse(query)
 
     queries: dict[str, str] = {}
-    
+
     if url.query.strip() != "":
         url_queries = url.query.split("&")
 
         for url_query in url_queries:
             url_query_split = url_query.split("=")
-            queries.update({url_query_split[0]:url_query_split[1]})
+            queries.update({url_query_split[0]: url_query_split[1]})
 
-    if url.netloc in ["www.youtube.com", "youtube.com", "www.youtu.be", "youtu.be", "music.youtube.com"]:
+    if url.netloc in [
+        "www.youtube.com",
+        "youtube.com",
+        "www.youtu.be",
+        "youtu.be",
+        "music.youtube.com",
+    ]:
         if url.path == "/playlist":
             return Checked(queries["list"], CheckedType.PLAYLIST)
         elif url.path == "/watch":
             return Checked(queries["v"], CheckedType.TRACK)
 
     return Checked(query, CheckedType.QUERY)
-

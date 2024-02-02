@@ -35,7 +35,7 @@ class PlayerTest(unittest.TestCase):
             False,
             test_player_state,
             test_player_voice,
-            {}
+            {},
         )
 
         assert test_player.guild_id == hikari.Snowflake(19216868440)

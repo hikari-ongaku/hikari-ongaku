@@ -23,6 +23,7 @@ class Payload(abc.ABC, t.Generic[PayloadT]):
     The main payload, that all payload types are inherited from.
     """
 
+
 def _to_payload(payload: t.Mapping[str, t.Any]) -> dict[str, t.Any]:
     fixed_data: dict[str, t.Any] = {}
     for key, value in payload.items():
@@ -35,14 +36,15 @@ def _to_payload(payload: t.Mapping[str, t.Any]) -> dict[str, t.Any]:
                 else:
                     new_name_list.append(split[x].capitalize())
             key = "".join(new_name_list)
-        
+
         if isinstance(value, t.Mapping):
-            fixed_data.update({key:_to_payload(value)}) #type: ignore
-        
+            fixed_data.update({key: _to_payload(value)})  # type: ignore
+
         else:
-            fixed_data.update({key:value})
-    
+            fixed_data.update({key: value})
+
     return fixed_data
+
 
 class PayloadBase(Payload[PayloadT], abc.ABC):
     """
@@ -54,7 +56,7 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
     @classmethod
     def _from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
         """From payload.
-        
+
         Converts the payload, into the current object.
 
         Raises
@@ -69,7 +71,7 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
     @property
     def to_payload(self) -> dict[str, t.Any]:
         """To payload.
-        
+
         Converts your object, to a payload.
         """
         return _to_payload(attrs.asdict(self))

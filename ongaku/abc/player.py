@@ -44,19 +44,19 @@ class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
             raise ValueError("time cannot be none.")
         if not isinstance(time, int):
             raise TypeError("time must be a integer.")
-        
+
         position = payload.get("position")
         if position is None:
             raise ValueError("position cannot be none.")
         if not isinstance(position, int):
             raise TypeError("position must be a integer.")
-        
+
         connected = payload.get("connected")
         if connected is None:
             raise ValueError("connected cannot be none.")
         if not isinstance(connected, bool):
             raise TypeError("connected must be a integer.")
-        
+
         ping = payload.get("ping")
         if ping is None:
             raise ValueError("ping cannot be none.")
@@ -64,9 +64,9 @@ class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
             raise TypeError("ping must be a integer.")
 
         return cls(
-            time, 
-            position, 
-            connected, 
+            time,
+            position,
+            connected,
             ping,
         )
 
@@ -93,13 +93,13 @@ class PlayerVoice(PayloadBase[t.Mapping[str, t.Any]]):
             raise ValueError("token cannot be none.")
         if not isinstance(token, str):
             raise TypeError("token must be a string.")
-        
+
         endpoint = payload.get("endpoint")
         if endpoint is None:
             raise ValueError("endpoint cannot be none.")
         if not isinstance(endpoint, str):
             raise TypeError("endpoint must be a string.")
-        
+
         session_id = payload.get("sessionId")
         if session_id is None:
             raise ValueError("sessionId cannot be none.")
@@ -142,7 +142,7 @@ class Player(PayloadBase[dict[str, t.Any]]):
             guild_id = int(guild_id)
         else:
             raise TypeError("guildId must be a integer.")
-        
+
         track = payload.get("track")
         if track is not None:
             try:
@@ -186,10 +186,12 @@ class Player(PayloadBase[dict[str, t.Any]]):
         except ValueError:
             raise
 
-        #TODO: These might need checks, however, I am unsure.
+        # TODO: These might need checks, however, I am unsure.
         filters = payload.get("filters", {})
 
-        return cls(hikari.Snowflake(guild_id), track, volume, paused, state, voice, filters)
+        return cls(
+            hikari.Snowflake(guild_id), track, volume, paused, state, voice, filters
+        )
 
 
 # MIT License

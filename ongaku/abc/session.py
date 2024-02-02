@@ -35,7 +35,7 @@ class Session(PayloadBase[t.Mapping[str, t.Any]]):
             raise ValueError("resuming cannot be none.")
         if not isinstance(resuming, bool):
             raise TypeError("resuming must be a boolean.")
-        
+
         timeout = payload.get("timeout")
         if timeout is None:
             raise ValueError("timeout cannot be none.")

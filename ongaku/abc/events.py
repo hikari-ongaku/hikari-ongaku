@@ -10,11 +10,11 @@ import typing as t
 import attrs
 import hikari
 
+from .. import enums
 from .base import PayloadBase
 from .base import PayloadBaseApp
-from .track import Track
-from .. import enums
 from .lavalink import ExceptionError
+from .track import Track
 
 __all__ = (
     "OngakuEvent",
@@ -69,7 +69,7 @@ class ReadyEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
             raise ValueError("resumed cannot be none.")
         if not isinstance(resumed, bool):
             raise TypeError("resumed must be a boolean.")
-        
+
         session_id = payload.get("sessionId")
         if session_id is None:
             raise ValueError("sessionId cannot be none.")
@@ -103,31 +103,26 @@ class StatsMemory(PayloadBase[dict[str, t.Any]]):
             raise ValueError("free cannot be none.")
         if not isinstance(free, int):
             raise TypeError("free must be a integer.")
-        
+
         used = payload.get("used")
         if used is None:
             raise ValueError("used cannot be none.")
         if not isinstance(used, int):
             raise TypeError("used must be a integer.")
-        
+
         allocated = payload.get("allocated")
         if allocated is None:
             raise ValueError("allocated cannot be none.")
         if not isinstance(allocated, int):
             raise TypeError("allocated must be a integer.")
-        
+
         reservable = payload.get("reservable")
         if reservable is None:
             raise ValueError("reservable cannot be none.")
         if not isinstance(reservable, int):
             raise TypeError("reservable must be a integer.")
 
-        return cls(
-            free, 
-            used, 
-            allocated, 
-            reservable
-        )
+        return cls(free, used, allocated, reservable)
 
 
 @attrs.define
@@ -160,7 +155,7 @@ class StatsCpu(PayloadBase[dict[str, t.Any]]):
             system_load = float(system_load)
         else:
             raise TypeError("systemLoad must be a float.")
-        
+
         lavalink_load = payload.get("lavalinkLoad")
         if lavalink_load is None:
             raise ValueError("lavalinkLoad cannot be none.")
@@ -194,13 +189,13 @@ class StatsFrameStatistics(PayloadBase[dict[str, t.Any]]):
             raise ValueError("sent cannot be none.")
         if not isinstance(sent, int):
             raise TypeError("sent must be a integer.")
-        
+
         nulled = payload.get("nulled")
         if nulled is None:
             raise ValueError("nulled cannot be none.")
         if not isinstance(nulled, int):
             raise TypeError("nulled must be a integer.")
-        
+
         deficit = payload.get("deficit")
         if deficit is None:
             raise ValueError("deficit cannot be none.")
@@ -240,13 +235,13 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
             raise ValueError("players cannot be none.")
         if not isinstance(players, int):
             raise TypeError("players must be a integer.")
-        
+
         playing_players = payload.get("playingPlayers")
         if playing_players is None:
             raise ValueError("playingPlayers cannot be none.")
         if not isinstance(playing_players, int):
             raise TypeError("playingPlayers must be a integer.")
-        
+
         uptime = payload.get("uptime")
         if uptime is None:
             raise ValueError("uptime cannot be none.")
@@ -272,7 +267,7 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
             raise
         except ValueError:
             raise
-        
+
         frame_statistics = payload.get("frameStats")
 
         if frame_statistics is not None:
@@ -315,27 +310,26 @@ class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
             guild_id = int(guild_id)
         else:
             raise TypeError("guildId must be a integer.")
-        
+
         code = payload.get("code")
         if code is None:
             raise ValueError("code cannot be none.")
         if not isinstance(code, int):
             raise TypeError("code must be a integer.")
-        
+
         reason = payload.get("reason")
         if reason is None:
             raise ValueError("reason cannot be none.")
         if not isinstance(reason, str):
             raise TypeError("reason must be a string.")
-        
+
         by_remote = payload.get("byRemote")
         if by_remote is None:
             raise ValueError("byRemote cannot be none.")
         if not isinstance(by_remote, bool):
             raise TypeError("byRemote must be a boolean.")
-        
 
-        return cls(app, hikari.Snowflake(guild_id), code, reason, by_remote) 
+        return cls(app, hikari.Snowflake(guild_id), code, reason, by_remote)
 
 
 @attrs.define
@@ -361,7 +355,7 @@ class TrackBase(OngakuEvent, PayloadBaseApp[dict[str, t.Any]]):
             guild_id = int(guild_id)
         else:
             raise TypeError("guildId must be a integer.")
-        
+
         track = payload.get("track")
         if track is None:
             raise ValueError("track cannot be none.")
@@ -393,11 +387,7 @@ class TrackStartEvent(TrackBase, OngakuEvent):
         except ValueError:
             raise
 
-        return cls(
-            base.app, 
-            base.guild_id, 
-            base.track
-        )
+        return cls(base.app, base.guild_id, base.track)
 
 
 @attrs.define
@@ -426,10 +416,7 @@ class TrackEndEvent(TrackBase, OngakuEvent):
             raise TypeError("reason must be a integer.")
 
         return cls(
-            base.app, 
-            base.guild_id, 
-            base.track,
-            enums.TrackEndReasonType(reason)
+            base.app, base.guild_id, base.track, enums.TrackEndReasonType(reason)
         )
 
 
@@ -463,8 +450,8 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
             raise
 
         return cls(
-            base.app, 
-            base.guild_id, 
+            base.app,
+            base.guild_id,
             base.track,
             exception,
         )
@@ -494,11 +481,10 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
             raise ValueError("thresholdMs cannot be none.")
         if not isinstance(threshold_ms, int):
             raise TypeError("thresholdMs must be a integer.")
-        
 
         return cls(
-            base.app, 
-            base.guild_id, 
+            base.app,
+            base.guild_id,
             base.track,
             threshold_ms,
         )
@@ -535,6 +521,7 @@ class QueueEmptyEvent(PlayerBase, OngakuEvent):
 
     This event is dispatched when the player queue is empty, and no more songs are available.
     """
+
 
 @attrs.define
 class QueueNextEvent(PlayerBase, OngakuEvent):

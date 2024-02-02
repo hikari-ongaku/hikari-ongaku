@@ -170,7 +170,7 @@ class PlaylistTest(unittest.TestCase):
         assert test_playlist.to_payload == self.playlist_payload
 
     def test_playlist_info(self):
-        test_playlist_info = PlaylistInfo("test_playlist_name",-1)
+        test_playlist_info = PlaylistInfo("test_playlist_name", -1)
 
         assert test_playlist_info.name == "test_playlist_name"
         assert test_playlist_info.selected_track == -1

@@ -103,7 +103,6 @@ nav:
   - Extensions:
     - ext/index.md
     - Creation: ext/creation.md
-    - Local: ext/local.md
     - Checker: ext/checker.md
   - Changelog: changelog.md
 

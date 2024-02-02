@@ -286,6 +286,8 @@ class Player:
             The session id was null, or empty.
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
+        PlayerException
+            The bot is not connected to a channel.
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         """
@@ -295,8 +297,10 @@ class Player:
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
-        if len(self.queue) > 0 and track is None:
-            raise PlayerQueueException("Empty Queue. Cannot play nothing.")
+        if len(self.queue) <= 0 and track == None:
+            raise PlayerQueueException(
+                "You must provide a track if no tracks are in the queue."
+            )
 
         if track:
             if requestor:
@@ -497,7 +501,7 @@ class Player:
             raise PlayerException("No tracks in queue.")
 
         for _ in range(amount):
-            if len(self._queue) == 0: 
+            if len(self._queue) == 0:
                 break
             else:
                 self._queue.pop(0)
@@ -508,7 +512,7 @@ class Player:
                     self.guild_id,
                     self.session._internal.session_id,
                     track=None,
-                    no_replace=False
+                    no_replace=False,
                 )
             except LavalinkException:
                 raise
@@ -522,7 +526,7 @@ class Player:
                     self.guild_id,
                     self.session._internal.session_id,
                     track=self.queue[0],
-                    no_replace=False
+                    no_replace=False,
                 )
             except LavalinkException:
                 raise
