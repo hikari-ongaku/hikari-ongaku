@@ -595,6 +595,8 @@ class Player:
             The session id was null, or empty.
         ValueError
             The queue is empty.
+        ValueError
+            The track specified, does not exist in the current queue.
         PlayerException
             The song did not exist, or the position was out of the length of the queue.
         LavalinkException
@@ -604,9 +606,6 @@ class Player:
         """
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
-
-        if self.session._internal.session_id is None:
-            raise SessionStartException("Session has not been started for this player.")
 
         if isinstance(value, Track):
             index = self._queue.index(value)
