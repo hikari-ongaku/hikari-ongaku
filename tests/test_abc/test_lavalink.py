@@ -13,20 +13,20 @@ from ongaku.enums import SeverityType
 class InfoTest(unittest.TestCase):
     def test_info(self):
         test_info_version = InfoVersion(
-            "semver_test", 1, 2, 3, "prerelease_test", "build_test"
+            semver="semver_test", major=1, minor=2, patch=3, pre_release="prerelease_test", build="build_test"
         )
-        test_info_git = InfoGit("branch_test", "commit_test", 30)
-        test_info_plugin_1 = InfoPlugin("plugin_test_1", "1.2")
-        test_info_plugin_2 = InfoPlugin("plugin_test_2", "3.4")
+        test_info_git = InfoGit(branch="branch_test", commit="commit_test", commit_time=30)
+        test_info_plugin_1 = InfoPlugin(name="plugin_test_1", version="1.2")
+        test_info_plugin_2 = InfoPlugin(name="plugin_test_2", version="3.4")
         test_info = Info(
-            test_info_version,
-            60,
-            test_info_git,
-            "jvm_test",
-            "lavaplayer_test",
-            ["youtube", "soundcloud"],
-            ["equalizer", "karaoke", "timescale", "channelMix"],
-            [test_info_plugin_1, test_info_plugin_2],
+            version=test_info_version,
+            build_time=60,
+            git=test_info_git,
+            jvm="jvm_test",
+            lavaplayer="lavaplayer_test",
+            source_managers=["youtube", "soundcloud"],
+            filters=["equalizer", "karaoke", "timescale", "channelMix"],
+            plugins=[test_info_plugin_1, test_info_plugin_2],
         )
 
         assert test_info.build_time == 60
@@ -99,11 +99,11 @@ class InfoTest(unittest.TestCase):
         assert test_info.filters[2] == "timescale"
         assert test_info.filters[3] == "channelMix"
 
-        assert test_info.to_payload == payload
+        assert test_info._to_payload == payload
 
     def test_info_version(self):
         test_info_version = InfoVersion(
-            "semver_test", 1, 2, 3, "prerelease_test", "build_test"
+            semver="semver_test", major=1, minor=2, patch=3, pre_release="prerelease_test", build="build_test"
         )
 
         assert test_info_version.semver == "semver_test"
@@ -132,10 +132,10 @@ class InfoTest(unittest.TestCase):
         assert test_info_version.pre_release == "prerelease_test"
         assert test_info_version.build == "build_test"
 
-        assert test_info_version.to_payload == payload
+        assert test_info_version._to_payload == payload
 
     def test_info_git(self):
-        test_info_git = InfoGit("branch_test", "commit_test", 30)
+        test_info_git = InfoGit(branch="branch_test", commit="commit_test", commit_time=30)
 
         assert test_info_git.branch == "branch_test"
         assert test_info_git.commit == "commit_test"
@@ -150,10 +150,10 @@ class InfoTest(unittest.TestCase):
         assert test_info_git.commit == "commit_test"
         assert test_info_git.commit_time == 30
 
-        assert test_info_git.to_payload == payload
+        assert test_info_git._to_payload == payload
 
     def test_info_plugin(self):
-        test_info_plugin = InfoPlugin("plugin_test_1", "1.2")
+        test_info_plugin = InfoPlugin(name="plugin_test_1", version="1.2")
 
         assert test_info_plugin.name == "plugin_test_1"
         assert test_info_plugin.version == "1.2"
@@ -166,13 +166,13 @@ class InfoTest(unittest.TestCase):
         assert test_info_plugin.name == "plugin_test_1"
         assert test_info_plugin.version == "1.2"
 
-        assert test_info_plugin.to_payload == payload
+        assert test_info_plugin._to_payload == payload
 
 
 class TestErrors(unittest.TestCase):
     def test_rest_error(self):
         test_rest_error = RestError(
-            32, 12, "test_error", "test_trace", "test_message", "test_path"
+            timestamp=32, status=12, error="test_error", trace="test_trace", message="test_message", path="test_path"
         )
 
         assert test_rest_error.timestamp == 32
@@ -203,7 +203,7 @@ class TestErrors(unittest.TestCase):
 
     def test_exception_error(self):
         test_exception_error = ExceptionError(
-            "test_message", SeverityType.COMMON, "test_cause"
+            message="test_message", severity=SeverityType.COMMON, cause="test_cause"
         )
 
         assert test_exception_error.message == "test_message"

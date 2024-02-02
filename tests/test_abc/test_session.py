@@ -1,4 +1,5 @@
 # ruff: noqa
+
 import unittest
 
 from ongaku.abc.session import Session
@@ -6,7 +7,7 @@ from ongaku.abc.session import Session
 
 class SessionTest(unittest.TestCase):
     def test_session(self):
-        test_session = Session(False, 100)
+        test_session = Session(resuming=False, timeout=100)
 
         assert test_session.resuming is False
         assert test_session.timeout == 100
@@ -19,4 +20,4 @@ class SessionTest(unittest.TestCase):
         assert test_session.resuming is True
         assert test_session.timeout == 10
 
-        assert test_session.to_payload == payload
+        assert test_session._to_payload == payload

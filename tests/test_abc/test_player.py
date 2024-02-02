@@ -10,32 +10,36 @@ from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 
 _test_info = TrackInfo(
-    "test_identifier",
-    False,
-    "test_author",
-    246,
-    True,
-    200,
-    "test_title",
-    "test_source_name",
+    identifier="test_identifier",
+    is_seekable=False,
+    author="test_author",
+    length=246,
+    is_stream=True,
+    position=200,
+    title="test_title",
+    source_name="test_source_name",
+    uri=None,
+    artwork_url=None,
+    isrc=None
 )
-_test_track = Track("test_encoded", _test_info, {}, {})
+_test_track = Track(encoded="test_encoded", info=_test_info, plugin_info={}, user_data={}, requestor=None)
+
 
 
 class PlayerTest(unittest.TestCase):
     def test_player(self):
-        test_player_state = PlayerState(12, 24, True, 48)
+        test_player_state = PlayerState(time=12, position=24, connected=True, ping=48)
         test_player_voice = PlayerVoice(
-            "test_token", "test_endpoint", "test_session_id"
+            token="test_token", endpoint="test_endpoint", session_id="test_session_id"
         )
         test_player = Player(
-            hikari.Snowflake(19216868440),
-            _test_track,
-            100,
-            False,
-            test_player_state,
-            test_player_voice,
-            {},
+            guild_id=hikari.Snowflake(19216868440),
+            track=_test_track,
+            volume=100,
+            is_paused=False,
+            state=test_player_state,
+            voice=test_player_voice,
+            filters={},
         )
 
         assert test_player.guild_id == hikari.Snowflake(19216868440)
@@ -110,10 +114,10 @@ class PlayerTest(unittest.TestCase):
         assert test_player.voice.token == "test_token"
         assert test_player.voice.endpoint == "test_endpoint"
         assert test_player.voice.session_id == "test_session_id"
-        assert test_player.to_payload == payload
+        assert test_player._to_payload == payload
 
     def test_player_state(self):
-        test_player_state = PlayerState(12, 24, True, 48)
+        test_player_state = PlayerState(time=12, position=24, connected=True, ping=48)
 
         assert test_player_state.time == 12
         assert test_player_state.position == 24
@@ -130,11 +134,11 @@ class PlayerTest(unittest.TestCase):
         assert test_player_state.connected is True
         assert test_player_state.ping == 48
 
-        assert test_player_state.to_payload == payload
+        assert test_player_state._to_payload == payload
 
     def test_player_voice(self):
         test_player_voice = PlayerVoice(
-            "test_token", "test_endpoint", "test_session_id"
+            token="test_token", endpoint="test_endpoint", session_id="test_session_id"
         )
 
         assert test_player_voice.token == "test_token"
@@ -154,4 +158,4 @@ class PlayerTest(unittest.TestCase):
         assert test_player_voice.endpoint == "test_endpoint"
         assert test_player_voice.session_id == "test_session_id"
 
-        assert test_player_voice.to_payload == payload
+        assert test_player_voice._to_payload == payload

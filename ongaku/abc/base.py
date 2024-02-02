@@ -8,15 +8,17 @@ from __future__ import annotations
 import abc
 import typing as t
 
-import attrs
+import pydantic
 import hikari
 
-__all__ = ("PayloadT", "PayloadBase", "PayloadBaseApp")
+__all__ = ("PayloadBase", "PayloadBaseApp")
 
-PayloadT = t.TypeVar("PayloadT", t.Sequence[t.Any], t.Mapping[str, t.Any])
+if t.TYPE_CHECKING:
+    BaseT = t.Mapping[str, t.Any] | t.Sequence[t.Any]
 
+# FIXME: handle hikari.Snowflake type somehow.
 
-class Payload(abc.ABC, t.Generic[PayloadT]):
+class Payload(abc.ABC, pydantic.BaseModel):
     """
     Main payload.
 
@@ -24,29 +26,8 @@ class Payload(abc.ABC, t.Generic[PayloadT]):
     """
 
 
-def _to_payload(payload: t.Mapping[str, t.Any]) -> dict[str, t.Any]:
-    fixed_data: dict[str, t.Any] = {}
-    for key, value in payload.items():
-        if key.count("_") > 0:
-            split = key.split("_")
-            new_name_list: list[str] = []
-            for x in range(len(split)):
-                if x == 0:
-                    new_name_list.append(split[x])
-                else:
-                    new_name_list.append(split[x].capitalize())
-            key = "".join(new_name_list)
 
-        if isinstance(value, t.Mapping):
-            fixed_data.update({key: _to_payload(value)})  # type: ignore
-
-        else:
-            fixed_data.update({key: value})
-
-    return fixed_data
-
-
-class PayloadBase(Payload[PayloadT], abc.ABC):
+class PayloadBase(Payload, abc.ABC):
     """
     Payload base.
 
@@ -54,7 +35,7 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
     """
 
     @classmethod
-    def _from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
+    def _from_payload(cls, payload: BaseT):
         """From payload.
 
         Converts the payload, into the current object.
@@ -66,32 +47,56 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
         ValueError
             When the value is none.
         """
-        ...
+        return cls.model_validate(payload, strict=True)
 
     @property
-    def to_payload(self) -> dict[str, t.Any]:
+    def _to_payload(self) -> BaseT:
         """To payload.
 
         Converts your object, to a payload.
         """
-        return _to_payload(attrs.asdict(self))
+        return self.model_dump_json(by_alias=True)
 
 
-class PayloadBaseApp(Payload[PayloadT], abc.ABC):
+class PayloadBaseApp(Payload, abc.ABC):
     """
     Payload base application.
 
     The payload base, that supports an application/bot.
-
-    !!! WARNING
-        This cannot be converted into a dict.
     """
 
+    model_config = pydantic.ConfigDict(ignored_types=(hikari.RESTAware,))
+
+    _app: hikari.RESTAware
+
+    @property
+    def app(self) -> hikari.RESTAware:
+        """The application the event is attached too."""
+        return self._app
+
     @classmethod
-    def _from_payload(
-        cls, payload: PayloadT, *, app: hikari.RESTAware
-    ) -> PayloadBaseApp[PayloadT]:
-        ...
+    def _from_payload(cls, payload: BaseT, app: hikari.RESTAware):
+        """From payload.
+
+        Converts the payload, into the current object.
+
+        Raises
+        ------
+        TypeError
+            When the type the value wanted, is incorrect.
+        ValueError
+            When the value is none.
+        """
+        cls._app = app
+        return cls.model_validate(payload, strict=True)
+
+    @property
+    def _to_payload(self) -> BaseT:
+        """To payload.
+
+        Converts your object, to a payload.
+        """
+        return self.model_dump(by_alias=True)
 
 
 # MIT License

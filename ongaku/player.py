@@ -217,7 +217,7 @@ class Player:
 
         try:
             self._voice = PlayerVoice(
-                server_event.token, server_event.endpoint, state_event.state.session_id
+                token=server_event.token, endpoint=server_event.endpoint, session_id=state_event.state.session_id
             )
         except Exception as e:
             raise BuildException(f"Failed to build player voice: {e}")
@@ -728,15 +728,15 @@ class Player:
             try:
                 await self.remove(0)
             except ValueError:
-                await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
+                await self.bot.dispatch(QueueEmptyEvent(_app=self.bot, guild_id=self.guild_id))
                 return
 
             if len(self.queue) <= 0:
-                await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
+                await self.bot.dispatch(QueueEmptyEvent(_app=self.bot, guild_id=self.guild_id))
                 return
 
             await self.play(self.queue[0])
 
             await self.bot.dispatch(
-                QueueNextEvent(self.bot, self.guild_id, self._queue[0], event.track)
+                QueueNextEvent(_app=self.bot, guild_id=self.guild_id, track=self._queue[0], old_track=event.track)
             )

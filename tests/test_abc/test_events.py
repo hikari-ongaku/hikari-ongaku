@@ -25,21 +25,24 @@ from ongaku.enums import TrackEndReasonType
 
 _test_bot = hikari.GatewayBot("", banner=None)
 _test_info = TrackInfo(
-    "test_identifier",
-    False,
-    "test_author",
-    246,
-    True,
-    200,
-    "test_title",
-    "test_source_name",
+    identifier="test_identifier",
+    is_seekable=False,
+    author="test_author",
+    length=246,
+    is_stream=True,
+    position=200,
+    title="test_title",
+    source_name="test_source_name",
+    uri=None,
+    artwork_url=None,
+    isrc=None
 )
-_test_track = Track("test_encoded", _test_info, {}, {})
+_test_track = Track(encoded="test_encoded", info=_test_info, plugin_info={}, user_data={}, requestor=None)
 
 
 class ReadyEventTest(unittest.TestCase):  # noqa: D101
     def test_base(self):  # noqa: D102
-        test_ready_event = ReadyEvent(_test_bot, False, "test_session_id")
+        test_ready_event = ReadyEvent(_app=_test_bot, resumed=False, session_id="test_session_id")
 
         assert test_ready_event.app == _test_bot
         assert test_ready_event.resumed is False
@@ -57,12 +60,12 @@ class ReadyEventTest(unittest.TestCase):  # noqa: D101
 
 class StatsEventTest(unittest.TestCase):  # noqa: D101
     def test_base(self):  # noqa: D102
-        test_memory = StatsMemory(1, 2, 3, 4)
-        test_cpu = StatsCpu(1, 2.3, 4.5)
-        test_frame_stats = StatsFrameStatistics(68, 12, -5)
+        test_memory = StatsMemory(free=1, used=2, allocated=3, reservable=4)
+        test_cpu = StatsCpu(cores=1, system_load=2.3, lavalink_load=4.5)
+        test_frame_stats = StatsFrameStatistics(sent=68, nulled=12, deficit=-5)
 
         test_stats_event = StatisticsEvent(
-            _test_bot, 2, 1, 32, test_memory, test_cpu, test_frame_stats
+            _app=_test_bot, players=2, playing_players=1, uptime=32, memory=test_memory, cpu=test_cpu, frame_statistics=test_frame_stats
         )
 
         assert test_stats_event.app == _test_bot
@@ -116,7 +119,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
             assert test_stats_event.frame_statistics.deficit == -3010
 
     def test_memory(self):  # noqa: D102
-        test_memory = StatsMemory(1, 2, 3, 4)
+        test_memory = StatsMemory(free=1, used=2, allocated=3, reservable=4)
 
         assert test_memory.free == 1
         assert test_memory.used == 2
@@ -139,7 +142,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
         assert test_memory.reservable == 123456789
 
     def test_cpu(self):  # noqa: D102
-        test_cpu = StatsCpu(1, 2.3, 4)
+        test_cpu = StatsCpu(cores=1, system_load=2.3, lavalink_load=4)
 
         assert test_cpu.cores == 1
         assert test_cpu.system_load == 2.3
@@ -155,7 +158,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
         assert test_cpu.lavalink_load == 0.5
 
     def test_frame_stats(self):  # noqa: D102
-        test_frame_stats = StatsFrameStatistics(1, 2, -3)
+        test_frame_stats = StatsFrameStatistics(sent=1, nulled=2, deficit=-3)
 
         assert test_frame_stats.sent == 1
         assert test_frame_stats.nulled == 2
@@ -174,9 +177,9 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 class TrackBaseTest(unittest.TestCase):
     def test_track_base(self):
         test_track_base = TrackBase(
-            _test_bot,
-            hikari.Snowflake(19216868440),
-            _test_track,
+            _app=_test_bot,
+            guild_id=hikari.Snowflake(19216868440),
+            track=_test_track,
         )
 
         assert test_track_base.app == _test_bot
@@ -228,9 +231,9 @@ class TrackBaseTest(unittest.TestCase):
 class TrackStartTest(unittest.TestCase):
     def test_base(self):
         test_start_event = TrackStartEvent(
-            _test_bot,
-            hikari.Snowflake(19216868440),
-            _test_track,
+            _app=_test_bot,
+            guild_id=hikari.Snowflake(19216868440),
+            track=_test_track,
         )
 
         assert test_start_event.app == _test_bot
@@ -283,10 +286,10 @@ class TrackStartTest(unittest.TestCase):
 class TrackEndTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackEndEvent(
-            _test_bot,
-            hikari.Snowflake(19216868440),
-            _test_track,
-            TrackEndReasonType.FINISHED,
+            _app=_test_bot,
+            guild_id=hikari.Snowflake(19216868440),
+            track=_test_track,
+            reason=TrackEndReasonType.FINISHED,
         )
 
         assert test_end_event.app == _test_bot
@@ -342,10 +345,10 @@ class TrackEndTest(unittest.TestCase):
 class TrackExceptionTest(unittest.TestCase):
     def test_base(self):
         test_exception_event = TrackExceptionEvent(
-            _test_bot,
-            hikari.Snowflake(19216868440),
-            _test_track,
-            ExceptionError("test_message", SeverityType.COMMON, "test_cause"),
+            _app=_test_bot,
+            guild_id=hikari.Snowflake(19216868440),
+            track=_test_track,
+            exception=ExceptionError(message="test_message", severity=SeverityType.COMMON, cause="test_cause"),
         )
 
         assert test_exception_event.app == _test_bot
@@ -409,10 +412,10 @@ class TrackExceptionTest(unittest.TestCase):
 class TrackStuckTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackStuckEvent(
-            _test_bot,
-            hikari.Snowflake(19216868440),
-            _test_track,
-            60,
+            _app=_test_bot,
+            guild_id=hikari.Snowflake(19216868440),
+            track=_test_track,
+            threshold_ms=60,
         )
 
         assert test_end_event.app == _test_bot
@@ -468,7 +471,11 @@ class TrackStuckTest(unittest.TestCase):
 class WebsocketClosedTest(unittest.TestCase):
     def test_base(self):
         test_websocket_closed_event = WebsocketClosedEvent(
-            _test_bot, hikari.Snowflake(19216868440), 4000, "test_reason", False
+            _app=_test_bot, 
+            guild_id=hikari.Snowflake(19216868440), 
+            code=4000, 
+            reason="test_reason", 
+            by_remote=False
         )
 
         assert test_websocket_closed_event.app == _test_bot
