@@ -15,6 +15,7 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
+
 from .abc import player
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
@@ -28,6 +29,7 @@ from .errors import PlayerException
 from .errors import PlayerQueueException
 from .errors import SessionStartException
 from .errors import TimeoutException
+from .enums import TrackEndReasonType
 
 if t.TYPE_CHECKING:
     from .session import Session
@@ -233,7 +235,7 @@ class Player:
             raise
         except BuildException:
             raise
-
+        self._connected = True
         await self._update(player)
 
     async def disconnect(self) -> None:
@@ -262,6 +264,8 @@ class Player:
             raise
         except BuildException:
             raise
+
+        self._connected = False
 
         await self.bot.update_voice_state(self.guild_id, None)
 
@@ -712,6 +716,9 @@ class Player:
             raise SessionStartException()
 
         if not self._autoplay:
+            return
+        
+        if event.reason != TrackEndReasonType.FINISHED:
             return
 
         if int(event.guild_id) == int(self.guild_id):
