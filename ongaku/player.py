@@ -337,15 +337,6 @@ class Player:
             The list of tracks you wish to add to the queue.
         requestor : Snowflake | None
             The user/member id that requested the song.
-
-        Raises
-        ------
-        SessionStartException
-            The session id was null, or empty.
-        LavalinkException
-            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
-        BuildException
-            Failure to build the player object.
         """
         for track in tracks:
             if requestor:
