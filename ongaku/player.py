@@ -732,7 +732,7 @@ class Player:
                 await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
                 return
 
-            await self.play(self.queue[0])
+            await self.play()
 
             await self.bot.dispatch(
                 QueueNextEvent(self.bot, self.guild_id, self._queue[0], event.track)
