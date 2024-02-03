@@ -10,6 +10,8 @@ import typing as t
 import hikari
 import pydantic
 
+from ongaku.abc import base
+
 from .base import PayloadBase
 from .track import Track
 
@@ -18,7 +20,6 @@ __all__ = (
     "PlayerVoice",
     "Player",
 )
-
 
 
 class PlayerState(PayloadBase):
@@ -38,7 +39,6 @@ class PlayerState(PayloadBase):
     """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
 
 
-
 class PlayerVoice(PayloadBase):
     """Players Voice state.
 
@@ -54,7 +54,6 @@ class PlayerVoice(PayloadBase):
     """The Discord voice session id to authenticate with."""
 
 
-
 class Player(PayloadBase):
     """Player information.
 
@@ -63,7 +62,11 @@ class Player(PayloadBase):
     Find out more [here](https://lavalink.dev/api/rest.html#player).
     """
 
-    guild_id: hikari.Snowflake
+    guild_id: t.Annotated[
+        hikari.Snowflake,
+        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.Field(alias="guildId"),
+    ]
     """The guild id this player is currently in."""
     track: Track | None
     """The track the player is currently playing. None means its not currently playing any track."""
@@ -77,7 +80,6 @@ class Player(PayloadBase):
     """the [PlayerVoice][ongaku.abc.player.PlayerVoice] object."""
     filters: dict[t.Any, t.Any]
     """The filters object."""
-
 
 
 # MIT License

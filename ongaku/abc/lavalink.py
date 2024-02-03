@@ -6,6 +6,7 @@ All of the information about the lavalink connection.
 from __future__ import annotations
 
 import typing as t
+
 import pydantic
 
 from .. import enums
@@ -19,7 +20,6 @@ __all__ = (
     "RestError",
     "ExceptionError",
 )
-
 
 
 class InfoVersion(PayloadBase):
@@ -37,9 +37,9 @@ class InfoVersion(PayloadBase):
     """The minor version of this Lavalink server"""
     patch: int
     """The patch version of this Lavalink server"""
-    pre_release:  t.Annotated[str, pydantic.Field(alias="preRelease")]
+    pre_release: t.Annotated[str, pydantic.Field(alias="preRelease")]
     """The pre-release version according to semver as a `.` separated list of identifiers"""
-    build: t.Annotated[str | None, pydantic.Field(default=None)]
+    build: t.Annotated[str | None, pydantic.Field(default=None)] = None
     """The build metadata according to semver as a `.` separated list of identifiers"""
 
 
@@ -80,7 +80,7 @@ class Info(PayloadBase):
 
     version: InfoVersion
     """The version of this Lavalink server."""
-    build_time: int
+    build_time: t.Annotated[int, pydantic.Field(alias="buildTime")]
     """The millisecond unix timestamp when this Lavalink jar was built."""
     git: InfoGit
     """The git information of this Lavalink server."""
@@ -88,7 +88,9 @@ class Info(PayloadBase):
     """The JVM version this Lavalink server runs on."""
     lavaplayer: str
     """The Lavaplayer version being used by this server."""
-    source_managers:  t.Annotated[t.Sequence[str], pydantic.Field(alias="sourceManagers")]
+    source_managers: t.Annotated[
+        t.Sequence[str], pydantic.Field(alias="sourceManagers")
+    ]
     """The enabled source managers for this server."""
     filters: t.Sequence[str]
     """The enabled filters for this server."""
@@ -109,13 +111,12 @@ class RestError(PayloadBase):
     """The HTTP status code."""
     error: str
     """The HTTP status code message."""
-    trace: t.Annotated[str | None, pydantic.Field(default=None)]
+    trace: t.Annotated[str | None, pydantic.Field(default=None)] = None
     """The stack trace of the error."""
     message: str
     """The error message."""
     path: str
     """The request path."""
-
 
 
 class ExceptionError(PayloadBase):
@@ -130,7 +131,6 @@ class ExceptionError(PayloadBase):
     """The severity of the exception."""
     cause: str
     """The cause of the exception."""
-
 
 
 # MIT License

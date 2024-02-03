@@ -44,9 +44,15 @@ class TrackTest(unittest.TestCase):
             source_name="test_source_name",
             uri=None,
             artwork_url=None,
-            isrc=None
+            isrc=None,
         )
-        test_track = Track(encoded="test_encoded", info=test_info, plugin_info={}, user_data={}, requestor=None)
+        test_track = Track(
+            encoded="test_encoded",
+            info=test_info,
+            plugin_info={},
+            user_data={},
+            requestor=None,
+        )
 
         assert test_track.encoded == "test_encoded"
         assert test_track.plugin_info == {}
@@ -78,7 +84,7 @@ class TrackTest(unittest.TestCase):
             source_name="test_source_name",
             uri=None,
             artwork_url=None,
-            isrc=None
+            isrc=None,
         )
 
         assert test_info.identifier == "test_identifier"
@@ -120,7 +126,7 @@ class PlaylistTest(unittest.TestCase):
         "tracks": [TrackTest.track_payload],
     }
 
-    playlist_info_payload: dict[str, t.Any] = playlist_payload["data"]["info"]
+    playlist_info_payload: dict[str, t.Any] = playlist_payload["info"]
 
     def test_playlist(self):
         test_info = TrackInfo(
@@ -134,11 +140,19 @@ class PlaylistTest(unittest.TestCase):
             source_name="test_source_name",
             uri=None,
             artwork_url=None,
-            isrc=None
+            isrc=None,
         )
-        test_track = Track(encoded="test_encoded", info=test_info, plugin_info={}, user_data={}, requestor=None)
+        test_track = Track(
+            encoded="test_encoded",
+            info=test_info,
+            plugin_info={},
+            user_data={},
+            requestor=None,
+        )
         test_playlist_info = PlaylistInfo(name="test_playlist_name", selected_track=-1)
-        test_playlist = Playlist(info=test_playlist_info, plugin_info={}, tracks=(test_track,))
+        test_playlist = Playlist(
+            info=test_playlist_info, plugin_info={}, tracks=(test_track,)
+        )
 
         assert test_playlist.info == test_playlist_info
         assert test_playlist.plugin_info == {}
@@ -158,9 +172,15 @@ class PlaylistTest(unittest.TestCase):
             source_name="test_source_name",
             uri=None,
             artwork_url=None,
-            isrc=None
+            isrc=None,
         )
-        test_track = Track(encoded="test_encoded", info=test_info, plugin_info={}, user_data={}, requestor=None)
+        test_track = Track(
+            encoded="test_encoded",
+            info=test_info,
+            plugin_info={},
+            user_data={},
+            requestor=None,
+        )
         test_playlist_info = PlaylistInfo(name="test_playlist_name", selected_track=-1)
         test_playlist = Playlist._from_payload(self.playlist_payload)
 
@@ -202,9 +222,15 @@ class SearchResultTest(unittest.TestCase):
             source_name="test_source_name",
             uri=None,
             artwork_url=None,
-            isrc=None
+            isrc=None,
         )
-        test_track = Track(encoded="test_encoded", info=test_info, plugin_info={}, user_data={}, requestor=None)
+        test_track = Track(
+            encoded="test_encoded",
+            info=test_info,
+            plugin_info={},
+            user_data={},
+            requestor=None,
+        )
         test_search_result = SearchResult(tracks=(test_track,))
 
         assert test_search_result.tracks == (test_track,)
@@ -223,9 +249,15 @@ class SearchResultTest(unittest.TestCase):
             source_name="test_source_name",
             uri=None,
             artwork_url=None,
-            isrc=None
+            isrc=None,
         )
-        test_track = Track(encoded="test_encoded", info=test_info, plugin_info={}, user_data={}, requestor=None)
+        test_track = Track(
+            encoded="test_encoded",
+            info=test_info,
+            plugin_info={},
+            user_data={},
+            requestor=None,
+        )
         test_search_result = SearchResult._from_payload(self.search_result_payload)
 
         assert test_search_result.tracks == (test_track,)

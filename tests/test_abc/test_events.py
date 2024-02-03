@@ -35,14 +35,22 @@ _test_info = TrackInfo(
     source_name="test_source_name",
     uri=None,
     artwork_url=None,
-    isrc=None
+    isrc=None,
 )
-_test_track = Track(encoded="test_encoded", info=_test_info, plugin_info={}, user_data={}, requestor=None)
+_test_track = Track(
+    encoded="test_encoded",
+    info=_test_info,
+    plugin_info={},
+    user_data={},
+    requestor=None,
+)
 
 
 class ReadyEventTest(unittest.TestCase):  # noqa: D101
     def test_base(self):  # noqa: D102
-        test_ready_event = ReadyEvent(_app=_test_bot, resumed=False, session_id="test_session_id")
+        test_ready_event = ReadyEvent(
+            model_app=_test_bot, resumed=False, session_id="test_session_id"
+        )
 
         assert test_ready_event.app == _test_bot
         assert test_ready_event.resumed is False
@@ -65,7 +73,13 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
         test_frame_stats = StatsFrameStatistics(sent=68, nulled=12, deficit=-5)
 
         test_stats_event = StatisticsEvent(
-            _app=_test_bot, players=2, playing_players=1, uptime=32, memory=test_memory, cpu=test_cpu, frame_statistics=test_frame_stats
+            model_app=_test_bot,
+            players=2,
+            playing_players=1,
+            uptime=32,
+            memory=test_memory,
+            cpu=test_cpu,
+            frame_statistics=test_frame_stats,
         )
 
         assert test_stats_event.app == _test_bot
@@ -177,7 +191,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 class TrackBaseTest(unittest.TestCase):
     def test_track_base(self):
         test_track_base = TrackBase(
-            _app=_test_bot,
+            model_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
         )
@@ -227,11 +241,13 @@ class TrackBaseTest(unittest.TestCase):
         assert test_track_base.track.info.isrc is None
         assert test_track_base.track.info.source_name == "test_source_name"
 
+        # FIXME: assert test_track_base._to_payload == payload
+
 
 class TrackStartTest(unittest.TestCase):
     def test_base(self):
         test_start_event = TrackStartEvent(
-            _app=_test_bot,
+            model_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
         )
@@ -282,11 +298,12 @@ class TrackStartTest(unittest.TestCase):
         assert test_start_event.track.info.isrc is None
         assert test_start_event.track.info.source_name == "test_source_name"
 
+        # FIXME: assert test_start_event._to_payload == payload
 
 class TrackEndTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackEndEvent(
-            _app=_test_bot,
+            model_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
             reason=TrackEndReasonType.FINISHED,
@@ -345,10 +362,12 @@ class TrackEndTest(unittest.TestCase):
 class TrackExceptionTest(unittest.TestCase):
     def test_base(self):
         test_exception_event = TrackExceptionEvent(
-            _app=_test_bot,
+            model_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
-            exception=ExceptionError(message="test_message", severity=SeverityType.COMMON, cause="test_cause"),
+            exception=ExceptionError(
+                message="test_message", severity=SeverityType.COMMON, cause="test_cause"
+            ),
         )
 
         assert test_exception_event.app == _test_bot
@@ -412,7 +431,7 @@ class TrackExceptionTest(unittest.TestCase):
 class TrackStuckTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackStuckEvent(
-            _app=_test_bot,
+            model_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
             threshold_ms=60,
@@ -471,11 +490,11 @@ class TrackStuckTest(unittest.TestCase):
 class WebsocketClosedTest(unittest.TestCase):
     def test_base(self):
         test_websocket_closed_event = WebsocketClosedEvent(
-            _app=_test_bot, 
-            guild_id=hikari.Snowflake(19216868440), 
-            code=4000, 
-            reason="test_reason", 
-            by_remote=False
+            model_app=_test_bot,
+            guild_id=hikari.Snowflake(19216868440),
+            code=4000,
+            reason="test_reason",
+            by_remote=False,
         )
 
         assert test_websocket_closed_event.app == _test_bot

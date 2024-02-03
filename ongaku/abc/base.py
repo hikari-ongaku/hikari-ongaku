@@ -8,15 +8,16 @@ from __future__ import annotations
 import abc
 import typing as t
 
-import pydantic
 import hikari
+import pydantic
+#from pydantic.alias_generators import to_camel
 
-__all__ = ("PayloadBase", "PayloadBaseApp")
+__all__ = ("_string_to_guild_id", "PayloadBase", "PayloadBaseApp")
 
 if t.TYPE_CHECKING:
     BaseT = t.Mapping[str, t.Any] | t.Sequence[t.Any]
 
-# FIXME: handle hikari.Snowflake type somehow.
+
 
 class Payload(abc.ABC, pydantic.BaseModel):
     """
@@ -26,6 +27,16 @@ class Payload(abc.ABC, pydantic.BaseModel):
     """
 
 
+def _string_to_guild_id(
+    guild_id: str,
+    handler: pydantic.ValidatorFunctionWrapHandler,
+    info: pydantic.ValidationInfo,
+) -> hikari.Snowflake:
+    try:
+        return hikari.Snowflake(int(guild_id))
+    except:
+        raise
+
 
 class PayloadBase(Payload, abc.ABC):
     """
@@ -33,6 +44,10 @@ class PayloadBase(Payload, abc.ABC):
 
     The payload base, that allows for converting back into payloads to transfer.
     """
+
+    model_config = pydantic.ConfigDict(
+        arbitrary_types_allowed=True, populate_by_name=True
+    )  # , populate_by_name=True, loc_by_alias=False
 
     @classmethod
     def _from_payload(cls, payload: BaseT):
@@ -58,37 +73,37 @@ class PayloadBase(Payload, abc.ABC):
         return self.model_dump_json(by_alias=True)
 
 
-class PayloadBaseApp(Payload, abc.ABC):
+class PayloadBaseApp(Payload):
     """
     Payload base application.
 
     The payload base, that supports an application/bot.
     """
 
-    model_config = pydantic.ConfigDict(ignored_types=(hikari.RESTAware,))
+    model_config = pydantic.ConfigDict(
+        ignored_types=(hikari.RESTAware, hikari.GatewayBotAware),
+        arbitrary_types_allowed=True,
+        #alias_generator=to_camel,
+        populate_by_name=True,
+        loc_by_alias=True,
+    )
 
-    _app: hikari.RESTAware
+    model_app: t.Annotated[hikari.RESTAware, pydantic.Field(default=None, exclude=True)]
 
     @property
     def app(self) -> hikari.RESTAware:
         """The application the event is attached too."""
-        return self._app
+        return self.model_app
 
     @classmethod
     def _from_payload(cls, payload: BaseT, app: hikari.RESTAware):
         """From payload.
 
         Converts the payload, into the current object.
-
-        Raises
-        ------
-        TypeError
-            When the type the value wanted, is incorrect.
-        ValueError
-            When the value is none.
         """
-        cls._app = app
-        return cls.model_validate(payload, strict=True)
+        cls = cls.model_validate(payload, strict=True)
+        cls.model_app = app
+        return cls
 
     @property
     def _to_payload(self) -> BaseT:
@@ -96,7 +111,7 @@ class PayloadBaseApp(Payload, abc.ABC):
 
         Converts your object, to a payload.
         """
-        return self.model_dump(by_alias=True)
+        return self.model_dump(by_alias=True, mode='json')
 
 
 # MIT License

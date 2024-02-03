@@ -10,7 +10,6 @@ from .base import PayloadBase
 __all__ = ("Session",)
 
 
-
 class Session(PayloadBase):
     """Session information.
 

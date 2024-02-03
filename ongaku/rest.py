@@ -139,6 +139,7 @@ class RESTClient:
             except Exception as e:
                 raise LavalinkException(e)
 
+
 class RESTSession:
     """REST Session.
 

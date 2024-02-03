@@ -5,9 +5,12 @@ All of the hikari events for ongaku, are here!
 
 from __future__ import annotations
 
+import typing as t
+
 import hikari
 import pydantic
-import typing as t
+
+from ongaku.abc import base
 
 from .. import enums
 from .base import PayloadBase
@@ -32,32 +35,23 @@ __all__ = (
 )
 
 
-
 class OngakuEvent(hikari.Event):
     """Ongaku Event.
 
     The base event, that all other Ongaku events are attached too.
     """
-
-    _app: hikari.RESTAware
-
-    @property
-    def app(self) -> hikari.RESTAware:
-        """The application the event is attached too."""
-        return self._app
-
-
-class ReadyEvent(OngakuEvent, PayloadBaseApp):
+    
+class ReadyEvent(PayloadBaseApp, OngakuEvent):
     """Ready event.
 
     The event that is dispatched, when lavalink is ready for new players, discord connections, and song requests.
     """
-
+    
     resumed: bool
     """Whether or not the session has been resumed, or is a new session."""
     session_id: t.Annotated[str, pydantic.Field(alias="sessionId")]
     """The lavalink session id, for the current session."""
-
+    
 
 
 class StatsMemory(PayloadBase):
@@ -77,7 +71,6 @@ class StatsMemory(PayloadBase):
     """The amount of reservable memory in bytes"""
 
 
-
 class StatsCpu(PayloadBase):
     """
     All of the Statistics CPU information.
@@ -91,8 +84,6 @@ class StatsCpu(PayloadBase):
     """The system load of the server."""
     lavalink_load: t.Annotated[float | int, pydantic.Field(alias="systemLoad")]
     """The load of Lavalink on the server."""
-
-
 
 
 class StatsFrameStatistics(PayloadBase):
@@ -110,16 +101,12 @@ class StatsFrameStatistics(PayloadBase):
     """The difference between sent frames and the expected amount of frames."""
 
 
-
-
-class StatisticsEvent(OngakuEvent, PayloadBaseApp):
+class StatisticsEvent(PayloadBaseApp, OngakuEvent):
     """
     All of the Statistics information.
 
     Find out more [here](https://lavalink.dev/api/websocket.html#stats-object).
     """
-
-    _app: hikari.RESTAware
 
     players: int
     """The amount of players connected to the session."""
@@ -131,19 +118,23 @@ class StatisticsEvent(OngakuEvent, PayloadBaseApp):
     """The memory stats of the session."""
     cpu: StatsCpu
     """The cpu stats of the session."""
-    frame_statistics: t.Annotated[StatsFrameStatistics | None, pydantic.Field(default=None, alias="frameStats")]
+    frame_statistics: t.Annotated[
+        StatsFrameStatistics | None, pydantic.Field(default=None, alias="frameStats")
+    ] = None
     """The frame stats of the session."""
 
 
-class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp):
+class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
     """Websocket closed event.
 
     The event that is sent out, when a websocket closes.
     """
 
-    _app: hikari.RESTAware
-
-    guild_id: t.Annotated[hikari.Snowflake, pydantic.Field(alias="guildId")]
+    guild_id: t.Annotated[
+        hikari.Snowflake,
+        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.Field(alias="guildId"),
+    ]
     """The guild that had their websocket closed in."""
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
@@ -152,32 +143,31 @@ class WebsocketClosedEvent(OngakuEvent, PayloadBaseApp):
     by_remote: t.Annotated[bool, pydantic.Field(alias="byRemote")]
     """Whether the connection was closed by Discord."""
 
-    
 
-
-
-class TrackBase(OngakuEvent, PayloadBaseApp):
+class TrackBase(PayloadBaseApp, OngakuEvent):
     """Base track class.
 
     The class that all Track based classes, inherit.
     """
 
-    guild_id: t.Annotated[hikari.Snowflake, pydantic.Field(alias="guildId")]
+    guild_id: t.Annotated[
+        hikari.Snowflake,
+        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.Field(alias="guildId"),
+    ]
     """The guild the track is playing in."""
     track: Track
     """The track that the event is attached too."""
 
 
-
-
-class TrackStartEvent(TrackBase, OngakuEvent):
+class TrackStartEvent(TrackBase):
     """Track start event.
 
     The track start event that is dispatched when a track starts on a player.
     """
 
 
-class TrackEndEvent(TrackBase, OngakuEvent):
+class TrackEndEvent(TrackBase):
     """Track end event.
 
     The track end event that is dispatched when a track ends.
@@ -187,8 +177,7 @@ class TrackEndEvent(TrackBase, OngakuEvent):
     """The reason for the track ending."""
 
 
-
-class TrackExceptionEvent(TrackBase, OngakuEvent):
+class TrackExceptionEvent(TrackBase):
     """Track exception event.
 
     This event is dispatched when a track gets stuck.
@@ -198,8 +187,7 @@ class TrackExceptionEvent(TrackBase, OngakuEvent):
     """The exception error that was returned."""
 
 
-
-class TrackStuckEvent(TrackBase, OngakuEvent):
+class TrackStuckEvent(TrackBase):
     """Track stuck event.
 
     This event is dispatched when a track gets stuck.
@@ -209,27 +197,28 @@ class TrackStuckEvent(TrackBase, OngakuEvent):
     """The threshold in milliseconds that was exceeded."""
 
 
-
-class PlayerBase(OngakuEvent, PayloadBaseApp):
+class PlayerBase(PayloadBaseApp, OngakuEvent):
     """Player base.
 
     This is the base player object for all Ongaku player events.
     """
 
-    guild_id: t.Annotated[hikari.Snowflake, pydantic.Field(alias="guildId")]
+    guild_id: t.Annotated[
+        hikari.Snowflake,
+        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.Field(alias="guildId"),
+    ]
     """The guild id of the player."""
 
 
-
-class QueueEmptyEvent(PlayerBase, OngakuEvent):
+class QueueEmptyEvent(PlayerBase):
     """Queue empty event.
 
     This event is dispatched when the player queue is empty, and no more songs are available.
     """
 
 
-
-class QueueNextEvent(PlayerBase, OngakuEvent):
+class QueueNextEvent(PlayerBase):
     """Queue next event.
 
     The event that is dispatched, when a new song is played in a player, from the queue.
@@ -237,7 +226,7 @@ class QueueNextEvent(PlayerBase, OngakuEvent):
 
     track: Track
     """The track that is now playing."""
-    old_track:  t.Annotated[Track, pydantic.Field(alias="oldTrack")]
+    old_track: t.Annotated[Track, pydantic.Field(alias="oldTrack")]
     """The track that was playing."""
 
 
