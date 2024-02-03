@@ -15,56 +15,64 @@ ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 # Events
 
 
-@bot.listen(ongaku.ReadyEvent)
+@client.include
+@crescent.event(ongaku.ReadyEvent)
 async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
         f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
     )
 
 
-@bot.listen(ongaku.TrackStartEvent)
+@client.include
+@crescent.event(ongaku.TrackStartEvent)
 async def track_start_event(event: ongaku.TrackStartEvent):
     logging.info(
         f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
     )
 
 
-@bot.listen(ongaku.TrackEndEvent)
+@client.include
+@crescent.event(ongaku.TrackEndEvent)
 async def track_end_event(event: ongaku.TrackEndEvent):
     logging.info(
         f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
     )
 
 
-@bot.listen(ongaku.TrackExceptionEvent)
+@client.include
+@crescent.event(ongaku.TrackExceptionEvent)
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
     logging.info(
         f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
     )
 
 
-@bot.listen(ongaku.TrackStuckEvent)
+@client.include
+@crescent.event(ongaku.TrackStuckEvent)
 async def track_stuck_event(event: ongaku.TrackStuckEvent):
     logging.info(
         f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
     )
 
 
-@bot.listen(ongaku.WebsocketClosedEvent)
+@client.include
+@crescent.event(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
         f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
     )
 
 
-@bot.listen(ongaku.QueueNextEvent)
+@client.include
+@crescent.event(ongaku.QueueNextEvent)
 async def queue_next_event(event: ongaku.QueueNextEvent):
     logging.info(
         f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
     )
 
 
-@bot.listen(ongaku.QueueEmptyEvent)
+@client.include
+@crescent.event(ongaku.QueueEmptyEvent)
 async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
