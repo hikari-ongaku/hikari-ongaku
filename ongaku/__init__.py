@@ -54,7 +54,16 @@ from .errors import RequiredException
 from .errors import SessionStartException
 from .errors import TimeoutException
 
+from .about import __author__, __author_email__, __maintainer__, __license__, __url__, __version__
+
 __all__ = (
+    # .about
+    "__author__",
+    "__author_email__",
+    "__maintainer__",
+    "__license__",
+    "__url__",
+    "__version__",
     # .client
     "Client",
     # .enums
