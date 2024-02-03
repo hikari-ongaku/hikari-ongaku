@@ -54,6 +54,7 @@ from .errors import RequiredException
 from .errors import SessionStartException
 from .errors import TimeoutException
 
+
 __all__ = (
     # .client
     "Client",

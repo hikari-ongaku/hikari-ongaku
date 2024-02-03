@@ -49,7 +49,7 @@ _test_track = Track(
 class ReadyEventTest(unittest.TestCase):  # noqa: D101
     def test_base(self):  # noqa: D102
         test_ready_event = ReadyEvent(
-            model_app=_test_bot, resumed=False, session_id="test_session_id"
+            bot_app=_test_bot, resumed=False, session_id="test_session_id"
         )
 
         assert test_ready_event.app == _test_bot
@@ -73,7 +73,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
         test_frame_stats = StatsFrameStatistics(sent=68, nulled=12, deficit=-5)
 
         test_stats_event = StatisticsEvent(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             players=2,
             playing_players=1,
             uptime=32,
@@ -191,7 +191,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 class TrackBaseTest(unittest.TestCase):
     def test_track_base(self):
         test_track_base = TrackBase(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
         )
@@ -247,7 +247,7 @@ class TrackBaseTest(unittest.TestCase):
 class TrackStartTest(unittest.TestCase):
     def test_base(self):
         test_start_event = TrackStartEvent(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
         )
@@ -303,7 +303,7 @@ class TrackStartTest(unittest.TestCase):
 class TrackEndTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackEndEvent(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
             reason=TrackEndReasonType.FINISHED,
@@ -362,7 +362,7 @@ class TrackEndTest(unittest.TestCase):
 class TrackExceptionTest(unittest.TestCase):
     def test_base(self):
         test_exception_event = TrackExceptionEvent(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
             exception=ExceptionError(
@@ -431,7 +431,7 @@ class TrackExceptionTest(unittest.TestCase):
 class TrackStuckTest(unittest.TestCase):
     def test_base(self):
         test_end_event = TrackStuckEvent(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             track=_test_track,
             threshold_ms=60,
@@ -490,7 +490,7 @@ class TrackStuckTest(unittest.TestCase):
 class WebsocketClosedTest(unittest.TestCase):
     def test_base(self):
         test_websocket_closed_event = WebsocketClosedEvent(
-            model_app=_test_bot,
+            bot_app=_test_bot,
             guild_id=hikari.Snowflake(19216868440),
             code=4000,
             reason="test_reason",

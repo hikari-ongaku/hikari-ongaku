@@ -1,6 +1,9 @@
 # ruff: noqa
 from setuptools import setup, find_namespace_packages
 import typing as t
+import types
+import os
+import re
 
 
 name = "ongaku"
@@ -16,19 +19,36 @@ def parse_requirements_file(path: str) -> t.List[str]:
         dependencies = (d.strip() for d in fp.read().split("\n") if d.strip())
         return [d for d in dependencies if not d.startswith("#")]
 
+def parse_meta() -> types.SimpleNamespace:
+    with open(os.path.join(name, "about.py")) as fp:
+        code = fp.read()
+
+    token_pattern = re.compile(
+        r"^__(?P<key>\w+)?__\s*:?.*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M
+    )
+
+    groups = {}
+
+    for match in token_pattern.finditer(code):
+        group = match.groupdict()
+        groups[group["key"]] = group["value"]
+
+    return types.SimpleNamespace(**groups)
+
+meta = parse_meta()
 
 setup(
     name="hikari-ongaku",
-    version="0.4.1",
+    version=meta.version,
     description="A voice library, for hikari.",
     long_description=long_description(),
     long_description_content_type="text/markdown",
-    author="MPlaty",
-    author_email="contact@mplaty.com",
+    author=meta.author,
+    author_email=meta.author_email,
     url="https://github.com/MPlatypus/hikari-ongaku",
     packages=find_namespace_packages(include=[name + "*"]),
     package_data={"ongaku": ["py.typed"]},
-    license="MIT",
+    license=meta.license,
     include_package_data=True,
     zip_safe=False,
     install_requires=parse_requirements_file("requirements.txt"),

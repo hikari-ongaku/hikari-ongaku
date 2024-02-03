@@ -1,6 +1,9 @@
 site_name: Ongaku Docs
+
 site_url: https://ongaku.mplaty.com/
+
 repo_url: https://github.com/MPlatypus/hikari-ongaku/
+
 
 theme:
   name: material
@@ -22,8 +25,10 @@ theme:
   logo: assets/logo.png
   favicon: assets/favicon.png
 
+
 extra_css:
   - stylesheets/extra.css
+
 
 plugins:
   - search
@@ -53,6 +58,7 @@ plugins:
             extensions:
                 - griffe_inherited_docstrings
 
+
 markdown_extensions:
   - toc:
       permalink: "#"
@@ -75,6 +81,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/MPlatypus/hikari-ongaku
       name: Hikari Ongaku Github
+
 
 nav:
   - home: index.md

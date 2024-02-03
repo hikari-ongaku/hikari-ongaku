@@ -88,21 +88,22 @@ class PayloadBaseApp(Payload):
         loc_by_alias=True,
     )
 
-    model_app: t.Annotated[hikari.RESTAware, pydantic.Field(default=None, exclude=True)]
+    bot_app: t.Annotated[hikari.RESTAware, pydantic.Field(default=None, exclude=True)]
 
     @property
     def app(self) -> hikari.RESTAware:
         """The application the event is attached too."""
-        return self.model_app
+        return self.bot_app
 
     @classmethod
     def _from_payload(cls, payload: BaseT, app: hikari.RESTAware):
-        """From payload.
+        """
+        From payload.
 
         Converts the payload, into the current object.
         """
         cls = cls.model_validate(payload, strict=True)
-        cls.model_app = app
+        cls.bot_app = app
         return cls
 
     @property
