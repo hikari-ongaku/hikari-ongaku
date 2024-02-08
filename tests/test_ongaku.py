@@ -23,5 +23,4 @@ class ClientTest(unittest.TestCase):
         assert len(test_client.sessions) == 0
         assert isinstance(test_client.rest, RESTClient)
 
-        with self.assertRaises(ValueError):
-            pass
+        

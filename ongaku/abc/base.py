@@ -7,10 +7,11 @@ from __future__ import annotations
 
 import abc
 import typing as t
+import json
 
 import hikari
 import pydantic
-#from pydantic.alias_generators import to_camel
+from pydantic.alias_generators import to_camel
 
 __all__ = ("_string_to_guild_id", "PayloadBase", "PayloadBaseApp")
 
@@ -62,7 +63,11 @@ class PayloadBase(Payload, abc.ABC):
         ValueError
             When the value is none.
         """
-        return cls.model_validate(payload, strict=True)
+        if isinstance(payload, str):
+            cls = cls.model_validate_json(payload, strict=True)
+        else:
+            cls = cls.model_validate_json(json.dumps(payload), strict=True)
+        return cls
 
     @property
     def _to_payload(self) -> BaseT:
@@ -83,7 +88,7 @@ class PayloadBaseApp(Payload):
     model_config = pydantic.ConfigDict(
         ignored_types=(hikari.RESTAware, hikari.GatewayBotAware),
         arbitrary_types_allowed=True,
-        #alias_generator=to_camel,
+        alias_generator=to_camel,
         populate_by_name=True,
         loc_by_alias=True,
     )
@@ -96,13 +101,16 @@ class PayloadBaseApp(Payload):
         return self.bot_app
 
     @classmethod
-    def _from_payload(cls, payload: BaseT, app: hikari.RESTAware):
+    def _from_payload(cls, payload: BaseT | str, app: hikari.RESTAware):
         """
         From payload.
 
         Converts the payload, into the current object.
         """
-        cls = cls.model_validate(payload, strict=True)
+        if isinstance(payload, str):
+            cls = cls.model_validate_json(payload, strict=True)
+        else:
+            cls = cls.model_validate_json(json.dumps(payload), strict=True)
         cls.bot_app = app
         return cls
 
