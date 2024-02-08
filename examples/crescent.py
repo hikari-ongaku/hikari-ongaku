@@ -16,7 +16,7 @@ ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
 
 @client.include
-@crescent.event(ongaku.ReadyEvent)
+@crescent.event
 async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
         f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
@@ -24,7 +24,7 @@ async def ready_event(event: ongaku.ReadyEvent):
 
 
 @client.include
-@crescent.event(ongaku.TrackStartEvent)
+@crescent.event
 async def track_start_event(event: ongaku.TrackStartEvent):
     logging.info(
         f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
@@ -32,7 +32,7 @@ async def track_start_event(event: ongaku.TrackStartEvent):
 
 
 @client.include
-@crescent.event(ongaku.TrackEndEvent)
+@crescent.event
 async def track_end_event(event: ongaku.TrackEndEvent):
     logging.info(
         f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
@@ -40,7 +40,7 @@ async def track_end_event(event: ongaku.TrackEndEvent):
 
 
 @client.include
-@crescent.event(ongaku.TrackExceptionEvent)
+@crescent.event
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
     logging.info(
         f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
@@ -48,7 +48,7 @@ async def track_exception_event(event: ongaku.TrackExceptionEvent):
 
 
 @client.include
-@crescent.event(ongaku.TrackStuckEvent)
+@crescent.event
 async def track_stuck_event(event: ongaku.TrackStuckEvent):
     logging.info(
         f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
@@ -56,7 +56,7 @@ async def track_stuck_event(event: ongaku.TrackStuckEvent):
 
 
 @client.include
-@crescent.event(ongaku.WebsocketClosedEvent)
+@crescent.event
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
         f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
@@ -64,7 +64,7 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
 
 
 @client.include
-@crescent.event(ongaku.QueueNextEvent)
+@crescent.event
 async def queue_next_event(event: ongaku.QueueNextEvent):
     logging.info(
         f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
@@ -72,7 +72,7 @@ async def queue_next_event(event: ongaku.QueueNextEvent):
 
 
 @client.include
-@crescent.event(ongaku.QueueEmptyEvent)
+@crescent.event
 async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
