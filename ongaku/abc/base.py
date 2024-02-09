@@ -6,6 +6,7 @@ All of the payload base related objects.
 from __future__ import annotations
 
 import abc
+import logging
 import typing as t
 import json
 
@@ -15,12 +16,12 @@ from pydantic.alias_generators import to_camel
 
 __all__ = ("_string_to_guild_id", "PayloadBase", "PayloadBaseApp")
 
-if t.TYPE_CHECKING:
-    BaseT = t.Mapping[str, t.Any] | t.Sequence[t.Any]
 
+BaseT = t.TypeVar("BaseT", t.Mapping[str, t.Any], t.Sequence[t.Any])
 
+INTERNAL_LOGGER = logging.getLogger(__name__)
 
-class Payload(abc.ABC, pydantic.BaseModel):
+class Payload(abc.ABC, pydantic.BaseModel, t.Generic[BaseT]):
     """
     Main payload.
 
@@ -39,7 +40,7 @@ def _string_to_guild_id(
         raise
 
 
-class PayloadBase(Payload, abc.ABC):
+class PayloadBase(Payload[BaseT], abc.ABC):
     """
     Payload base.
 
@@ -51,7 +52,7 @@ class PayloadBase(Payload, abc.ABC):
     )  # , populate_by_name=True, loc_by_alias=False
 
     @classmethod
-    def _from_payload(cls, payload: BaseT):
+    def _from_payload(cls, payload: BaseT) -> t.Self:
         """From payload.
 
         Converts the payload, into the current object.
@@ -67,18 +68,19 @@ class PayloadBase(Payload, abc.ABC):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
+        
         return cls
 
     @property
-    def _to_payload(self) -> BaseT:
+    def _to_payload(self) -> t.Mapping[str, t.Any]:
         """To payload.
 
         Converts your object, to a payload.
         """
-        return self.model_dump_json(by_alias=True)
+        return self.model_dump(by_alias=True)
 
 
-class PayloadBaseApp(Payload):
+class PayloadBaseApp(Payload[BaseT]):
     """
     Payload base application.
 
@@ -101,7 +103,7 @@ class PayloadBaseApp(Payload):
         return self.bot_app
 
     @classmethod
-    def _from_payload(cls, payload: BaseT | str, app: hikari.RESTAware):
+    def _from_payload(cls, payload: BaseT | str, app: hikari.RESTAware) -> t.Self:
         """
         From payload.
 
@@ -111,11 +113,13 @@ class PayloadBaseApp(Payload):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
+        
         cls.bot_app = app
+        
         return cls
 
     @property
-    def _to_payload(self) -> BaseT:
+    def _to_payload(self) -> t.Mapping[str, t.Any]:
         """To payload.
 
         Converts your object, to a payload.
