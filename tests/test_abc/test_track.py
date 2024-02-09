@@ -260,6 +260,6 @@ class SearchResultTest(unittest.TestCase):
         )
         test_search_result = SearchResult._from_payload(self.search_result_payload)
 
-        assert test_search_result.tracks == (test_track,)
+        assert test_search_result.tracks[0] == test_track
 
         #FIXME: assert test_search_result._to_payload == self.search_result_payload

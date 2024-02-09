@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-class PlayerState(PayloadBase):
+class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
     """Players State.
 
     All the information for the players current state.
@@ -39,7 +39,7 @@ class PlayerState(PayloadBase):
     """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
 
 
-class PlayerVoice(PayloadBase):
+class PlayerVoice(PayloadBase[t.Mapping[str, t.Any]]):
     """Players Voice state.
 
     All of the Player Voice information.
@@ -54,7 +54,7 @@ class PlayerVoice(PayloadBase):
     """The Discord voice session id to authenticate with."""
 
 
-class Player(PayloadBase):
+class Player(PayloadBase[t.Mapping[str, t.Any]]):
     """Player information.
 
     All of the information about the player, for the specified guild.
@@ -68,7 +68,7 @@ class Player(PayloadBase):
         pydantic.Field(alias="guildId"),
     ]
     """The guild id this player is currently in."""
-    track: Track | None
+    track: t.Annotated[Track | None, pydantic.Field(default=None)]
     """The track the player is currently playing. None means its not currently playing any track."""
     volume: int
     """The volume of the player."""

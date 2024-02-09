@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-class InfoVersion(PayloadBase):
+class InfoVersion(PayloadBase[t.Mapping[str, t.Any]]):
     """Version information.
 
     All information, about the version of lavalink that is running.
@@ -43,7 +43,7 @@ class InfoVersion(PayloadBase):
     """The build metadata according to semver as a `.` separated list of identifiers"""
 
 
-class InfoGit(PayloadBase):
+class InfoGit(PayloadBase[t.Mapping[str, t.Any]]):
     """Git information.
 
     All of the information about the lavalink git information.
@@ -58,7 +58,7 @@ class InfoGit(PayloadBase):
     """The millisecond unix timestamp for when the commit was created."""
 
 
-class InfoPlugin(PayloadBase):
+class InfoPlugin(PayloadBase[t.Mapping[str, t.Any]]):
     """Plugin information.
 
     All of the Information about the currently loaded plugins.
@@ -71,7 +71,7 @@ class InfoPlugin(PayloadBase):
     """The version of the plugin."""
 
 
-class Info(PayloadBase):
+class Info(PayloadBase[t.Mapping[str, t.Any]]):
     """
     All of the Info Version information.
 
@@ -98,7 +98,7 @@ class Info(PayloadBase):
     """The enabled plugins for this server."""
 
 
-class RestError(PayloadBase):
+class RestError(PayloadBase[t.Mapping[str, t.Any]]):
     """Rest error information.
 
     This is the error that is formed, when a call to a rest method fails.
@@ -119,7 +119,7 @@ class RestError(PayloadBase):
     """The request path."""
 
 
-class ExceptionError(PayloadBase):
+class ExceptionError(PayloadBase[t.Mapping[str, t.Any]]):
     """Exception error.
 
     The exception error lavalink returns when a track has an exception.

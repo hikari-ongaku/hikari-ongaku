@@ -41,7 +41,7 @@ class OngakuEvent(hikari.Event):
     The base event, that all other Ongaku events are attached too.
     """
     
-class ReadyEvent(PayloadBaseApp, OngakuEvent):
+class ReadyEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """Ready event.
 
     The event that is dispatched, when lavalink is ready for new players, discord connections, and song requests.
@@ -54,7 +54,7 @@ class ReadyEvent(PayloadBaseApp, OngakuEvent):
     
 
 
-class StatsMemory(PayloadBase):
+class StatsMemory(PayloadBase[t.Mapping[str, t.Any]]):
     """
     All of the Statistics Memory information.
 
@@ -71,7 +71,7 @@ class StatsMemory(PayloadBase):
     """The amount of reservable memory in bytes"""
 
 
-class StatsCpu(PayloadBase):
+class StatsCpu(PayloadBase[t.Mapping[str, t.Any]]):
     """
     All of the Statistics CPU information.
 
@@ -86,7 +86,7 @@ class StatsCpu(PayloadBase):
     """The load of Lavalink on the server."""
 
 
-class StatsFrameStatistics(PayloadBase):
+class StatsFrameStatistics(PayloadBase[t.Mapping[str, t.Any]]):
     """
     All of the Statistics frame statistics information.
 
@@ -101,7 +101,7 @@ class StatsFrameStatistics(PayloadBase):
     """The difference between sent frames and the expected amount of frames."""
 
 
-class StatisticsEvent(PayloadBaseApp, OngakuEvent):
+class StatisticsEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """
     All of the Statistics information.
 
@@ -124,7 +124,7 @@ class StatisticsEvent(PayloadBaseApp, OngakuEvent):
     """The frame stats of the session."""
 
 
-class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
+class WebsocketClosedEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """Websocket closed event.
 
     The event that is sent out, when a websocket closes.
@@ -144,7 +144,7 @@ class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
     """Whether the connection was closed by Discord."""
 
 
-class TrackBase(PayloadBaseApp, OngakuEvent):
+class TrackBase(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """Base track class.
 
     The class that all Track based classes, inherit.
@@ -197,7 +197,7 @@ class TrackStuckEvent(TrackBase):
     """The threshold in milliseconds that was exceeded."""
 
 
-class PlayerBase(PayloadBaseApp, OngakuEvent):
+class PlayerBase(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """Player base.
 
     This is the base player object for all Ongaku player events.

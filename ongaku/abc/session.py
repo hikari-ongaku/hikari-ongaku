@@ -6,11 +6,12 @@ The session abstract classes. [more here](https://ongaku.mplaty.com/api/abc/sess
 from __future__ import annotations
 
 from .base import PayloadBase
+import typing as t
 
 __all__ = ("Session",)
 
 
-class Session(PayloadBase):
+class Session(PayloadBase[t.Mapping[str, t.Any]]):
     """Session information.
 
     All of the specified session information.

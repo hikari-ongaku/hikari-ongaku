@@ -93,7 +93,7 @@ class PlayerTest(unittest.TestCase):
         test_player = Player._from_payload(payload)
 
         assert test_player.guild_id == hikari.Snowflake(19216868440)
-        if test_player.track is not None:
+        if test_player.track:
             assert test_player.track.encoded == "test_encoded"
             assert test_player.track.plugin_info == {}
             assert test_player.track.user_data == {}

@@ -110,19 +110,16 @@ class RESTClient:
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
     ) -> t.Mapping[str, t.Any]:
-        if self._session is None:
-            async with aiohttp.ClientSession() as session:
-                self._session = session
-
-        async with self._session as session:
+        async with aiohttp.ClientSession() as session:
             try:
                 async with session.request(
                     method.value,
-                    url,
+                    self._client._internal.base_uri + url,
                     headers=headers,
                     json=json,
                     params=params,
                 ) as response:
+                    print(await response.text())
                     if response.status >= 400:
                         raise LavalinkException(
                             f"A {response.status} error has occurred."

@@ -20,7 +20,7 @@ __all__ = (
 )
 
 
-class TrackInfo(PayloadBase):
+class TrackInfo(PayloadBase[t.Mapping[str, t.Any]]):
     """Track information.
 
     All of the track information.
@@ -54,7 +54,7 @@ class TrackInfo(PayloadBase):
     """The track ISRC"""
 
 
-class Track(PayloadBase):
+class Track(PayloadBase[t.Mapping[str, t.Any]]):
     """Base track.
 
     The base track data.
@@ -85,7 +85,7 @@ class Track(PayloadBase):
     """
 
 
-class PlaylistInfo(PayloadBase):
+class PlaylistInfo(PayloadBase[t.Mapping[str, t.Any]]):
     """Playlist information.
 
     The playlist info object.
@@ -101,7 +101,7 @@ class PlaylistInfo(PayloadBase):
     """The selected track of the playlist (`-1` if no track is selected)"""
 
 
-class Playlist(PayloadBase):
+class Playlist(PayloadBase[t.Mapping[str, t.Any]]):
     """Playlist.
 
     The playlist object.
@@ -119,7 +119,7 @@ class Playlist(PayloadBase):
     """The tracks in this playlist."""
 
 
-class SearchResult(PayloadBase):
+class SearchResult(PayloadBase[t.Sequence[t.Any]]):
     """Search result.
 
     A search result, that has a list of tracks, from the search result.
@@ -130,6 +130,20 @@ class SearchResult(PayloadBase):
     tracks: t.Annotated[t.Sequence[Track], pydantic.Field(alias="")]
     """The tracks from the search result."""
 
+    @classmethod
+    def _from_payload(cls, payload: t.Sequence[t.Any]):
+        """
+        From payload.
+
+        Converts the payload, into the current object.
+        """
+        track_list: list[Track] = []
+        for track in payload:
+            track_list.append(Track._from_payload(track))
+
+        
+
+        return SearchResult(tracks=track_list)
 
 # MIT License
 
