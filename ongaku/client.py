@@ -20,7 +20,9 @@ from .player import Player
 from .rest import RESTClient
 from .session import Session
 
-INTERNAL_LOGGER = logging.getLogger(__name__)
+from . import internal
+
+INTERNAL_LOGGER = internal.logger
 
 __all__ = ("Client",)
 
@@ -30,6 +32,8 @@ class _ClientInternal:
     headers: dict[str, t.Any]
     base_uri: str
     attempts: int
+    trace_level: str | int = "INFO"
+    base_logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -56,6 +60,8 @@ class Client:
         The maximum amount of retries for the Websocket.
     auto_sessions : bool
         Whether or not auto sessions are enabled.
+    logs : str | int
+
     """
 
     def __init__(
@@ -68,7 +74,10 @@ class Client:
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
         auto_sessions: bool = True,
+        logs: str | int = "INFO"
     ) -> None:
+        INTERNAL_LOGGER.setLevel(logs)
+        
         self._bot = bot
 
         headers: dict[str, t.Any] = {}
@@ -87,7 +96,10 @@ class Client:
         self._auto_sessions = auto_sessions
         if auto_sessions:
             bot.subscribe(hikari.ShardEvent, self._handle_sessions)
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, "Successfully setup auto-sessions.")
+            
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
+        INTERNAL_LOGGER.log(internal.Trace.LEVEL, "Successfully setup stop event.")
 
         self._player_client = PlayerClient(self)
 
@@ -129,10 +141,13 @@ class Client:
             except Exception:
                 raise
 
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"Successfully created, and connected a new session on shard id: {event.shard.id}")
+
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
         INTERNAL_LOGGER.info("Shutting down players...")
         for player in self.player.walk():
             await player.disconnect()
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"Player on guild id: {player.guild_id} successfully shut down.")
 
         INTERNAL_LOGGER.info("Shutdown complete.")
 

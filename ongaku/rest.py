@@ -23,6 +23,10 @@ from .abc.track import Track
 from .errors import BuildException
 from .errors import LavalinkException
 
+from . import internal
+
+INTERNAL_LOGGER = internal.logger.getChild("rest")
+
 if t.TYPE_CHECKING:
     from .client import Client
 
@@ -85,6 +89,7 @@ class RESTClient:
             Returns an information object.
         """
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running GET /info")
             resp = await self._rest_handler(
                 "/info", self._client._internal.headers, _HttpMethod.GET
             )
@@ -108,6 +113,7 @@ class RESTClient:
         **kwargs: t.Any,
     ) -> t.Mapping[str, t.Any]:
         async with aiohttp.ClientSession() as session:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running aiohttp client")
             if method == _HttpMethod.GET:
                 try:
                     async with session.get(
@@ -224,6 +230,7 @@ class RESTSession:
             The session object information.
         """
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running PATCH /sessions/{session_id}")
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id,
                 self._rest._client._internal.headers,
@@ -275,6 +282,7 @@ class RESTPlayer:
             The players that are attached to the session.
         """
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running GET /sessions/{session_id}/players")
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players",
                 self._rest._client._internal.headers,
@@ -322,6 +330,7 @@ class RESTPlayer:
             The player that was found for the specified guild.
         """
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running GET /sessions/{session_id}/players/{guild_id}")
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players/" + str(guild_id),
                 self._rest._client._internal.headers,
@@ -453,6 +462,7 @@ class RESTPlayer:
             params.update({"noReplace": "true"})
 
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running PATCH /sessions/{session_id}/players/{guild_id} with params: {params} and json: {patch_data}")
             resp = await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players/" + str(guild_id),
                 self._rest._client._internal.headers,
@@ -492,6 +502,7 @@ class RESTPlayer:
             Json data could not be found or decoded.
         """
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running DELETE /sessions/{session_id}/players/{guild_id}")
             await self._rest._rest_handler(
                 "/sessions/" + session_id + "/players/" + str(guild_id),
                 self._rest._client._internal.headers,
@@ -542,6 +553,7 @@ class RESTTrack:
         params: dict[str, t.Any] = {"identifier": query}
 
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running GET /loadtracks with params: {params}")
             resp = await self._rest._rest_handler(
                 "/loadtracks",
                 self._rest._client._internal.headers,
@@ -555,35 +567,33 @@ class RESTTrack:
 
         load_type = resp["loadType"]
 
-        if load_type == "empty":
-            return
+        build = None
 
-        if load_type == "error":
+        if load_type == "empty":
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"loadType is empty.")
+
+        elif load_type == "error":
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"loadType caused an error.")
             raise LavalinkException(ExceptionError._from_payload(resp["data"]))
 
-        if load_type == "search":
-            try:
-                search_result = SearchResult._from_payload(resp["data"])
-            except Exception as e:
-                raise BuildException(e)
+        elif load_type == "search":
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"loadType was a search result.")
+            build = SearchResult._from_payload(resp["data"])
 
-            return search_result
 
-        if load_type == "track":
-            try:
-                track = Track._from_payload(resp["data"])
-            except Exception as e:
-                raise BuildException(e)
+        elif load_type == "track":
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"loadType was a track link.")
+            build = Track._from_payload(resp["data"])
 
-            return track
 
-        if load_type == "playlist":
-            try:
-                playlist = Playlist._from_payload(resp["data"])
-            except Exception as e:
-                raise BuildException(e)
+        elif load_type == "playlist":
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"loadType was a playlist link.")
+            build = Playlist._from_payload(resp["data"])
 
-            return playlist
+        else:
+            raise Exception("An unknown loadType was received.")
+        
+        return build
 
     async def decode(self, code: str) -> Track:
         """Decode a track.
@@ -607,12 +617,15 @@ class RESTTrack:
         Track
             The track that came from the encoded code.
         """
+        params = {"encodedTrack": code}
+
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running GET /decodetrack with params: {params}")
             resp = await self._rest._rest_handler(
                 self._rest._client._internal.base_uri + "/decodetrack",
                 self._rest._client._internal.headers,
                 _HttpMethod.GET,
-                params={"encodedTrack": code},
+                params=params,
             )
         except LavalinkException:
             raise
@@ -649,6 +662,7 @@ class RESTTrack:
             The track that came from the encoded code.
         """
         try:
+            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"running GET /decodetracks with json: {[*codes]}")
             resp = await self._rest._rest_handler(
                 self._rest._client._internal.base_uri + "/decodetracks",
                 self._rest._client._internal.headers,
