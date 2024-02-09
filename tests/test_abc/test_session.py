@@ -22,4 +22,4 @@ class SessionTest(unittest.TestCase):
         assert test_session.resuming is True
         assert test_session.timeout == 10
 
-        #FIXME: assert test_session._to_payload == payload
+        assert test_session._to_payload == payload

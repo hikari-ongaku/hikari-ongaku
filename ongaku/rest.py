@@ -119,7 +119,6 @@ class RESTClient:
                     json=json,
                     params=params,
                 ) as response:
-                    print(await response.text())
                     if response.status >= 400:
                         raise LavalinkException(
                             f"A {response.status} error has occurred."
