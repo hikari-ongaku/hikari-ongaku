@@ -1,6 +1,8 @@
 # ruff: noqa
 import unittest
 
+import typing as t
+
 from ongaku.abc.lavalink import ExceptionError
 from ongaku.abc.lavalink import Info
 from ongaku.abc.lavalink import InfoGit
@@ -11,12 +13,37 @@ from ongaku.enums import SeverityType
 
 
 class InfoTest(unittest.TestCase):
+    info_payload: dict[str, t.Any] = {
+        "version": {
+            "semver": "semver_test",
+            "major": 3,
+            "minor": 7,
+            "patch": 0,
+            "preRelease": "prerelease_test",
+            "build": "build_test",
+        },
+        "buildTime": 60,
+        "git": {"branch": "branch_test", "commit": "commit_test", "commitTime": 30},
+        "jvm": "jvm_test",
+        "lavaplayer": "lavaplayer_test",
+        "sourceManagers": ["youtube", "soundcloud"],
+        "filters": ["equalizer", "karaoke", "timescale", "channelMix"],
+        "plugins": [
+            {"name": "plugin_test_1", "version": "1.2"},
+            {"name": "plugin_test_2", "version": "3.4"},
+        ],
+    }
+
+    info_version_payload = info_payload["version"]
+    
+    info_git_payload = info_payload["git"]
+
     def test_info(self):
         test_info_version = InfoVersion(
             semver="semver_test",
-            major=1,
-            minor=2,
-            patch=3,
+            major=3,
+            minor=7,
+            patch=0,
             pre_release="prerelease_test",
             build="build_test",
         )
@@ -35,53 +62,6 @@ class InfoTest(unittest.TestCase):
             filters=["equalizer", "karaoke", "timescale", "channelMix"],
             plugins=[test_info_plugin_1, test_info_plugin_2],
         )
-
-        assert test_info.build_time == 60
-        assert test_info.jvm == "jvm_test"
-        assert test_info.lavaplayer == "lavaplayer_test"
-        assert test_info.version.semver == "semver_test"
-        assert test_info.version.major == 1
-        assert test_info.version.minor == 2
-        assert test_info.version.patch == 3
-        assert test_info.version.pre_release == "prerelease_test"
-        assert test_info.version.build == "build_test"
-        assert test_info.git.branch == "branch_test"
-        assert test_info.git.commit == "commit_test"
-        assert test_info.git.commit_time == 30
-        assert test_info.plugins[0].name == "plugin_test_1"
-        assert test_info.plugins[0].version == "1.2"
-        assert test_info.plugins[1].name == "plugin_test_2"
-        assert test_info.plugins[1].version == "3.4"
-        assert test_info.source_managers[0] == "youtube"
-        assert test_info.source_managers[1] == "soundcloud"
-        assert test_info.filters[0] == "equalizer"
-        assert test_info.filters[1] == "karaoke"
-        assert test_info.filters[2] == "timescale"
-        assert test_info.filters[3] == "channelMix"
-
-    def test_info_payload(self):
-        payload = {
-            "version": {
-                "semver": "semver_test",
-                "major": 3,
-                "minor": 7,
-                "patch": 0,
-                "preRelease": "prerelease_test",
-                "build": "build_test",
-            },
-            "buildTime": 60,
-            "git": {"branch": "branch_test", "commit": "commit_test", "commitTime": 30},
-            "jvm": "jvm_test",
-            "lavaplayer": "lavaplayer_test",
-            "sourceManagers": ["youtube", "soundcloud"],
-            "filters": ["equalizer", "karaoke", "timescale", "channelMix"],
-            "plugins": [
-                {"name": "plugin_test_1", "version": "1.2"},
-                {"name": "plugin_test_2", "version": "3.4"},
-            ],
-        }
-
-        test_info = Info._from_payload(payload)
 
         assert test_info.build_time == 60
         assert test_info.jvm == "jvm_test"
@@ -106,36 +86,47 @@ class InfoTest(unittest.TestCase):
         assert test_info.filters[2] == "timescale"
         assert test_info.filters[3] == "channelMix"
 
-        # FIXME: assert test_info._to_payload == payload
+        assert test_info._to_payload == self.info_payload
+
+    def test_info_payload(self):
+        
+
+        test_info = Info._from_payload(self.info_payload)
+
+        assert test_info.build_time == 60
+        assert test_info.jvm == "jvm_test"
+        assert test_info.lavaplayer == "lavaplayer_test"
+        assert test_info.version.semver == "semver_test"
+        assert test_info.version.major == 3
+        assert test_info.version.minor == 7
+        assert test_info.version.patch == 0
+        assert test_info.version.pre_release == "prerelease_test"
+        assert test_info.version.build == "build_test"
+        assert test_info.git.branch == "branch_test"
+        assert test_info.git.commit == "commit_test"
+        assert test_info.git.commit_time == 30
+        assert test_info.plugins[0].name == "plugin_test_1"
+        assert test_info.plugins[0].version == "1.2"
+        assert test_info.plugins[1].name == "plugin_test_2"
+        assert test_info.plugins[1].version == "3.4"
+        assert test_info.source_managers[0] == "youtube"
+        assert test_info.source_managers[1] == "soundcloud"
+        assert test_info.filters[0] == "equalizer"
+        assert test_info.filters[1] == "karaoke"
+        assert test_info.filters[2] == "timescale"
+        assert test_info.filters[3] == "channelMix"
+
+        assert test_info._to_payload == self.info_payload
 
     def test_info_version(self):
         test_info_version = InfoVersion(
             semver="semver_test",
-            major=1,
-            minor=2,
-            patch=3,
+            major=3,
+            minor=7,
+            patch=0,
             pre_release="prerelease_test",
             build="build_test",
         )
-
-        assert test_info_version.semver == "semver_test"
-        assert test_info_version.major == 1
-        assert test_info_version.minor == 2
-        assert test_info_version.patch == 3
-        assert test_info_version.pre_release == "prerelease_test"
-        assert test_info_version.build == "build_test"
-
-    def test_info_version_payload(self):
-        payload = {
-            "semver": "semver_test",
-            "major": 3,
-            "minor": 7,
-            "patch": 0,
-            "preRelease": "prerelease_test",
-            "build": "build_test",
-        }
-
-        test_info_version = InfoVersion._from_payload(payload)
 
         assert test_info_version.semver == "semver_test"
         assert test_info_version.major == 3
@@ -144,7 +135,20 @@ class InfoTest(unittest.TestCase):
         assert test_info_version.pre_release == "prerelease_test"
         assert test_info_version.build == "build_test"
 
-        # FIXME: assert test_info_version._to_payload == payload
+        assert test_info_version._to_payload == self.info_version_payload
+
+    def test_info_version_payload(self):
+
+        test_info_version = InfoVersion._from_payload(self.info_version_payload)
+
+        assert test_info_version.semver == "semver_test"
+        assert test_info_version.major == 3
+        assert test_info_version.minor == 7
+        assert test_info_version.patch == 0
+        assert test_info_version.pre_release == "prerelease_test"
+        assert test_info_version.build == "build_test"
+
+        assert test_info_version._to_payload == self.info_version_payload
 
     def test_info_git(self):
         test_info_git = InfoGit(
@@ -155,16 +159,18 @@ class InfoTest(unittest.TestCase):
         assert test_info_git.commit == "commit_test"
         assert test_info_git.commit_time == 30
 
-    def test_info_git_payload(self):
-        payload = {"branch": "branch_test", "commit": "commit_test", "commitTime": 30}
+        assert test_info_git._to_payload == self.info_git_payload
 
-        test_info_git = InfoGit._from_payload(payload)
+        
+
+    def test_info_git_payload(self):
+        test_info_git = InfoGit._from_payload(self.info_git_payload)
 
         assert test_info_git.branch == "branch_test"
         assert test_info_git.commit == "commit_test"
         assert test_info_git.commit_time == 30
 
-        # FIXME: assert test_info_git._to_payload == payload
+        assert test_info_git._to_payload == self.info_git_payload
 
     def test_info_plugin(self):
         test_info_plugin = InfoPlugin(name="plugin_test_1", version="1.2")
@@ -180,7 +186,7 @@ class InfoTest(unittest.TestCase):
         assert test_info_plugin.name == "plugin_test_1"
         assert test_info_plugin.version == "1.2"
 
-        # FIXME: assert test_info_plugin._to_payload == payload
+        assert test_info_plugin._to_payload == payload
 
 
 class TestErrors(unittest.TestCase):
@@ -201,6 +207,8 @@ class TestErrors(unittest.TestCase):
         assert test_rest_error.message == "test_message"
         assert test_rest_error.path == "test_path"
 
+        # Converting to a payload is unnecessary.
+
     def test_rest_error_payload(self):
         payload = {
             "timestamp": 32,
@@ -220,6 +228,8 @@ class TestErrors(unittest.TestCase):
         assert test_rest_error.message == "test_message"
         assert test_rest_error.path == "test_path"
 
+        # Converting to a payload is unnecessary.
+
     def test_exception_error(self):
         test_exception_error = ExceptionError(
             message="test_message", severity=SeverityType.COMMON, cause="test_cause"
@@ -228,6 +238,8 @@ class TestErrors(unittest.TestCase):
         assert test_exception_error.message == "test_message"
         assert test_exception_error.severity == SeverityType.COMMON
         assert test_exception_error.cause == "test_cause"
+
+        # Converting to a payload is unnecessary.
 
     def test_exception_error_payload(self):
         payload = {
@@ -241,3 +253,5 @@ class TestErrors(unittest.TestCase):
         assert test_exception_error.message == "test_message"
         assert test_exception_error.severity == SeverityType.COMMON
         assert test_exception_error.cause == "test_cause"
+
+        # Converting to a payload is unnecessary.
