@@ -23,7 +23,8 @@ if "--version" in sys.argv or "-v" in sys.argv:
 
 if "--about" in sys.argv or "-a" in sys.argv:
     sys.stderr.write(
-        f"""{WATERMELON}About Ongaku
+f"""{WATERMELON}About Ongaku
+
 {WHITE}------------
 Ongaku is a voice library, designed to work with hikari (https://hikari-py.dev/).
 It's a super simple to setup library, whilst also having all features for advanced users as well.

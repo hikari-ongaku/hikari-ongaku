@@ -15,6 +15,7 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
+
 from .abc import player
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
@@ -28,6 +29,7 @@ from .errors import PlayerException
 from .errors import PlayerQueueException
 from .errors import SessionStartException
 from .errors import TimeoutException
+from .enums import TrackEndReasonType
 
 if t.TYPE_CHECKING:
     from .session import Session
@@ -235,7 +237,7 @@ class Player:
             raise
         except BuildException:
             raise
-
+        self._connected = True
         await self._update(player)
 
     async def disconnect(self) -> None:
@@ -264,6 +266,8 @@ class Player:
             raise
         except BuildException:
             raise
+
+        self._connected = False
 
         await self.bot.update_voice_state(self.guild_id, None)
 
@@ -339,15 +343,6 @@ class Player:
             The list of tracks you wish to add to the queue.
         requestor : Snowflake | None
             The user/member id that requested the song.
-
-        Raises
-        ------
-        SessionStartException
-            The session id was null, or empty.
-        LavalinkException
-            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
-        BuildException
-            Failure to build the player object.
         """
         for track in tracks:
             if requestor:
@@ -597,6 +592,8 @@ class Player:
             The session id was null, or empty.
         ValueError
             The queue is empty.
+        ValueError
+            The track specified, does not exist in the current queue.
         PlayerException
             The song did not exist, or the position was out of the length of the queue.
         LavalinkException
@@ -606,9 +603,6 @@ class Player:
         """
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
-
-        if self.session._internal.session_id is None:
-            raise SessionStartException("Session has not been started for this player.")
 
         if isinstance(value, Track):
             index = self._queue.index(value)
@@ -725,6 +719,9 @@ class Player:
 
         if not self._autoplay:
             return
+        
+        if event.reason != TrackEndReasonType.FINISHED:
+            return
 
         if int(event.guild_id) == int(self.guild_id):
             try:
@@ -741,7 +738,7 @@ class Player:
                 )
                 return
 
-            await self.play(self.queue[0])
+            await self.play()
 
             await self.bot.dispatch(
                 QueueNextEvent(
