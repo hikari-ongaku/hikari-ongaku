@@ -49,6 +49,7 @@ def format(session: nox.Session) -> None:
 def pyright(session: nox.Session) -> None:
     session.install(".")
     session.install("-U", "pyright")
+    session.install("-U", "-r", "examples/examples_requirements.txt")
     session.run("pyright", PATH_TO_PROJECT, EXAMPLES_PATH)
 
 
