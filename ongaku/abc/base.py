@@ -80,11 +80,13 @@ class PayloadBase(Payload[BaseT], abc.ABC):
         ValueError
             When the value is none.
         """
+        name = cls.__qualname__
+        _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
         if isinstance(payload, str):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-
+        _logger.log(internal.Trace.LEVEL, f"Payload validation to {name} completed successfully.")
         return cls
 
     @property
@@ -125,13 +127,15 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts the payload, into the current object.
         """
+        name = cls.__qualname__
+
+        _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
         if isinstance(payload, str):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-
         cls.bot_app = app
-
+        _logger.log(internal.Trace.LEVEL, f"Payload validation to {name} completed successfully.")
         return cls
 
     @property
@@ -140,6 +144,7 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts your object, to a payload.
         """
+        _logger.log(internal.Trace.LEVEL, f"converting {self.__qualname__} to payload...")
         return self.model_dump(by_alias=True, mode="json")
 
 

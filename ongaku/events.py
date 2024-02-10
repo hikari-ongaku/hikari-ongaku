@@ -37,21 +37,26 @@ class EventHandler:
 
     async def handle_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle all incoming payloads."""
+        _logger.log(internal.Trace.LEVEL, f"Handling payload...")
         try:
             op_code = payload["op"]
         except Exception as e:
             raise e
 
         if op_code == "ready":
+            _logger.log(internal.Trace.LEVEL, f"Decoding ready payload...")
             await self.ready_payload(payload)
 
         elif op_code == "stats":
+            _logger.log(internal.Trace.LEVEL, f"Decoding stats payload...")
             await self.stats_payload(payload)
 
         elif op_code == "event":
+            _logger.log(internal.Trace.LEVEL, f"Decoding event payload...")
             await self.event_payload(payload)
 
         elif op_code == "playerUpdate":
+            _logger.log(internal.Trace.LEVEL, f"Decoding playerUpdate payload...")
             pass
 
         else:
@@ -74,8 +79,9 @@ class EventHandler:
         except Exception as e:
             raise e
 
-        _logger.info("Successfully connected to the server.")
+        
         await self._session.client.bot.dispatch(event)
+        _logger.log(internal.Trace.LEVEL, "Successful decode, and dispatch of ready payload.")
 
     async def stats_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle statistics payload."""
@@ -85,6 +91,8 @@ class EventHandler:
             raise e
 
         await self._session.client.bot.dispatch(event)
+
+        _logger.log(internal.Trace.LEVEL, "Successful decode, and dispatch of stats payload.")
 
     async def event_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle event payloads."""
@@ -134,7 +142,10 @@ class EventHandler:
                 raise e
 
         else:
-            return
+            logging.warning(f"Event code not recognized: {event_type}")
+            raise Exception(f"Unknown event code: {event_type}")
+        
+        _logger.log(internal.Trace.LEVEL, "Successful decode, and dispatch of event payload.")
 
         await self._session.client.bot.dispatch(event)
 

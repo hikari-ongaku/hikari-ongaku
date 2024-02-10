@@ -124,6 +124,7 @@ class RESTClient:
                     json=json,
                     params=params,
                 ) as response:
+                    _logger.log(internal.Trace.LEVEL, f"Received code: {response.status} with response {await response.text()}")
                     if response.status >= 400:
                         raise LavalinkException(
                             f"A {response.status} error has occurred."
