@@ -54,6 +54,7 @@ setup(
     install_requires=parse_requirements_file("requirements.txt"),
     extras_require={
         "docs": parse_requirements_file("doc_requirements.txt"),
+        "dev": parse_requirements_file("dev_requirements.txt")
     },
     python_requires=">=3.11.0, <3.13",
     classifiers=[

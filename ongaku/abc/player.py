@@ -64,7 +64,8 @@ class Player(PayloadBase[t.Mapping[str, t.Any]]):
 
     guild_id: t.Annotated[
         hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.WrapValidator(base._string_to_snowflake),
+        pydantic.WrapSerializer(base._snowflake_to_string),
         pydantic.Field(alias="guildId"),
     ]
     """The guild id this player is currently in."""

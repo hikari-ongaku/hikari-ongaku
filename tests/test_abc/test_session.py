@@ -17,8 +17,6 @@ class SessionTest(unittest.TestCase):
         assert test_session._to_payload == self.payload
 
     def test_session_payload(self):
-        
-
         test_session = Session._from_payload(self.payload)
 
         assert test_session.resuming is True

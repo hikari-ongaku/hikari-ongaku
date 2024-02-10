@@ -126,7 +126,9 @@ class PlaylistTest(unittest.TestCase):
     playlist_payload: dict[str, t.Any] = {
         "info": {"name": "test_playlist_name", "selectedTrack": -1},
         "pluginInfo": {},
-        "tracks": [TrackTest.track_payload,],
+        "tracks": [
+            TrackTest.track_payload,
+        ],
     }
 
     playlist_info_payload: dict[str, t.Any] = playlist_payload["info"]
@@ -155,7 +157,11 @@ class PlaylistTest(unittest.TestCase):
         test_playlist_info = PlaylistInfo(name="test_playlist_name", selected_track=-1)
 
         test_playlist = Playlist(
-            info=test_playlist_info, plugin_info={}, tracks=[test_track,]
+            info=test_playlist_info,
+            plugin_info={},
+            tracks=[
+                test_track,
+            ],
         )
 
         assert test_playlist.info == test_playlist_info

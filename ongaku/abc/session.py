@@ -5,8 +5,9 @@ The session abstract classes. [more here](https://ongaku.mplaty.com/api/abc/sess
 
 from __future__ import annotations
 
-from .base import PayloadBase
 import typing as t
+
+from .base import PayloadBase
 
 __all__ = ("Session",)
 

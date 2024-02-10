@@ -35,7 +35,7 @@ class InfoTest(unittest.TestCase):
     }
 
     info_version_payload = info_payload["version"]
-    
+
     info_git_payload = info_payload["git"]
 
     def test_info(self):
@@ -89,8 +89,6 @@ class InfoTest(unittest.TestCase):
         assert test_info._to_payload == self.info_payload
 
     def test_info_payload(self):
-        
-
         test_info = Info._from_payload(self.info_payload)
 
         assert test_info.build_time == 60
@@ -138,7 +136,6 @@ class InfoTest(unittest.TestCase):
         assert test_info_version._to_payload == self.info_version_payload
 
     def test_info_version_payload(self):
-
         test_info_version = InfoVersion._from_payload(self.info_version_payload)
 
         assert test_info_version.semver == "semver_test"
@@ -160,8 +157,6 @@ class InfoTest(unittest.TestCase):
         assert test_info_git.commit_time == 30
 
         assert test_info_git._to_payload == self.info_git_payload
-
-        
 
     def test_info_git_payload(self):
         test_info_git = InfoGit._from_payload(self.info_git_payload)

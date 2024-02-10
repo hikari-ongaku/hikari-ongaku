@@ -6,20 +6,26 @@ All of the payload base related objects.
 from __future__ import annotations
 
 import abc
+import json
 import logging
 import typing as t
-import json
 
 import hikari
 import pydantic
 from pydantic.alias_generators import to_camel
 
-__all__ = ("_string_to_guild_id", "PayloadBase", "PayloadBaseApp")
+__all__ = (
+    "_string_to_snowflake",
+    "_snowflake_to_string",
+    "PayloadBase",
+    "PayloadBaseApp",
+)
 
 
 BaseT = t.TypeVar("BaseT", t.Mapping[str, t.Any], t.Sequence[t.Any])
 
 INTERNAL_LOGGER = logging.getLogger(__name__)
+
 
 class Payload(abc.ABC, pydantic.BaseModel, t.Generic[BaseT]):
     """
@@ -29,7 +35,7 @@ class Payload(abc.ABC, pydantic.BaseModel, t.Generic[BaseT]):
     """
 
 
-def _string_to_guild_id(
+def _string_to_snowflake(
     guild_id: str,
     handler: pydantic.ValidatorFunctionWrapHandler,
     info: pydantic.ValidationInfo,
@@ -38,6 +44,14 @@ def _string_to_guild_id(
         return hikari.Snowflake(int(guild_id))
     except:
         raise
+
+
+def _snowflake_to_string(
+    guild_id: hikari.Snowflake,
+    handler: pydantic.SerializerFunctionWrapHandler,
+    info: pydantic.SerializationInfo,
+) -> str:
+    return str(guild_id)
 
 
 class PayloadBase(Payload[BaseT], abc.ABC):
@@ -68,7 +82,7 @@ class PayloadBase(Payload[BaseT], abc.ABC):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-        
+
         return cls
 
     @property
@@ -77,7 +91,7 @@ class PayloadBase(Payload[BaseT], abc.ABC):
 
         Converts your object, to a payload.
         """
-        return self.model_dump(by_alias=True)
+        return self.model_dump(by_alias=True, mode="json")
 
 
 class PayloadBaseApp(Payload[BaseT]):
@@ -113,9 +127,9 @@ class PayloadBaseApp(Payload[BaseT]):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-        
+
         cls.bot_app = app
-        
+
         return cls
 
     @property
@@ -124,7 +138,7 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts your object, to a payload.
         """
-        return self.model_dump(by_alias=True, mode='json')
+        return self.model_dump(by_alias=True, mode="json")
 
 
 # MIT License

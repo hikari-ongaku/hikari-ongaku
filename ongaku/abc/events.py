@@ -40,18 +40,18 @@ class OngakuEvent(hikari.Event):
 
     The base event, that all other Ongaku events are attached too.
     """
-    
+
+
 class ReadyEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """Ready event.
 
     The event that is dispatched, when lavalink is ready for new players, discord connections, and song requests.
     """
-    
+
     resumed: bool
     """Whether or not the session has been resumed, or is a new session."""
     session_id: t.Annotated[str, pydantic.Field(alias="sessionId")]
     """The lavalink session id, for the current session."""
-    
 
 
 class StatsMemory(PayloadBase[t.Mapping[str, t.Any]]):
@@ -82,7 +82,7 @@ class StatsCpu(PayloadBase[t.Mapping[str, t.Any]]):
     """The amount of cores the server has."""
     system_load: t.Annotated[float | int, pydantic.Field(alias="systemLoad")]
     """The system load of the server."""
-    lavalink_load: t.Annotated[float | int, pydantic.Field(alias="systemLoad")]
+    lavalink_load: t.Annotated[float | int, pydantic.Field(alias="lavalinkLoad")]
     """The load of Lavalink on the server."""
 
 
@@ -110,7 +110,7 @@ class StatisticsEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
 
     players: int
     """The amount of players connected to the session."""
-    playing_players: t.Annotated[int, pydantic.Field(alias="playingPlayers")]
+    playing_players: int
     """The amount of players playing a track."""
     uptime: int
     """The uptime of the session in milliseconds."""
@@ -132,7 +132,8 @@ class WebsocketClosedEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
 
     guild_id: t.Annotated[
         hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.WrapValidator(base._string_to_snowflake),
+        pydantic.WrapSerializer(base._snowflake_to_string),
         pydantic.Field(alias="guildId"),
     ]
     """The guild that had their websocket closed in."""
@@ -152,7 +153,8 @@ class TrackBase(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
 
     guild_id: t.Annotated[
         hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.WrapValidator(base._string_to_snowflake),
+        pydantic.WrapSerializer(base._snowflake_to_string),
         pydantic.Field(alias="guildId"),
     ]
     """The guild the track is playing in."""
@@ -205,7 +207,8 @@ class PlayerBase(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
 
     guild_id: t.Annotated[
         hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_guild_id),
+        pydantic.WrapValidator(base._string_to_snowflake),
+        pydantic.WrapSerializer(base._snowflake_to_string),
         pydantic.Field(alias="guildId"),
     ]
     """The guild id of the player."""
@@ -226,7 +229,7 @@ class QueueNextEvent(PlayerBase):
 
     track: Track
     """The track that is now playing."""
-    old_track: t.Annotated[Track, pydantic.Field(alias="oldTrack")]
+    old_track: t.Annotated[Track, pydantic.Field()]
     """The track that was playing."""
 
 

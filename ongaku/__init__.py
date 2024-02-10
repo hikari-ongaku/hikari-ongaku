@@ -36,6 +36,12 @@ from .abc.session import Session
 from .abc.track import Playlist
 from .abc.track import SearchResult
 from .abc.track import Track
+from .about import __author__
+from .about import __author_email__
+from .about import __license__
+from .about import __maintainer__
+from .about import __url__
+from .about import __version__
 from .client import Client
 from .enums import BandType
 from .enums import ConnectionType
@@ -53,8 +59,6 @@ from .errors import PlayerQueueException
 from .errors import RequiredException
 from .errors import SessionStartException
 from .errors import TimeoutException
-
-from .about import __author__, __author_email__, __maintainer__, __license__, __url__, __version__
 
 __all__ = (
     # .about

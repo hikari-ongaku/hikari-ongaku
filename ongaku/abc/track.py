@@ -141,9 +141,8 @@ class SearchResult(PayloadBase[t.Sequence[t.Any]]):
         for track in payload:
             track_list.append(Track._from_payload(track))
 
-        
-
         return SearchResult(tracks=track_list)
+
 
 # MIT License
 

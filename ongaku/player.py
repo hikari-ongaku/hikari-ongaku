@@ -730,17 +730,26 @@ class Player:
             try:
                 await self.remove(0)
             except ValueError:
-                await self.bot.dispatch(QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id))
+                await self.bot.dispatch(
+                    QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id)
+                )
                 return
 
             if len(self.queue) <= 0:
-                await self.bot.dispatch(QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id))
+                await self.bot.dispatch(
+                    QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id)
+                )
                 return
 
             await self.play(self.queue[0])
 
             await self.bot.dispatch(
-                QueueNextEvent(bot_app=self.bot, guild_id=self.guild_id, track=self._queue[0], old_track=event.track)
+                QueueNextEvent(
+                    bot_app=self.bot,
+                    guild_id=self.guild_id,
+                    track=self._queue[0],
+                    old_track=event.track,
+                )
             )
 
 
@@ -765,4 +774,3 @@ class Player:
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
