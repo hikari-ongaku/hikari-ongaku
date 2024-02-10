@@ -30,9 +30,12 @@ from .errors import PlayerQueueException
 from .errors import SessionStartException
 from .errors import TimeoutException
 from .enums import TrackEndReasonType
+from . import internal
 
 if t.TYPE_CHECKING:
     from .session import Session
+
+_logger = internal.logger.getChild("events")
 
 
 class Player:

@@ -22,7 +22,7 @@ from .session import Session
 
 from . import internal
 
-INTERNAL_LOGGER = internal.logger
+_logger = internal.logger
 
 __all__ = ("Client",)
 
@@ -76,7 +76,7 @@ class Client:
         auto_sessions: bool = True,
         logs: str | int = "INFO"
     ) -> None:
-        INTERNAL_LOGGER.setLevel(logs)
+        _logger.setLevel(logs)
         
         self._bot = bot
 
@@ -96,10 +96,10 @@ class Client:
         self._auto_sessions = auto_sessions
         if auto_sessions:
             bot.subscribe(hikari.ShardEvent, self._handle_sessions)
-            INTERNAL_LOGGER.log(internal.Trace.LEVEL, "Successfully setup auto-sessions.")
+            _logger.log(internal.Trace.LEVEL, "Successfully setup auto-sessions.")
             
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
-        INTERNAL_LOGGER.log(internal.Trace.LEVEL, "Successfully setup stop event.")
+        _logger.log(internal.Trace.LEVEL, "Successfully setup stop event.")
 
         self._player_client = PlayerClient(self)
 
@@ -141,15 +141,15 @@ class Client:
             except Exception:
                 raise
 
-            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"Successfully created, and connected a new session on shard id: {event.shard.id}")
+            _logger.log(internal.Trace.LEVEL, f"Successfully created, and connected a new session on shard id: {event.shard.id}")
 
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
-        INTERNAL_LOGGER.info("Shutting down players...")
+        _logger.info("Shutting down players...")
         for player in self.player.walk():
             await player.disconnect()
-            INTERNAL_LOGGER.log(internal.Trace.LEVEL, f"Player on guild id: {player.guild_id} successfully shut down.")
+            _logger.log(internal.Trace.LEVEL, f"Player on guild id: {player.guild_id} successfully shut down.")
 
-        INTERNAL_LOGGER.info("Shutdown complete.")
+        _logger.info("Shutdown complete.")
 
 
 class PlayerClient:

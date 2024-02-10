@@ -8,6 +8,8 @@ from __future__ import annotations
 import logging
 import typing as t
 
+from ongaku import internal
+
 from .abc import ReadyEvent
 from .abc import StatisticsEvent
 from .abc import TrackEndEvent
@@ -20,7 +22,7 @@ from .errors import SessionStartException
 if t.TYPE_CHECKING:
     from .session import Session
 
-INTERNAL_LOGGER = logging.getLogger(__name__)
+_logger = internal.logger.getChild("events")
 
 
 class EventHandler:
@@ -72,7 +74,7 @@ class EventHandler:
         except Exception as e:
             raise e
 
-        INTERNAL_LOGGER.info("Successfully connected to the server.")
+        _logger.info("Successfully connected to the server.")
         await self._session.client.bot.dispatch(event)
 
     async def stats_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:

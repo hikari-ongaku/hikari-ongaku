@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import abc
 import asyncio
-import logging
 import typing as t
 
 import aiohttp
@@ -20,13 +19,14 @@ from .errors import RequiredException
 from .errors import SessionException
 from .events import EventHandler
 from .player import Player
+from . import internal
 
 if t.TYPE_CHECKING:
     from .client import Client
 
 __all__ = ("Session",)
 
-INTERNAL_LOGGER = logging.getLogger(__name__)
+_logger = internal.logger.getChild("session")
 
 
 @attrs.define

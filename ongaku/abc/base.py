@@ -11,10 +11,13 @@ import typing as t
 import attrs
 import hikari
 
+from .. import internal
+
 __all__ = ("PayloadT", "PayloadBase", "PayloadBaseApp")
 
 PayloadT = t.TypeVar("PayloadT", t.Sequence[t.Any], t.Mapping[str, t.Any])
 
+_logger = internal.logger.getChild("abc.base")
 
 class Payload(abc.ABC, t.Generic[PayloadT]):
     """
