@@ -6,20 +6,30 @@ All of the payload base related objects.
 from __future__ import annotations
 
 import abc
+import json
+import logging
 import typing as t
 
-import attrs
 import hikari
-
+import pydantic
+from pydantic.alias_generators import to_camel
 from .. import internal
 
-__all__ = ("PayloadT", "PayloadBase", "PayloadBaseApp")
-
-PayloadT = t.TypeVar("PayloadT", t.Sequence[t.Any], t.Mapping[str, t.Any])
+__all__ = (
+    "_string_to_snowflake",
+    "_snowflake_to_string",
+    "PayloadBase",
+    "PayloadBaseApp",
+)
 
 _logger = internal.logger.getChild("abc.base")
 
-class Payload(abc.ABC, t.Generic[PayloadT]):
+BaseT = t.TypeVar("BaseT", t.Mapping[str, t.Any], t.Sequence[t.Any])
+
+INTERNAL_LOGGER = logging.getLogger(__name__)
+
+
+class Payload(abc.ABC, pydantic.BaseModel, t.Generic[BaseT]):
     """
     Main payload.
 
@@ -27,37 +37,38 @@ class Payload(abc.ABC, t.Generic[PayloadT]):
     """
 
 
-def _to_payload(payload: t.Mapping[str, t.Any]) -> dict[str, t.Any]:
-    fixed_data: dict[str, t.Any] = {}
-    for key, value in payload.items():
-        if key.count("_") > 0:
-            split = key.split("_")
-            new_name_list: list[str] = []
-            for x in range(len(split)):
-                if x == 0:
-                    new_name_list.append(split[x])
-                else:
-                    new_name_list.append(split[x].capitalize())
-            key = "".join(new_name_list)
-
-        if isinstance(value, t.Mapping):
-            fixed_data.update({key: _to_payload(value)})  # type: ignore
-
-        else:
-            fixed_data.update({key: value})
-
-    return fixed_data
+def _string_to_snowflake(
+    guild_id: str,
+    handler: pydantic.ValidatorFunctionWrapHandler,
+    info: pydantic.ValidationInfo,
+) -> hikari.Snowflake:
+    try:
+        return hikari.Snowflake(int(guild_id))
+    except:
+        raise
 
 
-class PayloadBase(Payload[PayloadT], abc.ABC):
+def _snowflake_to_string(
+    guild_id: hikari.Snowflake,
+    handler: pydantic.SerializerFunctionWrapHandler,
+    info: pydantic.SerializationInfo,
+) -> str:
+    return str(guild_id)
+
+
+class PayloadBase(Payload[BaseT], abc.ABC):
     """
     Payload base.
 
     The payload base, that allows for converting back into payloads to transfer.
     """
 
+    model_config = pydantic.ConfigDict(
+        arbitrary_types_allowed=True, populate_by_name=True
+    )  # , populate_by_name=True, loc_by_alias=False
+
     @classmethod
-    def _from_payload(cls, payload: PayloadT) -> PayloadBase[PayloadT]:
+    def _from_payload(cls, payload: BaseT) -> t.Self:
         """From payload.
 
         Converts the payload, into the current object.
@@ -69,32 +80,67 @@ class PayloadBase(Payload[PayloadT], abc.ABC):
         ValueError
             When the value is none.
         """
-        ...
+        if isinstance(payload, str):
+            cls = cls.model_validate_json(payload, strict=True)
+        else:
+            cls = cls.model_validate_json(json.dumps(payload), strict=True)
+
+        return cls
 
     @property
-    def to_payload(self) -> dict[str, t.Any]:
+    def _to_payload(self) -> t.Mapping[str, t.Any]:
         """To payload.
 
         Converts your object, to a payload.
         """
-        return _to_payload(attrs.asdict(self))
+        return self.model_dump(by_alias=True, mode="json")
 
 
-class PayloadBaseApp(Payload[PayloadT], abc.ABC):
+class PayloadBaseApp(Payload[BaseT]):
     """
     Payload base application.
 
     The payload base, that supports an application/bot.
-
-    !!! WARNING
-        This cannot be converted into a dict.
     """
 
+    model_config = pydantic.ConfigDict(
+        ignored_types=(hikari.RESTAware, hikari.GatewayBotAware),
+        arbitrary_types_allowed=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+        loc_by_alias=True,
+    )
+
+    bot_app: t.Annotated[hikari.RESTAware, pydantic.Field(default=None, exclude=True)]
+
+    @property
+    def app(self) -> hikari.RESTAware:
+        """The application the event is attached too."""
+        return self.bot_app
+
     @classmethod
-    def _from_payload(
-        cls, payload: PayloadT, *, app: hikari.RESTAware
-    ) -> PayloadBaseApp[PayloadT]:
-        ...
+    def _from_payload(cls, payload: BaseT | str, app: hikari.RESTAware) -> t.Self:
+        """
+        From payload.
+
+        Converts the payload, into the current object.
+        """
+        if isinstance(payload, str):
+            cls = cls.model_validate_json(payload, strict=True)
+        else:
+            cls = cls.model_validate_json(json.dumps(payload), strict=True)
+
+        cls.bot_app = app
+
+        return cls
+
+    @property
+    def _to_payload(self) -> t.Mapping[str, t.Any]:
+        """To payload.
+
+        Converts your object, to a payload.
+        """
+        return self.model_dump(by_alias=True, mode="json")
 
 
 # MIT License

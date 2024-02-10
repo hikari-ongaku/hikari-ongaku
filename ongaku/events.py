@@ -70,7 +70,7 @@ class EventHandler:
         self._session._internal.session_id = session_id
 
         try:
-            event = ReadyEvent._from_payload(payload, app=self._session.client.bot)
+            event = ReadyEvent._from_payload(payload, self._session.client.bot)
         except Exception as e:
             raise e
 

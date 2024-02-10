@@ -39,6 +39,12 @@ from .abc.session import Session
 from .abc.track import Playlist
 from .abc.track import SearchResult
 from .abc.track import Track
+from .about import __author__
+from .about import __author_email__
+from .about import __license__
+from .about import __maintainer__
+from .about import __url__
+from .about import __version__
 from .client import Client
 from .enums import BandType
 from .enums import ConnectionType

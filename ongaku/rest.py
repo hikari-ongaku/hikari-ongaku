@@ -34,10 +34,10 @@ __all__ = ("RESTClient",)
 
 
 class _HttpMethod(enum.Enum):
-    GET = 0
-    POST = 1
-    PATCH = 3
-    DELETE = 4
+    GET = "GET"
+    POST = "POST"
+    PATCH = "PATCH"
+    DELETE = "DELETE"
 
 
 class RESTClient:
@@ -55,6 +55,8 @@ class RESTClient:
         self._rest_track = RESTTrack(self)
         self._rest_player = RESTPlayer(self)
         self._rest_session = RESTSession(self)
+
+        self._session: aiohttp.ClientSession | None = None
 
     @property
     def track(self) -> RESTTrack:
@@ -108,93 +110,35 @@ class RESTClient:
     async def _rest_handler(
         self,
         url: str,
-        headers: dict[str, t.Any],
+        headers: t.Mapping[str, t.Any],
         method: _HttpMethod,
-        **kwargs: t.Any,
+        json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
+        params: t.Mapping[str, t.Any] = {},
     ) -> t.Mapping[str, t.Any]:
         async with aiohttp.ClientSession() as session:
-            _logger.log(internal.Trace.LEVEL, f"running aiohttp client")
-            if method == _HttpMethod.GET:
-                try:
-                    async with session.get(
-                        self._client._internal.base_uri + url, headers=headers, **kwargs
-                    ) as response:
-                        if response.status >= 400:
-                            raise LavalinkException(
-                                f"A {response.status} error has occurred."
-                            )
+            try:
+                async with session.request(
+                    method.value,
+                    self._client._internal.base_uri + url,
+                    headers=headers,
+                    json=json,
+                    params=params,
+                ) as response:
+                    if response.status >= 400:
+                        raise LavalinkException(
+                            f"A {response.status} error has occurred."
+                        )
 
-                        try:
-                            payload = await response.json()
-                        except Exception:
-                            raise ValueError(
-                                "Json data was not received from the response."
-                            )
+                    try:
+                        payload = await response.json()
+                    except Exception:
+                        raise ValueError(
+                            "Json data was not received from the response."
+                        )
 
-                        return payload
-                except Exception as e:
-                    raise LavalinkException(e)
-
-            if method == _HttpMethod.POST:
-                try:
-                    async with session.post(
-                        self._client._internal.base_uri + url, headers=headers, **kwargs
-                    ) as response:
-                        if response.status >= 400:
-                            raise LavalinkException(
-                                f"A {response.status} error has occurred."
-                            )
-
-                        try:
-                            payload = await response.json()
-                        except Exception:
-                            raise ValueError(
-                                "Json data was not received from the response."
-                            )
-
-                        return payload
-                except Exception as e:
-                    raise LavalinkException(e)
-
-            if method == _HttpMethod.PATCH:
-                try:
-                    async with session.patch(
-                        self._client._internal.base_uri + url, headers=headers, **kwargs
-                    ) as response:
-                        if response.status >= 400:
-                            raise LavalinkException(
-                                f"A {response.status} error has occurred."
-                            )
-
-                        try:
-                            payload = await response.json()
-                        except Exception as e:
-                            raise ValueError(f"Data was not received: {e}")
-
-                        return payload
-                except Exception as e:
-                    raise LavalinkException(e)
-
-            if method == _HttpMethod.DELETE:
-                try:
-                    async with session.delete(
-                        self._client._internal.base_uri + url, headers=headers, **kwargs
-                    ) as response:
-                        if response.status >= 400:
-                            raise LavalinkException(
-                                f"A {response.status} error has occurred."
-                            )
-
-                        try:
-                            payload = await response.json()
-                        except Exception:
-                            raise ValueError(
-                                "Json data was not received from the response."
-                            )
-
-                        return payload
-                except Exception as e:
-                    raise LavalinkException(e)
+                    return payload
+            except Exception as e:
+                raise LavalinkException(e)
 
 
 class RESTSession:
