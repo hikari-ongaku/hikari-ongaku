@@ -11,12 +11,8 @@ import hikari
 import ongaku
 from ongaku.ext import checker
 
-import os
-import dotenv
 
-dotenv.load_dotenv(".env")
-
-bot = hikari.GatewayBot(os.getenv("TOKEN", ""), suppress_optimization_warning=True, intents=hikari.Intents.ALL)
+bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
 
 ongaku_client = ongaku.Client(bot, host="192.168.68.55", password="youshallnotpass", logs="TRACE_ONGAKU")
 
