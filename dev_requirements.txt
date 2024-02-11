@@ -5,8 +5,5 @@ hikari-crescent==0.6.6
 hikari-lightbulb==2.3.5
 hikari-tanjun==2.17.2
 
-# Testing:
-pydantic==2.6.1
-
 # Hidden:
 python-dotenv==1.0.1
