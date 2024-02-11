@@ -13,6 +13,7 @@ import typing as t
 import hikari
 import pydantic
 from pydantic.alias_generators import to_camel
+from .. import internal
 
 __all__ = (
     "_string_to_snowflake",
@@ -21,6 +22,7 @@ __all__ = (
     "PayloadBaseApp",
 )
 
+_logger = internal.logger.getChild("abc.base")
 
 BaseT = t.TypeVar("BaseT", t.Mapping[str, t.Any], t.Sequence[t.Any])
 
@@ -78,11 +80,13 @@ class PayloadBase(Payload[BaseT], abc.ABC):
         ValueError
             When the value is none.
         """
+        name = cls.__qualname__
+        _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
         if isinstance(payload, str):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-
+        _logger.log(internal.Trace.LEVEL, f"Payload validation to {name} completed successfully.")
         return cls
 
     @property
@@ -123,13 +127,15 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts the payload, into the current object.
         """
+        name = cls.__qualname__
+
+        _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
         if isinstance(payload, str):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-
         cls.bot_app = app
-
+        _logger.log(internal.Trace.LEVEL, f"Payload validation to {name} completed successfully.")
         return cls
 
     @property
@@ -138,6 +144,7 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts your object, to a payload.
         """
+        _logger.log(internal.Trace.LEVEL, f"converting {self.__qualname__} to payload...")
         return self.model_dump(by_alias=True, mode="json")
 
 

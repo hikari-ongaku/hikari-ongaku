@@ -20,7 +20,9 @@ from .player import Player
 from .rest import RESTClient
 from .session import Session
 
-INTERNAL_LOGGER = logging.getLogger(__name__)
+from . import internal
+
+_logger = internal.logger
 
 __all__ = ("Client",)
 
@@ -30,6 +32,8 @@ class _ClientInternal:
     headers: dict[str, t.Any]
     base_uri: str
     attempts: int
+    trace_level: str | int = "INFO"
+    base_logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -56,6 +60,8 @@ class Client:
         The maximum amount of retries for the Websocket.
     auto_sessions : bool
         Whether or not auto sessions are enabled.
+    logs : str | int
+
     """
 
     def __init__(
@@ -68,7 +74,10 @@ class Client:
         version: VersionType = VersionType.V4,
         max_retries: int = 3,
         auto_sessions: bool = True,
+        logs: str | int = "INFO"
     ) -> None:
+        _logger.setLevel(logs)
+        
         self._bot = bot
 
         headers: dict[str, t.Any] = {}
@@ -87,7 +96,10 @@ class Client:
         self._auto_sessions = auto_sessions
         if auto_sessions:
             bot.subscribe(hikari.ShardEvent, self._handle_sessions)
+            _logger.log(internal.Trace.LEVEL, "Successfully setup auto-sessions.")
+            
         bot.subscribe(hikari.StoppingEvent, self._handle_shutdown)
+        _logger.log(internal.Trace.LEVEL, "Successfully setup stop event.")
 
         self._player_client = PlayerClient(self)
 
@@ -129,12 +141,20 @@ class Client:
             except Exception:
                 raise
 
+            _logger.log(internal.Trace.LEVEL, f"Successfully created, and connected a new session on shard id: {event.shard.id}")
+
     async def _handle_shutdown(self, event: hikari.StoppingEvent):
-        INTERNAL_LOGGER.info("Shutting down players...")
+        _logger.info("Shutting down players...")
         for player in self.player.walk():
             await player.disconnect()
+            _logger.log(internal.Trace.LEVEL, f"Player on guild id: {player.guild_id} successfully shut down.")
+        
+        _logger.info("Shutting down sessions...")
+        for session in self.sessions:
+            await session._disconnect()
+            _logger.log(internal.Trace.LEVEL, f"Session with name: {session.name} successfully shut down.")
 
-        INTERNAL_LOGGER.info("Shutdown complete.")
+        _logger.info("Shutdown complete.")
 
 
 class PlayerClient:
@@ -174,6 +194,8 @@ class PlayerClient:
                 "Sorry, but this method does not work if auto sessions is disabled."
             )
 
+        _logger.log(internal.Trace.LEVEL, f"Calculating shard ID for guild: {guild_id}")
+
         shard_id = hikari.snowflakes.calculate_shard_id(self._client.bot, guild_id)
 
         session = self._client._sessions.get(shard_id)
@@ -181,10 +203,14 @@ class PlayerClient:
         if not session:
             raise SessionException("Session does not exist.")
 
+        _logger.log(internal.Trace.LEVEL, f"Successfully calculated, and found session for guild: {guild_id}")
+
         bot = self._client.bot.get_me()
 
         if bot is None:
             raise RequiredException("The bot is required to be able to connect.")
+
+        _logger.log(internal.Trace.LEVEL, f"Checking bot's voice state for guild: {guild_id}")
 
         bot_state = self._client.bot.cache.get_voice_state(guild_id, bot.id)
 
@@ -195,10 +221,15 @@ class PlayerClient:
                 raise SessionException(
                     "The session this player needs to attach too, has not yet been created."
                 )
+            
+        _logger.log(internal.Trace.LEVEL, f"Successfully checked voice state for guild: {guild_id}")
 
         new_player = Player(session, guild_id)
 
         session._players.update({guild_id: new_player})
+
+        _logger.log(internal.Trace.LEVEL, f"Successfully created player for guild: {guild_id}")
+
         return new_player
 
     async def fetch(self, guild_id: hikari.Snowflake) -> Player:
@@ -243,6 +274,8 @@ class PlayerClient:
             The player was not found for the guild specified.
 
         """
+        _logger.log(internal.Trace.LEVEL, f"attempting to delete player {guild_id}")
+
         player = await self.fetch(guild_id)
 
         await player.disconnect()
@@ -259,9 +292,13 @@ class PlayerClient:
         typing.Iterator[Player]
             the players from all of the sessions.
         """
+        _logger.log(internal.Trace.LEVEL, f"Walking players...")
         for session in self._client._sessions.values():
             for player in session.players:
+                _logger.log(internal.Trace.LEVEL, f"Player on session: {session.name} for guild: {player.guild_id} found.")
                 yield player
+        
+        _logger.log(internal.Trace.LEVEL, f"Player walk complete.")
 
 
 class SessionClient:
@@ -296,14 +333,18 @@ class SessionClient:
         if self._client._sessions.get(name) is not None:
             raise ValueError("Sorry, but this name already exists.")
 
-        new_session = Session(self._client, name)
+        _logger.log(internal.Trace.LEVEL, f"Attempting to create and connect session with name: {name}")
 
+        new_session = Session(self._client, name)
+        
         try:
             await new_session._connect()
         except:
             raise
 
         self._client._sessions.update({name: new_session})
+
+        _logger.log(internal.Trace.LEVEL, f"Successfully created, and connected session with name: {name}")
 
         return new_session
 
@@ -350,12 +391,15 @@ class SessionClient:
             When the session does not exist.
         """
         session = self._client._sessions.get(name)
-
+        _logger.log(internal.Trace.LEVEL, f"Attempting to delete session with name: {name}")
         if session:
             for player in session.players:
                 await player.disconnect()
 
             await session._disconnect()
+            _logger.log(internal.Trace.LEVEL, f"Successfully deleted session with name: {name}")
+            return
+        
 
         raise ValueError("That session does not exist.")
 

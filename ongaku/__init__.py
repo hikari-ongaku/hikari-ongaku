@@ -7,6 +7,9 @@ https://ongaku.mplaty.com/
 """
 
 from __future__ import annotations
+import logging
+from . import internal
+logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
 
 from . import abc
 from . import enums
@@ -59,8 +62,6 @@ from .errors import PlayerQueueException
 from .errors import RequiredException
 from .errors import SessionStartException
 from .errors import TimeoutException
-
-from .about import __author__, __author_email__, __maintainer__, __license__, __url__, __version__
 
 __all__ = (
     # .about
