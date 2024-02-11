@@ -269,6 +269,7 @@ async def queue_command(
 
     if len(player.queue) == 0:
         await ctx.respond("There is not tracks in the queue currently.")
+        return
 
     queue_embed = hikari.Embed(
         title="Queue",
