@@ -13,6 +13,7 @@ import typing as t
 import hikari
 import pydantic
 from pydantic.alias_generators import to_camel
+
 from .. import internal
 
 __all__ = (
@@ -86,7 +87,10 @@ class PayloadBase(Payload[BaseT], abc.ABC):
             cls = cls.model_validate_json(payload, strict=True)
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
-        _logger.log(internal.Trace.LEVEL, f"Payload validation to {name} completed successfully.")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Payload validation to {name} completed successfully.",
+        )
         return cls
 
     @property
@@ -127,7 +131,7 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts the payload, into the current object.
         """
-        name = cls.__qualname__
+        name = cls.__class__.__name__
 
         _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
         if isinstance(payload, str):
@@ -135,7 +139,10 @@ class PayloadBaseApp(Payload[BaseT]):
         else:
             cls = cls.model_validate_json(json.dumps(payload), strict=True)
         cls.bot_app = app
-        _logger.log(internal.Trace.LEVEL, f"Payload validation to {name} completed successfully.")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Payload validation to {name} completed successfully.",
+        )
         return cls
 
     @property
@@ -144,7 +151,9 @@ class PayloadBaseApp(Payload[BaseT]):
 
         Converts your object, to a payload.
         """
-        _logger.log(internal.Trace.LEVEL, f"converting {self.__qualname__} to payload...")
+        _logger.log(
+            internal.Trace.LEVEL, f"converting {self.__class__.__name__} to payload..."
+        )
         return self.model_dump(by_alias=True, mode="json")
 
 

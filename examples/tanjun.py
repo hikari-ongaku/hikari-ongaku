@@ -1,9 +1,19 @@
+# ruff: noqa: D100, D101, D102, D103
+
+
+# ╔════════════════╗
+# ║ Tanjun example ║
+# ╚════════════════╝
+
+
+
 import logging
 
 import hikari
 import tanjun
 
 import ongaku
+from ongaku.ext import checker
 
 bot = hikari.GatewayBot("...")
 
@@ -11,8 +21,12 @@ client = tanjun.Client.from_gateway_bot(bot)
 
 ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
+client.injector.set_type_dependency(ongaku.Client, ongaku_client)
 
-# Events
+
+# ╔════════╗
+# ║ Events ║
+# ╚════════╝
 
 
 @bot.listen(ongaku.ReadyEvent)
@@ -69,16 +83,22 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
-# Commands
+# ╔══════════╗
+# ║ Commands ║
+# ╚══════════╝
 
 
 component = tanjun.Component()
 
 
 @component.with_slash_command
-@tanjun.with_str_slash_option("query", "query to search")
-@tanjun.as_slash_command("play", "Play a song. (must be a name, not a url.)")
-async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
+@tanjun.with_str_slash_option("query", "The song you wish to play.")
+@tanjun.as_slash_command("play", "Play a song.")
+async def play_command(
+    ctx: tanjun.abc.SlashContext,
+    query: str,
+    ongaku_client: ongaku.Client = tanjun.inject(),
+) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
@@ -92,7 +112,12 @@ async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
         )
         return
 
-    result = await ongaku_client.rest.track.load(query)
+    checked_query = await checker.check(query)
+
+    if checked_query.type == checker.CheckedType.QUERY:
+        result = await ongaku_client.rest.track.load(f"ytsearch:{checked_query.value}")
+    else:
+        result = await ongaku_client.rest.track.load(checked_query.value)
 
     if result is None:
         await ctx.create_initial_response(
@@ -101,7 +126,7 @@ async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
         )
         return
 
-    track: ongaku.Track | None = None
+    track: ongaku.Track
 
     if isinstance(result, ongaku.SearchResult):
         track = result.tracks[0]
@@ -113,15 +138,13 @@ async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
         track = result.tracks[0]
 
     embed = hikari.Embed(
-        title=track.info.title,
+        title=f"[{track.info.title}]({track.info.uri})",
         description=f"made by: {track.info.author}",
     )
 
-    embed.set_image(track.info.artwork_url)
-
     try:
         player = await ongaku_client.player.fetch(ctx.guild_id)
-    except Exception:
+    except ongaku.PlayerMissingException:
         player = await ongaku_client.player.create(ctx.guild_id)
 
     if player.connected is False:
@@ -139,17 +162,19 @@ async def play_command(ctx: tanjun.abc.SlashContext, query: str) -> None:
 
 
 @component.with_slash_command
-@tanjun.with_str_slash_option("query", "query to search")
-@tanjun.as_slash_command("add", "Add a song. (must be a name, not a url.)")
+@tanjun.with_str_slash_option("query", "The song you wish to play.")
+@tanjun.as_slash_command("add", "Add a song (or songs!)")
 async def add_command(
     ctx: tanjun.abc.SlashContext,
     query: str,
+    ongaku_client: ongaku.Client = tanjun.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
         )
         return
+
     try:
         current_player = await ongaku_client.player.fetch(ctx.guild_id)
     except Exception:
@@ -159,7 +184,12 @@ async def add_command(
         )
         return
 
-    result = await ongaku_client.rest.track.load(query)
+    checked_query = await checker.check(query)
+
+    if checked_query.type == checker.CheckedType.QUERY:
+        result = await ongaku_client.rest.track.load(f"ytsearch:{checked_query.value}")
+    else:
+        result = await ongaku_client.rest.track.load(checked_query.value)
 
     if result is None:
         await ctx.create_initial_response(
@@ -168,26 +198,34 @@ async def add_command(
         )
         return
 
-    track_count: int = 0
+    tracks: list[ongaku.Track] = []
 
-    if isinstance(result, ongaku.SearchResult):
-        await current_player.add((result.tracks[0],))
-        track_count = 1
-
-    elif isinstance(result, ongaku.Track):
+    if isinstance(result, ongaku.Track):
         await current_player.add((result,))
-        track_count = 1
+        tracks.append(result)
 
     else:
         await current_player.add(result.tracks)
-        track_count = len(result.tracks)
+        tracks.extend(result.tracks)
 
-    await ctx.create_initial_response(f"Added {track_count} track(s) to the player.")
+    embed = hikari.Embed(
+        title="Tracks added",
+        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}",
+    )
+
+    for track in tracks:
+        if len(embed.fields) >= 25:
+            break
+        embed.add_field(track.info.title, track.info.author)
+
+    await ctx.respond(embed=embed)
 
 
 @component.with_slash_command
 @tanjun.as_slash_command("pause", "pause or unpause the currently playing song.")
-async def pause_command(ctx: tanjun.abc.SlashContext) -> None:
+async def pause_command(
+    ctx: tanjun.abc.SlashContext, ongaku_client: ongaku.Client = tanjun.inject()
+) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
@@ -216,7 +254,9 @@ async def pause_command(ctx: tanjun.abc.SlashContext) -> None:
 
 @component.with_slash_command
 @tanjun.as_slash_command("queue", "View the queue of the player.")
-async def queue_command(ctx: tanjun.abc.SlashContext) -> None:
+async def queue_command(
+    ctx: tanjun.abc.SlashContext, ongaku_client: ongaku.Client = tanjun.inject()
+) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
             "Guild ID is none! You must be in a guild to run this command.",
@@ -234,11 +274,11 @@ async def queue_command(ctx: tanjun.abc.SlashContext) -> None:
         return
 
     if len(player.queue) == 0:
-        await ctx.create_initial_response("There is not tracks in the queue currently.")
+        await ctx.respond("There is not tracks in the queue currently.")
 
     queue_embed = hikari.Embed(
         title="Queue",
-        description=f"The current queue for this server.\nCurrent song: {player.queue[0].info.title}",
+        description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
     )
 
     for x in range(len(player.queue)):
@@ -252,17 +292,18 @@ async def queue_command(ctx: tanjun.abc.SlashContext) -> None:
 
         queue_embed.add_field(track.info.title, track.info.author)
 
-    await ctx.create_initial_response(embed=queue_embed)
+    await ctx.respond(embed=queue_embed)
 
 
 @component.with_slash_command
 @tanjun.with_int_slash_option(
-    "volume", "The volume of the player.", min_value=0, max_value=100
+    "volume", "The volume number you wish to set.", min_value=1, default=1
 )
-@tanjun.as_slash_command("volume", "change the volume of the player.")
+@tanjun.as_slash_command("queue", "View the queue of the player.")
 async def volume_command(
     ctx: tanjun.abc.SlashContext,
     volume: int,
+    ongaku_client: ongaku.Client = tanjun.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
@@ -281,7 +322,7 @@ async def volume_command(
         return
 
     try:
-        await player.set_volume(volume * 10)
+        await player.set_volume(volume)
     except ValueError:
         await ctx.create_initial_response(
             "Sorry, but you have entered an invalid number."
@@ -295,12 +336,16 @@ async def volume_command(
 
 @component.with_slash_command
 @tanjun.with_int_slash_option(
-    "amount", "The amount of songs to skip.", min_value=1, default=1
+    "amount",
+    "The amount of songs you wish to skip. default is 1.",
+    min_value=1,
+    default=1,
 )
-@tanjun.as_slash_command("skip", "skip a song, or multiple")
+@tanjun.as_slash_command("queue", "View the queue of the player.")
 async def skip_command(
     ctx: tanjun.abc.SlashContext,
     amount: int,
+    ongaku_client: ongaku.Client = tanjun.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
@@ -333,16 +378,17 @@ async def skip_command(
 @tanjun.as_slash_command(
     "stop", "Stops the player, and disconnects it from the server."
 )
-async def stop_command(ctx: tanjun.abc.SlashContext) -> None:
+async def stop_command(
+    ctx: tanjun.abc.SlashContext, ongaku_client: ongaku.Client = tanjun.inject()
+) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
             "Guild ID is none! You must be in a guild to run this command.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
     try:
-        await ongaku_client.player.create(ctx.guild_id)
+        player = await ongaku_client.player.fetch(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -350,7 +396,9 @@ async def stop_command(ctx: tanjun.abc.SlashContext) -> None:
         )
         return
 
-    await ctx.create_initial_response("Successfully stopped the player.")
+    await player.disconnect()
+
+    await ctx.respond("Successfully stopped the player.")
 
 
 if __name__ == "__main__":

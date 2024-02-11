@@ -4,12 +4,14 @@
     Do not modify, or try to change anything in here.
 """
 
-import typing as t
 import logging
+import typing as t
 
-class Trace: # noqa: D101
+
+class Trace:  # noqa: D101
     LEVEL: t.Final[int] = logging.DEBUG - 5
     NAME: t.Final[str] = "TRACE_ONGAKU"
+
 
 logger = logging.getLogger("ongaku")
 

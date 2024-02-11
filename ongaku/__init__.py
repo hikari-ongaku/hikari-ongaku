@@ -7,8 +7,11 @@ https://ongaku.mplaty.com/
 """
 
 from __future__ import annotations
+
 import logging
+
 from . import internal
+
 logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
 
 from . import abc

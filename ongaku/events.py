@@ -79,9 +79,10 @@ class EventHandler:
         except Exception as e:
             raise e
 
-        
         await self._session.client.bot.dispatch(event)
-        _logger.log(internal.Trace.LEVEL, "Successful decode, and dispatch of ready payload.")
+        _logger.log(
+            internal.Trace.LEVEL, "Successful decode, and dispatch of ready payload."
+        )
 
     async def stats_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle statistics payload."""
@@ -92,7 +93,9 @@ class EventHandler:
 
         await self._session.client.bot.dispatch(event)
 
-        _logger.log(internal.Trace.LEVEL, "Successful decode, and dispatch of stats payload.")
+        _logger.log(
+            internal.Trace.LEVEL, "Successful decode, and dispatch of stats payload."
+        )
 
     async def event_payload(self, payload: t.Mapping[t.Any, t.Any]) -> None:
         """Handle event payloads."""
@@ -144,8 +147,10 @@ class EventHandler:
         else:
             logging.warning(f"Event code not recognized: {event_type}")
             raise Exception(f"Unknown event code: {event_type}")
-        
-        _logger.log(internal.Trace.LEVEL, "Successful decode, and dispatch of event payload.")
+
+        _logger.log(
+            internal.Trace.LEVEL, "Successful decode, and dispatch of event payload."
+        )
 
         await self._session.client.bot.dispatch(event)
 

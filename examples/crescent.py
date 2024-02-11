@@ -1,18 +1,36 @@
+# ruff: noqa: D100, D101, D102, D103
+
+
+# ╔══════════════════╗
+# ║ Crescent example ║
+# ╚══════════════════╝
+
+
+import dataclasses
 import logging
 
 import crescent
 import hikari
 
 import ongaku
+from ongaku.ext import checker
+
+
+@dataclasses.dataclass
+class OngakuModel:
+    ongaku_client: ongaku.Client
+
 
 bot = hikari.GatewayBot("...")
 
-client = crescent.Client(bot)
-
 ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
+client = crescent.Client(bot, OngakuModel(ongaku_client))
 
-# Events
+
+# ╔════════╗
+# ║ Events ║
+# ╚════════╝
 
 
 @client.include
@@ -77,7 +95,9 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
-# Commands
+# ╔══════════╗
+# ║ Commands ║
+# ╚══════════╝
 
 
 @client.include
@@ -100,15 +120,25 @@ class Play:
             )
             return
 
-        result = await ongaku_client.rest.track.load(self.query)
+        checked_query = await checker.check(self.query)
+
+        if checked_query.type == checker.CheckedType.QUERY:
+            result = await ctx.client.model.ongaku_client.rest.track.load(
+                f"ytsearch:{checked_query.value}"
+            )
+        else:
+            result = await ctx.client.model.ongaku_client.rest.track.load(
+                checked_query.value
+            )
 
         if result is None:
             await ctx.respond(
-                "Sorry, no songs were found.", flags=hikari.MessageFlag.EPHEMERAL
+                "Sorry, no songs were found.",
+                flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
 
-        track: ongaku.Track | None = None
+        track: ongaku.Track
 
         if isinstance(result, ongaku.SearchResult):
             track = result.tracks[0]
@@ -125,9 +155,9 @@ class Play:
         )
 
         try:
-            player = await ongaku_client.player.fetch(ctx.guild_id)
-        except Exception:
-            player = await ongaku_client.player.create(ctx.guild_id)
+            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
+        except ongaku.PlayerMissingException:
+            player = await ctx.client.model.ongaku_client.player.create(ctx.guild_id)
 
         if player.connected is False:
             await player.connect(voice_state.channel_id)
@@ -137,7 +167,10 @@ class Play:
         except Exception as e:
             raise e
 
-        await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            embed=embed,
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
 
 
 @client.include
@@ -152,8 +185,11 @@ class Add:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
+
         try:
-            current_player = await ongaku_client.player.fetch(ctx.guild_id)
+            current_player = await ctx.client.model.ongaku_client.player.fetch(
+                ctx.guild_id
+            )
         except Exception:
             await ctx.respond(
                 "You must have a player currently running!",
@@ -161,7 +197,16 @@ class Add:
             )
             return
 
-        result = await ongaku_client.rest.track.load(self.query)
+        checked_query = await checker.check(self.query)
+
+        if checked_query.type == checker.CheckedType.QUERY:
+            result = await ctx.client.model.ongaku_client.rest.track.load(
+                f"ytsearch:{checked_query.value}"
+            )
+        else:
+            result = await ctx.client.model.ongaku_client.rest.track.load(
+                checked_query.value
+            )
 
         if result is None:
             await ctx.respond(
@@ -170,21 +215,27 @@ class Add:
             )
             return
 
-        track_count: int = 0
+        tracks: list[ongaku.Track] = []
 
-        if isinstance(result, ongaku.SearchResult):
-            await current_player.add((result.tracks[0],))
-            track_count = 1
-
-        elif isinstance(result, ongaku.Track):
+        if isinstance(result, ongaku.Track):
             await current_player.add((result,))
-            track_count = 1
+            tracks.append(result)
 
         else:
             await current_player.add(result.tracks)
-            track_count = len(result.tracks)
+            tracks.extend(result.tracks)
 
-        await ctx.respond(f"Added {track_count} track(s) to the player.")
+        embed = hikari.Embed(
+            title="Tracks added",
+            description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}",
+        )
+
+        for track in tracks:
+            if len(embed.fields) >= 25:
+                break
+            embed.add_field(track.info.title, track.info.author)
+
+        await ctx.respond(embed=embed)
 
 
 @client.include
@@ -200,7 +251,9 @@ class Pause:
             )
             return
         try:
-            current_player = await ongaku_client.player.fetch(ctx.guild_id)
+            current_player = await ctx.client.model.ongaku_client.player.fetch(
+                ctx.guild_id
+            )
         except Exception:
             await ctx.respond(
                 "You must have a player currently running!",
@@ -232,7 +285,7 @@ class Queue:
             return
 
         try:
-            player = await ongaku_client.player.fetch(ctx.guild_id)
+            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
@@ -245,7 +298,7 @@ class Queue:
 
         queue_embed = hikari.Embed(
             title="Queue",
-            description=f"The current queue for this server.\nCurrent song: {player.queue[0].info.title}",
+            description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
         )
 
         for x in range(len(player.queue)):
@@ -278,7 +331,7 @@ class Volume:
             return
 
         try:
-            player = await ongaku_client.player.fetch(ctx.guild_id)
+            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
@@ -287,7 +340,7 @@ class Volume:
             return
 
         try:
-            await player.set_volume(self.volume * 10)
+            await player.set_volume(self.volume)
         except ValueError:
             await ctx.respond("Sorry, but you have entered an invalid number.")
             return
@@ -311,7 +364,7 @@ class Skip:
             return
 
         try:
-            player = await ongaku_client.player.fetch(ctx.guild_id)
+            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
@@ -342,15 +395,16 @@ class Stop:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
-
         try:
-            await ongaku_client.player.delete(ctx.guild_id)
+            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
         except Exception:
             await ctx.respond(
                 "There is no player currently playing in this server.",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
+
+        await player.disconnect()
 
         await ctx.respond("Successfully stopped the player.")
 

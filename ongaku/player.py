@@ -15,7 +15,7 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
-
+from . import internal
 from .abc import player
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
@@ -23,14 +23,13 @@ from .abc.events import TrackEndEvent
 from .abc.filters import Filter
 from .abc.player import PlayerVoice
 from .abc.track import Track
+from .enums import TrackEndReasonType
 from .errors import BuildException
 from .errors import LavalinkException
 from .errors import PlayerException
 from .errors import PlayerQueueException
 from .errors import SessionStartException
 from .errors import TimeoutException
-from .enums import TrackEndReasonType
-from . import internal
 
 if t.TYPE_CHECKING:
     from .session import Session
@@ -192,7 +191,10 @@ class Player:
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
-        _logger.log(internal.Trace.LEVEL, f"Attempting connection to voice channel: {channel_id} in guild: {self.guild_id}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Attempting connection to voice channel: {channel_id} in guild: {self.guild_id}",
+        )
 
         self._channel_id = channel_id
         try:
@@ -202,7 +204,10 @@ class Player:
         except Exception as e:
             raise ConnectionError(e)
 
-        _logger.log(internal.Trace.LEVEL, "waiting for voice events for channel: {channel_id} in guild: {self.guild_id}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            "waiting for voice events for channel: {channel_id} in guild: {self.guild_id}",
+        )
 
         try:
             state_event, server_event = await asyncio.gather(
@@ -225,7 +230,10 @@ class Player:
                 f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}"
             )
 
-        _logger.log(internal.Trace.LEVEL, f"Successfully received events for channel: {channel_id} in guild: {self.guild_id}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully received events for channel: {channel_id} in guild: {self.guild_id}",
+        )
 
         try:
             self._voice = PlayerVoice(
@@ -249,7 +257,10 @@ class Player:
             raise
         self._connected = True
 
-        _logger.log(internal.Trace.LEVEL, f"Successfully connected, and sent data to lavalink for channel: {channel_id} in guild: {self.guild_id}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully connected, and sent data to lavalink for channel: {channel_id} in guild: {self.guild_id}",
+        )
 
         await self._update(player)
 
@@ -269,9 +280,12 @@ class Player:
 
         if self.session._internal.session_id is None:
             raise SessionStartException()
-        
-        _logger.log(internal.Trace.LEVEL, f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}")
-        
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
+
         try:
             await self.session.client.rest.player.delete(
                 self.session._internal.session_id, self._guild_id
@@ -282,16 +296,27 @@ class Player:
             raise
         except BuildException:
             raise
-        
-        _logger.log(internal.Trace.LEVEL, f"Successfully deleted player for channel: {self.channel_id} in guild: {self.guild_id}")
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully deleted player for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
         self._connected = False
 
-        _logger.log(internal.Trace.LEVEL, f"Updating voice state for channel: {self.channel_id} in guild: {self.guild_id}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Updating voice state for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
         await self.bot.update_voice_state(self.guild_id, None)
 
-        _logger.log(internal.Trace.LEVEL, f"Successfully updated voice state for channel: {self.channel_id} in guild: {self.guild_id}")
+        self.session._players.pop(self.guild_id)
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully updated voice state for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
     async def play(
         self, track: Track | None = None, requestor: Snowflake | None = None
@@ -731,7 +756,10 @@ class Player:
     async def _update(self, player: player.Player) -> None:
         # TODO: Somehow do the filter and the track.
 
-        _logger.log(internal.Trace.LEVEL, f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
         self._is_paused = player.is_paused
         self._voice = player.voice
@@ -743,14 +771,20 @@ class Player:
 
         if not self._autoplay:
             return
-        
+
         if event.reason != TrackEndReasonType.FINISHED:
             return
-        
-        _logger.log(internal.Trace.LEVEL, f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}")
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
         if int(event.guild_id) == int(self.guild_id):
-            _logger.log(internal.Trace.LEVEL, f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}")
+            _logger.log(
+                internal.Trace.LEVEL,
+                f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
+            )
             try:
                 await self.remove(0)
             except ValueError:
@@ -759,16 +793,21 @@ class Player:
                 )
                 return
 
-
             if len(self.queue) <= 0:
-                _logger.log(internal.Trace.LEVEL, f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}")
+                _logger.log(
+                    internal.Trace.LEVEL,
+                    f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
+                )
                 await self.bot.dispatch(
                     QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id)
                 )
                 return
-            
-            _logger.log(internal.Trace.LEVEL, f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}")
-            
+
+            _logger.log(
+                internal.Trace.LEVEL,
+                f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
+            )
+
             await self.play()
 
             await self.bot.dispatch(
@@ -780,7 +819,10 @@ class Player:
                 )
             )
 
-            _logger.log(internal.Trace.LEVEL, f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}")
+            _logger.log(
+                internal.Trace.LEVEL,
+                f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
+            )
 
 
 # MIT License

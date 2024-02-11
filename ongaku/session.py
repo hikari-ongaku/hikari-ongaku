@@ -13,13 +13,13 @@ import aiohttp
 import attrs
 import hikari
 
+from . import internal
 from .enums import ConnectionType
 from .errors import PlayerMissingException
 from .errors import RequiredException
 from .errors import SessionException
 from .events import EventHandler
 from .player import Player
-from . import internal
 
 if t.TYPE_CHECKING:
     from .client import Client
@@ -103,15 +103,21 @@ class Session(abc.ABC):
                 await asyncio.sleep(3)
             async with aiohttp.ClientSession() as session:
                 try:
-                    
                     async with session.ws_connect(
                         self._internal.base_uri + "/websocket", headers=new_headers
                     ) as ws:
-                        _logger.log(internal.Trace.LEVEL, "Websocket connection successful!")
+                        _logger.log(
+                            internal.Trace.LEVEL, "Websocket connection successful!"
+                        )
                         async for msg in ws:
-                            _logger.log(internal.Trace.LEVEL, f"Received message, with data: {msg.data}")
+                            _logger.log(
+                                internal.Trace.LEVEL,
+                                f"Received message, with data: {msg.data}",
+                            )
                             if msg.type == aiohttp.WSMsgType.ERROR:
-                                _logger.warning(f"An error has occurred with the websocket connection. Reason: {msg.data}")
+                                _logger.warning(
+                                    f"An error has occurred with the websocket connection. Reason: {msg.data}"
+                                )
                                 self._internal.connection_status = (
                                     ConnectionType.FAILURE
                                 )
@@ -122,14 +128,20 @@ class Session(abc.ABC):
                                 )
 
                             if msg.type == aiohttp.WSMsgType.CLOSED:
-                                raise SessionException("Session has received a closure message.")
+                                raise SessionException(
+                                    "Session has received a closure message."
+                                )
 
                             if msg.type == aiohttp.WSMsgType.TEXT:
-                                _logger.log(internal.Trace.LEVEL, f"Decoding payload...")
+                                _logger.log(
+                                    internal.Trace.LEVEL, f"Decoding payload..."
+                                )
                                 try:
                                     json_data = msg.json()
                                 except Exception as e:
-                                    _logger.warning(f"Failed to decode payload. Error {e}, payload: {msg.data}")
+                                    _logger.warning(
+                                        f"Failed to decode payload. Error {e}, payload: {msg.data}"
+                                    )
                                     raise SessionException(
                                         "Failed to decode payload: " + msg.data
                                     )
@@ -196,7 +208,7 @@ class Session(abc.ABC):
         _logger.log(internal.Trace.LEVEL, "Destroying connection...")
         if self._connection:
             self._connection.cancel()
-        
+
         _logger.log(internal.Trace.LEVEL, f"successfully destroyed connection.")
 
 
@@ -224,27 +236,31 @@ class PlayerSession:
         Player
             The player that has been successfully created.
         """
-        _logger.log(internal.Trace.LEVEL, f"bot player: {guild_id} in node: {self._session.name}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"bot player: {guild_id} in node: {self._session.name}",
+        )
         bot = self._session.client.bot.get_me()
 
         if bot is None:
             raise RequiredException("The bot is required to be able to connect.")
-        
+
         bot_state = self._session.client.bot.cache.get_voice_state(guild_id, bot.id)
 
         if bot_state is not None and bot_state.channel_id is not None:
             try:
                 self._session._players.pop(guild_id)
             except KeyError:
-                raise SessionException(
-                    "This session has not yet been started."
-                )
+                raise SessionException("This session has not yet been started.")
 
         new_player = Player(self._session, guild_id)
 
         self._session._players.update({guild_id: new_player})
 
-        _logger.log(internal.Trace.LEVEL, f"successfully created player: {guild_id} in node: {self._session.name}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"successfully created player: {guild_id} in node: {self._session.name}",
+        )
 
         return new_player
 
@@ -268,11 +284,17 @@ class PlayerSession:
         Player
             The player that belongs to the specified guild.
         """
-        _logger.log(internal.Trace.LEVEL, f"finding player: {guild_id} in node: {self._session.name}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"finding player: {guild_id} in node: {self._session.name}",
+        )
 
         for player in self._session._players.values():
             if player.guild_id == guild_id:
-                _logger.log(internal.Trace.LEVEL, f"successfully found player: {guild_id} in node: {self._session.name}")
+                _logger.log(
+                    internal.Trace.LEVEL,
+                    f"successfully found player: {guild_id} in node: {self._session.name}",
+                )
                 return player
 
         raise PlayerMissingException(guild_id)
@@ -293,7 +315,10 @@ class PlayerSession:
             The player was not found for the guild specified.
 
         """
-        _logger.log(internal.Trace.LEVEL, f"deleting player: {guild_id} in node: {self._session.name}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"deleting player: {guild_id} in node: {self._session.name}",
+        )
 
         player = await self.fetch_player(guild_id)
 
@@ -301,7 +326,10 @@ class PlayerSession:
 
         self._session._players.pop(guild_id)
 
-        _logger.log(internal.Trace.LEVEL, f"successfully deleted player: {guild_id} in node: {self._session.name}")
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"successfully deleted player: {guild_id} in node: {self._session.name}",
+        )
 
 
 # MIT License
