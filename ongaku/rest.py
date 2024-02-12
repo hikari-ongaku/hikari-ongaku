@@ -83,6 +83,8 @@ class RESTClient:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build `abc.Info`
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -99,6 +101,9 @@ class RESTClient:
         except ValueError as e:
             raise LavalinkException(e)
 
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
+
         try:
             info_resp = Info._from_payload(resp)
         except Exception as e:
@@ -113,7 +118,7 @@ class RESTClient:
         method: _HttpMethod,
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
-    ) -> t.Mapping[str, t.Any]:
+    ) -> t.Mapping[str, t.Any] | t.Sequence[t.Any]:
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.request(
@@ -173,6 +178,8 @@ class RESTSession:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the session object.
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -190,6 +197,9 @@ class RESTSession:
             raise
         except ValueError as e:
             raise LavalinkException(e)
+
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
 
         try:
             session_model = Session._from_payload(resp)
@@ -225,6 +235,8 @@ class RESTPlayer:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -247,13 +259,22 @@ class RESTPlayer:
 
         player_list: list[Player] = []
 
-        for _, value in resp.items():
-            try:
-                player_model = Player._from_payload(value)
-            except Exception as e:
-                raise BuildException(e)
+        if isinstance(resp, t.Sequence):
+            for value in resp:
+                try:
+                    player_model = Player._from_payload(value)
+                except Exception as e:
+                    raise BuildException(e)
 
-            player_list.append(player_model)
+                player_list.append(player_model)
+        else:
+            for _, value in resp.items():
+                try:
+                    player_model = Player._from_payload(value)
+                except Exception as e:
+                    raise BuildException(e)
+
+                player_list.append(player_model)
 
         return player_list
 
@@ -275,6 +296,8 @@ class RESTPlayer:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -295,6 +318,9 @@ class RESTPlayer:
             raise
         except ValueError as e:
             raise LavalinkException(e)
+
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
 
         try:
             player_model = Player._from_payload(resp)
@@ -353,6 +379,8 @@ class RESTPlayer:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             Failure to build the player object.
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -407,6 +435,7 @@ class RESTPlayer:
                 patch_data.update({"filters": None})
             else:
                 patch_data.update({"filters": filter._build()})
+
         new_headers = self._rest._client._internal.headers.copy()
 
         new_headers.update({"Content-Type": "application/json"})
@@ -432,6 +461,9 @@ class RESTPlayer:
             raise
         except ValueError as e:
             raise LavalinkException(e)
+
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
 
         try:
             player_model = Player._from_payload(resp)
@@ -501,6 +533,8 @@ class RESTTrack:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -527,6 +561,9 @@ class RESTTrack:
             raise
         except ValueError as e:
             raise LavalinkException(e)
+
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
 
         load_type = resp["loadType"]
 
@@ -572,6 +609,8 @@ class RESTTrack:
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
             If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+        TypeError
+            When the response was of an incorrect type.
 
         Returns
         -------
@@ -594,6 +633,9 @@ class RESTTrack:
             raise
         except ValueError as e:
             raise LavalinkException(e)
+
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
 
         try:
             track = Track._from_payload(resp)
@@ -640,13 +682,24 @@ class RESTTrack:
             raise LavalinkException(e)
 
         tracks: list[Track] = []
-        for t in resp.values():
-            try:
-                track = Track._from_payload(t)
-            except Exception as e:
-                raise BuildException(e)
 
-            tracks.append(track)
+        if isinstance(resp, t.Sequence):
+            for track in resp:
+                try:
+                    track = Track._from_payload(track)
+                except Exception as e:
+                    raise BuildException(e)
+
+                tracks.append(track)
+
+        else:
+            for _, track in resp.values():
+                try:
+                    track = Track._from_payload(track)
+                except Exception as e:
+                    raise BuildException(e)
+
+                tracks.append(track)
 
         return tracks
 

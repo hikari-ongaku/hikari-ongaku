@@ -1,7 +1,6 @@
-# ruff: noqa
-import unittest
-
+# ruff: noqa: D100, D101, D102
 import typing as t
+import unittest
 
 from ongaku.abc.lavalink import ExceptionError
 from ongaku.abc.lavalink import Info

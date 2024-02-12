@@ -7,8 +7,8 @@ reportUnnecessaryTypeIgnoreComment = "warning"
 reportUninitializedInstanceVariable = "error"
 reportShadowedImports = "warning"
 
-#[tool.ruff]
-#extend-exclude = ["examples/*", ".venv/*"]
+[tool.ruff]
+extend-exclude = ["examples/*", ".venv/*"]
 
 [tool.ruff.lint.isort]
 force-single-line = true

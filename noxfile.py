@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: D100, D103
 import os
 
 import nox
@@ -65,7 +65,7 @@ def pytest(session: nox.Session) -> None:
 def docs(session: nox.Session) -> None:
     session.install("-Ur", "doc_requirements.txt")
     session.install("-Ur", "requirements.txt")
-    session.install("-U", "black")  # Signature formatting
+    session.install("-U", "black")
     session.run("python", "-m", "mkdocs", "-q", "build")
 
 
@@ -73,5 +73,5 @@ def docs(session: nox.Session) -> None:
 def servedocs(session: nox.Session) -> None:
     session.install("-Ur", "doc_requirements.txt")
     session.install("-Ur", "requirements.txt")
-    session.install("-U", "black")  # Signature formatting
+    session.install("-U", "black")
     session.run("python", "-m", "mkdocs", "serve")

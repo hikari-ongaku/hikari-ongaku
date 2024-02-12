@@ -1,4 +1,8 @@
-# noqa: D100
+"""
+Checker.
+
+A extension, that checks if your query, is a track/playlist, or just a query.
+"""
 from __future__ import annotations
 
 import enum

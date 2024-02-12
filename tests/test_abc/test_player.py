@@ -1,8 +1,8 @@
-# ruff: noqa
+# ruff: noqa: D100, D101, D102
+import typing as t
 import unittest
 
 import hikari
-import typing as t
 
 from ongaku.abc.player import Player
 from ongaku.abc.player import PlayerState
@@ -58,9 +58,7 @@ class PlayerTest(unittest.TestCase):
         assert test_player.voice.session_id == "test_session_id"
         assert test_player.filters == {}
 
-        assert (
-            test_player._to_payload == self.player_payload
-        )  # The data is not passing, due to the fact, the guildId is a string.
+        assert test_player._to_payload == self.player_payload
 
     def test_player_payload(self):
         test_player = Player._from_payload(self.player_payload)
@@ -79,9 +77,7 @@ class PlayerTest(unittest.TestCase):
         assert test_player.voice.endpoint == "test_endpoint"
         assert test_player.voice.session_id == "test_session_id"
 
-        assert (
-            test_player._to_payload == self.player_payload
-        )  # unsure why this is not passing. Data looks valid however.
+        assert test_player._to_payload == self.player_payload
 
     def test_player_state(self):
         test_player_state = PlayerState(time=12, position=24, connected=True, ping=48)

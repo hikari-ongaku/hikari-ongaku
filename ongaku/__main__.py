@@ -7,7 +7,6 @@ import hikari
 
 import ongaku
 
-# Support color on Windows
 if sys.platform == "win32":
     import colorama
 

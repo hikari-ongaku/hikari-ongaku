@@ -66,7 +66,7 @@ class PayloadBase(Payload[BaseT], abc.ABC):
 
     model_config = pydantic.ConfigDict(
         arbitrary_types_allowed=True, populate_by_name=True
-    )  # , populate_by_name=True, loc_by_alias=False
+    )
 
     @classmethod
     def _from_payload(cls, payload: BaseT) -> t.Self:

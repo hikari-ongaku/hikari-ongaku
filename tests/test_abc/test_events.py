@@ -1,9 +1,9 @@
-# ruff: noqa
+# ruff: noqa: D100, D101, D102
 import json
+import typing as t
 import unittest
 
 import hikari
-import typing as t
 
 from ongaku.abc.events import ReadyEvent
 from ongaku.abc.events import StatisticsEvent
@@ -17,9 +17,10 @@ from ongaku.abc.events import TrackStartEvent
 from ongaku.abc.events import TrackStuckEvent
 from ongaku.abc.events import WebsocketClosedEvent
 from ongaku.abc.lavalink import ExceptionError
-from .test_track import TrackTest
 from ongaku.enums import SeverityType
 from ongaku.enums import TrackEndReasonType
+
+from .test_track import TrackTest
 
 _test_bot = hikari.GatewayBot("", banner=None)
 
@@ -36,7 +37,7 @@ class ReadyEventTest(unittest.TestCase):
         assert test_ready_event.resumed is True
         assert test_ready_event.session_id == "test_session_id"
 
-    def test_base_payload(self):  # noqa: D102
+    def test_base_payload(self):
         test_ready_event = ReadyEvent._from_payload(self.ready_payload, app=_test_bot)
 
         assert test_ready_event.app == _test_bot
@@ -44,7 +45,7 @@ class ReadyEventTest(unittest.TestCase):
         assert test_ready_event.session_id == "test_session_id"
 
 
-class StatsEventTest(unittest.TestCase):  # noqa: D101
+class StatsEventTest(unittest.TestCase):
     stats_payload: dict[str, t.Any] = {
         "players": 1,
         "playingPlayers": 1,
@@ -65,7 +66,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 
     frame_stats_payload = stats_payload["frameStats"]
 
-    def test_base(self):  # noqa: D102
+    def test_base(self):
         test_memory = StatsMemory(
             free=123456789, used=123456789, allocated=123456789, reservable=123456789
         )
@@ -130,7 +131,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 
         assert test_memory._to_payload == self.memory_payload
 
-    def test_memory_payload(self):  # noqa: D102
+    def test_memory_payload(self):
         test_memory = StatsMemory._from_payload(self.memory_payload)
 
         assert test_memory.free == 123456789
@@ -140,7 +141,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 
         assert test_memory._to_payload == self.memory_payload
 
-    def test_cpu(self):  # noqa: D102
+    def test_cpu(self):
         test_cpu = StatsCpu(cores=4, system_load=0.5, lavalink_load=0.5)
 
         assert test_cpu.cores == 4
@@ -149,7 +150,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
         print(test_cpu._to_payload)
         assert test_cpu._to_payload == self.cpu_payload
 
-    def test_cpu_payload(self):  # noqa: D102
+    def test_cpu_payload(self):
         test_cpu = StatsCpu._from_payload(self.cpu_payload)
 
         assert test_cpu.cores == 4
@@ -158,7 +159,7 @@ class StatsEventTest(unittest.TestCase):  # noqa: D101
 
         assert test_cpu._to_payload == self.cpu_payload
 
-    def test_frame_stats(self):  # noqa: D102
+    def test_frame_stats(self):
         test_frame_stats = StatsFrameStatistics(sent=6000, nulled=10, deficit=-3010)
 
         assert test_frame_stats.sent == 6000

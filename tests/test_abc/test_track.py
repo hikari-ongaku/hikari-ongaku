@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: D100, D101, D102
 
 import typing as t
 import unittest

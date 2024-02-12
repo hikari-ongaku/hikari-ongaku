@@ -8,6 +8,20 @@ hide:
 
 All the changelogs for `hikari-ongaku`.
 
+## **v0.5.0**
+
+ - About: Added about, so a few terminal commands can be used, to check the version of ongaku your using, about ongaku, and where it is installed.
+ - Logging: Added logging, mainly warnings, and errors, but also, traces, for errors and debugging stuff.
+ - Examples: Cleaned up examples, and made them more accurate.
+ - ABC:
+  - Complete reformatting: all abc files, have been reformatted, to use the new method of handling payloads, [pydantic](https://docs.pydantic.dev/)!
+ - Fixes:
+    - Player skip: An error occurred, when trying to skip a song, the bot would attempt to also use `autoplay` to play the next song, and keep looping, causing it to spam lavalink with update requests.
+    - Player play: There was an issue, where, if the queue had songs, but you didn't provide a track, it would raise an error. This is no longer an issue.
+    - Player autoplay: Fixed an issue, where it would duplicate the next track, when auto-playing tracks.
+    - Player/Session Shutdown: Fixed an issue, where sessions were not shut down at all, and hikari forcefully shuts them down. This is no longer an issue, and you will not see a warning like `W 0000-00-00 00:00:00,000 hikari.bot: terminating 1 remaining tasks forcefully`
+    - Player disconnect: Fixed an issue, where if you used `player.disconnect()`, it would not remove it from the node.
+
 ## **v0.4.1**
  - Extensions:
    - Added the ability to create extensions for ongaku.

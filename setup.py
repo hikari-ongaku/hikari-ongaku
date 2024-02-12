@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: D100, D103
 from setuptools import setup, find_namespace_packages
 import typing as t
 import types

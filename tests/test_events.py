@@ -1,1 +1,1 @@
-# ruff: noqa
+# ruff: noqa: D100
