@@ -14,7 +14,7 @@ All the changelogs for `hikari-ongaku`.
  - Logging: Added logging, mainly warnings, and errors, but also, traces, for errors and debugging stuff.
  - Examples: Cleaned up examples, and made them more accurate.
  - ABC:
-  - Complete reformatting: all abc files, have been reformatted, to use the new method of handling payloads, [pydantic](https://docs.pydantic.dev/)!
+    - Complete reformatting: all abc files, have been reformatted, to use the new method of handling payloads, [pydantic](https://docs.pydantic.dev/)!
  - Fixes:
     - Player skip: An error occurred, when trying to skip a song, the bot would attempt to also use `autoplay` to play the next song, and keep looping, causing it to spam lavalink with update requests.
     - Player play: There was an issue, where, if the queue had songs, but you didn't provide a track, it would raise an error. This is no longer an issue.
