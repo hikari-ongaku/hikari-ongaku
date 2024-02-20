@@ -14,15 +14,6 @@ from . import internal
 
 logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
 
-from . import abc
-from . import enums
-from . import errors
-from . import ext
-from .abc import events
-from .abc import lavalink
-from .abc import player
-from .abc import session
-from .abc import track
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
 from .abc.events import ReadyEvent
@@ -94,12 +85,6 @@ __all__ = (
     "GatewayRequiredException",
     "RequiredException",
     "TimeoutException",
-    # .abc
-    "events",
-    "lavalink",
-    "player",
-    "session",
-    "track",
     # .abc.events
     "ReadyEvent",
     "StatisticsEvent",
@@ -125,11 +110,6 @@ __all__ = (
     "SearchResult",
     # .abc.filters
     "Filter",
-    # Other
-    "errors",
-    "enums",
-    "abc",
-    "ext",
 )
 
 

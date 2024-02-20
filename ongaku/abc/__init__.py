@@ -3,12 +3,6 @@
 All of the abstract classes for Ongaku.
 """
 
-from . import events
-from . import filters
-from . import lavalink
-from . import player
-from . import session
-from . import track
 from .events import QueueEmptyEvent
 from .events import QueueNextEvent
 from .events import ReadyEvent
@@ -31,13 +25,6 @@ from .track import SearchResult
 from .track import Track
 
 __all__ = (
-    # .
-    "events",
-    "filters",
-    "lavalink",
-    "player",
-    "session",
-    "track",
     # .events
     "ReadyEvent",
     "StatisticsEvent",

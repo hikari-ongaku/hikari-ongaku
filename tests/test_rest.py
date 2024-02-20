@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock
 from unittest.mock import patch
 
 import hikari
+from test_abc import InfoTest
+from test_abc import PlayerTest
+from test_abc import PlaylistTest
+from test_abc import SessionTest
+from test_abc import TrackTest
 
 from ongaku import Playlist
 from ongaku.abc.lavalink import ExceptionError
@@ -18,11 +23,6 @@ from ongaku.rest import RESTPlayer
 from ongaku.rest import RESTSession
 from ongaku.rest import RESTTrack
 from ongaku.rest import _HttpMethod
-from test_abc import InfoTest
-from test_abc import PlayerTest
-from test_abc import SessionTest
-from test_abc import PlaylistTest
-from test_abc import TrackTest
 
 
 class RestTest(unittest.IsolatedAsyncioTestCase):
