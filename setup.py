@@ -19,12 +19,14 @@ def parse_requirements_file(path: str) -> t.List[str]:
         dependencies = (d.strip() for d in fp.read().split("\n") if d.strip())
         return [d for d in dependencies if not d.startswith("#")]
 
+
 def parse_meta() -> types.SimpleNamespace:
     with open(os.path.join(name, "about.py")) as fp:
         code = fp.read()
 
     token_pattern = re.compile(
-        r"^__(?P<key>\w+)?__\s*:?.*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)", re.M
+        r"^__(?P<key>\w+)?__\s*:?.*=\s*(?P<quote>(?:'{3}|\"{3}|'|\"))(?P<value>.*?)(?P=quote)",
+        re.M,
     )
 
     groups = {}
@@ -34,6 +36,7 @@ def parse_meta() -> types.SimpleNamespace:
         groups[group["key"]] = group["value"]
 
     return types.SimpleNamespace(**groups)
+
 
 meta = parse_meta()
 
@@ -54,7 +57,7 @@ setup(
     install_requires=parse_requirements_file("requirements.txt"),
     extras_require={
         "docs": parse_requirements_file("doc_requirements.txt"),
-        "dev": parse_requirements_file("dev_requirements.txt")
+        "dev": parse_requirements_file("dev_requirements.txt"),
     },
     python_requires=">=3.11.0, <3.13",
     classifiers=[
