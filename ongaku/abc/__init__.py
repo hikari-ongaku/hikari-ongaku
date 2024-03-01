@@ -19,6 +19,9 @@ from .lavalink import RestError
 from .player import Player
 from .player import PlayerState
 from .player import PlayerVoice
+from .route_planner import FailingAddress
+from .route_planner import RoutePlannerDetails
+from .route_planner import RoutePlannerStatus
 from .session import Session
 from .track import Playlist
 from .track import SearchResult
@@ -43,6 +46,10 @@ __all__ = (
     "Player",
     "PlayerState",
     "PlayerVoice",
+    # .route_planner
+    "FailingAddress",
+    "RoutePlannerDetails",
+    "RoutePlannerStatus",
     # .session
     "Session",
     # .track

@@ -14,6 +14,8 @@ __all__ = (
     "VersionType",
     "ConnectionType",
     "BandType",
+    "RoutePlannerType",
+    "IPBlockType",
 )
 
 
@@ -114,6 +116,33 @@ class BandType(enum.IntEnum):
     """10000 Hz"""
     HZ16000 = 14
     """16000 Hz"""
+
+
+class RoutePlannerType(str, enum.Enum):
+    """Route Planner Type.
+    
+    more [here](https://lavalink.dev/api/rest#route-planner-types)
+    """
+
+    ROTATING_ROUTE_PLANNER = "RotatingIpRoutePlanner"
+    """IP address used is switched on ban. Recommended for IPv4 blocks or IPv6 blocks smaller than a /64."""
+    NANO_IP_ROUTE_PLANNER = "NanoIpRoutePlanner"
+    """IP address used is switched on clock update. Use with at least 1 /64 IPv6 block."""
+    ROTATING_NANO_IP_ROUTE_PLANNER = "RotatingNanoIpRoutePlanner"
+    """IP address used is switched on clock update, rotates to a different /64 block on ban. Use with at least 2x /64 IPv6 blocks."""
+    BALANCING_IP_ROUTE_PLANNER = "BalancingIpRoutePlanner"
+    """IP address used is selected at random per request. Recommended for larger IP blocks."""
+
+class IPBlockType(str, enum.Enum):
+    """IP Block Type.
+    
+    more [here](https://lavalink.dev/api/rest#ip-block-type)
+    """
+
+    INET_4_ADDRESS = "Inet4Address"
+    """The ipv4 block type"""
+    INET_6_ADDRESS = "Inet6Address"
+    """The ipv6 block type"""
 
 
 # MIT License

@@ -107,6 +107,7 @@ nav:
       - Events: api/abc/events.md
       - Lavalink: api/abc/lavalink.md
       - Player: api/abc/player.md
+      - Route Planner: api/abc/route_planner.md
       - Session: api/abc/session.md
       - Track: api/abc/track.md
       - Filters: api/abc/filters.md

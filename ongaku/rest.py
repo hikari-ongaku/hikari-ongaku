@@ -23,6 +23,7 @@ from .abc.track import SearchResult
 from .abc.track import Track
 from .errors import BuildException
 from .errors import LavalinkException
+from .abc.route_planner import RoutePlannerStatus
 
 _logger = internal.logger.getChild("rest")
 
@@ -54,6 +55,7 @@ class RESTClient:
         self._rest_track = RESTTrack(self)
         self._rest_player = RESTPlayer(self)
         self._rest_session = RESTSession(self)
+        self._rest_route_planner = RESTRoutePlanner(self)
 
         self._session: aiohttp.ClientSession | None = None
 
@@ -71,6 +73,11 @@ class RESTClient:
     def session(self) -> RESTSession:
         """The session related rest actions."""
         return self._rest_session
+    
+    @property
+    def route_planner(self) -> RESTRoutePlanner:
+        """The route planner related rest actions."""
+        return self._rest_route_planner
 
     async def fetch_info(self) -> Info:
         """Fetch information.
@@ -703,6 +710,107 @@ class RESTTrack:
 
         return tracks
 
+class RESTRoutePlanner:
+    """REST RoutePlanner.
+
+    !!! WARNING
+        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
+    """
+
+    def __init__(self, rest: RESTClient) -> None:
+        self._rest = rest
+
+    async def status(self) -> RoutePlannerStatus:
+        """Routeplanner Status.
+
+        Check the status of the routeplanner, and its addresses.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        BuildException
+            Failure to build the routeplanner status object.
+        TypeError
+            When the response was of an incorrect type.
+
+        Returns
+        -------
+        RoutePlannerStatus
+            The status of the routes.
+        """
+        try:
+            _logger.log(
+                internal.Trace.LEVEL, f"running GET /routeplanner/status"
+            )
+            resp = await self._rest._rest_handler(
+                "/routeplanner/status",
+                self._rest._client._internal.headers,
+                _HttpMethod.GET,
+            )
+        except LavalinkException:
+            raise
+        except ValueError as e:
+            raise LavalinkException(e)
+        
+        if isinstance(resp, t.Sequence):
+            raise TypeError("Incorrect type provided.")
+
+        try:
+            status_model = RoutePlannerStatus._from_payload(resp)
+        except Exception as e:
+            raise BuildException(e)
+        
+        return status_model
+    
+    async def free(self, address: str) -> None:
+        """Free an address.
+
+        Free a specific address.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        """
+        try:
+            _logger.log(
+                internal.Trace.LEVEL, f"running POST /routeplanner/free/{address}"
+            )
+            await self._rest._rest_handler(
+                f"/routeplanner/free/{address}",
+                self._rest._client._internal.headers,
+                _HttpMethod.POST,
+            )
+        except LavalinkException:
+            raise
+        except ValueError as e:
+            raise LavalinkException(e)
+        
+
+    async def free_all(self) -> None:
+        """Free all addresses.
+
+        Frees all addresses that exist.
+
+        Raises
+        ------
+        LavalinkException
+            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
+        """
+        try:
+            _logger.log(
+                internal.Trace.LEVEL, f"running POST /routeplanner/free/all"
+            )
+            await self._rest._rest_handler(
+                f"/routeplanner/free/all",
+                self._rest._client._internal.headers,
+                _HttpMethod.POST,
+            )
+        except LavalinkException:
+            raise
+        except ValueError as e:
+            raise LavalinkException(e)
 
 # MIT License
 
