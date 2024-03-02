@@ -16,7 +16,6 @@ from ongaku.abc.lavalink import ExceptionError
 from ongaku.abc.lavalink import Info
 from ongaku.abc.player import Player
 from ongaku.abc.session import Session
-from ongaku.abc.track import SearchResult
 from ongaku.abc.track import Track
 from ongaku.rest import RESTClient
 from ongaku.rest import RESTPlayer
@@ -44,7 +43,7 @@ class RestTest(unittest.IsolatedAsyncioTestCase):
                     return_value=mock_response
                 )
 
-                result = await rest_client.fetch_info()
+                result = await rest_client.info()
 
         mock_rest_handler.assert_called_once_with(
             "/info", mock_client._internal.headers, _HttpMethod.GET
@@ -238,7 +237,7 @@ class RestTrackTest(unittest.IsolatedAsyncioTestCase):
             params={"identifier": "test"},
         )
 
-        self.assertEqual(result, SearchResult._from_payload([TrackTest.track_payload]))
+        self.assertEqual(result, [TrackTest.track_payload])
 
     async def test_track_load_track(self):
         with patch("ongaku.rest.RESTClient._rest_handler") as mock_rest_handler:

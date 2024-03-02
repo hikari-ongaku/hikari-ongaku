@@ -1,6 +1,6 @@
 """A voice handling library for hikari.
 
-GitHub: 
+GitHub:
 https://github.com/MPlatypus/hikari-ongaku
 Docs:
 https://ongaku.mplaty.com/
@@ -31,7 +31,6 @@ from .abc.player import PlayerState
 from .abc.player import PlayerVoice
 from .abc.session import Session
 from .abc.track import Playlist
-from .abc.track import SearchResult
 from .abc.track import Track
 from .about import __author__
 from .about import __author_email__
@@ -107,7 +106,6 @@ __all__ = (
     # .abc.track
     "Track",
     "Playlist",
-    "SearchResult",
     # .abc.filters
     "Filter",
 )

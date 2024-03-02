@@ -24,7 +24,6 @@ from .route_planner import RoutePlannerDetails
 from .route_planner import RoutePlannerStatus
 from .session import Session
 from .track import Playlist
-from .track import SearchResult
 from .track import Track
 
 __all__ = (
@@ -55,7 +54,6 @@ __all__ = (
     # .track
     "Track",
     "Playlist",
-    "SearchResult",
     # .filters
     "Filter",
 )

@@ -5,10 +5,11 @@ Route planner abstract classes. find more [here](https://lavalink.dev/api/rest#r
 
 from __future__ import annotations
 
-from .base import PayloadBase
 import typing as t
-from ..enums import RoutePlannerType
+
 from ..enums import IPBlockType
+from ..enums import RoutePlannerType
+from .base import PayloadBase
 
 __all__ = (
     "FailingAddress",
@@ -16,9 +17,10 @@ __all__ = (
     "RoutePlannerStatus",
 )
 
+
 class FailingAddress(PayloadBase[t.Mapping[str, t.Any]]):
     """Failing address.
-    
+
     more [here](https://lavalink.dev/api/rest#failing-address-object)
     """
 
@@ -29,9 +31,10 @@ class FailingAddress(PayloadBase[t.Mapping[str, t.Any]]):
     failing_time: str
     """The timestamp when the address failed as a pretty string"""
 
+
 class RoutePlannerDetails(PayloadBase[t.Mapping[str, t.Any]]):
     """Route Planner details.
-    
+
     more [here](https://lavalink.dev/api/rest#details-object)
     """
 
@@ -49,6 +52,7 @@ class RoutePlannerDetails(PayloadBase[t.Mapping[str, t.Any]]):
     """The current offset in the ip block"""
     block_index: str
     """The current offset in the ip block"""
+
 
 class RoutePlannerStatus(PayloadBase[t.Mapping[str, t.Any]]):
     """Route Planner Status Object.

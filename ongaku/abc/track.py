@@ -16,7 +16,6 @@ __all__ = (
     "TrackInfo",
     "Track",
     "PlaylistInfo",
-    "SearchResult",
 )
 
 
@@ -117,31 +116,6 @@ class Playlist(PayloadBase[t.Mapping[str, t.Any]]):
     """Addition playlist info provided by plugins"""
     tracks: t.Sequence[Track]
     """The tracks in this playlist."""
-
-
-class SearchResult(PayloadBase[t.Sequence[t.Any]]):
-    """Search result.
-
-    A search result, that has a list of tracks, from the search result.
-
-    Find out more [here](https://lavalink.dev/api/rest.html#search-result-data).
-    """
-
-    tracks: t.Annotated[t.Sequence[Track], pydantic.Field(alias="")]
-    """The tracks from the search result."""
-
-    @classmethod
-    def _from_payload(cls, payload: t.Sequence[t.Any]):
-        """
-        From payload.
-
-        Converts the payload, into the current object.
-        """
-        track_list: list[Track] = []
-        for track in payload:
-            track_list.append(Track._from_payload(track))
-
-        return SearchResult(tracks=track_list)
 
 
 # MIT License

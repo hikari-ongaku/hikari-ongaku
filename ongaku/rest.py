@@ -17,18 +17,28 @@ from .abc.lavalink import ExceptionError
 from .abc.lavalink import Info
 from .abc.player import Player
 from .abc.player import PlayerVoice
+from .abc.route_planner import RoutePlannerStatus
 from .abc.session import Session
 from .abc.track import Playlist
-from .abc.track import SearchResult
 from .abc.track import Track
 from .errors import BuildException
 from .errors import LavalinkException
-from .abc.route_planner import RoutePlannerStatus
 
 _logger = internal.logger.getChild("rest")
 
 if t.TYPE_CHECKING:
     from .client import Client
+
+RestT = t.TypeVar(
+    "RestT",
+    Info,
+    Player,
+    PlayerVoice,
+    Session,
+    Playlist,
+    Track,
+    RoutePlannerStatus,
+)
 
 __all__ = ("RESTClient",)
 
@@ -57,7 +67,7 @@ class RESTClient:
         self._rest_session = RESTSession(self)
         self._rest_route_planner = RESTRoutePlanner(self)
 
-        self._session: aiohttp.ClientSession | None = None
+        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
 
     @property
     def track(self) -> RESTTrack:
@@ -73,13 +83,13 @@ class RESTClient:
     def session(self) -> RESTSession:
         """The session related rest actions."""
         return self._rest_session
-    
+
     @property
     def route_planner(self) -> RESTRoutePlanner:
         """The route planner related rest actions."""
         return self._rest_route_planner
 
-    async def fetch_info(self) -> Info:
+    async def info(self) -> Info:
         """Fetch information.
 
         Fetch the information about the Lavalink server.
@@ -98,35 +108,58 @@ class RESTClient:
         Info
             Returns an information object.
         """
-        try:
-            _logger.log(internal.Trace.LEVEL, f"running GET /info")
-            resp = await self._rest_handler(
-                "/info", self._client._internal.headers, _HttpMethod.GET
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(internal.Trace.LEVEL, f"running GET /info")
 
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        resp = await self._handle_rest(
+            "/info",
+            _HttpMethod.GET,
+            self._client._internal.headers,
+            Info,
+        )
 
-        try:
-            info_resp = Info._from_payload(resp)
-        except Exception as e:
-            raise BuildException(e)
+        if resp:
+            return resp
 
-        return info_resp
+        raise TypeError("Session update requires an object to be returned.")
 
-    async def _rest_handler(
+    @t.overload
+    async def _handle_rest(
         self,
         url: str,
-        headers: t.Mapping[str, t.Any],
         method: _HttpMethod,
+        headers: t.Mapping[str, t.Any],
+        return_type: t.Type[RestT] | None,
+        *,
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
-    ) -> t.Mapping[str, t.Any] | t.Sequence[t.Any]:
-        async with aiohttp.ClientSession() as session:
+        sequence: t.Literal[False] = False,
+    ) -> RestT: ...
+
+    @t.overload
+    async def _handle_rest(
+        self,
+        url: str,
+        method: _HttpMethod,
+        headers: t.Mapping[str, t.Any],
+        return_type: t.Type[RestT] | None,
+        *,
+        json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
+        params: t.Mapping[str, t.Any] = {},
+        sequence: t.Literal[True] = True,
+    ) -> t.Sequence[RestT]: ...
+
+    async def _handle_rest(
+        self,
+        url: str,
+        method: _HttpMethod,
+        headers: t.Mapping[str, t.Any],
+        return_type: t.Type[RestT] | None,
+        *,
+        json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
+        params: t.Mapping[str, t.Any] = {},
+        sequence: bool = False,
+    ) -> RestT | t.Sequence[RestT] | None:
+        async with self._session as session:
             try:
                 async with session.request(
                     method.value,
@@ -147,14 +180,31 @@ class RESTClient:
                     try:
                         payload = await response.json()
                     except Exception:
-                        if method == _HttpMethod.DELETE:
-                            return {}
-                        else:
-                            raise ValueError(
-                                "Json data was not received from the response."
-                            )
+                        raise ValueError(
+                            "Json data was not received from the response."
+                        )
+
+                    if not return_type:
+                        return
+
+                    if sequence:
+                        model_seq: list[t.Any] = []
+                        for item in payload:
+                            try:
+                                model = return_type._from_payload(item)
+                            except Exception as e:
+                                raise BuildException(e)
+                            else:
+                                model_seq.append(model)
+
+                        return model_seq
                     else:
-                        return payload
+                        try:
+                            model = return_type._from_payload(payload)
+                        except Exception as e:
+                            raise BuildException(e)
+                        else:
+                            return model
             except Exception as e:
                 raise LavalinkException(e)
 
@@ -193,27 +243,19 @@ class RESTSession:
         Session
             The session object information.
         """
-        try:
-            _logger.log(internal.Trace.LEVEL, f"running PATCH /sessions/{session_id}")
-            resp = await self._rest._rest_handler(
-                "/sessions/" + session_id,
-                self._rest._client._internal.headers,
-                _HttpMethod.PATCH,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(internal.Trace.LEVEL, f"running PATCH /sessions/{session_id}")
 
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        resp = await self._rest._handle_rest(
+            "/sessions/" + session_id,
+            _HttpMethod.PATCH,
+            self._rest._client._internal.headers,
+            Session,
+        )
 
-        try:
-            session_model = Session._from_payload(resp)
-        except Exception as e:
-            raise BuildException(e)
+        if resp:
+            return resp
 
-        return session_model
+        raise TypeError("Session update requires an object to be returned.")
 
 
 class RESTPlayer:
@@ -250,40 +292,20 @@ class RESTPlayer:
         typing.Sequence[Player]
             The players that are attached to the session.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running GET /sessions/{session_id}/players"
-            )
-            resp = await self._rest._rest_handler(
-                "/sessions/" + session_id + "/players",
-                self._rest._client._internal.headers,
-                _HttpMethod.GET,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(internal.Trace.LEVEL, f"running GET /sessions/{session_id}/players")
 
-        player_list: list[Player] = []
+        resp = await self._rest._handle_rest(
+            "/sessions/" + session_id + "/players",
+            _HttpMethod.GET,
+            self._rest._client._internal.headers,
+            Player,
+            sequence=True,
+        )
 
-        if isinstance(resp, t.Sequence):
-            for value in resp:
-                try:
-                    player_model = Player._from_payload(value)
-                except Exception as e:
-                    raise BuildException(e)
+        if resp:
+            return resp
 
-                player_list.append(player_model)
-        else:
-            for _, value in resp.items():
-                try:
-                    player_model = Player._from_payload(value)
-                except Exception as e:
-                    raise BuildException(e)
-
-                player_list.append(player_model)
-
-        return player_list
+        raise TypeError("fetch_all requires an object to be returned.")
 
     async def fetch(self, session_id: str, guild_id: hikari.Snowflake) -> Player | None:
         """Fetch a player.
@@ -311,30 +333,22 @@ class RESTPlayer:
         Player
             The player that was found for the specified guild.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL,
-                f"running GET /sessions/{session_id}/players/{guild_id}",
-            )
-            resp = await self._rest._rest_handler(
-                "/sessions/" + session_id + "/players/" + str(guild_id),
-                self._rest._client._internal.headers,
-                _HttpMethod.GET,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"running GET /sessions/{session_id}/players/{guild_id}",
+        )
 
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        resp = await self._rest._handle_rest(
+            "/sessions/" + session_id,
+            _HttpMethod.GET,
+            self._rest._client._internal.headers,
+            Player,
+        )
 
-        try:
-            player_model = Player._from_payload(resp)
-        except Exception as e:
-            raise BuildException(e)
+        if resp:
+            return resp
 
-        return player_model
+        raise TypeError("fetch update requires an object to be returned.")
 
     async def update(
         self,
@@ -388,12 +402,26 @@ class RESTPlayer:
             Failure to build the player object.
         TypeError
             When the response was of an incorrect type.
+        ValueError
+            Raised when no new data has been inputted.
 
         Returns
         -------
         Player
             The player that was found for the specified guild.
         """
+        if (
+            track is hikari.UNDEFINED
+            and position is hikari.UNDEFINED
+            and end_time is hikari.UNDEFINED
+            and volume is hikari.UNDEFINED
+            and paused is hikari.UNDEFINED
+            and filter is hikari.UNDEFINED
+            and voice is hikari.UNDEFINED
+            and position is hikari.UNDEFINED
+        ):
+            raise ValueError("Update requires at least one change.")
+
         patch_data: dict[str, t.Any] = {}
 
         if track != hikari.UNDEFINED:
@@ -452,32 +480,24 @@ class RESTPlayer:
         if no_replace:
             params.update({"noReplace": "true"})
 
-        try:
-            _logger.log(
-                internal.Trace.LEVEL,
-                f"running PATCH /sessions/{session_id}/players/{guild_id} with params: {params} and json: {patch_data}",
-            )
-            resp = await self._rest._rest_handler(
-                "/sessions/" + session_id + "/players/" + str(guild_id),
-                self._rest._client._internal.headers,
-                _HttpMethod.PATCH,
-                json=patch_data,
-                params=params,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"running PATCH /sessions/{session_id}/players/{guild_id} with params: {params} and json: {patch_data}",
+        )
 
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        resp = await self._rest._handle_rest(
+            "/sessions/" + session_id + "/players/" + str(guild_id),
+            _HttpMethod.PATCH,
+            self._rest._client._internal.headers,
+            Player,
+            json=patch_data,
+            params=params,
+        )
 
-        try:
-            player_model = Player._from_payload(resp)
-        except Exception as e:
-            raise BuildException(e)
+        if resp:
+            return resp
 
-        return player_model
+        raise TypeError("fetch update requires an object to be returned.")
 
     async def delete(self, session_id: str, guild_id: hikari.Snowflake) -> None:
         """Delete player.
@@ -498,20 +518,17 @@ class RESTPlayer:
         ValueError
             Json data could not be found or decoded.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL,
-                f"running DELETE /sessions/{session_id}/players/{guild_id}",
-            )
-            await self._rest._rest_handler(
-                "/sessions/" + session_id + "/players/" + str(guild_id),
-                self._rest._client._internal.headers,
-                _HttpMethod.DELETE,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"running DELETE /sessions/{session_id}/players/{guild_id}",
+        )
+
+        await self._rest._handle_rest(
+            "/sessions/" + session_id + "/players/" + str(guild_id),
+            _HttpMethod.DELETE,
+            self._rest._client._internal.headers,
+            None,
+        )
 
 
 class RESTTrack:
@@ -524,7 +541,7 @@ class RESTTrack:
     def __init__(self, rest: RESTClient) -> None:
         self._rest = rest
 
-    async def load(self, query: str) -> SearchResult | Playlist | Track | None:
+    async def load(self, query: str) -> Playlist | t.Sequence[Track] | Track | None:
         """Load tracks.
 
         Load tracks to be able to play on a player.
@@ -552,27 +569,42 @@ class RESTTrack:
         Track
             If a song/track url is sent, you will receive this option.
         """
-        params: dict[str, t.Any] = {"identifier": query}
+        params = {"identifier": query}
 
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running GET /loadtracks with params: {params}"
-            )
-            resp = await self._rest._rest_handler(
-                "/loadtracks",
-                self._rest._client._internal.headers,
-                _HttpMethod.GET,
-                params=params,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(
+            internal.Trace.LEVEL, f"running GET /loadtracks with params: {params}"
+        )
 
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        async with self._rest._session as session:
+            try:
+                async with session.get(
+                    self._rest._client._internal.base_uri + "/loadtracks",
+                    headers=self._rest._client._internal.headers,
+                    params=params,
+                ) as response:
+                    _logger.log(
+                        internal.Trace.LEVEL,
+                        f"Received code: {response.status} with response {await response.text()}",
+                    )
+                    if response.status >= 400:
+                        raise LavalinkException(
+                            f"A {response.status} error has occurred."
+                        )
 
-        load_type = resp["loadType"]
+                    try:
+                        resp = await response.json()
+                    except Exception:
+                        raise ValueError(
+                            "Json data was not received from the response."
+                        )
+
+            except Exception as e:
+                raise LavalinkException(e)
+
+        if resp is None:
+            raise ValueError("Response cannot be none.")
+
+        load_type: str = resp["loadType"]
 
         build = None
 
@@ -585,7 +617,16 @@ class RESTTrack:
 
         elif load_type == "search":
             _logger.log(internal.Trace.LEVEL, f"loadType was a search result.")
-            build = SearchResult._from_payload(resp["data"])
+            tracks: t.Sequence[Track] = []
+            for trk in resp:
+                try:
+                    track = Track._from_payload(trk)
+                except Exception as e:
+                    raise BuildException(e)
+                else:
+                    tracks.append(track)
+            
+            return tracks
 
         elif load_type == "track":
             _logger.log(internal.Trace.LEVEL, f"loadType was a track link.")
@@ -596,7 +637,7 @@ class RESTTrack:
             build = Playlist._from_payload(resp["data"])
 
         else:
-            raise Exception("An unknown loadType was received.")
+            raise Exception(f"An unknown loadType was received: {load_type}")
 
         return build
 
@@ -615,7 +656,7 @@ class RESTTrack:
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
-            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+            If it fails to build the [track][ongaku.abc.track.Track].
         TypeError
             When the response was of an incorrect type.
 
@@ -626,30 +667,18 @@ class RESTTrack:
         """
         params = {"encodedTrack": code}
 
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running GET /decodetrack with params: {params}"
-            )
-            resp = await self._rest._rest_handler(
-                self._rest._client._internal.base_uri + "/decodetrack",
-                self._rest._client._internal.headers,
-                _HttpMethod.GET,
-                params=params,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(
+            internal.Trace.LEVEL, f"running GET /decodetrack with params: {params}"
+        )
 
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        resp = await self._rest._handle_rest(
+            "/decodetrack",
+            _HttpMethod.GET,
+            self._rest._client._internal.headers,
+            Track,
+        )
 
-        try:
-            track = Track._from_payload(resp)
-        except Exception as e:
-            raise BuildException(e)
-
-        return track
+        return resp
 
     async def decode_many(self, codes: t.Sequence[str]) -> t.Sequence[Track]:
         """Decode multiple tracks.
@@ -666,49 +695,31 @@ class RESTTrack:
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
-            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+            If it fails to build the a [track][ongaku.abc.track.Track] within the sequence.
 
         Returns
         -------
         typing.Sequence[Track]
             The track that came from the encoded code.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running GET /decodetracks with json: {[*codes]}"
-            )
-            resp = await self._rest._rest_handler(
-                self._rest._client._internal.base_uri + "/decodetracks",
-                self._rest._client._internal.headers,
-                _HttpMethod.GET,
-                json=[*codes],
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(
+            internal.Trace.LEVEL, f"running GET /decodetracks with json: {[*codes]}"
+        )
 
-        tracks: list[Track] = []
+        resp = await self._rest._handle_rest(
+            "/decodetracks",
+            _HttpMethod.GET,
+            self._rest._client._internal.headers,
+            Track,
+            json=[*codes],
+            sequence=True,
+        )
 
-        if isinstance(resp, t.Sequence):
-            for track in resp:
-                try:
-                    track = Track._from_payload(track)
-                except Exception as e:
-                    raise BuildException(e)
+        if resp:
+            return resp
 
-                tracks.append(track)
+        raise TypeError("decode_many requires an object to be returned.")
 
-        else:
-            for _, track in resp.values():
-                try:
-                    track = Track._from_payload(track)
-                except Exception as e:
-                    raise BuildException(e)
-
-                tracks.append(track)
-
-        return tracks
 
 class RESTRoutePlanner:
     """REST RoutePlanner.
@@ -739,30 +750,17 @@ class RESTRoutePlanner:
         RoutePlannerStatus
             The status of the routes.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running GET /routeplanner/status"
-            )
-            resp = await self._rest._rest_handler(
-                "/routeplanner/status",
-                self._rest._client._internal.headers,
-                _HttpMethod.GET,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
-        
-        if isinstance(resp, t.Sequence):
-            raise TypeError("Incorrect type provided.")
+        _logger.log(internal.Trace.LEVEL, f"running GET /routeplanner/status")
 
-        try:
-            status_model = RoutePlannerStatus._from_payload(resp)
-        except Exception as e:
-            raise BuildException(e)
-        
-        return status_model
-    
+        resp = await self._rest._handle_rest(
+            "/loadtracks",
+            _HttpMethod.GET,
+            self._rest._client._internal.headers,
+            RoutePlannerStatus,
+        )
+
+        return resp
+
     async def free(self, address: str) -> None:
         """Free an address.
 
@@ -773,20 +771,14 @@ class RESTRoutePlanner:
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running POST /routeplanner/free/{address}"
-            )
-            await self._rest._rest_handler(
-                f"/routeplanner/free/{address}",
-                self._rest._client._internal.headers,
-                _HttpMethod.POST,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
-        
+        _logger.log(internal.Trace.LEVEL, f"running POST /routeplanner/free/{address}")
+
+        await self._rest._handle_rest(
+            "/routeplanner/free/" + address,
+            _HttpMethod.POST,
+            self._rest._client._internal.headers,
+            None,
+        )
 
     async def free_all(self) -> None:
         """Free all addresses.
@@ -798,19 +790,15 @@ class RESTRoutePlanner:
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         """
-        try:
-            _logger.log(
-                internal.Trace.LEVEL, f"running POST /routeplanner/free/all"
-            )
-            await self._rest._rest_handler(
-                f"/routeplanner/free/all",
-                self._rest._client._internal.headers,
-                _HttpMethod.POST,
-            )
-        except LavalinkException:
-            raise
-        except ValueError as e:
-            raise LavalinkException(e)
+        _logger.log(internal.Trace.LEVEL, f"running POST /routeplanner/free/all")
+
+        await self._rest._handle_rest(
+            "/routeplanner/free/all",
+            _HttpMethod.POST,
+            self._rest._client._internal.headers,
+            None,
+        )
+
 
 # MIT License
 

@@ -3,7 +3,6 @@
 All of the enums for the entire library.
 """
 
-
 from __future__ import annotations
 
 import enum
@@ -120,7 +119,7 @@ class BandType(enum.IntEnum):
 
 class RoutePlannerType(str, enum.Enum):
     """Route Planner Type.
-    
+
     more [here](https://lavalink.dev/api/rest#route-planner-types)
     """
 
@@ -133,9 +132,10 @@ class RoutePlannerType(str, enum.Enum):
     BALANCING_IP_ROUTE_PLANNER = "BalancingIpRoutePlanner"
     """IP address used is selected at random per request. Recommended for larger IP blocks."""
 
+
 class IPBlockType(str, enum.Enum):
     """IP Block Type.
-    
+
     more [here](https://lavalink.dev/api/rest#ip-block-type)
     """
 

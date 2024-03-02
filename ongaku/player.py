@@ -378,7 +378,7 @@ class Player:
         await self._update(player)
 
     async def add(
-        self, tracks: t.Sequence[Track], requestor: Snowflake | None = None
+        self, tracks: t.Sequence[Track] | Track, requestor: Snowflake | None = None
     ) -> None:
         """Add tracks.
 
@@ -386,11 +386,16 @@ class Player:
 
         Parameters
         ----------
-        tracks : t.Sequence[abc.Track]
-            The list of tracks you wish to add to the queue.
+        tracks : t.Sequence[abc.Track] | Track
+            The list of tracks or a singular track you wish to add to the queue.
         requestor : Snowflake | None
             The user/member id that requested the song.
         """
+        if isinstance(tracks, Track):
+            tracks.requestor = requestor
+            self._queue.append(tracks)
+            return
+        
         for track in tracks:
             if requestor:
                 track.requestor = requestor

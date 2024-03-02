@@ -1,4 +1,5 @@
 """About this library."""
+
 import typing as t
 
 __author__: t.Final[str] = "mplaty"

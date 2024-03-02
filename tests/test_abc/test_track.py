@@ -5,7 +5,6 @@ import unittest
 
 from ongaku.abc.track import Playlist
 from ongaku.abc.track import PlaylistInfo
-from ongaku.abc.track import SearchResult
 from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 
@@ -217,62 +216,3 @@ class PlaylistTest(unittest.TestCase):
 
         assert test_playlist_info._to_payload == self.playlist_info_payload
 
-
-class SearchResultTest(unittest.TestCase):
-    search_result_payload: list[dict[str, t.Any]] = [TrackTest.track_payload]
-
-    def test_search_result(self):
-        test_info = TrackInfo(
-            identifier="test_identifier",
-            is_seekable=False,
-            author="test_author",
-            length=246,
-            is_stream=True,
-            position=200,
-            title="test_title",
-            source_name="test_source_name",
-            uri=None,
-            artwork_url=None,
-            isrc=None,
-        )
-        test_track = Track(
-            encoded="test_encoded",
-            info=test_info,
-            plugin_info={},
-            user_data={},
-            requestor=None,
-        )
-        test_search_result = SearchResult(tracks=(test_track,))
-
-        assert test_search_result.tracks == (test_track,)
-
-        # There is no need to check if the payload data is valid currently.
-
-    def test_search_result_payload(self):
-        test_info = TrackInfo(
-            identifier="test_identifier",
-            is_seekable=False,
-            author="test_author",
-            length=246,
-            is_stream=True,
-            position=0,
-            title="test_title",
-            source_name="test_source_name",
-            uri="test_uri",
-            artwork_url="test_artwork",
-            isrc=None,
-        )
-        test_track = Track(
-            encoded="test_encoded",
-            info=test_info,
-            plugin_info={},
-            user_data={},
-            requestor=None,
-        )
-        test_search_result = SearchResult._from_payload(self.search_result_payload)
-
-        print(test_search_result.tracks)
-
-        assert tuple(test_search_result.tracks) == (test_track,)
-
-        # There is no need to check if the payload data is valid currently.
