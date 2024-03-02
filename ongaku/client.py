@@ -162,6 +162,11 @@ class Client:
                 f"Session with name: {session.name} successfully shut down.",
             )
 
+        _logger.info("shutting down client session...")
+
+        if self._rest._session:
+            await self._rest._session.close()
+
         _logger.info("Shutdown complete.")
 
 

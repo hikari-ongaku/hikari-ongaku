@@ -10,6 +10,7 @@ import typing as t
 
 import aiohttp
 import hikari
+from ongaku import RestError
 
 from . import internal
 from .abc.filters import Filter
@@ -67,7 +68,7 @@ class RESTClient:
         self._rest_session = RESTSession(self)
         self._rest_route_planner = RESTRoutePlanner(self)
 
-        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self._session: aiohttp.ClientSession | None = None
 
     @property
     def track(self) -> RESTTrack:
@@ -159,54 +160,60 @@ class RESTClient:
         params: t.Mapping[str, t.Any] = {},
         sequence: bool = False,
     ) -> RestT | t.Sequence[RestT] | None:
-        async with self._session as session:
-            try:
-                async with session.request(
-                    method.value,
-                    self._client._internal.base_uri + url,
-                    headers=headers,
-                    json=json,
-                    params=params,
-                ) as response:
-                    _logger.log(
-                        internal.Trace.LEVEL,
-                        f"Received code: {response.status} with response {await response.text()}",
-                    )
-                    if response.status >= 400:
-                        raise LavalinkException(
-                            f"A {response.status} error has occurred."
-                        )
 
+        if not self._session:
+            self._session = aiohttp.ClientSession()
+
+        try:
+            async with self._session.request(
+                method.value,
+                self._client._internal.base_uri + url,
+                headers=headers,
+                json=json,
+                params=params,
+            ) as response:
+                _logger.log(
+                    internal.Trace.LEVEL,
+                    f"Received code: {response.status} with response {await response.text()}",
+                )
+                if response.status >= 400:
                     try:
                         payload = await response.json()
                     except Exception:
-                        raise ValueError(
-                            "Json data was not received from the response."
+                        raise LavalinkException(
+                            f"A {response.status} error has occurred."
                         )
-
-                    if not return_type:
-                        return
-
-                    if sequence:
-                        model_seq: list[t.Any] = []
-                        for item in payload:
-                            try:
-                                model = return_type._from_payload(item)
-                            except Exception as e:
-                                raise BuildException(e)
-                            else:
-                                model_seq.append(model)
-
-                        return model_seq
                     else:
+                        raise LavalinkException(RestError._from_payload(payload))
+
+                if not return_type:
+                    return
+                
+                try:
+                    payload = await response.json()
+                except Exception:
+                    raise ValueError("Payload required for this response.")
+
+                if sequence:
+                    model_seq: list[t.Any] = []
+                    for item in payload:
                         try:
-                            model = return_type._from_payload(payload)
+                            model = return_type._from_payload(item)
                         except Exception as e:
                             raise BuildException(e)
                         else:
-                            return model
-            except Exception as e:
-                raise LavalinkException(e)
+                            model_seq.append(model)
+
+                    return model_seq
+                else:
+                    try:
+                        model = return_type._from_payload(payload)
+                    except Exception as e:
+                        raise BuildException(e)
+                    else:
+                        return model
+        except Exception as e:
+            raise LavalinkException(e)
 
 
 class RESTSession:
@@ -556,13 +563,13 @@ class RESTTrack:
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         BuildException
-            If it fails to build the [SearchResult][ongaku.abc.track.SearchResult], [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track]
+            If it fails to build the [Playlist][ongaku.abc.track.Playlist] or [Track][ongaku.abc.track.Track], or any [Track][ongaku.abc.track.Track] in the search result.
         TypeError
             When the response was of an incorrect type.
 
         Returns
         -------
-        SearchResult
+        typing.Sequence[Track]
             If it was not a url, you will always receive this.
         Playlist
             If a playlist url is sent, you will receive this option.
@@ -575,31 +582,33 @@ class RESTTrack:
             internal.Trace.LEVEL, f"running GET /loadtracks with params: {params}"
         )
 
-        async with self._rest._session as session:
-            try:
-                async with session.get(
-                    self._rest._client._internal.base_uri + "/loadtracks",
-                    headers=self._rest._client._internal.headers,
-                    params=params,
-                ) as response:
-                    _logger.log(
-                        internal.Trace.LEVEL,
-                        f"Received code: {response.status} with response {await response.text()}",
+        if not self._rest._session:
+            self._rest._session = aiohttp.ClientSession()
+
+        try:
+            async with self._rest._session.get(
+                self._rest._client._internal.base_uri + "/loadtracks",
+                headers=self._rest._client._internal.headers,
+                params=params,
+            ) as response:
+                _logger.log(
+                    internal.Trace.LEVEL,
+                    f"Received code: {response.status} with response {await response.text()}",
+                )
+                if response.status >= 400:
+                    raise LavalinkException(
+                        f"A {response.status} error has occurred."
                     )
-                    if response.status >= 400:
-                        raise LavalinkException(
-                            f"A {response.status} error has occurred."
-                        )
 
-                    try:
-                        resp = await response.json()
-                    except Exception:
-                        raise ValueError(
-                            "Json data was not received from the response."
-                        )
+                try:
+                    resp = await response.json()
+                except Exception:
+                    raise ValueError(
+                        "Json data was not received from the response."
+                    )
 
-            except Exception as e:
-                raise LavalinkException(e)
+        except Exception as e:
+            raise LavalinkException(e)
 
         if resp is None:
             raise ValueError("Response cannot be none.")
@@ -618,7 +627,7 @@ class RESTTrack:
         elif load_type == "search":
             _logger.log(internal.Trace.LEVEL, f"loadType was a search result.")
             tracks: t.Sequence[Track] = []
-            for trk in resp:
+            for trk in resp["data"]:
                 try:
                     track = Track._from_payload(trk)
                 except Exception as e:

@@ -47,7 +47,7 @@ The method, will then return one of the following:
 
  * `Track` - This is a singular track, because a url to a video/song was originally sent.
 
- * `SearchResult` - This is a list of songs, that are usually going to be very similar to each other.
+ * `typing.Sequence[Track]` - This is a list of songs, that are usually going to be very similar to each other.
 
  * `None` - Your result returned absolutely nothing!
 
