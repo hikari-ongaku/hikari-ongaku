@@ -1,4 +1,4 @@
-black==23.12.1
+black==24.2.0
 mkdocs==1.5.3
 mkdocs-autorefs==1.0.1
 mkdocs-material==9.5.12
