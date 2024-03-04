@@ -14,7 +14,12 @@ from ongaku.ext import checker
 
 bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
 
-ongaku_client = ongaku.Client(bot, host="192.168.68.55", password="youshallnotpass", logs="TRACE_ONGAKU")
+ongaku_client = ongaku.Client(bot)
+
+ongaku_client.add_server(
+    host="127.0.0.1",
+    password="youshallnotpass"
+)
 
 
 # ╔════════╗
@@ -141,9 +146,9 @@ async def play_command(
     )
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except ongaku.PlayerMissingException:
-        player = await ongaku_client.player.create(event.guild_id)
+        player = await ongaku_client.create_player(event.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -176,7 +181,7 @@ async def add_command(
         return
     
     try:
-        current_player = await ongaku_client.player.fetch(event.guild_id)
+        current_player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -246,7 +251,7 @@ async def pause_command(
         return
 
     try:
-        current_player = await ongaku_client.player.fetch(event.guild_id)
+        current_player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -288,7 +293,7 @@ async def queue_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -344,7 +349,7 @@ async def volume_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -403,7 +408,7 @@ async def skip_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -463,7 +468,7 @@ async def stop_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,

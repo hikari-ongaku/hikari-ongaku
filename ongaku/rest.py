@@ -5,25 +5,26 @@ All REST based actions, happen in here.
 
 from __future__ import annotations
 
+import asyncio
 import enum
 import typing as t
 
-import aiohttp
 import hikari
-from ongaku import RestError
+import ujson
 
 from . import internal
 from .abc.filters import Filter
 from .abc.lavalink import ExceptionError
 from .abc.lavalink import Info
+from .abc.lavalink import RestError
 from .abc.player import Player
 from .abc.player import PlayerVoice
 from .abc.route_planner import RoutePlannerStatus
 from .abc.session import Session
 from .abc.track import Playlist
 from .abc.track import Track
-from .errors import BuildException
-from .errors import LavalinkException
+from .exceptions import BuildException
+from .exceptions import LavalinkException
 
 _logger = internal.logger.getChild("rest")
 
@@ -67,8 +68,6 @@ class RESTClient:
         self._rest_player = RESTPlayer(self)
         self._rest_session = RESTSession(self)
         self._rest_route_planner = RESTRoutePlanner(self)
-
-        self._session: aiohttp.ClientSession | None = None
 
     @property
     def track(self) -> RESTTrack:
@@ -114,7 +113,6 @@ class RESTClient:
         resp = await self._handle_rest(
             "/info",
             _HttpMethod.GET,
-            self._client._internal.headers,
             Info,
         )
 
@@ -128,9 +126,9 @@ class RESTClient:
         self,
         url: str,
         method: _HttpMethod,
-        headers: t.Mapping[str, t.Any],
         return_type: t.Type[RestT] | None,
         *,
+        headers: t.Mapping[str, t.Any] = {},
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: t.Literal[False] = False,
@@ -141,9 +139,9 @@ class RESTClient:
         self,
         url: str,
         method: _HttpMethod,
-        headers: t.Mapping[str, t.Any],
         return_type: t.Type[RestT] | None,
         *,
+        headers: t.Mapping[str, t.Any] = {},
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: t.Literal[True] = True,
@@ -153,22 +151,33 @@ class RESTClient:
         self,
         url: str,
         method: _HttpMethod,
-        headers: t.Mapping[str, t.Any],
         return_type: t.Type[RestT] | None,
         *,
+        headers: t.Mapping[str, t.Any] = {},
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: bool = False,
     ) -> RestT | t.Sequence[RestT] | None:
+        """Handle rest.
 
-        if not self._session:
-            self._session = aiohttp.ClientSession()
+        Raises
+        ------
+        LavalinkException
+
+        """
+        session = await self._client._get_session()
+
+        server = self._client._get_server()
+
+        new_headers = server.default_headers.copy()
+
+        new_headers.update(headers)
 
         try:
-            async with self._session.request(
+            async with session.request(
                 method.value,
-                self._client._internal.base_uri + url,
-                headers=headers,
+                server.base_uri + server.version.value + url,
+                headers=new_headers,
                 json=json,
                 params=params,
             ) as response:
@@ -188,9 +197,9 @@ class RESTClient:
 
                 if not return_type:
                     return
-                
+
                 try:
-                    payload = await response.json()
+                    payload = await response.text()
                 except Exception:
                     raise ValueError("Payload required for this response.")
 
@@ -200,7 +209,7 @@ class RESTClient:
                         try:
                             model = return_type._from_payload(item)
                         except Exception as e:
-                            raise BuildException(e)
+                            raise BuildException(str(e))
                         else:
                             model_seq.append(model)
 
@@ -209,10 +218,14 @@ class RESTClient:
                     try:
                         model = return_type._from_payload(payload)
                     except Exception as e:
-                        raise BuildException(e)
+                        raise BuildException(str(e))
                     else:
                         return model
+        except asyncio.TimeoutError:
+            self._client._strike_server(server, "Timeout")
+
         except Exception as e:
+            self._client._strike_server(server, str(e))
             raise LavalinkException(e)
 
 
@@ -255,7 +268,6 @@ class RESTSession:
         resp = await self._rest._handle_rest(
             "/sessions/" + session_id,
             _HttpMethod.PATCH,
-            self._rest._client._internal.headers,
             Session,
         )
 
@@ -304,7 +316,6 @@ class RESTPlayer:
         resp = await self._rest._handle_rest(
             "/sessions/" + session_id + "/players",
             _HttpMethod.GET,
-            self._rest._client._internal.headers,
             Player,
             sequence=True,
         )
@@ -348,7 +359,6 @@ class RESTPlayer:
         resp = await self._rest._handle_rest(
             "/sessions/" + session_id,
             _HttpMethod.GET,
-            self._rest._client._internal.headers,
             Player,
         )
 
@@ -478,10 +488,6 @@ class RESTPlayer:
             else:
                 patch_data.update({"filters": filter._build()})
 
-        new_headers = self._rest._client._internal.headers.copy()
-
-        new_headers.update({"Content-Type": "application/json"})
-
         params = {"noReplace": "false"}
 
         if no_replace:
@@ -495,8 +501,8 @@ class RESTPlayer:
         resp = await self._rest._handle_rest(
             "/sessions/" + session_id + "/players/" + str(guild_id),
             _HttpMethod.PATCH,
-            self._rest._client._internal.headers,
             Player,
+            headers={"Content-Type": "application/json"},
             json=patch_data,
             params=params,
         )
@@ -533,7 +539,6 @@ class RESTPlayer:
         await self._rest._handle_rest(
             "/sessions/" + session_id + "/players/" + str(guild_id),
             _HttpMethod.DELETE,
-            self._rest._client._internal.headers,
             None,
         )
 
@@ -582,13 +587,14 @@ class RESTTrack:
             internal.Trace.LEVEL, f"running GET /loadtracks with params: {params}"
         )
 
-        if not self._rest._session:
-            self._rest._session = aiohttp.ClientSession()
+        session = await self._rest._client._get_session()
+
+        server = self._rest._client._get_server()
 
         try:
-            async with self._rest._session.get(
-                self._rest._client._internal.base_uri + "/loadtracks",
-                headers=self._rest._client._internal.headers,
+            async with session.get(
+                server.base_uri + server.version.value + "/loadtracks",
+                headers=server.default_headers,
                 params=params,
             ) as response:
                 _logger.log(
@@ -596,18 +602,19 @@ class RESTTrack:
                     f"Received code: {response.status} with response {await response.text()}",
                 )
                 if response.status >= 400:
-                    raise LavalinkException(
-                        f"A {response.status} error has occurred."
-                    )
+                    raise LavalinkException(f"A {response.status} error has occurred.")
 
                 try:
                     resp = await response.json()
                 except Exception:
-                    raise ValueError(
-                        "Json data was not received from the response."
-                    )
+                    raise ValueError("Json data was not received from the response.")
+
+        except asyncio.TimeoutError:
+            self._rest._client._strike_server(server, "Timeout")
+            raise LavalinkException("Timeout error.")
 
         except Exception as e:
+            self._rest._client._strike_server(server, str(e))
             raise LavalinkException(e)
 
         if resp is None:
@@ -615,35 +622,36 @@ class RESTTrack:
 
         load_type: str = resp["loadType"]
 
-        build = None
-
         if load_type == "empty":
             _logger.log(internal.Trace.LEVEL, f"loadType is empty.")
+            return
 
         elif load_type == "error":
             _logger.log(internal.Trace.LEVEL, f"loadType caused an error.")
-            raise LavalinkException(ExceptionError._from_payload(resp["data"]))
+            raise LavalinkException(
+                ExceptionError._from_payload(ujson.dumps(resp["data"]))
+            )
 
         elif load_type == "search":
             _logger.log(internal.Trace.LEVEL, f"loadType was a search result.")
             tracks: t.Sequence[Track] = []
             for trk in resp["data"]:
                 try:
-                    track = Track._from_payload(trk)
+                    track = Track._from_payload(ujson.dumps(trk))
                 except Exception as e:
-                    raise BuildException(e)
+                    raise BuildException(str(e))
                 else:
                     tracks.append(track)
-            
-            return tracks
+
+            build = tracks
 
         elif load_type == "track":
             _logger.log(internal.Trace.LEVEL, f"loadType was a track link.")
-            build = Track._from_payload(resp["data"])
+            build = Track._from_payload(ujson.dumps(resp["data"]))
 
         elif load_type == "playlist":
             _logger.log(internal.Trace.LEVEL, f"loadType was a playlist link.")
-            build = Playlist._from_payload(resp["data"])
+            build = Playlist._from_payload(ujson.dumps(resp["data"]))
 
         else:
             raise Exception(f"An unknown loadType was received: {load_type}")
@@ -683,7 +691,6 @@ class RESTTrack:
         resp = await self._rest._handle_rest(
             "/decodetrack",
             _HttpMethod.GET,
-            self._rest._client._internal.headers,
             Track,
         )
 
@@ -718,7 +725,6 @@ class RESTTrack:
         resp = await self._rest._handle_rest(
             "/decodetracks",
             _HttpMethod.GET,
-            self._rest._client._internal.headers,
             Track,
             json=[*codes],
             sequence=True,
@@ -764,7 +770,6 @@ class RESTRoutePlanner:
         resp = await self._rest._handle_rest(
             "/loadtracks",
             _HttpMethod.GET,
-            self._rest._client._internal.headers,
             RoutePlannerStatus,
         )
 
@@ -785,7 +790,6 @@ class RESTRoutePlanner:
         await self._rest._handle_rest(
             "/routeplanner/free/" + address,
             _HttpMethod.POST,
-            self._rest._client._internal.headers,
             None,
         )
 
@@ -804,7 +808,6 @@ class RESTRoutePlanner:
         await self._rest._handle_rest(
             "/routeplanner/free/all",
             _HttpMethod.POST,
-            self._rest._client._internal.headers,
             None,
         )
 

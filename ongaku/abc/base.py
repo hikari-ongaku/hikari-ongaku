@@ -6,7 +6,6 @@ All of the payload base related objects.
 from __future__ import annotations
 
 import abc
-import json
 import logging
 import typing as t
 
@@ -17,6 +16,7 @@ from pydantic.alias_generators import to_camel
 from .. import internal
 
 __all__ = (
+    "Payload",
     "_string_to_snowflake",
     "_snowflake_to_string",
     "PayloadBase",
@@ -25,12 +25,11 @@ __all__ = (
 
 _logger = internal.logger.getChild("abc.base")
 
-BaseT = t.TypeVar("BaseT", t.Mapping[str, t.Any], t.Sequence[t.Any])
 
 INTERNAL_LOGGER = logging.getLogger(__name__)
 
 
-class Payload(abc.ABC, pydantic.BaseModel, t.Generic[BaseT]):
+class Payload(abc.ABC, pydantic.BaseModel):
     """
     Main payload.
 
@@ -57,7 +56,7 @@ def _snowflake_to_string(
     return str(guild_id)
 
 
-class PayloadBase(Payload[BaseT], abc.ABC):
+class PayloadBase(Payload):
     """
     Payload base.
 
@@ -69,7 +68,7 @@ class PayloadBase(Payload[BaseT], abc.ABC):
     )
 
     @classmethod
-    def _from_payload(cls, payload: BaseT) -> t.Self:
+    def _from_payload(cls, payload: str) -> t.Self:
         """From payload.
 
         Converts the payload, into the current object.
@@ -83,10 +82,9 @@ class PayloadBase(Payload[BaseT], abc.ABC):
         """
         name = cls.__qualname__
         _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
-        if isinstance(payload, str):
-            cls = cls.model_validate_json(payload, strict=True)
-        else:
-            cls = cls.model_validate_json(json.dumps(payload), strict=True)
+
+        cls = cls.model_validate_json(payload, strict=True)
+
         _logger.log(
             internal.Trace.LEVEL,
             f"Payload validation to {name} completed successfully.",
@@ -102,7 +100,7 @@ class PayloadBase(Payload[BaseT], abc.ABC):
         return self.model_dump(by_alias=True, mode="json")
 
 
-class PayloadBaseApp(Payload[BaseT]):
+class PayloadBaseApp(Payload):
     """
     Payload base application.
 
@@ -125,7 +123,7 @@ class PayloadBaseApp(Payload[BaseT]):
         return self.bot_app
 
     @classmethod
-    def _from_payload(cls, payload: BaseT | str, app: hikari.RESTAware) -> t.Self:
+    def _from_payload(cls, payload: str, app: hikari.RESTAware) -> t.Self:
         """
         From payload.
 
@@ -134,10 +132,9 @@ class PayloadBaseApp(Payload[BaseT]):
         name = cls.__class__.__name__
 
         _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
-        if isinstance(payload, str):
-            cls = cls.model_validate_json(payload, strict=True)
-        else:
-            cls = cls.model_validate_json(json.dumps(payload), strict=True)
+
+        cls = cls.model_validate_json(payload, strict=True)
+
         cls.bot_app = app
         _logger.log(
             internal.Trace.LEVEL,

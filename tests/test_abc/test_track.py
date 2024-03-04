@@ -215,4 +215,3 @@ class PlaylistTest(unittest.TestCase):
         assert test_playlist_info.selected_track == -1
 
         assert test_playlist_info._to_payload == self.playlist_info_payload
-

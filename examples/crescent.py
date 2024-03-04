@@ -23,7 +23,12 @@ class OngakuModel:
 
 bot = hikari.GatewayBot("...")
 
-ongaku_client = ongaku.Client(bot, password="youshallnotpass")
+ongaku_client = ongaku.Client(bot)
+
+ongaku_client.add_server(
+    host="127.0.0.1",
+    password="youshallnotpass"
+)
 
 client = crescent.Client(bot, OngakuModel(ongaku_client))
 

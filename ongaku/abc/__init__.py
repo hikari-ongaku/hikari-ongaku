@@ -3,10 +3,17 @@
 All of the abstract classes for Ongaku.
 """
 
+from .events import OngakuEvent
+from .events import PlayerBase
+from .events import PlayerUpdateEvent
 from .events import QueueEmptyEvent
 from .events import QueueNextEvent
 from .events import ReadyEvent
 from .events import StatisticsEvent
+from .events import StatsCpu
+from .events import StatsFrameStatistics
+from .events import StatsMemory
+from .events import TrackBase
 from .events import TrackEndEvent
 from .events import TrackExceptionEvent
 from .events import TrackStartEvent
@@ -15,6 +22,9 @@ from .events import WebsocketClosedEvent
 from .filters import Filter
 from .lavalink import ExceptionError
 from .lavalink import Info
+from .lavalink import InfoGit
+from .lavalink import InfoPlugin
+from .lavalink import InfoVersion
 from .lavalink import RestError
 from .player import Player
 from .player import PlayerState
@@ -22,40 +32,57 @@ from .player import PlayerVoice
 from .route_planner import FailingAddress
 from .route_planner import RoutePlannerDetails
 from .route_planner import RoutePlannerStatus
+from .server import Server
 from .session import Session
 from .track import Playlist
+from .track import PlaylistInfo
 from .track import Track
+from .track import TrackInfo
 
 __all__ = (
     # .events
+    "OngakuEvent",
     "ReadyEvent",
+    "PlayerUpdateEvent",
+    "StatsMemory",
+    "StatsCpu",
+    "StatsFrameStatistics",
     "StatisticsEvent",
+    "WebsocketClosedEvent",
+    "TrackBase",
     "TrackStartEvent",
     "TrackEndEvent",
     "TrackExceptionEvent",
     "TrackStuckEvent",
-    "WebsocketClosedEvent",
+    "PlayerBase",
     "QueueEmptyEvent",
     "QueueNextEvent",
+    # .filters
+    "Filter",
     # .lavalink
+    "InfoVersion",
+    "InfoGit",
+    "InfoPlugin",
     "Info",
     "RestError",
     "ExceptionError",
     # .player
-    "Player",
     "PlayerState",
     "PlayerVoice",
+    "Player",
     # .route_planner
     "FailingAddress",
     "RoutePlannerDetails",
     "RoutePlannerStatus",
+    # .server
+    "Server",
     # .session
     "Session",
     # .track
+    "TrackInfo",
     "Track",
+    "PlaylistInfo",
     "Playlist",
-    # .filters
-    "Filter",
 )
 
 

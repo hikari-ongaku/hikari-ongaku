@@ -18,7 +18,7 @@ __all__ = (
 )
 
 
-class FailingAddress(PayloadBase[t.Mapping[str, t.Any]]):
+class FailingAddress(PayloadBase):
     """Failing address.
 
     more [here](https://lavalink.dev/api/rest#failing-address-object)
@@ -32,7 +32,7 @@ class FailingAddress(PayloadBase[t.Mapping[str, t.Any]]):
     """The timestamp when the address failed as a pretty string"""
 
 
-class RoutePlannerDetails(PayloadBase[t.Mapping[str, t.Any]]):
+class RoutePlannerDetails(PayloadBase):
     """Route Planner details.
 
     more [here](https://lavalink.dev/api/rest#details-object)
@@ -54,11 +54,13 @@ class RoutePlannerDetails(PayloadBase[t.Mapping[str, t.Any]]):
     """The current offset in the ip block"""
 
 
-class RoutePlannerStatus(PayloadBase[t.Mapping[str, t.Any]]):
+class RoutePlannerStatus(PayloadBase):
     """Route Planner Status Object.
 
-    The status of the route-planner.
+    The status of the route-planner. More [here](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
     class_type: RoutePlannerType | None
+    """The name of the RoutePlanner implementation being used by this server."""
     details: RoutePlannerDetails | None
+    """The status details of the RoutePlanner"""

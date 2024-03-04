@@ -101,7 +101,8 @@ nav:
     - Player: api/player.md
     - Rest: api/rest.md
     - Enums: api/enums.md
-    - Errors: api/errors.md
+    - Exceptions: api/exceptions.md
+    - Handlers: api/handlers.md
     - ABC:
       - Base: api/abc/base.md
       - Events: api/abc/events.md

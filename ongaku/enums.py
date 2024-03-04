@@ -15,6 +15,8 @@ __all__ = (
     "BandType",
     "RoutePlannerType",
     "IPBlockType",
+    "WebsocketOPCodeType",
+    "WebsocketEventType",
 )
 
 
@@ -60,7 +62,7 @@ class VersionType(str, enum.Enum):
     The lavalink server version you wish to use.
     """
 
-    V4 = "v4"
+    V4 = "/v4"
     """V4 Servers"""
 
 
@@ -72,7 +74,7 @@ class ConnectionType(enum.IntEnum):
 
     FAILURE = 0
     """The session has failed to connect to the lavalink server."""
-    LOADING = 1
+    NOT_CONNECTED = 1
     """The session has not yet attempted to connect to the server."""
     CONNECTED = 2
     """The session has successfully connected to the lavalink server"""
@@ -143,6 +145,21 @@ class IPBlockType(str, enum.Enum):
     """The ipv4 block type"""
     INET_6_ADDRESS = "Inet6Address"
     """The ipv6 block type"""
+
+
+class WebsocketOPCodeType(str, enum.Enum):
+    READY = "ready"
+    PLAYER_UPDATE = "playerUpdate"
+    STATS = "stats"
+    EVENT = "event"
+
+
+class WebsocketEventType(str, enum.Enum):
+    TRACK_START_EVENT = "TrackStartEvent"
+    TRACK_END_EVENT = "TrackEndEvent"
+    TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
+    TRACK_STUCK_EVENT = "TrackStuckEvent"
+    WEBSOCKET_CLOSED_EVENT = "WebSocketClosedEvent"
 
 
 # MIT License

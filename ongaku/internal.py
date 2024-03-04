@@ -4,8 +4,15 @@
     Do not modify, or try to change anything in here.
 """
 
+from __future__ import annotations
+
 import logging
 import typing as t
+
+__all__ = (
+    "Trace",
+    "logger",
+)
 
 
 class Trace:  # noqa: D101
@@ -14,6 +21,7 @@ class Trace:  # noqa: D101
 
 
 logger = logging.getLogger("ongaku")
+
 
 # MIT License
 

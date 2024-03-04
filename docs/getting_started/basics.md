@@ -16,16 +16,17 @@ bot = hikari.GatewayBot(
 )
 ```
 
-You then must create an ongaku class, that attaches to that bot.
+You then must create an ongaku class, that attaches to that bot and attach a server to said ongaku class.
 
 ```python
 import ongaku
 
-client = ongaku.Client(
-    bot,
-    password="youshallnotpass"
-)
+client = ongaku.Client(bot)
+
+client.add_server(password="youshallnotpass")
 ```
+
+
 
 then, you have to run the bot:
 

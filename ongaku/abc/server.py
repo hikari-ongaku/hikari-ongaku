@@ -1,27 +1,62 @@
-"""Session ABC's.
+"""Server.
 
-The session abstract classes. [more here](https://ongaku.mplaty.com/api/abc/session)
+All server relation functions and classes.
 """
 
 from __future__ import annotations
 
-from .base import PayloadBase
+import typing as t
 
-__all__ = ("Session",)
+import attrs
+
+from ..enums import ConnectionType
+from ..enums import VersionType
+
+__all__ = ("Server",)
 
 
-class Session(PayloadBase):
-    """Session information.
+@attrs.define
+class Server:
+    """Server.
 
-    All of the specified session information.
-
-    Find out more [here](https://lavalink.dev/api/rest.html#update-session).
+    A server object.
     """
 
-    resuming: bool
-    """Whether resuming is enabled for this session or not."""
-    timeout: int
-    """The timeout in seconds (default is 60s)."""
+    ssl: t.Final[bool]
+    host: t.Final[str]
+    port: t.Final[int]
+    password: t.Final[str] | None
+    version: t.Final[VersionType]
+    remaining_attempts: int
+
+    base_uri: t.Final[str]
+    default_headers: dict[str, t.Any]
+    status: ConnectionType = ConnectionType.NOT_CONNECTED
+
+    @classmethod
+    def build(
+        cls,
+        ssl: bool,
+        host: str,
+        port: int,
+        password: str | None,
+        version: VersionType,
+        attempts: int,
+    ) -> Server:
+        """Build Server.
+
+        Build a new server object.
+        """
+        return Server(
+            ssl,
+            host,
+            port,
+            password,
+            version,
+            attempts,
+            f"http{'s' if ssl else ''}://{host}:{port}",
+            {"Authorization": password} if password else {},
+        )
 
 
 # MIT License

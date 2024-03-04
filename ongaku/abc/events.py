@@ -10,26 +10,29 @@ import typing as t
 import hikari
 import pydantic
 
-from ongaku.abc import base
-
 from .. import enums
+from . import base
 from .base import PayloadBase
 from .base import PayloadBaseApp
 from .lavalink import ExceptionError
+from .player import PlayerState
 from .track import Track
 
 __all__ = (
     "OngakuEvent",
     "ReadyEvent",
+    "PlayerUpdateEvent",
     "StatsMemory",
     "StatsCpu",
     "StatsFrameStatistics",
     "StatisticsEvent",
     "WebsocketClosedEvent",
+    "TrackBase",
     "TrackStartEvent",
     "TrackEndEvent",
     "TrackExceptionEvent",
     "TrackStuckEvent",
+    "PlayerBase",
     "QueueEmptyEvent",
     "QueueNextEvent",
 )
@@ -42,7 +45,7 @@ class OngakuEvent(hikari.Event):
     """
 
 
-class ReadyEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
+class ReadyEvent(PayloadBaseApp, OngakuEvent):
     """Ready event.
 
     The event that is dispatched, when lavalink is ready for new players, discord connections, and song requests.
@@ -54,7 +57,23 @@ class ReadyEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """The lavalink session id, for the current session."""
 
 
-class StatsMemory(PayloadBase[t.Mapping[str, t.Any]]):
+class PlayerUpdateEvent(PayloadBaseApp, OngakuEvent):
+    """Player update event.
+
+    The event that occurs when a player is updated.
+    """
+
+    guild_id: t.Annotated[
+        hikari.Snowflake,
+        pydantic.WrapValidator(base._string_to_snowflake),
+        pydantic.WrapSerializer(base._snowflake_to_string),
+        pydantic.Field(alias="guildId"),
+    ]
+
+    state: PlayerState
+
+
+class StatsMemory(PayloadBase):
     """
     All of the Statistics Memory information.
 
@@ -71,7 +90,7 @@ class StatsMemory(PayloadBase[t.Mapping[str, t.Any]]):
     """The amount of reservable memory in bytes"""
 
 
-class StatsCpu(PayloadBase[t.Mapping[str, t.Any]]):
+class StatsCpu(PayloadBase):
     """
     All of the Statistics CPU information.
 
@@ -86,7 +105,7 @@ class StatsCpu(PayloadBase[t.Mapping[str, t.Any]]):
     """The load of Lavalink on the server."""
 
 
-class StatsFrameStatistics(PayloadBase[t.Mapping[str, t.Any]]):
+class StatsFrameStatistics(PayloadBase):
     """
     All of the Statistics frame statistics information.
 
@@ -101,7 +120,7 @@ class StatsFrameStatistics(PayloadBase[t.Mapping[str, t.Any]]):
     """The difference between sent frames and the expected amount of frames."""
 
 
-class StatisticsEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
+class StatisticsEvent(PayloadBaseApp, OngakuEvent):
     """
     All of the Statistics information.
 
@@ -124,7 +143,7 @@ class StatisticsEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """The frame stats of the session."""
 
 
-class WebsocketClosedEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
+class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
     """Websocket closed event.
 
     The event that is sent out, when a websocket closes.
@@ -145,7 +164,7 @@ class WebsocketClosedEvent(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
     """Whether the connection was closed by Discord."""
 
 
-class TrackBase(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
+class TrackBase(PayloadBaseApp, OngakuEvent):
     """Base track class.
 
     The class that all Track based classes, inherit.
@@ -199,7 +218,7 @@ class TrackStuckEvent(TrackBase):
     """The threshold in milliseconds that was exceeded."""
 
 
-class PlayerBase(PayloadBaseApp[t.Mapping[str, t.Any]], OngakuEvent):
+class PlayerBase(PayloadBaseApp, OngakuEvent):
     """Player base.
 
     This is the base player object for all Ongaku player events.

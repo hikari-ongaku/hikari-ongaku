@@ -16,10 +16,11 @@ __all__ = (
     "TrackInfo",
     "Track",
     "PlaylistInfo",
+    "Playlist",
 )
 
 
-class TrackInfo(PayloadBase[t.Mapping[str, t.Any]]):
+class TrackInfo(PayloadBase):
     """Track information.
 
     All of the track information.
@@ -53,7 +54,7 @@ class TrackInfo(PayloadBase[t.Mapping[str, t.Any]]):
     """The track ISRC"""
 
 
-class Track(PayloadBase[t.Mapping[str, t.Any]]):
+class Track(PayloadBase):
     """Base track.
 
     The base track data.
@@ -84,7 +85,7 @@ class Track(PayloadBase[t.Mapping[str, t.Any]]):
     """
 
 
-class PlaylistInfo(PayloadBase[t.Mapping[str, t.Any]]):
+class PlaylistInfo(PayloadBase):
     """Playlist information.
 
     The playlist info object.
@@ -100,7 +101,7 @@ class PlaylistInfo(PayloadBase[t.Mapping[str, t.Any]]):
     """The selected track of the playlist (`-1` if no track is selected)"""
 
 
-class Playlist(PayloadBase[t.Mapping[str, t.Any]]):
+class Playlist(PayloadBase):
     """Playlist.
 
     The playlist object.

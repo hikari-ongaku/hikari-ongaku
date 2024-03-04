@@ -1,3 +1,0 @@
-# errors
-
-::: ongaku.errors

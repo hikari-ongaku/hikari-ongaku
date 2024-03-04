@@ -2,3 +2,4 @@ hikari==2.0.0.dev122
 logging==0.4.9.6
 aiohttp==3.9.1
 pydantic==2.6.1
+ujson==5.9.0

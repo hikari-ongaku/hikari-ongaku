@@ -10,8 +10,7 @@ import typing as t
 import hikari
 import pydantic
 
-from ongaku.abc import base
-
+from . import base
 from .base import PayloadBase
 from .track import Track
 
@@ -22,7 +21,7 @@ __all__ = (
 )
 
 
-class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
+class PlayerState(PayloadBase):
     """Players State.
 
     All the information for the players current state.
@@ -39,7 +38,7 @@ class PlayerState(PayloadBase[t.Mapping[str, t.Any]]):
     """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
 
 
-class PlayerVoice(PayloadBase[t.Mapping[str, t.Any]]):
+class PlayerVoice(PayloadBase):
     """Players Voice state.
 
     All of the Player Voice information.
@@ -54,7 +53,7 @@ class PlayerVoice(PayloadBase[t.Mapping[str, t.Any]]):
     """The Discord voice session id to authenticate with."""
 
 
-class Player(PayloadBase[t.Mapping[str, t.Any]]):
+class Player(PayloadBase):
     """Player information.
 
     All of the information about the player, for the specified guild.
