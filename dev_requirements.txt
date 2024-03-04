@@ -1,4 +1,4 @@
-nox==2023.4.22
+nox==2024.3.2
 hikari-miru==4.0.0
 hikari-arc==1.2.1
 hikari-crescent==0.6.6
