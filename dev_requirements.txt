@@ -1,5 +1,5 @@
 nox==2024.3.2
-hikari-miru==4.0.0
+hikari-miru==4.1.0
 hikari-arc==1.2.1
 hikari-crescent==0.6.6
 hikari-lightbulb==2.3.5
