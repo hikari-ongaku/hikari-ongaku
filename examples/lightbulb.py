@@ -1,16 +1,12 @@
 # Example for Lightbulb handler.
 import logging
-import os
 
-import dotenv
 import hikari
 import lightbulb
 
 import ongaku
 
-dotenv.load_dotenv(dotenv_path=".env")
-
-bot = lightbulb.BotApp(token=os.getenv("TOKEN", ""), banner=None)
+bot = lightbulb.BotApp(token="...", banner=None)
 
 ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
