@@ -1,4 +1,5 @@
 # ruff: noqa: D100, D101, D102
+import json
 import typing as t
 import unittest
 
@@ -88,7 +89,7 @@ class InfoTest(unittest.TestCase):
         assert test_info._to_payload == self.info_payload
 
     def test_info_payload(self):
-        test_info = Info._from_payload(self.info_payload)
+        test_info = Info._from_payload(json.dumps(self.info_payload))
 
         assert test_info.build_time == 60
         assert test_info.jvm == "jvm_test"
@@ -175,7 +176,7 @@ class InfoTest(unittest.TestCase):
     def test_info_plugin_payload(self):
         payload = {"name": "plugin_test_1", "version": "1.2"}
 
-        test_info_plugin = InfoPlugin._from_payload(payload)
+        test_info_plugin = InfoPlugin._from_payload(json.dumps(payload))
 
         assert test_info_plugin.name == "plugin_test_1"
         assert test_info_plugin.version == "1.2"
@@ -213,7 +214,7 @@ class TestErrors(unittest.TestCase):
             "path": "test_path",
         }
 
-        test_rest_error = RestError._from_payload(payload)
+        test_rest_error = RestError._from_payload(json.dumps(payload))
 
         assert test_rest_error.timestamp == 32
         assert test_rest_error.status == 12
@@ -242,7 +243,7 @@ class TestErrors(unittest.TestCase):
             "cause": "test_cause",
         }
 
-        test_exception_error = ExceptionError._from_payload(payload)
+        test_exception_error = ExceptionError._from_payload(json.dumps(payload))
 
         assert test_exception_error.message == "test_message"
         assert test_exception_error.severity == SeverityType.COMMON

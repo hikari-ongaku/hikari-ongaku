@@ -7,16 +7,14 @@ from __future__ import annotations
 
 import typing as t
 
-import hikari
-import pydantic
+from hikari import Snowflake
+from pydantic import Field
 
-from .base import PayloadBase
+from .bases import PayloadBase
 
 __all__ = (
     "TrackInfo",
     "Track",
-    "PlaylistInfo",
-    "Playlist",
 )
 
 
@@ -30,27 +28,25 @@ class TrackInfo(PayloadBase):
 
     identifier: str
     """The track identifier."""
-    is_seekable: t.Annotated[bool, pydantic.Field(alias="isSeekable")]
+    is_seekable: t.Annotated[bool, Field(alias="isSeekable")]
     """Whether the track is seekable."""
     author: str
     """The track author."""
     length: int
     """The track length in milliseconds."""
-    is_stream: t.Annotated[bool, pydantic.Field(alias="isStream")]
+    is_stream: t.Annotated[bool, Field(alias="isStream")]
     """Whether the track is a stream."""
     position: int
     """The track position in milliseconds."""
     title: str
     """The track title."""
-    source_name: t.Annotated[str, pydantic.Field(alias="sourceName")]
+    source_name: t.Annotated[str, Field(alias="sourceName")]
     """The tracks source name."""
-    uri: t.Annotated[str | None, pydantic.Field(default=None)] = None
+    uri: t.Annotated[str | None, Field(default=None)] = None
     """The track uri."""
-    artwork_url: t.Annotated[
-        str | None, pydantic.Field(default=None, alias="artworkUrl")
-    ] = None
+    artwork_url: t.Annotated[str | None, Field(default=None, alias="artworkUrl")] = None
     """The track artwork url"""
-    isrc: t.Annotated[str | None, pydantic.Field(default=None)] = None
+    isrc: t.Annotated[str | None, Field(default=None)] = None
     """The track ISRC"""
 
 
@@ -67,56 +63,20 @@ class Track(PayloadBase):
     info: TrackInfo
     """Information about the track"""
     plugin_info: t.Annotated[
-        t.Mapping[t.Any, t.Any] | None, pydantic.Field(default={}, alias="pluginInfo")
+        t.Mapping[t.Any, t.Any] | None, Field(default={}, alias="pluginInfo")
     ] = {}
     """Additional track info provided by plugins"""
     user_data: t.Annotated[
-        t.Mapping[t.Any, t.Any] | None, pydantic.Field(default={}, alias="userData")
+        t.Mapping[t.Any, t.Any] | None, Field(default={}, alias="userData")
     ] = {}
     """Additional track data."""
-    requestor: t.Annotated[
-        hikari.Snowflake | None, pydantic.Field(default=None, exclude=True)
-    ] = None
+    requestor: t.Annotated[Snowflake | None, Field(default=None, exclude=True)] = None
     """
     The person who requested this track.
 
     !!! INFO
         This is an internal feature, not something from lavalink. If this track is apart of a lavalink event, then it will most likely be empty.
     """
-
-
-class PlaylistInfo(PayloadBase):
-    """Playlist information.
-
-    The playlist info object.
-
-    Find out more [here](https://lavalink.dev/api/rest#playlist-info).
-    """
-
-    name: str
-    """The name of the playlist."""
-    selected_track: t.Annotated[
-        int | None, pydantic.Field(default=-1, alias="selectedTrack")
-    ] = None
-    """The selected track of the playlist (`-1` if no track is selected)"""
-
-
-class Playlist(PayloadBase):
-    """Playlist.
-
-    The playlist object.
-
-    Find out more [here](https://lavalink.dev/api/rest.html#playlist-result-data).
-    """
-
-    info: PlaylistInfo
-    """The info of the playlist."""
-    plugin_info: t.Annotated[
-        t.Mapping[t.Any, t.Any] | None, pydantic.Field(alias="pluginInfo")
-    ]
-    """Addition playlist info provided by plugins"""
-    tracks: t.Sequence[Track]
-    """The tracks in this playlist."""
 
 
 # MIT License

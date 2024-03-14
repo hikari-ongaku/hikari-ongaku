@@ -5,31 +5,39 @@ All of the payload base related objects.
 
 from __future__ import annotations
 
-import abc
-import logging
 import typing as t
 
-import hikari
-import pydantic
-from pydantic.alias_generators import to_camel
 
-from .. import internal
+#from hikari import GatewayBotAware
+from hikari import RESTAware
+from hikari import Snowflake
+from pydantic import BaseModel
+from pydantic import ConfigDict
+#from pydantic import Field
+from pydantic import SerializationInfo
+from pydantic import SerializerFunctionWrapHandler
+from pydantic import ValidationInfo
+from pydantic import ValidatorFunctionWrapHandler
+#from pydantic.alias_generators import to_camel
+
+if t.TYPE_CHECKING:
+    from ..session import Session
+    from ..client import Client
+
+from ..internal import Trace
+from ..internal import logger
 
 __all__ = (
-    "Payload",
     "_string_to_snowflake",
     "_snowflake_to_string",
     "PayloadBase",
     "PayloadBaseApp",
 )
 
-_logger = internal.logger.getChild("abc.base")
+_logger = logger.getChild("abc.base")
 
 
-INTERNAL_LOGGER = logging.getLogger(__name__)
-
-
-class Payload(abc.ABC, pydantic.BaseModel):
+class Payload(BaseModel):
     """
     Main payload.
 
@@ -39,19 +47,19 @@ class Payload(abc.ABC, pydantic.BaseModel):
 
 def _string_to_snowflake(
     guild_id: str,
-    handler: pydantic.ValidatorFunctionWrapHandler,
-    info: pydantic.ValidationInfo,
-) -> hikari.Snowflake:
+    handler: ValidatorFunctionWrapHandler,
+    info: ValidationInfo,
+) -> Snowflake:
     try:
-        return hikari.Snowflake(int(guild_id))
+        return Snowflake(int(guild_id))
     except:
         raise
 
 
 def _snowflake_to_string(
-    guild_id: hikari.Snowflake,
-    handler: pydantic.SerializerFunctionWrapHandler,
-    info: pydantic.SerializationInfo,
+    guild_id: Snowflake,
+    handler: SerializerFunctionWrapHandler,
+    info: SerializationInfo,
 ) -> str:
     return str(guild_id)
 
@@ -63,9 +71,7 @@ class PayloadBase(Payload):
     The payload base, that allows for converting back into payloads to transfer.
     """
 
-    model_config = pydantic.ConfigDict(
-        arbitrary_types_allowed=True, populate_by_name=True
-    )
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
     @classmethod
     def _from_payload(cls, payload: str) -> t.Self:
@@ -81,12 +87,12 @@ class PayloadBase(Payload):
             When the value is none.
         """
         name = cls.__qualname__
-        _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
+        _logger.log(Trace.LEVEL, f"Validating payload: {payload} to {name}")
 
         cls = cls.model_validate_json(payload, strict=True)
 
         _logger.log(
-            internal.Trace.LEVEL,
+            Trace.LEVEL,
             f"Payload validation to {name} completed successfully.",
         )
         return cls
@@ -100,59 +106,52 @@ class PayloadBase(Payload):
         return self.model_dump(by_alias=True, mode="json")
 
 
-class PayloadBaseApp(Payload):
+class PayloadBaseApp(PayloadBase):
     """
     Payload base application.
 
     The payload base, that supports an application/bot.
     """
 
-    model_config = pydantic.ConfigDict(
-        ignored_types=(hikari.RESTAware, hikari.GatewayBotAware),
-        arbitrary_types_allowed=True,
-        alias_generator=to_camel,
-        populate_by_name=True,
-        loc_by_alias=True,
-    )
-
-    bot_app: t.Annotated[hikari.RESTAware, pydantic.Field(default=None, exclude=True)]
+    _client: Client
+    _session: Session
+    _app: RESTAware
 
     @property
-    def app(self) -> hikari.RESTAware:
+    def client(self) -> Client:
+        """The session that this event is attached too."""
+        return self._client
+
+    @client.setter
+    def _set_client(self, client: Client):
+        self._client = client
+
+    @property
+    def session(self) -> Session:
+        """The session that this event is attached too."""
+        return self._session
+
+    @session.setter
+    def _set_session(self, session: Session):
+        self._session = session
+
+    @property
+    def app(self) -> RESTAware:
         """The application the event is attached too."""
-        return self.bot_app
+        return self._app
+
+    @app.setter
+    def _set_app(self, value: RESTAware):
+        self._app = value
 
     @classmethod
-    def _from_payload(cls, payload: str, app: hikari.RESTAware) -> t.Self:
-        """
-        From payload.
+    def _build(cls, payload: str, session: Session, app: RESTAware) -> t.Self:
+        cls = cls._from_payload(payload)
 
-        Converts the payload, into the current object.
-        """
-        name = cls.__class__.__name__
+        cls._set_session = session
+        cls._set_app = app
 
-        _logger.log(internal.Trace.LEVEL, f"Validating payload: {payload} to {name}")
-
-        cls = cls.model_validate_json(payload, strict=True)
-
-        cls.bot_app = app
-        _logger.log(
-            internal.Trace.LEVEL,
-            f"Payload validation to {name} completed successfully.",
-        )
         return cls
-
-    @property
-    def _to_payload(self) -> t.Mapping[str, t.Any]:
-        """To payload.
-
-        Converts your object, to a payload.
-        """
-        _logger.log(
-            internal.Trace.LEVEL, f"converting {self.__class__.__name__} to payload..."
-        )
-        return self.model_dump(by_alias=True, mode="json")
-
 
 # MIT License
 

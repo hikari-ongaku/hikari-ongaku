@@ -19,10 +19,12 @@ from ongaku.abc.events import WebsocketClosedEvent
 from ongaku.abc.lavalink import ExceptionError
 from ongaku.enums import SeverityType
 from ongaku.enums import TrackEndReasonType
+from ongaku.session import Session
 
 from .test_track import TrackTest
 
 _test_bot = hikari.GatewayBot("", banner=None)
+_test_session = Session()
 
 
 class ReadyEventTest(unittest.TestCase):

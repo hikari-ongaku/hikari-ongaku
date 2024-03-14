@@ -9,7 +9,7 @@ import typing as t
 
 from ..enums import IPBlockType
 from ..enums import RoutePlannerType
-from .base import PayloadBase
+from .bases import PayloadBase
 
 __all__ = (
     "FailingAddress",

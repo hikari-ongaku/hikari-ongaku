@@ -15,25 +15,25 @@ from . import internal
 logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
 
 
-from .abc import Filter
-from .abc import OngakuEvent
-from .abc import PlayerBase
-from .abc import PlayerUpdateEvent
-from .abc import Playlist
-from .abc import QueueEmptyEvent
-from .abc import QueueNextEvent
-from .abc import ReadyEvent
-from .abc import StatisticsEvent
-from .abc import StatsCpu
-from .abc import StatsFrameStatistics
-from .abc import StatsMemory
-from .abc import Track
-from .abc import TrackBase
-from .abc import TrackEndEvent
-from .abc import TrackExceptionEvent
-from .abc import TrackStartEvent
-from .abc import TrackStuckEvent
-from .abc import WebsocketClosedEvent
+from .abc.events import OngakuEvent
+from .abc.events import PlayerBase
+from .abc.events import PlayerUpdateEvent
+from .abc.events import QueueEmptyEvent
+from .abc.events import QueueNextEvent
+from .abc.events import ReadyEvent
+from .abc.events import StatisticsEvent
+from .abc.statistics import StatsCpu
+from .abc.statistics import StatsFrameStatistics
+from .abc.statistics import StatsMemory
+from .abc.events import TrackBase
+from .abc.events import TrackEndEvent
+from .abc.events import TrackExceptionEvent
+from .abc.events import TrackStartEvent
+from .abc.events import TrackStuckEvent
+from .abc.events import WebsocketClosedEvent
+from .abc.filters import Filter
+from .abc.playlist import Playlist
+from .abc.track import Track
 from .about import __author__
 from .about import __author_email__
 from .about import __license__
@@ -62,8 +62,6 @@ from .exceptions import SessionHandlerException
 from .exceptions import WebsocketClosureException
 from .exceptions import WebsocketException
 from .exceptions import WebsocketTypeException
-from .handlers import BaseSessionHandler
-from .handlers import ShardSessionHandler
 from .player import Player
 from .session import Session
 
@@ -100,9 +98,6 @@ __all__ = (
     "RequiredException",
     "LavalinkException",
     "SessionHandlerException",
-    # .handlers
-    "BaseSessionHandler",
-    "ShardSessionHandler",
     # .player
     "Player",
     # .session

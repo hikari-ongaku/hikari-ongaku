@@ -104,14 +104,16 @@ nav:
     - Exceptions: api/exceptions.md
     - Handlers: api/handlers.md
     - ABC:
-      - Base: api/abc/base.md
+      - Bases: api/abc/bases.md
       - Events: api/abc/events.md
+      - Filters: api/abc/filters.md
       - Lavalink: api/abc/lavalink.md
       - Player: api/abc/player.md
+      - Playlist: api/abc/playlist.md
       - Route Planner: api/abc/route_planner.md
       - Session: api/abc/session.md
+      - Statistics: api/abc/statistics.md
       - Track: api/abc/track.md
-      - Filters: api/abc/filters.md
   - Extensions:
     - ext/index.md
     - Creation: ext/creation.md

@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import typing as t
 
-import hikari
+from hikari import UNDEFINED
+from hikari import UndefinedNoneOr
 
 from ..enums import BandType
 
@@ -45,7 +46,7 @@ class Filter:
         self._volume = value
 
     def set_equalizer(
-        self, band: BandType, gain: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
+        self, band: BandType, gain: UndefinedNoneOr[float] = UNDEFINED
     ) -> float | None:
         """
         Set the equalizer value.
@@ -57,12 +58,12 @@ class Filter:
         ----------
         band : BandType
             The band type.
-        gain : hikari.UndefinedNoneOr[float]
+        gain : UndefinedNoneOr[float]
             The gain of the band.
 
 
         """
-        if gain == hikari.UNDEFINED:
+        if gain == UNDEFINED:
             return self._equalizer.get(band)
 
         if not gain:
@@ -82,23 +83,23 @@ class Filter:
     def set_karaoke(
         self,
         *,
-        level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        mono_level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        filter_band: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        filter_width: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        level: UndefinedNoneOr[float] = UNDEFINED,
+        mono_level: UndefinedNoneOr[float] = UNDEFINED,
+        filter_band: UndefinedNoneOr[float] = UNDEFINED,
+        filter_width: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set the equalizer value.
 
         Parameters
         ----------
-        level : hikari.UndefinedNoneOr[float]
+        level : UndefinedNoneOr[float]
             The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)
-        mono_level : hikari.UndefinedNoneOr[float]
+        mono_level : UndefinedNoneOr[float]
             The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)
-        filter_band : hikari.UndefinedNoneOr[float]
+        filter_band : UndefinedNoneOr[float]
             The filter band (in Hz)
-        filter_width : hikari.UndefinedNoneOr[float]
+        filter_width : UndefinedNoneOr[float]
             The filter width
         """
         if level is None:
@@ -134,20 +135,20 @@ class Filter:
     def set_timescale(
         self,
         *,
-        speed: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        pitch: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        rate: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        speed: UndefinedNoneOr[float] = UNDEFINED,
+        pitch: UndefinedNoneOr[float] = UNDEFINED,
+        rate: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set timescale.
 
         Parameters
         ----------
-        speed : hikari.UndefinedNoneOr[float]
+        speed : UndefinedNoneOr[float]
             The playback speed 0.0 ≤ x
-        pitch : hikari.UndefinedNoneOr[float]
+        pitch : UndefinedNoneOr[float]
             The pitch 0.0 ≤ x
-        rate : hikari.UndefinedNoneOr[float]
+        rate : UndefinedNoneOr[float]
             The rate 0.0 ≤ x
         """
         if speed is None:
@@ -171,17 +172,17 @@ class Filter:
     def set_tremolo(
         self,
         *,
-        frequency: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        frequency: UndefinedNoneOr[float] = UNDEFINED,
+        depth: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set tremolo.
 
         Parameters
         ----------
-        frequency : hikari.UndefinedNoneOr[float]
+        frequency : UndefinedNoneOr[float]
             The frequency 0.0 < x
-        depth : hikari.UndefinedNoneOr[float]
+        depth : UndefinedNoneOr[float]
             The tremolo depth 0.0 < x ≤ 1.0
         """
         if frequency is None:
@@ -205,17 +206,17 @@ class Filter:
     def set_vibrato(
         self,
         *,
-        frequency: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        frequency: UndefinedNoneOr[float] = UNDEFINED,
+        depth: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set vibrato.
 
         Parameters
         ----------
-        frequency : hikari.UndefinedNoneOr[float]
+        frequency : UndefinedNoneOr[float]
                 The frequency 0.0 < x ≤ 14.0
-        depth : hikari.UndefinedNoneOr[float]
+        depth : UndefinedNoneOr[float]
             The tremolo depth 0.0 < x ≤ 1.0
         """
         if frequency is None:
@@ -239,14 +240,14 @@ class Filter:
     def set_rotation(
         self,
         *,
-        rotation_hz: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        rotation_hz: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set rotation.
 
         Parameters
         ----------
-        rotation_hz : hikari.UndefinedNoneOr[float]
+        rotation_hz : UndefinedNoneOr[float]
             The frequency of the audio rotating around the listener in Hz.
         """
         if rotation_hz is None:
@@ -258,35 +259,35 @@ class Filter:
     def set_distortion(
         self,
         *,
-        sin_offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        sin_scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        cos_offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        cos_scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        tan_offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        tan_scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        sin_offset: UndefinedNoneOr[float] = UNDEFINED,
+        sin_scale: UndefinedNoneOr[float] = UNDEFINED,
+        cos_offset: UndefinedNoneOr[float] = UNDEFINED,
+        cos_scale: UndefinedNoneOr[float] = UNDEFINED,
+        tan_offset: UndefinedNoneOr[float] = UNDEFINED,
+        tan_scale: UndefinedNoneOr[float] = UNDEFINED,
+        offset: UndefinedNoneOr[float] = UNDEFINED,
+        scale: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set distortion.
 
         Parameters
         ----------
-        sin_offset : hikari.UndefinedNoneOr[float]
+        sin_offset : UndefinedNoneOr[float]
             The sin offset
-        sin_scale : hikari.UndefinedNoneOr[float]
+        sin_scale : UndefinedNoneOr[float]
             The sin scale
-        cos_offset : hikari.UndefinedNoneOr[float]
+        cos_offset : UndefinedNoneOr[float]
             The cos offset
-        cos_scale : hikari.UndefinedNoneOr[float]
+        cos_scale : UndefinedNoneOr[float]
             The cos scale
-        tan_offset : hikari.UndefinedNoneOr[float]
+        tan_offset : UndefinedNoneOr[float]
             The tan offset
-        tan_scale : hikari.UndefinedNoneOr[float]
+        tan_scale : UndefinedNoneOr[float]
             The tan scale
-        offset : hikari.UndefinedNoneOr[float]
+        offset : UndefinedNoneOr[float]
             The offset
-        scale : hikari.UndefinedNoneOr[float]
+        scale : UndefinedNoneOr[float]
             The scale
         """
         if sin_offset is None:
@@ -340,23 +341,23 @@ class Filter:
     def set_channel_mix(
         self,
         *,
-        left_to_left: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        left_to_right: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        right_to_left: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        right_to_right: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        left_to_left: UndefinedNoneOr[float] = UNDEFINED,
+        left_to_right: UndefinedNoneOr[float] = UNDEFINED,
+        right_to_left: UndefinedNoneOr[float] = UNDEFINED,
+        right_to_right: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set channel mix.
 
         Parameters
         ----------
-        left_to_left : hikari.UndefinedNoneOr[float]
+        left_to_left : UndefinedNoneOr[float]
             The left to left channel mix factor (0.0 ≤ x ≤ 1.0)
-        left_to_right : hikari.UndefinedNoneOr[float]
+        left_to_right : UndefinedNoneOr[float]
             The left to right channel mix factor (0.0 ≤ x ≤ 1.0)
-        right_to_left : hikari.UndefinedNoneOr[float]
+        right_to_left : UndefinedNoneOr[float]
             The right to left channel mix factor (0.0 ≤ x ≤ 1.0)
-        right_to_right : hikari.UndefinedNoneOr[float]
+        right_to_right : UndefinedNoneOr[float]
             The right to right channel mix factor (0.0 ≤ x ≤ 1.0)
         """
         if left_to_left is None:
@@ -398,14 +399,14 @@ class Filter:
     def set_low_pass(
         self,
         *,
-        smoothing: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        smoothing: UndefinedNoneOr[float] = UNDEFINED,
     ) -> None:
         """
         Set low pass.
 
         Parameters
         ----------
-        smoothing : hikari.UndefinedNoneOr[float]
+        smoothing : UndefinedNoneOr[float]
             The smoothing factor (1.0 < x)
         """
         if smoothing is None:

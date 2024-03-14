@@ -1,0 +1,3 @@
+# Playlist
+
+::: ongaku.abc.playlist

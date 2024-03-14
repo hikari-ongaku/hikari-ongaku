@@ -9,8 +9,8 @@ import typing as t
 
 import pydantic
 
-from .. import enums
-from .base import PayloadBase
+from ..enums import SeverityType
+from .bases import PayloadBase
 
 __all__ = (
     "InfoVersion",
@@ -127,7 +127,7 @@ class ExceptionError(PayloadBase):
 
     message: str
     """The message of the exception."""
-    severity: enums.SeverityType
+    severity: SeverityType
     """The severity of the exception."""
     cause: str
     """The cause of the exception."""

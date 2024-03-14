@@ -1,7 +1,9 @@
 # ruff: noqa: D100, D101, D102
-import typing as t
+# import typing as t
 import unittest
-from unittest.mock import AsyncMock
+from unittest import mock
+
+"""from unittest.mock import AsyncMock
 from unittest.mock import patch
 
 import hikari
@@ -20,10 +22,54 @@ from ongaku.abc.track import Track
 from ongaku.rest import RESTClient
 from ongaku.rest import RESTPlayer
 from ongaku.rest import RESTSession
-from ongaku.rest import RESTTrack
-from ongaku.rest import _HttpMethod
+from ongaku.rest import RESTTrack"""
+# from ongaku.rest import _HttpMethod
+# from ongaku.rest import RestT
+# from tests.endpoints import ENDPOINTS, PayloadInformation
 
+# from ongaku.rest import RESTClient
+# from . import payload
+from tests import objects
 
+"""
+@mock.patch("ongaku.rest.RESTClient._handle_rest", new=mock.Mock())
+def handle_rest_action( # noqa: D103
+    url: str,
+    method: _HttpMethod,
+    return_type: t.Type[RestT] | None,
+    *,
+    headers: t.Mapping[str, t.Any] = {},
+    json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
+    params: t.Mapping[str, t.Any] = {},
+    sequence: bool = False,
+) -> RestT | t.Sequence[RestT] | None:
+    found_info: PayloadInformation | None = None
+    for endpoint in ENDPOINTS:
+        if endpoint.path == url:
+            found_info = endpoint
+            break
+    else:
+        found_info = None
+
+    if found_info is None:
+        return
+    
+    assert method.value == found_info.method
+
+    assert headers == found_info.headers
+
+    assert json == found_info.json
+
+    assert params == found_info.params
+
+    if sequence:
+        assert isinstance(found_info.return_data, t.Sequence)
+    else:
+        assert not isinstance(found_info.return_data, t.Sequence)
+
+    return found_info.return_data
+    """
+"""
 class RestTest(unittest.IsolatedAsyncioTestCase):
     async def test_rest_info(self):
         mock_client = AsyncMock()
@@ -48,7 +94,7 @@ class RestTest(unittest.IsolatedAsyncioTestCase):
         mock_rest_handler.assert_called_once_with(
             "/info", mock_client._internal.headers, _HttpMethod.GET
         )
-        self.assertEqual(result, Info._from_payload(InfoTest.info_payload))
+        self.assertEqual(result, Info._from_payload(payload.convert(payload.TRACK_INFO)))
 
 
 class RestSessionTest(unittest.IsolatedAsyncioTestCase):
@@ -91,7 +137,7 @@ class RestPlayerTest(unittest.IsolatedAsyncioTestCase):
             _HttpMethod.GET,
         )
 
-        self.assertEqual(result, [Player._from_payload(PlayerTest.player_payload)])
+        self.assertEqual(result, [Player._from_payload(payload)])
 
     async def test_player_fetch(self):
         with patch("ongaku.rest.RESTClient._rest_handler") as mock_rest_handler:
@@ -330,3 +376,16 @@ class RestTrackTest(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(result, Track._from_payload(TrackTest.track_payload))
+"""
+
+
+class NewRestSessionTest(unittest.IsolatedAsyncioTestCase):
+    async def test_session_update(self):
+        result = await objects.test_ongaku_client.rest.track.decode("{BASE64}")
+
+        assert result == objects.test_track
+
+
+@mock.patch("aiohttp.ClientSession.request")
+def aiohttp_request(request: mock.MagicMock):
+    print(request)

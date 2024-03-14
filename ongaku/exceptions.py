@@ -5,9 +5,9 @@ All of the ongaku errors.
 
 from __future__ import annotations
 
-import aiohttp
-import attrs
-import hikari
+from aiohttp import WSCloseCode
+from attrs import define
+from hikari import Snowflake
 
 from .enums import WebsocketEventType
 from .enums import WebsocketOPCodeType
@@ -40,15 +40,15 @@ class WebsocketException(OngakuException):
     """Base websocket exception."""
 
 
-@attrs.define
+@define
 class WebsocketClosureException(WebsocketException):
     """When a websocket has closed."""
 
-    reason: aiohttp.WSCloseCode
+    reason: WSCloseCode
     extra: str | None
 
 
-@attrs.define
+@define
 class WebsocketTypeException(WebsocketException):
     """When a event has an issue decoding."""
 
@@ -61,14 +61,14 @@ class WebsocketTypeException(WebsocketException):
 # Session related:
 
 
-@attrs.define
+@define
 class SessionException(OngakuException):
     """Base session exception."""
 
     session_id: str | None
 
 
-@attrs.define
+@define
 class SessionConnectionException(SessionException):
     """Raised when the session has either failed to connect, or is not connected."""
 
@@ -78,21 +78,21 @@ class SessionConnectionException(SessionException):
 # Player related:
 
 
-@attrs.define
+@define
 class PlayerException(OngakuException):
     """Base player exception."""
 
-    guild_id: hikari.Snowflake
+    guild_id: Snowflake
 
 
-@attrs.define
+@define
 class PlayerConnectException(PlayerException):
     """raised when the player fails to connect to a channel."""
 
     reason: str
 
 
-@attrs.define
+@define
 class PlayerQueueException(PlayerException):
     """Raised when an issue occurs within the queue of a player."""
 
@@ -120,14 +120,14 @@ class PlayerMissingException(PlayerException):
 # Other:
 
 
-@attrs.define
+@define
 class BuildException(OngakuException):
     """Raised when something fails to be built."""
 
     reason: str
 
 
-@attrs.define
+@define
 class RequiredException(OngakuException):
     """Raised when something is required, but does not exist."""
 
@@ -138,7 +138,7 @@ class LavalinkException(OngakuException):
     """Raised when an issue occurs with lavalink or rest actions."""
 
 
-@attrs.define
+@define
 class SessionHandlerException(OngakuException):
     """Raised when an issue occurs within a session handler."""
 

@@ -7,24 +7,25 @@ from __future__ import annotations
 
 import typing as t
 
-import hikari
-import pydantic
+from hikari import Event
+from hikari import Snowflake
+from pydantic import Field
+from pydantic import WrapSerializer
+from pydantic import WrapValidator
 
-from .. import enums
-from . import base
-from .base import PayloadBase
-from .base import PayloadBaseApp
+from ..enums import TrackEndReasonType
+from .bases import PayloadBaseApp
+from .bases import _snowflake_to_string
+from .bases import _string_to_snowflake
 from .lavalink import ExceptionError
 from .player import PlayerState
 from .track import Track
+from .statistics import Statistics
 
 __all__ = (
     "OngakuEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
-    "StatsMemory",
-    "StatsCpu",
-    "StatsFrameStatistics",
     "StatisticsEvent",
     "WebsocketClosedEvent",
     "TrackBase",
@@ -38,7 +39,7 @@ __all__ = (
 )
 
 
-class OngakuEvent(hikari.Event):
+class OngakuEvent(Event):
     """Ongaku Event.
 
     The base event, that all other Ongaku events are attached too.
@@ -53,7 +54,7 @@ class ReadyEvent(PayloadBaseApp, OngakuEvent):
 
     resumed: bool
     """Whether or not the session has been resumed, or is a new session."""
-    session_id: t.Annotated[str, pydantic.Field(alias="sessionId")]
+    session_id: t.Annotated[str, Field(alias="sessionId")]
     """The lavalink session id, for the current session."""
 
 
@@ -64,83 +65,21 @@ class PlayerUpdateEvent(PayloadBaseApp, OngakuEvent):
     """
 
     guild_id: t.Annotated[
-        hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_snowflake),
-        pydantic.WrapSerializer(base._snowflake_to_string),
-        pydantic.Field(alias="guildId"),
+        Snowflake,
+        WrapValidator(_string_to_snowflake),
+        WrapSerializer(_snowflake_to_string),
+        Field(alias="guildId"),
     ]
 
     state: PlayerState
 
 
-class StatsMemory(PayloadBase):
-    """
-    All of the Statistics Memory information.
-
-    Find out more [here](https://lavalink.dev/api/websocket.html#memory).
-    """
-
-    free: int
-    """The amount of free memory in bytes"""
-    used: int
-    """The amount of used memory in bytes"""
-    allocated: int
-    """The amount of allocated memory in bytes"""
-    reservable: int
-    """The amount of reservable memory in bytes"""
-
-
-class StatsCpu(PayloadBase):
-    """
-    All of the Statistics CPU information.
-
-    Find out more [here](https://lavalink.dev/api/websocket.html#cpu).
-    """
-
-    cores: int
-    """The amount of cores the server has."""
-    system_load: t.Annotated[float | int, pydantic.Field(alias="systemLoad")]
-    """The system load of the server."""
-    lavalink_load: t.Annotated[float | int, pydantic.Field(alias="lavalinkLoad")]
-    """The load of Lavalink on the server."""
-
-
-class StatsFrameStatistics(PayloadBase):
-    """
-    All of the Statistics frame statistics information.
-
-    Find out more [here](https://lavalink.dev/api/websocket.html#frame-stats).
-    """
-
-    sent: int
-    """The amount of frames sent to Discord."""
-    nulled: int
-    """The amount of frames that were nulled."""
-    deficit: int
-    """The difference between sent frames and the expected amount of frames."""
-
-
-class StatisticsEvent(PayloadBaseApp, OngakuEvent):
+class StatisticsEvent(PayloadBaseApp, Statistics, OngakuEvent):
     """
     All of the Statistics information.
 
     Find out more [here](https://lavalink.dev/api/websocket.html#stats-object).
     """
-
-    players: int
-    """The amount of players connected to the session."""
-    playing_players: int
-    """The amount of players playing a track."""
-    uptime: int
-    """The uptime of the session in milliseconds."""
-    memory: StatsMemory
-    """The memory stats of the session."""
-    cpu: StatsCpu
-    """The cpu stats of the session."""
-    frame_statistics: t.Annotated[
-        StatsFrameStatistics | None, pydantic.Field(default=None, alias="frameStats")
-    ] = None
-    """The frame stats of the session."""
 
 
 class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
@@ -150,17 +89,17 @@ class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
     """
 
     guild_id: t.Annotated[
-        hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_snowflake),
-        pydantic.WrapSerializer(base._snowflake_to_string),
-        pydantic.Field(alias="guildId"),
+        Snowflake,
+        WrapValidator(_string_to_snowflake),
+        WrapSerializer(_snowflake_to_string),
+        Field(alias="guildId"),
     ]
     """The guild that had their websocket closed in."""
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
     reason: str
     """	The close reason."""
-    by_remote: t.Annotated[bool, pydantic.Field(alias="byRemote")]
+    by_remote: t.Annotated[bool, Field(alias="byRemote")]
     """Whether the connection was closed by Discord."""
 
 
@@ -171,10 +110,10 @@ class TrackBase(PayloadBaseApp, OngakuEvent):
     """
 
     guild_id: t.Annotated[
-        hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_snowflake),
-        pydantic.WrapSerializer(base._snowflake_to_string),
-        pydantic.Field(alias="guildId"),
+        Snowflake,
+        WrapValidator(_string_to_snowflake),
+        WrapSerializer(_snowflake_to_string),
+        Field(alias="guildId"),
     ]
     """The guild the track is playing in."""
     track: Track
@@ -194,7 +133,7 @@ class TrackEndEvent(TrackBase):
     The track end event that is dispatched when a track ends.
     """
 
-    reason: enums.TrackEndReasonType
+    reason: TrackEndReasonType
     """The reason for the track ending."""
 
 
@@ -214,7 +153,7 @@ class TrackStuckEvent(TrackBase):
     This event is dispatched when a track gets stuck.
     """
 
-    threshold_ms: t.Annotated[int, pydantic.Field(alias="thresholdMs")]
+    threshold_ms: t.Annotated[int, Field(alias="thresholdMs")]
     """The threshold in milliseconds that was exceeded."""
 
 
@@ -225,10 +164,10 @@ class PlayerBase(PayloadBaseApp, OngakuEvent):
     """
 
     guild_id: t.Annotated[
-        hikari.Snowflake,
-        pydantic.WrapValidator(base._string_to_snowflake),
-        pydantic.WrapSerializer(base._snowflake_to_string),
-        pydantic.Field(alias="guildId"),
+        Snowflake,
+        WrapValidator(_string_to_snowflake),
+        WrapSerializer(_snowflake_to_string),
+        Field(alias="guildId"),
     ]
     """The guild id of the player."""
 
@@ -248,7 +187,7 @@ class QueueNextEvent(PlayerBase):
 
     track: Track
     """The track that is now playing."""
-    old_track: t.Annotated[Track, pydantic.Field()]
+    old_track: t.Annotated[Track, Field()]
     """The track that was playing."""
 
 
