@@ -1,9 +1,10 @@
-"""Abstract classes.
+"""
+Abstract classes.
 
 All of the abstract classes for Ongaku.
 """
 
-from .events import OngakuEvent
+from .bases import OngakuEvent
 from .events import PlayerBase
 from .events import PlayerUpdateEvent
 from .events import QueueEmptyEvent

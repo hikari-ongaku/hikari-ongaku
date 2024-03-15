@@ -1,6 +1,7 @@
-"""Filter ABC.
+"""
+Filter ABC's.
 
-All of the filter related functions.
+The filter abstract classes.
 """
 
 from __future__ import annotations
@@ -39,7 +40,8 @@ class Filter:
     _low_pass: dict[str, float] = {}
 
     def volume(self, value: float | None = None) -> None:
-        """Set the volume.
+        """
+        Set the volume.
 
         Set the volume for the player.
         """

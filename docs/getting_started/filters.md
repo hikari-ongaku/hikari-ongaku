@@ -2,7 +2,7 @@
 
 Filters are a feature, that allows for modifying the audio effects
 
-For more information on filters, check out [here](https://lavalink.dev/api/rest.html#filters).
+For more information on filters, check out [here](https://lavalink.dev/api/rest.html#filters)
 
 ## Basics
 

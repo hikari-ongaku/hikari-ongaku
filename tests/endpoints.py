@@ -1,4 +1,5 @@
-"""Endpoints.
+"""
+Endpoints.
 
 In this file, is an easy way to manage all available endpoints, and to make sure they are overridden, and handled properly.
 

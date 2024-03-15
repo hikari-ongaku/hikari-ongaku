@@ -1,4 +1,5 @@
-"""Player.
+"""
+Player.
 
 The player function, for all player related things.
 """
@@ -41,7 +42,8 @@ __all__ = ("Player",)
 
 
 class Player:
-    """Base player.
+    """
+    Base player.
 
     The class that allows the player, to play songs, and more.
 
@@ -125,7 +127,8 @@ class Player:
 
     @property
     def volume(self) -> int:
-        """The volume of the player.
+        """
+        The volume of the player.
 
         !!! warning
             If volume is -1, it has either not been updated, or connected to lavalink.
@@ -441,7 +444,8 @@ class Player:
             self._queue.append(track)
 
     async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
-        """Pause the player.
+        """
+        Pause the player.
 
         Allows for the user to pause the currently playing track on this player.
 
@@ -714,7 +718,8 @@ class Player:
         await self._update(player)
 
     async def set_auto_play(self, toggle: UndefinedOr[bool] = UNDEFINED) -> bool:
-        """Set auto play.
+        """
+        Set auto play.
 
         whether or not to enable or disable auto play.
 
@@ -731,7 +736,8 @@ class Player:
         return self._auto_play
 
     async def set_volume(self, volume: int) -> None:
-        """Set the volume.
+        """
+        Set the volume.
 
         The volume you wish to set for the player.
 
@@ -777,7 +783,8 @@ class Player:
         await self._update(player)
 
     async def set_position(self, value: int) -> None:
-        """Change the track position.
+        """
+        Change the track position.
 
         Change the currently playing track's position.
 

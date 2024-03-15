@@ -1,4 +1,5 @@
-"""Sessions.
+"""
+Sessions.
 
 The base hikari session.
 """
@@ -31,7 +32,8 @@ _logger = logger.getChild("session")
 
 
 class Session:
-    """Session.
+    """
+    Session.
 
     The session object, for a specific lavalink server session, or connection.
     """
@@ -168,9 +170,15 @@ class Session:
 
 
 class BaseSessionHandler(abc.ABC):
-    """Base Session handler.
+    """
+    Base Session handler.
 
     The base class for creating a new session handler.
+
+    Raises
+    ------
+    SessionConnectionException
+        You should raise this, when it cannot find an available session.
     """
 
     def __init__(self, client: Client) -> None: ...
@@ -306,7 +314,6 @@ class GeneralSessionHandler(BaseSessionHandler):
         pos = 0
 
         started_servers = 0
-        #print(started_servers, len(sessions))
         while started_servers != len(sessions):
             await asyncio.sleep(1)
             
@@ -318,7 +325,6 @@ class GeneralSessionHandler(BaseSessionHandler):
             session = sessions[pos - 1]
 
             if session.status == ConnectionType.CONNECTED:
-                print("Starting server:", pos-1)
                 started_servers += 1
                 continue
             
@@ -345,7 +351,7 @@ class GeneralSessionHandler(BaseSessionHandler):
                 self._current_session = session
                 return self._current_session
 
-        raise Exception("Failed to fetch a server from current servers.")
+        raise SessionConnectionException(None)
 
     async def switch_session(self) -> Session:
         current_session = self._current_session
@@ -389,10 +395,8 @@ class GeneralSessionHandler(BaseSessionHandler):
         player = await self.fetch_player(guild_id)
 
         await player.disconnect()
-
-        session = await self.fetch_session()
-
-        session.players.remove(player)
+        
+        player.session.players.remove(player)
 
 
 # MIT License

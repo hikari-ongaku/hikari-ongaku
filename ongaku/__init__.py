@@ -1,4 +1,5 @@
-"""A voice handling library for hikari.
+"""
+A voice handling library for hikari.
 
 GitHub:
 https://github.com/MPlatypus/hikari-ongaku
@@ -15,7 +16,7 @@ from . import internal
 logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
 
 
-from .abc.events import OngakuEvent
+from .abc.bases import OngakuEvent
 from .abc.events import PlayerBase
 from .abc.events import PlayerUpdateEvent
 from .abc.events import QueueEmptyEvent
@@ -55,7 +56,6 @@ from .exceptions import PlayerConnectException
 from .exceptions import PlayerException
 from .exceptions import PlayerMissingException
 from .exceptions import PlayerQueueException
-from .exceptions import RequiredException
 from .exceptions import SessionConnectionException
 from .exceptions import SessionException
 from .exceptions import SessionHandlerException
@@ -95,7 +95,6 @@ __all__ = (
     "PlayerQueueException",
     "PlayerMissingException",
     "BuildException",
-    "RequiredException",
     "LavalinkException",
     "SessionHandlerException",
     # .player

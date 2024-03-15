@@ -1,4 +1,5 @@
-"""Errors.
+"""
+Errors.
 
 All of the ongaku errors.
 """
@@ -24,7 +25,6 @@ __all__ = (
     "PlayerQueueException",
     "PlayerMissingException",
     "BuildException",
-    "RequiredException",
     "SessionHandlerException",
 )
 
@@ -44,8 +44,10 @@ class WebsocketException(OngakuException):
 class WebsocketClosureException(WebsocketException):
     """When a websocket has closed."""
 
-    reason: WSCloseCode
-    extra: str | None
+    code: WSCloseCode
+    """The disconnection code."""
+    reason: str | None
+    """The reason for the disconnection."""
 
 
 @define
@@ -66,6 +68,7 @@ class SessionException(OngakuException):
     """Base session exception."""
 
     session_id: str | None
+    """The session ID that this exception is related to."""
 
 
 @define
@@ -73,6 +76,7 @@ class SessionConnectionException(SessionException):
     """Raised when the session has either failed to connect, or is not connected."""
 
     reason: str = "Session is missing."
+    """The reason for the connection exception."""
 
 
 # Player related:
@@ -83,6 +87,7 @@ class PlayerException(OngakuException):
     """Base player exception."""
 
     guild_id: Snowflake
+    """The guild id that this player is attached to."""
 
 
 @define
@@ -90,6 +95,7 @@ class PlayerConnectException(PlayerException):
     """raised when the player fails to connect to a channel."""
 
     reason: str
+    """The reason for the failed connection."""
 
 
 @define
@@ -97,20 +103,7 @@ class PlayerQueueException(PlayerException):
     """Raised when an issue occurs within the queue of a player."""
 
     reason: str
-
-    # Old errors:
-
-    # class GatewayRequiredException(OngakuBaseException):
-    """Raised when Gateway bot is not used. [more info](https://ongaku.mplaty.com/getting_started/#qs-and-as)."""
-
-    # class BuildException(OngakuBaseException):
-    """Raised when a model fails to build correctly."""
-
-    # class TimeoutException(OngakuBaseException):
-    """Raised when a timeout has exceed its timer."""
-
-    # class RequiredException(OngakuBaseException):
-    """Raised when a value is required, but is None, or missing."""
+    """The reason for the failed queuing."""
 
 
 class PlayerMissingException(PlayerException):
@@ -125,13 +118,7 @@ class BuildException(OngakuException):
     """Raised when something fails to be built."""
 
     reason: str
-
-
-@define
-class RequiredException(OngakuException):
-    """Raised when something is required, but does not exist."""
-
-    required_item: str
+    """The reason for the failed build."""
 
 
 class LavalinkException(OngakuException):
@@ -143,6 +130,7 @@ class SessionHandlerException(OngakuException):
     """Raised when an issue occurs within a session handler."""
 
     reason: str
+    """The reason for the session handler exception."""
 
 
 # MIT License

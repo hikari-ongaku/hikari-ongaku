@@ -1,4 +1,5 @@
-"""Rest client.
+"""
+Rest client.
 
 All REST based actions, happen in here.
 """
@@ -45,7 +46,7 @@ RestT = t.TypeVar(
     RoutePlannerStatus,
     Statistics,
     str,
-    t.Mapping[str, t.Any]
+    dict[str, t.Any]
 )
 
 __all__ = ("RESTClient",)
@@ -102,7 +103,7 @@ class RESTClient:
 
         Gets the current lavalink version.
 
-        [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
 
         Raises
         ------
@@ -138,7 +139,7 @@ class RESTClient:
 
         Gets the current Lavalink statistics.
 
-        [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
 
         !!! note
             frame_statistics will always be None.
@@ -176,7 +177,7 @@ class RESTClient:
 
         Gets the current Lavalink statistics.
 
-        [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
 
         Raises
         ------
@@ -245,7 +246,8 @@ class RESTClient:
         sequence: bool = False,
         version: bool = True
     ) -> RestT | t.Sequence[RestT] | None:
-        """Handle rest.
+        """
+        Handle rest.
 
         Raises
         ------
@@ -264,21 +266,25 @@ class RESTClient:
 
         new_headers.update(headers)
 
+        server_version = ""
+        if version:
+            server_version = server.version.value
+
         try:
             async with session.request(
                 method.value,
-                server.base_uri + server.version.value if version else "" + url,
+                server.base_uri + server_version + url,
                 headers=new_headers,
                 json=json,
                 params=params,
             ) as response:
                 _logger.log(
                     Trace.LEVEL,
-                    f"Received code: {response.status} with response {await response.text()}",
+                    f"Received code: {response.status} with response {await response.text()} on url {response.url}",
                 )
                 if response.status >= 400:
                     try:
-                        payload = await response.json()
+                        payload = await response.text()
                     except Exception:
                         raise LavalinkException(
                             f"A {response.status} error has occurred."
@@ -297,8 +303,8 @@ class RESTClient:
                 if issubclass(return_type, str):
                     return return_type(payload)
                 
-                if issubclass(return_type, t.Mapping):
-                    return return_type(ujson.dumps(payload))
+                if issubclass(return_type, dict):
+                    return return_type(ujson.loads(payload))
 
                 if sequence:
                     model_seq: list[t.Any] = []
@@ -343,7 +349,7 @@ class RESTSession:
 
         Updates the lavalink session.
 
-        [Reference](https://lavalink.dev/api/rest#update-session)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-session)
 
         Raises
         ------
@@ -390,7 +396,7 @@ class RESTPlayer:
 
         Fetches all players on this session.
 
-        [Reference](https://lavalink.dev/api/rest#get-players)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-players)
         
         Parameters
         ----------
@@ -431,7 +437,7 @@ class RESTPlayer:
 
         Fetches a specific player from this session.
 
-        [Reference](https://lavalink.dev/api/rest#get-player)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-player)
         
         Parameters
         ----------
@@ -489,7 +495,7 @@ class RESTPlayer:
 
         Fetches a specific player from this session.
 
-        [Reference](https://lavalink.dev/api/rest#update-player)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-player)
         
         !!! note
             Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None. To not modify them, do not set them to anything.
@@ -624,7 +630,7 @@ class RESTPlayer:
 
         Deletes a specific player from this session.
 
-        [Reference](https://lavalink.dev/api/rest#destroy-player)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#destroy-player)
         
         Parameters
         ----------
@@ -667,7 +673,7 @@ class RESTTrack:
 
         Loads tracks, from a site, or a link to a song, to play on a player.
 
-        [Reference](https://lavalink.dev/api/rest#track-loading)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-loading)
 
         Parameters
         ----------
@@ -696,38 +702,12 @@ class RESTTrack:
 
         _logger.log(Trace.LEVEL, f"running GET /loadtracks with params: {params}")
 
-        session = await self._rest._client._get_session()
-
-        server = await self._rest._client._session_handler.fetch_session()
-
-        try:
-            async with session.get(
-                server.base_uri + server.version.value + "/loadtracks",
-                headers=server.base_headers,
-                params=params,
-            ) as response:
-                _logger.log(
-                    Trace.LEVEL,
-                    f"Received code: {response.status} with response {await response.text()}",
-                )
-                if response.status >= 400:
-                    raise LavalinkException(f"A {response.status} error has occurred.")
-
-                try:
-                    resp = await response.json()
-                except Exception:
-                    raise ValueError("Json data was not received from the response.")
-
-        except asyncio.TimeoutError:
-            server._strike_server("Timeout")
-            raise LavalinkException("Timeout error.")
-
-        except Exception as e:
-            server._strike_server(str(e))
-            raise LavalinkException(e)
-
-        if resp is None:
-            raise ValueError("Response cannot be none.")
+        resp = await self._rest._handle_rest(
+            "/loadtracks",
+            _HttpMethod.GET,
+            dict,
+            params=params
+        )
 
         load_type: str = resp["loadType"]
 
@@ -773,7 +753,7 @@ class RESTTrack:
 
         Decode a track from its encoded state.
 
-        [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
         
         Parameters
         ----------
@@ -812,7 +792,7 @@ class RESTTrack:
 
         Decode multiple tracks from their encoded state.
 
-        [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
         
         Parameters
         ----------
@@ -866,7 +846,7 @@ class RESTRoutePlanner:
 
         Fetches the routeplanner status.
 
-        [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
         
         Raises
         ------
@@ -898,7 +878,7 @@ class RESTRoutePlanner:
 
         Free's the specified routeplanner address.
 
-        [Reference](https://lavalink.dev/api/rest#unmark-a-failed-address)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#unmark-a-failed-address)
         
         Parameters
         ----------
@@ -924,7 +904,7 @@ class RESTRoutePlanner:
 
         Frees every blocked routeplanner address.
 
-        [Reference](https://lavalink.dev/api/rest#unmark-all-failed-address)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#unmark-all-failed-address)
         
         Raises
         ------

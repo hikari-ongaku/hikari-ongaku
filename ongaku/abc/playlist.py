@@ -1,7 +1,7 @@
 """
-Playlist.
+Playlist ABC's.
 
-All of the playlist related classes.
+The playlist abstract classes.
 """
 
 from .bases import PayloadBase
@@ -19,11 +19,12 @@ __all__ = (
 
 
 class PlaylistInfo(PayloadBase):
-    """Playlist information.
+    """
+    Playlist information.
 
     The playlist info object.
 
-    Find out more [here](https://lavalink.dev/api/rest#playlist-info).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#playlist-info)
     """
 
     name: str
@@ -35,11 +36,12 @@ class PlaylistInfo(PayloadBase):
 
 
 class Playlist(PayloadBase):
-    """Playlist.
+    """
+    Playlist.
 
     The playlist object.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#playlist-result-data).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
     """
 
     info: PlaylistInfo

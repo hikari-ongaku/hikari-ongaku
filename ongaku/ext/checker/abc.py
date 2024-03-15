@@ -20,7 +20,8 @@ class Checked:
     """
 
     value: str
-    """The value.
+    """
+    The value.
     
     This is the value, based on the [type][ongaku.ext.checker.abc.CheckedType] it is.
     """

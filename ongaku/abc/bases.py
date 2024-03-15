@@ -1,24 +1,22 @@
-"""Payload bases.
+"""
+Base's ABCs.
 
-All of the payload base related objects.
+The bases for all abstract classes.
 """
 
 from __future__ import annotations
 
 import typing as t
 
-
-#from hikari import GatewayBotAware
 from hikari import RESTAware
 from hikari import Snowflake
+from hikari import Event
 from pydantic import BaseModel
 from pydantic import ConfigDict
-#from pydantic import Field
 from pydantic import SerializationInfo
 from pydantic import SerializerFunctionWrapHandler
 from pydantic import ValidationInfo
 from pydantic import ValidatorFunctionWrapHandler
-#from pydantic.alias_generators import to_camel
 
 if t.TYPE_CHECKING:
     from ..session import Session
@@ -31,18 +29,12 @@ __all__ = (
     "_string_to_snowflake",
     "_snowflake_to_string",
     "PayloadBase",
+    "OngakuEvent",
     "PayloadBaseApp",
+    
 )
 
 _logger = logger.getChild("abc.base")
-
-
-class Payload(BaseModel):
-    """
-    Main payload.
-
-    The main payload, that all payload types are inherited from.
-    """
 
 
 def _string_to_snowflake(
@@ -64,7 +56,7 @@ def _snowflake_to_string(
     return str(guild_id)
 
 
-class PayloadBase(Payload):
+class PayloadBase(BaseModel):
     """
     Payload base.
 
@@ -75,18 +67,18 @@ class PayloadBase(Payload):
 
     @classmethod
     def _from_payload(cls, payload: str) -> t.Self:
-        """From payload.
+        """
+        From payload.
 
         Converts the payload, into the current object.
 
         Raises
         ------
-        TypeError
-            When the type the value wanted, is incorrect.
         ValueError
-            When the value is none.
+            Raised when it is not valid data.
         """
         name = cls.__qualname__
+        
         _logger.log(Trace.LEVEL, f"Validating payload: {payload} to {name}")
 
         cls = cls.model_validate_json(payload, strict=True)
@@ -95,18 +87,26 @@ class PayloadBase(Payload):
             Trace.LEVEL,
             f"Payload validation to {name} completed successfully.",
         )
+
         return cls
 
     @property
     def _to_payload(self) -> t.Mapping[str, t.Any]:
-        """To payload.
+        """
+        To payload.
 
         Converts your object, to a payload.
         """
         return self.model_dump(by_alias=True, mode="json")
+ 
+class OngakuEvent(Event):
+    """
+    Ongaku Event.
 
+    The base event, that all other Ongaku events are attached too.
+    """
 
-class PayloadBaseApp(PayloadBase):
+class PayloadBaseApp(PayloadBase, OngakuEvent):
     """
     Payload base application.
 
@@ -119,7 +119,7 @@ class PayloadBaseApp(PayloadBase):
 
     @property
     def client(self) -> Client:
-        """The session that this event is attached too."""
+        """The client that this event is attached too."""
         return self._client
 
     @client.setter
@@ -146,8 +146,14 @@ class PayloadBaseApp(PayloadBase):
 
     @classmethod
     def _build(cls, payload: str, session: Session, app: RESTAware) -> t.Self:
+        """
+        Build.
+        
+        Build this PayloadBaseApp.
+        """
         cls = cls._from_payload(payload)
 
+        cls._set_client = session.client
         cls._set_session = session
         cls._set_app = app
 

@@ -1,4 +1,5 @@
-"""Internal use only.
+"""
+Internal use only.
 
 !!! warning
     Do not modify, or try to change anything in here.

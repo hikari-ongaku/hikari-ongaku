@@ -1,6 +1,7 @@
-"""Track ABC's.
+"""
+Track ABC's.
 
-The player's abstract classes.
+The tracks abstract classes.
 """
 
 from __future__ import annotations
@@ -19,11 +20,12 @@ __all__ = (
 
 
 class TrackInfo(PayloadBase):
-    """Track information.
+    """
+    Track information.
 
-    All of the track information.
+    All of the information about the track.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#track-info).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#track-info)
     """
 
     identifier: str
@@ -55,24 +57,24 @@ class Track(PayloadBase):
 
     The base track data.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#track).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#track)
     """
 
     encoded: str
     """The base64 encoded track data."""
     info: TrackInfo
-    """Information about the track"""
+    """Information about the track."""
     plugin_info: t.Annotated[
         t.Mapping[t.Any, t.Any] | None, Field(default={}, alias="pluginInfo")
     ] = {}
-    """Additional track info provided by plugins"""
+    """Additional track info provided by plugins."""
     user_data: t.Annotated[
         t.Mapping[t.Any, t.Any] | None, Field(default={}, alias="userData")
     ] = {}
     """Additional track data."""
     requestor: t.Annotated[Snowflake | None, Field(default=None, exclude=True)] = None
     """
-    The person who requested this track.
+    The user who requested this track.
 
     !!! INFO
         This is an internal feature, not something from lavalink. If this track is apart of a lavalink event, then it will most likely be empty.

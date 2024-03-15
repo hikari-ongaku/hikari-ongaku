@@ -1,6 +1,7 @@
-"""# Player ABC's.
+"""
+Player ABC's.
 
-The player Abstract classes. [more here](https://ongaku.mplaty.com/api/abc/player)
+The player Abstract classes.
 """
 
 from __future__ import annotations
@@ -25,10 +26,12 @@ __all__ = (
 
 
 class PlayerState(PayloadBase):
-    """Players State.
+    """
+    Players State.
 
     All the information for the players current state.
-    Find out more [here](https://lavalink.dev/api/websocket.html#player-state).
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#player-state)
     """
 
     time: int
@@ -42,10 +45,12 @@ class PlayerState(PayloadBase):
 
 
 class PlayerVoice(PayloadBase):
-    """Players Voice state.
+    """
+    Players Voice state.
 
     All of the Player Voice information.
-    Find out more [here](https://lavalink.dev/api/rest.html#voice-state).
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#voice-state)
     """
 
     token: str
@@ -57,11 +62,12 @@ class PlayerVoice(PayloadBase):
 
 
 class Player(PayloadBase):
-    """Player information.
+    """
+    Player information.
 
     All of the information about the player, for the specified guild.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#player).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
     guild_id: t.Annotated[
@@ -82,7 +88,7 @@ class Player(PayloadBase):
     voice: PlayerVoice
     """the [PlayerVoice][ongaku.abc.player.PlayerVoice] object."""
     filters: dict[t.Any, t.Any]
-    """The filters object."""
+    """The filter object."""
 
 
 # MIT License

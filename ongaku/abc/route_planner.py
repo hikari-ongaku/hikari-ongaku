@@ -1,6 +1,7 @@
-"""Route Planner ABC's.
+"""
+Route Planner ABC's.
 
-Route planner abstract classes. find more [here](https://lavalink.dev/api/rest#routeplanner-api)
+Route planner abstract classes. 
 """
 
 from __future__ import annotations
@@ -19,9 +20,10 @@ __all__ = (
 
 
 class FailingAddress(PayloadBase):
-    """Failing address.
+    """
+    Failing address.
 
-    more [here](https://lavalink.dev/api/rest#failing-address-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
     failing_address: str
@@ -33,9 +35,12 @@ class FailingAddress(PayloadBase):
 
 
 class RoutePlannerDetails(PayloadBase):
-    """Route Planner details.
+    """
+    Route Planner details.
 
-    more [here](https://lavalink.dev/api/rest#details-object)
+    All of the information about the failing addresses.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
     ip_block: IPBlockType
@@ -55,9 +60,12 @@ class RoutePlannerDetails(PayloadBase):
 
 
 class RoutePlannerStatus(PayloadBase):
-    """Route Planner Status Object.
+    """
+    Route Planner Status Object.
 
-    The status of the route-planner. More [here](https://lavalink.dev/api/rest.html#get-routeplanner-status)
+    The status of the route-planner.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
     class_type: RoutePlannerType | None

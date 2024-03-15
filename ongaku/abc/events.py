@@ -1,13 +1,13 @@
-"""Events.
+"""
+Event ABC's and Events.
 
-All of the hikari events for ongaku, are here!
+The session abstract classes and hikari events.
 """
 
 from __future__ import annotations
 
 import typing as t
 
-from hikari import Event
 from hikari import Snowflake
 from pydantic import Field
 from pydantic import WrapSerializer
@@ -23,7 +23,6 @@ from .track import Track
 from .statistics import Statistics
 
 __all__ = (
-    "OngakuEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
     "StatisticsEvent",
@@ -39,17 +38,12 @@ __all__ = (
 )
 
 
-class OngakuEvent(Event):
-    """Ongaku Event.
 
-    The base event, that all other Ongaku events are attached too.
+class ReadyEvent(PayloadBaseApp):
     """
+    Ready event.
 
-
-class ReadyEvent(PayloadBaseApp, OngakuEvent):
-    """Ready event.
-
-    The event that is dispatched, when lavalink is ready for new players, discord connections, and song requests.
+    The event that is dispatched when lavalink is ready for new players, discord connections, and song requests.
     """
 
     resumed: bool
@@ -58,10 +52,11 @@ class ReadyEvent(PayloadBaseApp, OngakuEvent):
     """The lavalink session id, for the current session."""
 
 
-class PlayerUpdateEvent(PayloadBaseApp, OngakuEvent):
-    """Player update event.
+class PlayerUpdateEvent(PayloadBaseApp):
+    """
+    Player update event.
 
-    The event that occurs when a player is updated.
+    The event that is dispatched when a player is updated.
     """
 
     guild_id: t.Annotated[
@@ -74,18 +69,25 @@ class PlayerUpdateEvent(PayloadBaseApp, OngakuEvent):
     state: PlayerState
 
 
-class StatisticsEvent(PayloadBaseApp, Statistics, OngakuEvent):
+class StatisticsEvent(PayloadBaseApp, Statistics):
     """
-    All of the Statistics information.
+    Statistics Event.
 
-    Find out more [here](https://lavalink.dev/api/websocket.html#stats-object).
+    The event that is dispatched when the statistics of the server is updated.
+
+    Includes this information from [Statistics][ongaku.abc.statistics.Statistics].
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#stats-object)
     """
 
 
-class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
-    """Websocket closed event.
+class WebsocketClosedEvent(PayloadBaseApp):
+    """
+    Websocket closed event.
 
-    The event that is sent out, when a websocket closes.
+    The event that is dispatched when a discord websocket closes.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
     guild_id: t.Annotated[
@@ -98,15 +100,16 @@ class WebsocketClosedEvent(PayloadBaseApp, OngakuEvent):
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
     reason: str
-    """	The close reason."""
+    """The close reason."""
     by_remote: t.Annotated[bool, Field(alias="byRemote")]
     """Whether the connection was closed by Discord."""
 
 
-class TrackBase(PayloadBaseApp, OngakuEvent):
-    """Base track class.
+class TrackBase(PayloadBaseApp):
+    """
+    Base track class.
 
-    The class that all Track based classes, inherit.
+    The class that all Track based events, inherit.
     """
 
     guild_id: t.Annotated[
@@ -121,16 +124,18 @@ class TrackBase(PayloadBaseApp, OngakuEvent):
 
 
 class TrackStartEvent(TrackBase):
-    """Track start event.
+    """
+    Track start event.
 
-    The track start event that is dispatched when a track starts on a player.
+    The event that is dispatched when a track starts playing.
     """
 
 
 class TrackEndEvent(TrackBase):
-    """Track end event.
+    """
+    Track end event.
 
-    The track end event that is dispatched when a track ends.
+    The event that is dispatched when a track ends.
     """
 
     reason: TrackEndReasonType
@@ -138,9 +143,10 @@ class TrackEndEvent(TrackBase):
 
 
 class TrackExceptionEvent(TrackBase):
-    """Track exception event.
+    """
+    Track exception event.
 
-    This event is dispatched when a track gets stuck.
+    The event that is dispatched when an exception happens with a track.
     """
 
     exception: ExceptionError
@@ -148,19 +154,24 @@ class TrackExceptionEvent(TrackBase):
 
 
 class TrackStuckEvent(TrackBase):
-    """Track stuck event.
+    """
+    Track stuck event.
 
-    This event is dispatched when a track gets stuck.
+    The event that is dispatched when a track gets stuck.
     """
 
     threshold_ms: t.Annotated[int, Field(alias="thresholdMs")]
     """The threshold in milliseconds that was exceeded."""
 
 
-class PlayerBase(PayloadBaseApp, OngakuEvent):
-    """Player base.
+class PlayerBase(PayloadBaseApp):
+    """
+    Player base.
 
     This is the base player object for all Ongaku player events.
+
+    !!! note
+        All player based events, are ongaku related. Not lavalink related.
     """
 
     guild_id: t.Annotated[
@@ -173,21 +184,23 @@ class PlayerBase(PayloadBaseApp, OngakuEvent):
 
 
 class QueueEmptyEvent(PlayerBase):
-    """Queue empty event.
+    """
+    Queue empty event.
 
-    This event is dispatched when the player queue is empty, and no more songs are available.
+    The event that is dispatched, when a players queue is empty.
     """
 
 
 class QueueNextEvent(PlayerBase):
-    """Queue next event.
+    """
+    Queue next event.
 
-    The event that is dispatched, when a new song is played in a player, from the queue.
+    The event that is dispatched when a queue is playing the next song.
     """
 
     track: Track
     """The track that is now playing."""
-    old_track: t.Annotated[Track, Field()]
+    old_track: Track
     """The track that was playing."""
 
 

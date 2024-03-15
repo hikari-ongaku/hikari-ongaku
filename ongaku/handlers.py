@@ -1,4 +1,5 @@
-"""Handler.
+"""
+Handler.
 
 Handles all payload related events.
 """

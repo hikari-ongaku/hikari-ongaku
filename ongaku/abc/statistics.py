@@ -1,6 +1,7 @@
-"""Statistics.
+"""
+Statistics ABC's.
 
-The statistics payload.
+The statistic abstract classes.
 """
 
 from __future__ import annotations
@@ -19,26 +20,30 @@ __all__ = (
 
 class StatsMemory(PayloadBase):
     """
+    Statistics Memory.
+
     All of the Statistics Memory information.
 
-    Find out more [here](https://lavalink.dev/api/websocket.html#memory).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#memory)
     """
 
     free: int
-    """The amount of free memory in bytes"""
+    """The amount of free memory in bytes."""
     used: int
-    """The amount of used memory in bytes"""
+    """The amount of used memory in bytes."""
     allocated: int
-    """The amount of allocated memory in bytes"""
+    """The amount of allocated memory in bytes."""
     reservable: int
-    """The amount of reservable memory in bytes"""
+    """The amount of reservable memory in bytes."""
 
 
 class StatsCpu(PayloadBase):
     """
+    Statistics CPU.
+
     All of the Statistics CPU information.
 
-    Find out more [here](https://lavalink.dev/api/websocket.html#cpu).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#cpu)
     """
 
     cores: int
@@ -51,9 +56,11 @@ class StatsCpu(PayloadBase):
 
 class StatsFrameStatistics(PayloadBase):
     """
+    Statistics Frame Statistics.
+
     All of the Statistics frame statistics information.
 
-    Find out more [here](https://lavalink.dev/api/websocket.html#frame-stats).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#frame-stats)
     """
 
     sent: int
@@ -66,14 +73,16 @@ class StatsFrameStatistics(PayloadBase):
 
 class Statistics(PayloadBase):
     """
+    Statistics.
+
     All of the Statistics information.
 
-    Find out more [here](https://lavalink.dev/api/websocket.html#stats-object).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#stats-object)
     """
 
     players: int
     """The amount of players connected to the session."""
-    playing_players: int
+    playing_players: t.Annotated[int, Field(alias="playingPlayers")]
     """The amount of players playing a track."""
     uptime: int
     """The uptime of the session in milliseconds."""

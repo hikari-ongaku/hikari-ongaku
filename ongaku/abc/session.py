@@ -1,6 +1,7 @@
-"""Session ABC's.
+"""
+Session ABC's.
 
-The session abstract classes. [more here](https://ongaku.mplaty.com/api/abc/session)
+The session abstract classes.
 """
 
 from __future__ import annotations
@@ -11,11 +12,12 @@ __all__ = ("Session",)
 
 
 class Session(PayloadBase):
-    """Session information.
+    """
+    Session information.
 
     All of the specified session information.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#update-session).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
     resuming: bool

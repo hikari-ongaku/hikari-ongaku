@@ -1,6 +1,7 @@
-"""Lavalink ABC.
+"""
+Lavalink ABC's.
 
-All of the information about the lavalink connection.
+The lavalink abstract classes.
 """
 
 from __future__ import annotations
@@ -23,10 +24,12 @@ __all__ = (
 
 
 class InfoVersion(PayloadBase):
-    """Version information.
+    """
+    Version information.
 
     All information, about the version of lavalink that is running.
-    Find out more [here](https://lavalink.dev/api/rest.html#version-object).
+    
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#version-object)
     """
 
     semver: str
@@ -34,20 +37,22 @@ class InfoVersion(PayloadBase):
     major: int
     """The major version of this Lavalink server."""
     minor: int
-    """The minor version of this Lavalink server"""
+    """The minor version of this Lavalink server."""
     patch: int
-    """The patch version of this Lavalink server"""
+    """The patch version of this Lavalink server."""
     pre_release: t.Annotated[str, pydantic.Field(alias="preRelease")]
-    """The pre-release version according to semver as a `.` separated list of identifiers"""
+    """The pre-release version according to semver as a `.` separated list of identifiers."""
     build: t.Annotated[str | None, pydantic.Field(default=None)] = None
-    """The build metadata according to semver as a `.` separated list of identifiers"""
+    """The build metadata according to semver as a `.` separated list of identifiers."""
 
 
 class InfoGit(PayloadBase):
-    """Git information.
+    """
+    Git information.
 
     All of the information about the lavalink git information.
-    Find out more [here](https://lavalink.dev/api/rest.html#git-object).
+    
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#git-object)
     """
 
     branch: str
@@ -59,10 +64,12 @@ class InfoGit(PayloadBase):
 
 
 class InfoPlugin(PayloadBase):
-    """Plugin information.
+    """
+    Plugin information.
 
     All of the Information about the currently loaded plugins.
-    Find out more [here](https://lavalink.dev/api/rest.html#plugin-object).
+    
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#plugin-object)
     """
 
     name: str
@@ -73,9 +80,11 @@ class InfoPlugin(PayloadBase):
 
 class Info(PayloadBase):
     """
+    Information.
+
     All of the Info Version information.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#info-response).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#info-response)
     """
 
     version: InfoVersion
@@ -99,10 +108,12 @@ class Info(PayloadBase):
 
 
 class RestError(PayloadBase):
-    """Rest error information.
+    """
+    Rest error information.
 
     This is the error that is formed, when a call to a rest method fails.
-    Find out more [here](https://lavalink.dev/api/rest.html#error-responses).
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#error-responses)
     """
 
     timestamp: int
@@ -120,7 +131,8 @@ class RestError(PayloadBase):
 
 
 class ExceptionError(PayloadBase):
-    """Exception error.
+    """
+    Exception error.
 
     The exception error lavalink returns when a track has an exception.
     """
