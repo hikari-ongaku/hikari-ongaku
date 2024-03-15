@@ -11,9 +11,6 @@ from .events import QueueEmptyEvent
 from .events import QueueNextEvent
 from .events import ReadyEvent
 from .events import StatisticsEvent
-from .statistics import StatsCpu
-from .statistics import StatsFrameStatistics
-from .statistics import StatsMemory
 from .events import TrackBase
 from .events import TrackEndEvent
 from .events import TrackExceptionEvent
@@ -30,12 +27,15 @@ from .lavalink import RestError
 from .player import Player
 from .player import PlayerState
 from .player import PlayerVoice
+from .playlist import Playlist
+from .playlist import PlaylistInfo
 from .route_planner import FailingAddress
 from .route_planner import RoutePlannerDetails
 from .route_planner import RoutePlannerStatus
 from .session import Session
-from .playlist import Playlist
-from .playlist import PlaylistInfo
+from .statistics import StatsCpu
+from .statistics import StatsFrameStatistics
+from .statistics import StatsMemory
 from .track import Track
 from .track import TrackInfo
 

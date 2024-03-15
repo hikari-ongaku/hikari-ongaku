@@ -83,7 +83,7 @@ class Session:
     def _get_session_id(self) -> str:
         """
         Get session id.
-        
+
         Returns the session ID, or raises a SessionConnectionException
         """
         if self.session_id:
@@ -161,7 +161,7 @@ class Session:
     def stop(self) -> None:
         """
         Stop the session.
-        
+
         Stops and shuts down the sessions' connection, if it existed.
         """
         if self._connection:
@@ -225,7 +225,7 @@ class BaseSessionHandler(abc.ABC):
     async def switch_session(self) -> Session:
         """
         Switch session.
-        
+
         called when a session fails.
         """
         ...
@@ -316,18 +316,18 @@ class GeneralSessionHandler(BaseSessionHandler):
         started_servers = 0
         while started_servers != len(sessions):
             await asyncio.sleep(1)
-            
+
             if pos >= len(sessions):
                 pos = 0
             else:
                 pos += 1
-            
+
             session = sessions[pos - 1]
 
             if session.status == ConnectionType.CONNECTED:
                 started_servers += 1
                 continue
-            
+
             if session.status == ConnectionType.NOT_CONNECTED:
                 if session.remaining_attempts >= 1:
                     session.remaining_attempts -= 1
@@ -395,7 +395,7 @@ class GeneralSessionHandler(BaseSessionHandler):
         player = await self.fetch_player(guild_id)
 
         await player.disconnect()
-        
+
         player.session.players.remove(player)
 
 

@@ -41,7 +41,7 @@ class TrackEndReasonType(str, enum.Enum):
     Track end reason type.
 
     The track end reason type for the track that was just playing.
-    
+
     ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket#track-end-reason)
     """
 
@@ -165,7 +165,7 @@ class WebsocketOPCodeType(str, enum.Enum):
     EVENT = "event"
 
 
-class WebsocketEventType(str, enum.Enum): 
+class WebsocketEventType(str, enum.Enum):
     TRACK_START_EVENT = "TrackStartEvent"
     TRACK_END_EVENT = "TrackEndEvent"
     TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"

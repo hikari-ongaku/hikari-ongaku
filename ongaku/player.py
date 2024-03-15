@@ -547,7 +547,7 @@ class Player:
         ValueError
             Raised when a return type is set, and no data was received.
         BuildException
-            Raised when the object could not be built.  
+            Raised when the object could not be built.
         """
         session = self.session._get_session_id()
 
@@ -619,7 +619,7 @@ class Player:
         ValueError
             The queue is empty.
         BuildException
-            Raised when the object could not be built.  
+            Raised when the object could not be built.
         """
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
@@ -657,7 +657,7 @@ class Player:
         ValueError
             Raised when a return type is set, and no data was received.
         BuildException
-            Raised when the object could not be built.  
+            Raised when the object could not be built.
         """
         self._queue.clear()
 
@@ -697,7 +697,7 @@ class Player:
         ValueError
             Raised when a return type is set, and no data was received.
         BuildException
-            Raised when the object could not be built.  
+            Raised when the object could not be built.
         """
         session = self.session._get_session_id()
 
@@ -757,7 +757,7 @@ class Player:
         ValueError
             Raised if the value is above, or below 0, or 1000.
         BuildException
-            Raised when the object could not be built.  
+            Raised when the object could not be built.
         """
         session = self.session._get_session_id()
 
@@ -804,7 +804,7 @@ class Player:
         ValueError
             When the track position selected is not a valid position.
         BuildException
-            Raised when the object could not be built.            
+            Raised when the object could not be built.
         """
         session = self.session._get_session_id()
 
@@ -866,7 +866,10 @@ class Player:
             except ValueError:
                 await self.bot.dispatch(
                     QueueEmptyEvent(
-                        _client=event.client, _session=event.session, _app=self.bot, guild_id=self.guild_id
+                        _client=event.client,
+                        _session=event.session,
+                        _app=self.bot,
+                        guild_id=self.guild_id,
                     )
                 )
                 return
@@ -878,7 +881,10 @@ class Player:
                 )
                 await self.bot.dispatch(
                     QueueEmptyEvent(
-                        _client=event.client, _session=event.session, _app=self.bot, guild_id=self.guild_id
+                        _client=event.client,
+                        _session=event.session,
+                        _app=self.bot,
+                        guild_id=self.guild_id,
                     )
                 )
                 return

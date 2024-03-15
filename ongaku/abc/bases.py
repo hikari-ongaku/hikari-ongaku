@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import typing as t
 
+from hikari import Event
 from hikari import RESTAware
 from hikari import Snowflake
-from hikari import Event
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import SerializationInfo
@@ -19,8 +19,8 @@ from pydantic import ValidationInfo
 from pydantic import ValidatorFunctionWrapHandler
 
 if t.TYPE_CHECKING:
-    from ..session import Session
     from ..client import Client
+    from ..session import Session
 
 from ..internal import Trace
 from ..internal import logger
@@ -31,7 +31,6 @@ __all__ = (
     "PayloadBase",
     "OngakuEvent",
     "PayloadBaseApp",
-    
 )
 
 _logger = logger.getChild("abc.base")
@@ -78,7 +77,7 @@ class PayloadBase(BaseModel):
             Raised when it is not valid data.
         """
         name = cls.__qualname__
-        
+
         _logger.log(Trace.LEVEL, f"Validating payload: {payload} to {name}")
 
         cls = cls.model_validate_json(payload, strict=True)
@@ -98,13 +97,15 @@ class PayloadBase(BaseModel):
         Converts your object, to a payload.
         """
         return self.model_dump(by_alias=True, mode="json")
- 
+
+
 class OngakuEvent(Event):
     """
     Ongaku Event.
 
     The base event, that all other Ongaku events are attached too.
     """
+
 
 class PayloadBaseApp(PayloadBase, OngakuEvent):
     """
@@ -148,7 +149,7 @@ class PayloadBaseApp(PayloadBase, OngakuEvent):
     def _build(cls, payload: str, session: Session, app: RESTAware) -> t.Self:
         """
         Build.
-        
+
         Build this PayloadBaseApp.
         """
         cls = cls._from_payload(payload)
@@ -158,6 +159,7 @@ class PayloadBaseApp(PayloadBase, OngakuEvent):
         cls._set_app = app
 
         return cls
+
 
 # MIT License
 

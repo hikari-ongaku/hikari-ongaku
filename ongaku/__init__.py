@@ -23,9 +23,6 @@ from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
 from .abc.events import ReadyEvent
 from .abc.events import StatisticsEvent
-from .abc.statistics import StatsCpu
-from .abc.statistics import StatsFrameStatistics
-from .abc.statistics import StatsMemory
 from .abc.events import TrackBase
 from .abc.events import TrackEndEvent
 from .abc.events import TrackExceptionEvent
@@ -34,6 +31,9 @@ from .abc.events import TrackStuckEvent
 from .abc.events import WebsocketClosedEvent
 from .abc.filters import Filter
 from .abc.playlist import Playlist
+from .abc.statistics import StatsCpu
+from .abc.statistics import StatsFrameStatistics
+from .abc.statistics import StatsMemory
 from .abc.track import Track
 from .about import __author__
 from .about import __author_email__

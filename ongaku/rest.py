@@ -13,17 +13,16 @@ import typing as t
 import hikari
 import ujson
 
-from .abc.statistics import Statistics
-
 from .abc.filters import Filter
 from .abc.lavalink import ExceptionError
 from .abc.lavalink import Info
 from .abc.lavalink import RestError
 from .abc.player import Player
 from .abc.player import PlayerVoice
+from .abc.playlist import Playlist
 from .abc.route_planner import RoutePlannerStatus
 from .abc.session import Session
-from .abc.playlist import Playlist
+from .abc.statistics import Statistics
 from .abc.track import Track
 from .exceptions import BuildException
 from .exceptions import LavalinkException
@@ -46,7 +45,7 @@ RestT = t.TypeVar(
     RoutePlannerStatus,
     Statistics,
     str,
-    dict[str, t.Any]
+    dict[str, t.Any],
 )
 
 __all__ = ("RESTClient",)
@@ -217,7 +216,7 @@ class RESTClient:
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: t.Literal[False] = False,
-        version: bool = True
+        version: bool = True,
     ) -> RestT: ...
 
     @t.overload
@@ -231,7 +230,7 @@ class RESTClient:
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: t.Literal[True] = True,
-        version: bool = True
+        version: bool = True,
     ) -> t.Sequence[RestT]: ...
 
     async def _handle_rest(
@@ -244,7 +243,7 @@ class RESTClient:
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: bool = False,
-        version: bool = True
+        version: bool = True,
     ) -> RestT | t.Sequence[RestT] | None:
         """
         Handle rest.
@@ -302,7 +301,7 @@ class RESTClient:
 
                 if issubclass(return_type, str):
                     return return_type(payload)
-                
+
                 if issubclass(return_type, dict):
                     return return_type(ujson.loads(payload))
 
@@ -397,12 +396,12 @@ class RESTPlayer:
         Fetches all players on this session.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-players)
-        
+
         Parameters
         ----------
         session_id : str
             The Session ID that the players are attached too.
-        
+
         Raises
         ------
         LavalinkException
@@ -438,14 +437,14 @@ class RESTPlayer:
         Fetches a specific player from this session.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-player)
-        
+
         Parameters
         ----------
         session_id : str
             The Session ID that the players are attached too.
         guild_id : hikari.Snowflake
             The Guild ID that the player is attached to.
-        
+
         Raises
         ------
         LavalinkException
@@ -496,7 +495,7 @@ class RESTPlayer:
         Fetches a specific player from this session.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-player)
-        
+
         !!! note
             Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None. To not modify them, do not set them to anything.
 
@@ -522,7 +521,7 @@ class RESTPlayer:
             The player voice object you wish to set.
         no_replace : bool
             Whether or not the track can be replaced.
-        
+
         Raises
         ------
         LavalinkException
@@ -631,14 +630,14 @@ class RESTPlayer:
         Deletes a specific player from this session.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#destroy-player)
-        
+
         Parameters
         ----------
         session_id : str
             The Session ID that the players are attached too.
         guild_id : hikari.Snowflake
             The Guild ID that the player is attached to.
-        
+
         Raises
         ------
         LavalinkException
@@ -679,7 +678,7 @@ class RESTTrack:
         ----------
         query : str
             The query for the search/link.
-        
+
         Raises
         ------
         LavalinkException
@@ -703,10 +702,7 @@ class RESTTrack:
         _logger.log(Trace.LEVEL, f"running GET /loadtracks with params: {params}")
 
         resp = await self._rest._handle_rest(
-            "/loadtracks",
-            _HttpMethod.GET,
-            dict,
-            params=params
+            "/loadtracks", _HttpMethod.GET, dict, params=params
         )
 
         load_type: str = resp["loadType"]
@@ -754,7 +750,7 @@ class RESTTrack:
         Decode a track from its encoded state.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
-        
+
         Parameters
         ----------
         code : str
@@ -793,7 +789,7 @@ class RESTTrack:
         Decode multiple tracks from their encoded state.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
-        
+
         Parameters
         ----------
         codes : typing.Sequence[str]
@@ -847,7 +843,7 @@ class RESTRoutePlanner:
         Fetches the routeplanner status.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
-        
+
         Raises
         ------
         LavalinkException
@@ -879,12 +875,12 @@ class RESTRoutePlanner:
         Free's the specified routeplanner address.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#unmark-a-failed-address)
-        
+
         Parameters
         ----------
         address : str
             The address you wish to free.
-        
+
         Raises
         ------
         LavalinkException
@@ -905,7 +901,7 @@ class RESTRoutePlanner:
         Frees every blocked routeplanner address.
 
         ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#unmark-all-failed-address)
-        
+
         Raises
         ------
         LavalinkException

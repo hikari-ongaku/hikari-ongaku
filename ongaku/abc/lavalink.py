@@ -28,7 +28,7 @@ class InfoVersion(PayloadBase):
     Version information.
 
     All information, about the version of lavalink that is running.
-    
+
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#version-object)
     """
 
@@ -51,7 +51,7 @@ class InfoGit(PayloadBase):
     Git information.
 
     All of the information about the lavalink git information.
-    
+
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#git-object)
     """
 
@@ -68,7 +68,7 @@ class InfoPlugin(PayloadBase):
     Plugin information.
 
     All of the Information about the currently loaded plugins.
-    
+
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#plugin-object)
     """
 

@@ -58,14 +58,10 @@ class _EventHandler:
 
         match event_type:
             case WebsocketEventType.TRACK_START_EVENT:
-                event = TrackStartEvent._build(
-                    payload, self._session, self._client.bot
-                )
+                event = TrackStartEvent._build(payload, self._session, self._client.bot)
 
             case WebsocketEventType.TRACK_END_EVENT:
-                event = TrackEndEvent._build(
-                    payload, self._session, self._client.bot
-                )
+                event = TrackEndEvent._build(payload, self._session, self._client.bot)
 
             case WebsocketEventType.TRACK_EXCEPTION_EVENT:
                 event = TrackExceptionEvent._build(
@@ -73,9 +69,7 @@ class _EventHandler:
                 )
 
             case WebsocketEventType.TRACK_STUCK_EVENT:
-                event = TrackStuckEvent._build(
-                    payload, self._session, self._client.bot
-                )
+                event = TrackStuckEvent._build(payload, self._session, self._client.bot)
 
             case WebsocketEventType.WEBSOCKET_CLOSED_EVENT:
                 event = WebsocketClosedEvent._build(
@@ -99,9 +93,7 @@ class _EventHandler:
 
         match op_code:
             case WebsocketOPCodeType.READY:
-                event = ReadyEvent._build(
-                    payload, self._session, self._client.bot
-                )
+                event = ReadyEvent._build(payload, self._session, self._client.bot)
 
                 self._session.session_id = event.session_id
 
@@ -111,9 +103,7 @@ class _EventHandler:
                 )
 
             case WebsocketOPCodeType.STATS:
-                event = StatisticsEvent._build(
-                    payload, self._session, self._client.bot
-                )
+                event = StatisticsEvent._build(payload, self._session, self._client.bot)
 
             case WebsocketOPCodeType.EVENT:
                 event = await self._handle_event(payload, event_payload)

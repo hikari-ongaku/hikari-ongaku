@@ -19,8 +19,8 @@ from .bases import _snowflake_to_string
 from .bases import _string_to_snowflake
 from .lavalink import ExceptionError
 from .player import PlayerState
-from .track import Track
 from .statistics import Statistics
+from .track import Track
 
 __all__ = (
     "ReadyEvent",
@@ -36,7 +36,6 @@ __all__ = (
     "QueueEmptyEvent",
     "QueueNextEvent",
 )
-
 
 
 class ReadyEvent(PayloadBaseApp):

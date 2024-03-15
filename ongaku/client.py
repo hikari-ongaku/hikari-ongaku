@@ -10,8 +10,9 @@ import typing as t
 
 from aiohttp import ClientSession
 from hikari import GatewayBot
-from hikari import Snowflake, SnowflakeishOr
 from hikari import Guild
+from hikari import Snowflake
+from hikari import SnowflakeishOr
 from hikari import StartedEvent
 from hikari import StoppingEvent
 
@@ -56,7 +57,6 @@ class Client:
         session_handler: t.Type[BaseSessionHandler] = GeneralSessionHandler,
         logs: str | int = "INFO",
     ) -> None:
-        
         _logger.setLevel(logs)
         self._bot = bot
         self._rest = RESTClient(self)
@@ -92,7 +92,7 @@ class Client:
     async def _get_session(self) -> ClientSession:
         """
         Get session.
-        
+
         Get the `aiohttp.ClientSession`, or creates a new one.
         """
         if not self._session:
