@@ -1,217 +1,78 @@
 # ruff: noqa: D100, D101, D102
 
-import typing as t
 import unittest
 
-from ongaku.abc.track import Playlist
-from ongaku.abc.track import PlaylistInfo
-from ongaku.abc.track import Track
-from ongaku.abc.track import TrackInfo
+from ongaku.abc.track import Track, TrackInfo
+from tests import payload, objects
+
+class TestTrack(unittest.TestCase):
+
+    def test_base(self):
+        track = Track(encoded="test_encoded", info=objects.test_track_info, plugin_info={})
+
+        assert track.encoded == "test_encoded"
+        assert track.info == objects.test_track_info
+        assert track.plugin_info == {}
+        assert track.user_data == {}
+        assert track.requestor is None
+
+        assert track._to_payload == payload.TRACK
+
+    def test_payload(self):
+        track = Track._from_payload(payload.convert(payload.TRACK))
+
+        assert track.encoded == "test_encoded"
+        assert track.info == objects.test_track_info
+        assert track.plugin_info == {}
+        assert track.user_data == {}
+        assert track.requestor is None
+
+        assert track._to_payload == payload.TRACK
 
 
-class TrackTest(unittest.TestCase):
-    track_payload: dict[str, t.Any] = {
-        "encoded": "test_encoded",
-        "info": {
-            "identifier": "test_identifier",
-            "isSeekable": False,
-            "author": "test_author",
-            "length": 246,
-            "isStream": True,
-            "position": 0,
-            "title": "test_title",
-            "uri": "test_uri",
-            "artworkUrl": "test_artwork",
-            "isrc": None,
-            "sourceName": "test_source_name",
-        },
-        "pluginInfo": {},
-        "userData": {},
-    }
-
-    track_info_payload: dict[str, t.Any] = track_payload["info"]
-
-    info_data = TrackInfo(
-        identifier="test_identifier",
-        is_seekable=False,
-        author="test_author",
-        length=246,
-        is_stream=True,
-        position=0,
-        title="test_title",
-        source_name="test_source_name",
-        uri="test_uri",
-        artwork_url="test_artwork",
-        isrc=None,
-    )
-
-    track_data = Track(
-        encoded="test_encoded",
-        info=info_data,
-        plugin_info={},
-        user_data={},
-        requestor=None,
-    )
-
-    def test_track(self):
-        assert self.track_data.encoded == "test_encoded"
-        assert self.track_data.plugin_info == {}
-        assert self.track_data.user_data == {}
-
-        assert self.track_data.info == self.info_data
-
-        assert self.track_data._to_payload == self.track_payload
-
-    def test_track_payload(self):
-        test_track_info = TrackInfo._from_payload(self.track_info_payload)
-        test_track = Track._from_payload(self.track_payload)
-
-        assert test_track.encoded == "test_encoded"
-        assert test_track.plugin_info == {}
-        assert test_track.user_data == {}
-
-        assert test_track.info == test_track_info
-
-        assert test_track._to_payload == self.track_payload
-
-    def test_track_info(self):
-        test_info = TrackInfo(
-            identifier="test_identifier",
-            is_seekable=False,
-            author="test_author",
-            length=246,
-            is_stream=True,
-            position=0,
-            title="test_title",
-            source_name="test_source_name",
-            uri="test_uri",
-            artwork_url="test_artwork",
-            isrc=None,
+class TestTrackInfo(unittest.TestCase):
+    def test_base(self):
+        track_info = TrackInfo(
+            identifier="test_identifier", 
+            is_seekable=False, 
+            author="test_author", 
+            length=1234567890, 
+            is_stream=False, 
+            position=1234567890, 
+            title="test_title", 
+            source_name="test_source_name", 
+            uri="https://www.youtube.com/watch?=test", 
+            artwork_url="https://i.ytimg.com/test.jpg", 
+            isrc=None
         )
 
-        assert test_info.identifier == "test_identifier"
-        assert test_info.is_seekable is False
-        assert test_info.author == "test_author"
-        assert test_info.length == 246
-        assert test_info.is_stream is True
-        assert test_info.position == 0
-        assert test_info.title == "test_title"
-        assert test_info.uri == "test_uri"
-        assert test_info.artwork_url is "test_artwork"
-        assert test_info.isrc is None
-        assert test_info.source_name == "test_source_name"
+        assert track_info.identifier == "test_identifier"
+        assert track_info.is_seekable is False
+        assert track_info.author == "test_author"
+        assert track_info.length == 1234567890
+        assert track_info.is_stream == False
+        assert track_info.position == 1234567890
+        assert track_info.title == "test_title"
+        assert track_info.source_name == "test_source_name"
+        assert track_info.uri == "https://www.youtube.com/watch?=test"
+        assert track_info.artwork_url == "https://i.ytimg.com/test.jpg"
+        assert track_info.isrc is None
 
-        assert test_info._to_payload == self.track_info_payload
+        assert track_info._to_payload == payload.TRACK_INFO
 
-    def test_track_info_payload(self):
-        test_info = TrackInfo._from_payload(self.track_info_payload)
+    def test_payload(self):
+        track_info = TrackInfo._from_payload(payload.convert(payload.TRACK_INFO))
 
-        assert test_info.identifier == "test_identifier"
-        assert test_info.is_seekable is False
-        assert test_info.author == "test_author"
-        assert test_info.length == 246
-        assert test_info.is_stream is True
-        assert test_info.position == 0
-        assert test_info.title == "test_title"
-        assert test_info.uri == "test_uri"
-        assert test_info.artwork_url == "test_artwork"
-        assert test_info.isrc is None
-        assert test_info.source_name == "test_source_name"
+        assert track_info.identifier == "test_identifier"
+        assert track_info.is_seekable is False
+        assert track_info.author == "test_author"
+        assert track_info.length == 1234567890
+        assert track_info.is_stream == False
+        assert track_info.position == 1234567890
+        assert track_info.title == "test_title"
+        assert track_info.source_name == "test_source_name"
+        assert track_info.uri == "https://www.youtube.com/watch?=test"
+        assert track_info.artwork_url == "https://i.ytimg.com/test.jpg"
+        assert track_info.isrc is None
 
-        assert test_info._to_payload == self.track_info_payload
-
-
-class PlaylistTest(unittest.TestCase):
-    playlist_payload: dict[str, t.Any] = {
-        "info": {"name": "test_playlist_name", "selectedTrack": -1},
-        "pluginInfo": {},
-        "tracks": [
-            TrackTest.track_payload,
-        ],
-    }
-
-    playlist_info_payload: dict[str, t.Any] = playlist_payload["info"]
-
-    def test_playlist(self):
-        test_info = TrackInfo(
-            identifier="test_identifier",
-            is_seekable=False,
-            author="test_author",
-            length=246,
-            is_stream=True,
-            position=0,
-            title="test_title",
-            source_name="test_source_name",
-            uri="test_uri",
-            artwork_url="test_artwork",
-            isrc=None,
-        )
-        test_track = Track(
-            encoded="test_encoded",
-            info=test_info,
-            plugin_info={},
-            user_data={},
-            requestor=None,
-        )
-        test_playlist_info = PlaylistInfo(name="test_playlist_name", selected_track=-1)
-
-        test_playlist = Playlist(
-            info=test_playlist_info,
-            plugin_info={},
-            tracks=[
-                test_track,
-            ],
-        )
-
-        assert test_playlist.info == test_playlist_info
-        assert test_playlist.plugin_info == {}
-        assert list(test_playlist.tracks) == [test_track]
-
-        assert test_playlist._to_payload == self.playlist_payload
-
-    def test_playlist_payload(self):
-        test_info = TrackInfo(
-            identifier="test_identifier",
-            is_seekable=False,
-            author="test_author",
-            length=246,
-            is_stream=True,
-            position=0,
-            title="test_title",
-            source_name="test_source_name",
-            uri="test_uri",
-            artwork_url="test_artwork",
-            isrc=None,
-        )
-        test_track = Track(
-            encoded="test_encoded",
-            info=test_info,
-            plugin_info={},
-            user_data={},
-            requestor=None,
-        )
-        test_playlist_info = PlaylistInfo(name="test_playlist_name", selected_track=-1)
-
-        test_playlist = Playlist._from_payload(self.playlist_payload)
-
-        assert test_playlist.info == test_playlist_info
-        assert test_playlist.plugin_info == {}
-        assert tuple(test_playlist.tracks) == (test_track,)
-
-        assert test_playlist._to_payload == self.playlist_payload
-
-    def test_playlist_info(self):
-        test_playlist_info = PlaylistInfo(name="test_playlist_name", selected_track=-1)
-
-        assert test_playlist_info.name == "test_playlist_name"
-        assert test_playlist_info.selected_track == -1
-
-        assert test_playlist_info._to_payload == self.playlist_info_payload
-
-    def test_playlist_info_payload(self):
-        test_playlist_info = PlaylistInfo._from_payload(self.playlist_info_payload)
-
-        assert test_playlist_info.name == "test_playlist_name"
-        assert test_playlist_info.selected_track == -1
-
-        assert test_playlist_info._to_payload == self.playlist_info_payload
+        assert track_info._to_payload == payload.TRACK_INFO

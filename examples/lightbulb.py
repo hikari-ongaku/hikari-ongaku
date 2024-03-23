@@ -1,10 +1,6 @@
-# ruff: noqa: D100, D101, D102, D103
-
-
-# ╔═══════════════════╗
-# ║ Lightbulb example ║
-# ╚═══════════════════╝
-
+# ╔═══════════╗
+# ║ Lightbulb ║
+# ╚═══════════╝
 
 import logging
 
@@ -12,9 +8,8 @@ import hikari
 import lightbulb
 
 import ongaku
-from ongaku.ext import checker
 
-bot = lightbulb.BotApp("...")
+bot = lightbulb.BotApp(token="...f", banner=None)
 
 ongaku_client = ongaku.Client(bot)
 
@@ -22,9 +17,6 @@ ongaku_client.add_server(
     host="127.0.0.1",
     password="youshallnotpass"
 )
-
-bot.d.ongaku_client = ongaku_client
-
 
 # ╔════════╗
 # ║ Events ║
@@ -69,7 +61,7 @@ async def track_stuck_event(event: ongaku.TrackStuckEvent):
 @bot.listen(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
-        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}"
     )
 
 
@@ -91,12 +83,10 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
 
 
 @bot.command
-@lightbulb.option("query", "The song you wish to play.", str, required=True)
-@lightbulb.command("play", "Play a song.")
+@lightbulb.option("query", "Play a song. (must be a name, not a url.)")
+@lightbulb.command("play", "play a song")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def play_command(
-    ctx: lightbulb.Context,
-) -> None:
+async def play_command(ctx: lightbulb.Context) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
@@ -110,23 +100,27 @@ async def play_command(
         )
         return
 
-    checked_query = await checker.check(ctx.options.query)
+    query = ctx.options.query
 
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ctx.bot.d.ongaku_client.rest.track.load(
-            f"ytsearch:{checked_query.value}"
-        )
-    else:
-        result = await ctx.bot.d.ongaku_client.rest.track.load(checked_query.value)
+    if query is None or not isinstance(query, str):
+        await ctx.respond("A query is required.", flags=hikari.MessageFlag.EPHEMERAL)
+        return
+
+    await ctx.respond(
+        hikari.ResponseType.DEFERRED_MESSAGE_CREATE, flags=hikari.MessageFlag.EPHEMERAL
+    )
+
+    result = await ongaku_client.rest.track.load(query)
 
     if result is None:
         await ctx.respond(
+            hikari.ResponseType.DEFERRED_MESSAGE_UPDATE,
             "Sorry, no songs were found.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
-    track: ongaku.Track
+    track: ongaku.Track | None = None
 
     if isinstance(result, ongaku.Playlist):
         track = result.tracks[0]
@@ -144,26 +138,21 @@ async def play_command(
 
     try:
         player = await ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
+    except Exception:
         player = await ongaku_client.create_player(ctx.guild_id)
 
-    if player.connected is False:
-        await player.connect(voice_state.channel_id)
-
-    try:
-        await player.play(track)
-    except Exception as e:
-        raise e
+    await player.play(track)
 
     await ctx.respond(
+        hikari.ResponseType.DEFERRED_MESSAGE_UPDATE,
         embed=embed,
         flags=hikari.MessageFlag.EPHEMERAL,
     )
 
 
 @bot.command
-@lightbulb.option("query", "The song you wish to play.", str, required=True)
-@lightbulb.command("add", "Add a song (or songs!)")
+@lightbulb.option("query", "The song you wish to add.")
+@lightbulb.command("add", "Add a song. (must be a name, not a url.)")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def add_command(
     ctx: lightbulb.Context,
@@ -173,9 +162,8 @@ async def add_command(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
         )
         return
-
     try:
-        current_player = await ctx.bot.d.ongaku_client.fetch_player(ctx.guild_id)
+        current_player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "You must have a player currently running!",
@@ -183,14 +171,9 @@ async def add_command(
         )
         return
 
-    checked_query = await checker.check(ctx.options.query)
+    query = ctx.options.query
 
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ctx.bot.d.ongaku_client.rest.track.load(
-            f"ytsearch:{checked_query.value}"
-        )
-    else:
-        result = await ctx.bot.d.ongaku_client.rest.track.load(checked_query.value)
+    result = await ongaku_client.rest.track.load(query)
 
     if result is None:
         await ctx.respond(
@@ -199,45 +182,34 @@ async def add_command(
         )
         return
 
-    tracks: list[ongaku.Track] = []
+    track_count: int = 0
 
     if isinstance(result, ongaku.Playlist):
-        tracks.extend(result.tracks)
+        await current_player.add((result.tracks[0],))
+        track_count = 1
 
     elif isinstance(result, ongaku.Track):
-        tracks.append(result)
+        await current_player.add((result,))
+        track_count = 1
 
     else:
-        tracks.extend(result)
+        await current_player.add(result)
+        track_count = len(result)
 
-    await current_player.add(tracks)
-
-    embed = hikari.Embed(
-        title="Tracks added",
-        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}",
-    )
-
-    for track in tracks:
-        if len(embed.fields) >= 25:
-            break
-        embed.add_field(track.info.title, track.info.author)
-
-    await ctx.respond(embed=embed)
+    await ctx.respond(f"Added {track_count} track(s) to the player.")
 
 
 @bot.command
-@lightbulb.command("pause", "pause or unpause the currently playing song.")
+@lightbulb.command("pause", "pause the currently playing song.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def pause_command(
-    ctx: lightbulb.Context,
-) -> None:
+async def pause_command(ctx: lightbulb.Context) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
         )
         return
     try:
-        current_player = await ctx.bot.d.ongaku_client.fetch_player(ctx.guild_id)
+        current_player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "You must have a player currently running!",
@@ -256,9 +228,7 @@ async def pause_command(
 @bot.command
 @lightbulb.command("queue", "View the queue of the player.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def queue_command(
-    ctx: lightbulb.Context,
-) -> None:
+async def queue_command(ctx: lightbulb.Context) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "Guild ID is none! You must be in a guild to run this command.",
@@ -267,7 +237,7 @@ async def queue_command(
         return
 
     try:
-        player = await ctx.bot.d.ongaku_client.fetch_player(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
@@ -277,11 +247,10 @@ async def queue_command(
 
     if len(player.queue) == 0:
         await ctx.respond("There is not tracks in the queue currently.")
-        return
 
     queue_embed = hikari.Embed(
         title="Queue",
-        description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
+        description=f"The current queue for this server.\nCurrent song: {player.queue[0].info.title}",
     )
 
     for x in range(len(player.queue)):
@@ -299,14 +268,7 @@ async def queue_command(
 
 
 @bot.command
-@lightbulb.option(
-    "volume",
-    "The volume number you wish to set.",
-    int,
-    required=True,
-    min_value=0,
-    max_value=100,
-)
+@lightbulb.option("volume", "The volume you wish to set.", type=int)
 @lightbulb.command("volume", "change the volume of the player.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def volume_command(
@@ -320,7 +282,7 @@ async def volume_command(
         return
 
     try:
-        player = await ctx.bot.d.ongaku_client.fetch_player(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
@@ -328,26 +290,19 @@ async def volume_command(
         )
         return
 
+    volume = ctx.options.volume
+
     try:
-        await player.set_volume(ctx.options.volume)
+        await player.set_volume(volume * 10)
     except ValueError:
         await ctx.respond("Sorry, but you have entered an invalid number.")
         return
 
-    await ctx.respond(
-        f"the volume has successfully been set to {ctx.options.volume}/100"
-    )
+    await ctx.respond(f"the volume has successfully been set to {volume}/100")
 
 
 @bot.command
-@lightbulb.option(
-    "amount",
-    "The amount of songs you wish to skip. default is 1.",
-    int,
-    required=True,
-    min_value=0,
-    default=1,
-)
+@lightbulb.option("volume", "The volume you wish to set.", type=int)
 @lightbulb.command("skip", "skip a song, or multiple")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def skip_command(
@@ -361,7 +316,7 @@ async def skip_command(
         return
 
     try:
-        player = await ctx.bot.d.ongaku_client.fetch_player(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
@@ -369,39 +324,38 @@ async def skip_command(
         )
         return
 
+    amount = ctx.options.amount
+
     try:
-        await player.skip(ctx.options.amount)
+        await player.skip(amount)
     except ongaku.PlayerQueueException:
         await ctx.respond(
             "It looks like the queue is empty, so no new songs will be played."
         )
         return
 
-    await ctx.respond(f"{ctx.options.amount} song(s) were successfully skipped.")
+    await ctx.respond(f"{amount} song(s) were successfully skipped.")
 
 
 @bot.command
 @lightbulb.command("stop", "Stops the player, and disconnects it from the server.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def stop_command(
-    ctx: lightbulb.Context,
-) -> None:
+async def stop_command(ctx: lightbulb.Context) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "Guild ID is none! You must be in a guild to run this command.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
+
     try:
-        player = await ctx.bot.d.ongaku_client.fetch_player(ctx.guild_id)
+        await ongaku_client.delete_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
-    await player.disconnect()
 
     await ctx.respond("Successfully stopped the player.")
 

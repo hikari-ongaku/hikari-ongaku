@@ -1,16 +1,8 @@
-# ruff: noqa: D104
-from .test_events import ReadyEventTest
-from .test_lavalink import InfoTest
-from .test_player import PlayerTest
-from .test_session import SessionTest
-from .test_track import PlaylistTest
-from .test_track import TrackTest
+from __future__ import annotations
+
+from tests.test_abc.test_track import TestTrack, TestTrackInfo
 
 __all__ = (
-    "ReadyEventTest",
-    "InfoTest",
-    "PlayerTest",
-    "SessionTest",
-    "PlaylistTest",
-    "TrackTest",
+    "TestTrack",
+    "TestTrackInfo",
 )

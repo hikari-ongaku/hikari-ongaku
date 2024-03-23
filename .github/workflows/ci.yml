@@ -1,0 +1,43 @@
+name: build
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '!*' # Do not execute on tags
+    paths:
+      - src/*
+      - test/*
+      - '*.json'
+jobs:
+  test:
+    platform: ubuntu-latest
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    run: |
+      pip install .
+      pip install -r test_requirements.txt
+      coverage run -m unittest discover
+  coverage:
+    needs: [ test ]
+    name: coverage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    run: |
+        pip install build
+        python -m build
+        pip install twine
+        twine upload dist/* -u __token__ -p ${{ secrets.PYPI_TOKEN }}
+
+    - uses: paambaati/codeclimate-action@v2.2.4
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_ID }}

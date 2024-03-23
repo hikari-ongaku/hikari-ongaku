@@ -14,7 +14,7 @@ import typing as t
 
 import attrs
 
-from . import objects
+from tests import objects
 
 
 class _HttpMethod(enum.Enum):
