@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import abc
 import asyncio
-import logging
 import typing as t
 
 import aiohttp
 import attrs
 import hikari
 
+from . import internal
 from .enums import ConnectionType
 from .errors import PlayerMissingException
 from .errors import RequiredException
@@ -26,7 +26,7 @@ if t.TYPE_CHECKING:
 
 __all__ = ("Session",)
 
-INTERNAL_LOGGER = logging.getLogger(__name__)
+_logger = internal.logger.getChild("session")
 
 
 @attrs.define
@@ -99,14 +99,25 @@ class Session(abc.ABC):
 
     async def _websocket(self, new_headers: dict[str, t.Any]):
         while self._internal.remaining_attempts > 1:
-            await asyncio.sleep(3)
+            if self._internal.remaining_attempts < self._internal.attempts:
+                await asyncio.sleep(3)
             async with aiohttp.ClientSession() as session:
                 try:
                     async with session.ws_connect(
                         self._internal.base_uri + "/websocket", headers=new_headers
                     ) as ws:
+                        _logger.log(
+                            internal.Trace.LEVEL, "Websocket connection successful!"
+                        )
                         async for msg in ws:
+                            _logger.log(
+                                internal.Trace.LEVEL,
+                                f"Received message, with data: {msg.data}",
+                            )
                             if msg.type == aiohttp.WSMsgType.ERROR:
+                                _logger.warning(
+                                    f"An error has occurred with the websocket connection. Reason: {msg.data}"
+                                )
                                 self._internal.connection_status = (
                                     ConnectionType.FAILURE
                                 )
@@ -117,12 +128,20 @@ class Session(abc.ABC):
                                 )
 
                             if msg.type == aiohttp.WSMsgType.CLOSED:
-                                pass
+                                raise SessionException(
+                                    "Session has received a closure message."
+                                )
 
                             if msg.type == aiohttp.WSMsgType.TEXT:
+                                _logger.log(
+                                    internal.Trace.LEVEL, f"Decoding payload..."
+                                )
                                 try:
                                     json_data = msg.json()
-                                except Exception:
+                                except Exception as e:
+                                    _logger.warning(
+                                        f"Failed to decode payload. Error {e}, payload: {msg.data}"
+                                    )
                                     raise SessionException(
                                         "Failed to decode payload: " + msg.data
                                     )
@@ -131,6 +150,7 @@ class Session(abc.ABC):
                                         ConnectionType.CONNECTED
                                     )
                                     self._internal.connection_failure_reason = ""
+
                                     await self._event_handler.handle_payload(json_data)
 
                 except Exception as e:
@@ -159,6 +179,7 @@ class Session(abc.ABC):
             self._internal.remaining_attempts = -1
             self._internal.connection_status = ConnectionType.FAILURE
             self._internal.connection_failure_reason = "Bot ID could not be found."
+            _logger.warning("Bot ID cannot be None.")
             raise SessionException(
                 "Ongaku could not start, due to the bot ID not being found."
             )
@@ -167,6 +188,7 @@ class Session(abc.ABC):
             self._internal.remaining_attempts = -1
             self._internal.connection_status = ConnectionType.FAILURE
             self._internal.connection_failure_reason = "Bot ID could not be found."
+            _logger.warning("Bot ID cannot be None.")
             raise SessionException(
                 "Ongaku could not start, due to the bot ID not being found."
             )
@@ -177,14 +199,17 @@ class Session(abc.ABC):
         }
 
         new_header.update(self._internal.headers)
-
+        _logger.log(internal.Trace.LEVEL, "Starting websocket connection...")
         task = asyncio.create_task(self._websocket(new_header))
 
         self._connection = task
 
     async def _disconnect(self) -> None:
+        _logger.log(internal.Trace.LEVEL, "Destroying connection...")
         if self._connection:
             self._connection.cancel()
+
+        _logger.log(internal.Trace.LEVEL, f"successfully destroyed connection.")
 
 
 class PlayerSession:
@@ -203,12 +228,18 @@ class PlayerSession:
 
         Raises
         ------
-        PlayerException : Raised when the player failed to be created.
+        PlayerException
+            Raised when the player failed to be created.
 
         Returns
         -------
-        Player : The player that has been successfully created
+        Player
+            The player that has been successfully created.
         """
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"bot player: {guild_id} in node: {self._session.name}",
+        )
         bot = self._session.client.bot.get_me()
 
         if bot is None:
@@ -220,13 +251,17 @@ class PlayerSession:
             try:
                 self._session._players.pop(guild_id)
             except KeyError:
-                raise SessionException(
-                    "The session this player needs to attach too, has not yet been created."
-                )
+                raise SessionException("This session has not yet been started.")
 
         new_player = Player(self._session, guild_id)
 
         self._session._players.update({guild_id: new_player})
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"successfully created player: {guild_id} in node: {self._session.name}",
+        )
+
         return new_player
 
     async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
@@ -249,8 +284,17 @@ class PlayerSession:
         Player
             The player that belongs to the specified guild.
         """
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"finding player: {guild_id} in node: {self._session.name}",
+        )
+
         for player in self._session._players.values():
             if player.guild_id == guild_id:
+                _logger.log(
+                    internal.Trace.LEVEL,
+                    f"successfully found player: {guild_id} in node: {self._session.name}",
+                )
                 return player
 
         raise PlayerMissingException(guild_id)
@@ -271,11 +315,21 @@ class PlayerSession:
             The player was not found for the guild specified.
 
         """
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"deleting player: {guild_id} in node: {self._session.name}",
+        )
+
         player = await self.fetch_player(guild_id)
 
         await player.disconnect()
 
         self._session._players.pop(guild_id)
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"successfully deleted player: {guild_id} in node: {self._session.name}",
+        )
 
 
 # MIT License

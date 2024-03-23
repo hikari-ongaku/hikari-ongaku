@@ -15,6 +15,7 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
+from . import internal
 from .abc import player
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
@@ -22,6 +23,7 @@ from .abc.events import TrackEndEvent
 from .abc.filters import Filter
 from .abc.player import PlayerVoice
 from .abc.track import Track
+from .enums import TrackEndReasonType
 from .errors import BuildException
 from .errors import LavalinkException
 from .errors import PlayerException
@@ -31,6 +33,8 @@ from .errors import TimeoutException
 
 if t.TYPE_CHECKING:
     from .session import Session
+
+_logger = internal.logger.getChild("events")
 
 
 class Player:
@@ -150,7 +154,8 @@ class Player:
         deaf: UndefinedOr[bool] = UNDEFINED,
         timeout: int = 5,
     ) -> None:
-        """Connect to a channel.
+        """
+        Connect to a channel.
 
         Connect your bot, to a channel, to be able to start playing music.
 
@@ -186,6 +191,11 @@ class Player:
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Attempting connection to voice channel: {channel_id} in guild: {self.guild_id}",
+        )
+
         self._channel_id = channel_id
         try:
             await self.bot.update_voice_state(
@@ -193,6 +203,11 @@ class Player:
             )
         except Exception as e:
             raise ConnectionError(e)
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            "waiting for voice events for channel: {channel_id} in guild: {self.guild_id}",
+        )
 
         try:
             state_event, server_event = await asyncio.gather(
@@ -215,9 +230,16 @@ class Player:
                 f"Endpoint missing for attempted server connection in {channel_id}, for guild {self.guild_id}"
             )
 
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully received events for channel: {channel_id} in guild: {self.guild_id}",
+        )
+
         try:
             self._voice = PlayerVoice(
-                server_event.token, server_event.endpoint, state_event.state.session_id
+                token=server_event.token,
+                endpoint=server_event.endpoint,
+                session_id=state_event.state.session_id,
             )
         except Exception as e:
             raise BuildException(f"Failed to build player voice: {e}")
@@ -233,11 +255,18 @@ class Player:
             raise
         except BuildException:
             raise
+        self._connected = True
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully connected, and sent data to lavalink for channel: {channel_id} in guild: {self.guild_id}",
+        )
 
         await self._update(player)
 
     async def disconnect(self) -> None:
-        """Disconnect player.
+        """
+        Disconnect player.
 
         Disconnect the player from the lavalink server, and discord.
 
@@ -252,6 +281,11 @@ class Player:
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
+
         try:
             await self.session.client.rest.player.delete(
                 self.session._internal.session_id, self._guild_id
@@ -263,7 +297,26 @@ class Player:
         except BuildException:
             raise
 
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully deleted player for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
+
+        self._connected = False
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Updating voice state for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
+
         await self.bot.update_voice_state(self.guild_id, None)
+
+        self.session._players.pop(self.guild_id)
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Successfully updated voice state for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
     async def play(
         self, track: Track | None = None, requestor: Snowflake | None = None
@@ -286,6 +339,8 @@ class Player:
             The session id was null, or empty.
         PlayerQueueException
             The queue is empty and no track was given, so it cannot play songs.
+        PlayerException
+            The bot is not connected to a channel.
         LavalinkException
             If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
         """
@@ -295,8 +350,10 @@ class Player:
         if self.session._internal.session_id is None:
             raise SessionStartException()
 
-        if len(self.queue) > 0 and track is None:
-            raise PlayerQueueException("Empty Queue. Cannot play nothing.")
+        if len(self.queue) <= 0 and track == None:
+            raise PlayerQueueException(
+                "You must provide a track if no tracks are in the queue."
+            )
 
         if track:
             if requestor:
@@ -333,15 +390,6 @@ class Player:
             The list of tracks you wish to add to the queue.
         requestor : Snowflake | None
             The user/member id that requested the song.
-
-        Raises
-        ------
-        SessionStartException
-            The session id was null, or empty.
-        LavalinkException
-            If an error code of 4XX or 5XX is received, if if no data is received at all, when data was expected.
-        BuildException
-            Failure to build the player object.
         """
         for track in tracks:
             if requestor:
@@ -497,7 +545,7 @@ class Player:
             raise PlayerException("No tracks in queue.")
 
         for _ in range(amount):
-            if len(self._queue) == 0: 
+            if len(self._queue) == 0:
                 break
             else:
                 self._queue.pop(0)
@@ -508,7 +556,7 @@ class Player:
                     self.guild_id,
                     self.session._internal.session_id,
                     track=None,
-                    no_replace=False
+                    no_replace=False,
                 )
             except LavalinkException:
                 raise
@@ -522,7 +570,7 @@ class Player:
                     self.guild_id,
                     self.session._internal.session_id,
                     track=self.queue[0],
-                    no_replace=False
+                    no_replace=False,
                 )
             except LavalinkException:
                 raise
@@ -591,6 +639,8 @@ class Player:
             The session id was null, or empty.
         ValueError
             The queue is empty.
+        ValueError
+            The track specified, does not exist in the current queue.
         PlayerException
             The song did not exist, or the position was out of the length of the queue.
         LavalinkException
@@ -600,9 +650,6 @@ class Player:
         """
         if len(self.queue) == 0:
             raise ValueError("Queue is empty.")
-
-        if self.session._internal.session_id is None:
-            raise SessionStartException("Session has not been started for this player.")
 
         if isinstance(value, Track):
             index = self._queue.index(value)
@@ -709,6 +756,11 @@ class Player:
     async def _update(self, player: player.Player) -> None:
         # TODO: Somehow do the filter and the track.
 
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
+
         self._is_paused = player.is_paused
         self._voice = player.voice
         self._volume = player.volume
@@ -720,19 +772,77 @@ class Player:
         if not self._autoplay:
             return
 
+        if event.reason != TrackEndReasonType.FINISHED:
+            return
+
+        _logger.log(
+            internal.Trace.LEVEL,
+            f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
+
         if int(event.guild_id) == int(self.guild_id):
+            _logger.log(
+                internal.Trace.LEVEL,
+                f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
+            )
             try:
                 await self.remove(0)
             except ValueError:
-                await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
+                await self.bot.dispatch(
+                    QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id)
+                )
                 return
 
             if len(self.queue) <= 0:
-                await self.bot.dispatch(QueueEmptyEvent(self.bot, self.guild_id))
+                _logger.log(
+                    internal.Trace.LEVEL,
+                    f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
+                )
+                await self.bot.dispatch(
+                    QueueEmptyEvent(bot_app=self.bot, guild_id=self.guild_id)
+                )
                 return
 
-            await self.play(self.queue[0])
+            _logger.log(
+                internal.Trace.LEVEL,
+                f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
+            )
+
+            await self.play()
 
             await self.bot.dispatch(
-                QueueNextEvent(self.bot, self.guild_id, self._queue[0], event.track)
+                QueueNextEvent(
+                    bot_app=self.bot,
+                    guild_id=self.guild_id,
+                    track=self._queue[0],
+                    old_track=event.track,
+                )
             )
+
+            _logger.log(
+                internal.Trace.LEVEL,
+                f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
+            )
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

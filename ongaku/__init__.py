@@ -8,15 +8,12 @@ https://ongaku.mplaty.com/
 
 from __future__ import annotations
 
-from . import abc
-from . import enums
-from . import errors
-from . import ext
-from .abc import events
-from .abc import lavalink
-from .abc import player
-from .abc import session
-from .abc import track
+import logging
+
+from . import internal
+
+logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
+
 from .abc.events import QueueEmptyEvent
 from .abc.events import QueueNextEvent
 from .abc.events import ReadyEvent
@@ -36,6 +33,12 @@ from .abc.session import Session
 from .abc.track import Playlist
 from .abc.track import SearchResult
 from .abc.track import Track
+from .about import __author__
+from .about import __author_email__
+from .about import __license__
+from .about import __maintainer__
+from .about import __url__
+from .about import __version__
 from .client import Client
 from .enums import BandType
 from .enums import ConnectionType
@@ -55,6 +58,13 @@ from .errors import SessionStartException
 from .errors import TimeoutException
 
 __all__ = (
+    # .about
+    "__author__",
+    "__author_email__",
+    "__maintainer__",
+    "__license__",
+    "__url__",
+    "__version__",
     # .client
     "Client",
     # .enums
@@ -75,12 +85,6 @@ __all__ = (
     "GatewayRequiredException",
     "RequiredException",
     "TimeoutException",
-    # .abc
-    "events",
-    "lavalink",
-    "player",
-    "session",
-    "track",
     # .abc.events
     "ReadyEvent",
     "StatisticsEvent",
@@ -106,11 +110,6 @@ __all__ = (
     "SearchResult",
     # .abc.filters
     "Filter",
-    # Other
-    "errors",
-    "enums",
-    "abc",
-    "ext",
 )
 
 

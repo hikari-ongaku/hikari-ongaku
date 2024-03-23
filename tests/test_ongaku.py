@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: D100, D101, D102
 import unittest
 
 import hikari
@@ -22,6 +22,3 @@ class ClientTest(unittest.TestCase):
         assert test_client.bot == test_bot
         assert len(test_client.sessions) == 0
         assert isinstance(test_client.rest, RESTClient)
-
-        with self.assertRaises(ValueError):
-            pass

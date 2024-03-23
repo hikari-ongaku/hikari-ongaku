@@ -1,9 +1,18 @@
+# ruff: noqa: D100, D101, D102, D103
+
+
+# ╔═════════════╗
+# ║ Arc example ║
+# ╚═════════════╝
+
+
 import logging
 
 import arc
 import hikari
 
 import ongaku
+from ongaku.ext import checker
 
 bot = hikari.GatewayBot("...")
 
@@ -11,7 +20,12 @@ client = arc.GatewayClient(bot)
 
 ongaku_client = ongaku.Client(bot, password="youshallnotpass")
 
-# Events
+client.set_type_dependency(ongaku.Client, ongaku_client)
+
+
+# ╔════════╗
+# ║ Events ║
+# ╚════════╝
 
 
 @bot.listen(ongaku.ReadyEvent)
@@ -68,14 +82,17 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
-# Commands
+# ╔══════════╗
+# ║ Commands ║
+# ╚══════════╝
 
 
 @client.include
-@arc.slash_command("play", "Play a song. (must be a name, not a url.)")
+@arc.slash_command("play", "Play a song.")
 async def play_command(
     ctx: arc.GatewayContext,
     query: arc.Option[str, arc.StrParams("The song you wish to play.")],
+    ongaku_client: ongaku.Client = arc.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
@@ -90,7 +107,12 @@ async def play_command(
         )
         return
 
-    result = await ongaku_client.rest.track.load(query)
+    checked_query = await checker.check(query)
+
+    if checked_query.type == checker.CheckedType.QUERY:
+        result = await ongaku_client.rest.track.load(f"ytsearch:{checked_query.value}")
+    else:
+        result = await ongaku_client.rest.track.load(checked_query.value)
 
     if result is None:
         await ctx.respond(
@@ -99,7 +121,7 @@ async def play_command(
         )
         return
 
-    track: ongaku.Track | None = None
+    track: ongaku.Track
 
     if isinstance(result, ongaku.SearchResult):
         track = result.tracks[0]
@@ -117,7 +139,7 @@ async def play_command(
 
     try:
         player = await ongaku_client.player.fetch(ctx.guild_id)
-    except Exception:
+    except ongaku.PlayerMissingException:
         player = await ongaku_client.player.create(ctx.guild_id)
 
     if player.connected is False:
@@ -135,16 +157,18 @@ async def play_command(
 
 
 @client.include
-@arc.slash_command("add", "Add a song. (must be a name, not a url.)")
+@arc.slash_command("add", "Add a song (or songs!).")
 async def add_command(
     ctx: arc.GatewayContext,
     query: arc.Option[str, arc.StrParams("The song you wish to add.")],
+    ongaku_client: ongaku.Client = arc.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
         )
         return
+
     try:
         current_player = await ongaku_client.player.fetch(ctx.guild_id)
     except Exception:
@@ -154,7 +178,12 @@ async def add_command(
         )
         return
 
-    result = await ongaku_client.rest.track.load(query)
+    checked_query = await checker.check(query)
+
+    if checked_query.type == checker.CheckedType.QUERY:
+        result = await ongaku_client.rest.track.load(f"ytsearch:{checked_query.value}")
+    else:
+        result = await ongaku_client.rest.track.load(checked_query.value)
 
     if result is None:
         await ctx.respond(
@@ -163,26 +192,34 @@ async def add_command(
         )
         return
 
-    track_count: int = 0
+    tracks: list[ongaku.Track] = []
 
-    if isinstance(result, ongaku.SearchResult):
-        await current_player.add((result.tracks[0],))
-        track_count = 1
-
-    elif isinstance(result, ongaku.Track):
+    if isinstance(result, ongaku.Track):
         await current_player.add((result,))
-        track_count = 1
+        tracks.append(result)
 
     else:
         await current_player.add(result.tracks)
-        track_count = len(result.tracks)
+        tracks.extend(result.tracks)
 
-    await ctx.respond(f"Added {track_count} track(s) to the player.")
+    embed = hikari.Embed(
+        title="Tracks added",
+        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}",
+    )
+
+    for track in tracks:
+        if len(embed.fields) >= 25:
+            break
+        embed.add_field(track.info.title, track.info.author)
+
+    await ctx.respond(embed=embed)
 
 
 @client.include
 @arc.slash_command("pause", "pause or unpause the currently playing song.")
-async def pause_command(ctx: arc.GatewayContext) -> None:
+async def pause_command(
+    ctx: arc.GatewayContext, ongaku_client: ongaku.Client = arc.inject()
+) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
@@ -207,7 +244,9 @@ async def pause_command(ctx: arc.GatewayContext) -> None:
 
 @client.include
 @arc.slash_command("queue", "View the queue of the player.")
-async def queue_command(ctx: arc.GatewayContext) -> None:
+async def queue_command(
+    ctx: arc.GatewayContext, ongaku_client: ongaku.Client = arc.inject()
+) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "Guild ID is none! You must be in a guild to run this command.",
@@ -226,10 +265,11 @@ async def queue_command(ctx: arc.GatewayContext) -> None:
 
     if len(player.queue) == 0:
         await ctx.respond("There is not tracks in the queue currently.")
+        return
 
     queue_embed = hikari.Embed(
         title="Queue",
-        description=f"The current queue for this server.\nCurrent song: {player.queue[0].info.title}",
+        description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
     )
 
     for x in range(len(player.queue)):
@@ -253,6 +293,7 @@ async def volume_command(
     volume: arc.Option[
         int, arc.IntParams("The volume number you wish to set.", min=0, max=100)
     ],
+    ongaku_client: ongaku.Client = arc.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
@@ -271,7 +312,7 @@ async def volume_command(
         return
 
     try:
-        await player.set_volume(volume * 10)
+        await player.set_volume(volume)
     except ValueError:
         await ctx.respond("Sorry, but you have entered an invalid number.")
         return
@@ -286,6 +327,7 @@ async def skip_command(
     amount: arc.Option[
         int, arc.IntParams("The amount of songs you wish to skip. default is 1.", min=1)
     ] = 1,
+    ongaku_client: ongaku.Client = arc.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
@@ -316,22 +358,25 @@ async def skip_command(
 
 @client.include
 @arc.slash_command("stop", "Stops the player, and disconnects it from the server.")
-async def stop_command(ctx: arc.GatewayContext) -> None:
+async def stop_command(
+    ctx: arc.GatewayContext, ongaku_client: ongaku.Client = arc.inject()
+) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
             "Guild ID is none! You must be in a guild to run this command.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
     try:
-        await ongaku_client.player.delete(ctx.guild_id)
+        player = await ongaku_client.player.fetch(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
+
+    await player.disconnect()
 
     await ctx.respond("Successfully stopped the player.")
 

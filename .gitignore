@@ -159,8 +159,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-testing.py
-testing_*.py
-.vscode/
-testing.txt
-testing*.mp3
+/z_testing*
+/.vscode*

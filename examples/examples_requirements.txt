@@ -1,6 +1,4 @@
-hikari
 hikari-ongaku
-logging
 
 hikari-arc
 hikari-crescent

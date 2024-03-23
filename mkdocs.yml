@@ -1,6 +1,9 @@
 site_name: Ongaku Docs
+
 site_url: https://ongaku.mplaty.com/
+
 repo_url: https://github.com/MPlatypus/hikari-ongaku/
+
 
 theme:
   name: material
@@ -22,8 +25,10 @@ theme:
   logo: assets/logo.png
   favicon: assets/favicon.png
 
+
 extra_css:
   - stylesheets/extra.css
+
 
 plugins:
   - search
@@ -53,6 +58,7 @@ plugins:
             extensions:
                 - griffe_inherited_docstrings
 
+
 markdown_extensions:
   - toc:
       permalink: "#"
@@ -60,12 +66,15 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+
 
 copyright: Copyright &copy; 2023 MPlaty
 
@@ -75,6 +84,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/MPlatypus/hikari-ongaku
       name: Hikari Ongaku Github
+
 
 nav:
   - home: index.md
@@ -103,7 +113,6 @@ nav:
   - Extensions:
     - ext/index.md
     - Creation: ext/creation.md
-    - Local: ext/local.md
     - Checker: ext/checker.md
   - Changelog: changelog.md
 

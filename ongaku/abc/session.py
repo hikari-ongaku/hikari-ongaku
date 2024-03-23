@@ -7,14 +7,11 @@ from __future__ import annotations
 
 import typing as t
 
-import attrs
-
 from .base import PayloadBase
 
 __all__ = ("Session",)
 
 
-@attrs.define
 class Session(PayloadBase[t.Mapping[str, t.Any]]):
     """Session information.
 
@@ -27,22 +24,6 @@ class Session(PayloadBase[t.Mapping[str, t.Any]]):
     """Whether resuming is enabled for this session or not."""
     timeout: int
     """The timeout in seconds (default is 60s)."""
-
-    @classmethod
-    def _from_payload(cls, payload: t.Mapping[str, t.Any]) -> Session:
-        resuming = payload.get("resuming")
-        if resuming is None:
-            raise ValueError("resuming cannot be none.")
-        if not isinstance(resuming, bool):
-            raise TypeError("resuming must be a boolean.")
-        
-        timeout = payload.get("timeout")
-        if timeout is None:
-            raise ValueError("timeout cannot be none.")
-        if not isinstance(timeout, int):
-            raise TypeError("timeout must be a int.")
-
-        return cls(resuming, timeout)
 
 
 # MIT License
