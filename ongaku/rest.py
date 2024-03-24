@@ -13,10 +13,10 @@ import typing as t
 import hikari
 import ujson
 
+from .abc.error import ExceptionError
+from .abc.error import RestError
 from .abc.filters import Filter
-from .abc.lavalink import ExceptionError
-from .abc.lavalink import Info
-from .abc.lavalink import RestError
+from .abc.info import Info
 from .abc.player import Player
 from .abc.player import PlayerVoice
 from .abc.playlist import Playlist

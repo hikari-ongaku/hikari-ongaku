@@ -5,6 +5,8 @@ All of the abstract classes for Ongaku.
 """
 
 from .bases import OngakuEvent
+from .error import ExceptionError
+from .error import RestError
 from .events import PlayerBase
 from .events import PlayerUpdateEvent
 from .events import QueueEmptyEvent
@@ -18,21 +20,21 @@ from .events import TrackStartEvent
 from .events import TrackStuckEvent
 from .events import WebsocketClosedEvent
 from .filters import Filter
-from .lavalink import ExceptionError
-from .lavalink import Info
-from .lavalink import InfoGit
-from .lavalink import InfoPlugin
-from .lavalink import InfoVersion
-from .lavalink import RestError
+from .info import Info
+from .info import InfoGit
+from .info import InfoPlugin
+from .info import InfoVersion
 from .player import Player
 from .player import PlayerState
 from .player import PlayerVoice
 from .playlist import Playlist
 from .playlist import PlaylistInfo
 from .route_planner import FailingAddress
+from .route_planner import IPBlock
 from .route_planner import RoutePlannerDetails
 from .route_planner import RoutePlannerStatus
 from .session import Session
+from .statistics import Statistics
 from .statistics import StatsCpu
 from .statistics import StatsFrameStatistics
 from .statistics import StatsMemory
@@ -44,9 +46,6 @@ __all__ = (
     "OngakuEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
-    "StatsMemory",
-    "StatsCpu",
-    "StatsFrameStatistics",
     "StatisticsEvent",
     "WebsocketClosedEvent",
     "TrackBase",
@@ -71,6 +70,7 @@ __all__ = (
     "PlayerVoice",
     "Player",
     # .route_planner
+    "IPBlock",
     "FailingAddress",
     "RoutePlannerDetails",
     "RoutePlannerStatus",
@@ -79,8 +79,14 @@ __all__ = (
     # .track
     "TrackInfo",
     "Track",
+    # .playlist
     "PlaylistInfo",
     "Playlist",
+    # .statistics
+    "Statistics",
+    "StatsMemory",
+    "StatsCpu",
+    "StatsFrameStatistics",
 )
 
 

@@ -24,12 +24,12 @@ EXCEPTION: dict[str, str] = {
     "cause": "test_cause",
 }
 
-REST_EXCEPTION: dict[str, str | int] = {
-    "timestamp": 1667857581613,
+REST_ERROR: dict[str, str | int] = {
+    "timestamp": 1,
     "status": 404,
     "error": "Not Found",
     "trace": "...",
-    "message": "Session not found",
+    "message": "test_message",
     "path": "/v4/sessions/test_session",
 }
 
@@ -41,9 +41,9 @@ TRACK_INFO: dict[str, str | int | bool | None] = {
     "identifier": "test_identifier",
     "isSeekable": False,
     "author": "test_author",
-    "length": 1234567890,
+    "length": 1,
     "isStream": False,
-    "position": 1234567890,
+    "position": 2,
     "title": "test_title",
     "uri": "https://www.youtube.com/watch?=test",
     "artworkUrl": "https://i.ytimg.com/test.jpg",
@@ -57,7 +57,7 @@ TRACK: dict[str, str | dict[str, t.Any]] = {
     "pluginInfo": {},
 }
 
-PLAYLIST_INFO: dict[str, str | int] = {"name": "test_name", "selectedTrack": -1}
+PLAYLIST_INFO: dict[str, str | int] = {"name": "test_name", "selectedTrack": 1}
 
 PLAYLIST: dict[str, dict[str, str | int] | list[dict[str, str | dict[str, t.Any]]]] = {
     "info": PLAYLIST_INFO,
@@ -70,22 +70,22 @@ PLAYLIST: dict[str, dict[str, str | int] | list[dict[str, str | dict[str, t.Any]
 # ╚═════════╝
 
 PLAYER_STATE: dict[str, int | bool] = {
-    "time": 1234567890,
-    "position": 1234567890,
+    "time": 1,
+    "position": 2,
     "connected": False,
-    "ping": 1234567890,
+    "ping": 3,
 }
 
 PLAYER_VOICE: dict[str, str] = {
     "token": "test_token",
-    "endpoint": "test_end_point",
+    "endpoint": "test_endpoint",
     "sessionId": "test_session_id",
 }
 
 PLAYER: dict[str, str | int | bool | dict[str, t.Any]] = {
     "guildId": "1234567890",
     "track": TRACK,
-    "volume": 1234567890,
+    "volume": 1,
     "paused": False,
     "state": PLAYER_STATE,
     "voice": PLAYER_VOICE,
@@ -105,33 +105,33 @@ READY_OP: dict[str, str | bool] = {
 PLAYER_UPDATE_OP: dict[str, str | dict[str, int | bool]] = {
     "op": "playerUpdate",
     "guildId": "1234567890",
-    "state": {"time": 1500467109, "position": 60000, "connected": True, "ping": 50},
+    "state": {"time": 1, "position": 2, "connected": True, "ping": 3},
 }
 
 STATS_MEMORY: dict[str, int] = {
-    "free": 123456789,
-    "used": 123456789,
-    "allocated": 123456789,
-    "reservable": 123456789,
+    "free": 1,
+    "used": 2,
+    "allocated": 3,
+    "reservable": 4,
 }
 
 STATS_CPU: dict[str, int | float] = {
-    "cores": 1234567890,
-    "systemLoad": 12345.67890,
-    "lavalinkLoad": 12345.67890,
+    "cores": 1,
+    "systemLoad": 2.2,
+    "lavalinkLoad": 3.3,
 }
 
 STATS_FRAME_STATS: dict[str, int] = {
-    "sent": 1234567890,
-    "nulled": 1234567890,
-    "deficit": 1234567890,
+    "sent": 1,
+    "nulled": 2,
+    "deficit": 3,
 }
 
 STATS_OP: dict[str, str | int | dict[str, int] | dict[str, int | float]] = {
     "op": "stats",
-    "players": 1234567890,
-    "playingPlayers": 1234567890,
-    "uptime": 123456789,
+    "players": 1,
+    "playingPlayers": 2,
+    "uptime": 3,
     "memory": STATS_MEMORY,
     "cpu": STATS_CPU,
     "frameStats": STATS_FRAME_STATS,
@@ -217,21 +217,21 @@ REST_PLAYER_GET_PLAYER: dict[str, str | int | bool | dict[str, t.Any]] = PLAYER
 
 REST_PLAYER_UPDATE: dict[str, str | int | bool | dict[str, t.Any]] = PLAYER
 
-REST_SESSION_UPDATE: dict[str, int | bool] = {"resuming": False, "timeout": 1234567890}
+REST_SESSION_UPDATE: dict[str, int | bool] = {"resuming": False, "timeout": 1}
 
 INFO_VERSION: dict[str, str | int] = {
     "semver": "test_semver",
-    "major": 1234567890,
-    "minor": 1234567890,
-    "patch": 1234567890,
+    "major": 1,
+    "minor": 2,
+    "patch": 3,
     "preRelease": "test_pre_release",
     "build": "test_build",
 }
 
 INFO_GIT: dict[str, str | int] = {
-    "branch": "master",
-    "commit": "85c5ab5",
-    "commitTime": 1234567890,
+    "branch": "test_branch",
+    "commit": "test_commit",
+    "commitTime": 1,
 }
 
 INFO_PLUGIN: dict[str, str] = {"name": "test_name", "version": "test_version"}
@@ -240,7 +240,7 @@ REST_INFO: dict[
     str, str | int | dict[str, str | int] | list[str] | list[dict[str, str]]
 ] = {
     "version": INFO_VERSION,
-    "buildTime": 1234567890,
+    "buildTime": 1,
     "git": INFO_GIT,
     "jvm": "test_jvm",
     "lavaplayer": "test_lavaplayer",
@@ -251,25 +251,25 @@ REST_INFO: dict[
 
 REST_STATS: dict[str, int | dict[str, int] | dict[str, int | float]] = {
     "players": 1,
-    "playingPlayers": 1,
-    "uptime": 123456789,
+    "playingPlayers": 2,
+    "uptime": 3,
     "memory": STATS_MEMORY,
     "cpu": STATS_CPU,
 }
 
-ROUTEPLANNER_IP_BLOCK: dict[str, str] = {"type": "Inet6Address", "size": "1234567890"}
+ROUTEPLANNER_IP_BLOCK: dict[str, str] = {"type": "Inet6Address", "size": "test_size"}
 
 ROUTEPLANNER_FAILING_ADDRESS: dict[str, str | int] = {
     "failingAddress": "test_failing_address",
-    "failingTimestamp": 1234567890,
+    "failingTimestamp": 1,
     "failingTime": "test_failing_time",
 }
 
 ROUTEPLANNER_DETAILS: dict[str, str | dict[str, str] | list[dict[str, str | int]]] = {
     "ipBlock": ROUTEPLANNER_IP_BLOCK,
     "failingAddresses": [ROUTEPLANNER_FAILING_ADDRESS],
-    "blockIndex": "0",
-    "currentAddressIndex": "36792023813",
+    "blockIndex": "test_block_index",
+    "currentAddressIndex": "test_current_address_index",
 }
 
 REST_ROUTEPLANNER_STATUS: dict[

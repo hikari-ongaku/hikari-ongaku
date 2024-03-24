@@ -17,7 +17,7 @@ from ..enums import TrackEndReasonType
 from .bases import PayloadBaseApp
 from .bases import _snowflake_to_string
 from .bases import _string_to_snowflake
-from .lavalink import ExceptionError
+from .error import ExceptionError
 from .player import PlayerState
 from .statistics import Statistics
 from .track import Track

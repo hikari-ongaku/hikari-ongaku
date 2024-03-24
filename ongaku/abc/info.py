@@ -1,0 +1,104 @@
+"""
+Info ABC's.
+
+The info abstract classes.
+"""
+
+from __future__ import annotations
+
+import typing as t
+
+import pydantic
+
+from .bases import PayloadBase
+
+__all__ = (
+    "InfoVersion",
+    "InfoGit",
+    "InfoPlugin",
+    "Info",
+)
+
+
+class InfoVersion(PayloadBase):
+    """
+    Version information.
+
+    All information, about the version of lavalink that is running.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#version-object)
+    """
+
+    semver: str
+    """The full version string of this Lavalink server."""
+    major: int
+    """The major version of this Lavalink server."""
+    minor: int
+    """The minor version of this Lavalink server."""
+    patch: int
+    """The patch version of this Lavalink server."""
+    pre_release: t.Annotated[str, pydantic.Field(alias="preRelease")]
+    """The pre-release version according to semver as a `.` separated list of identifiers."""
+    build: t.Annotated[str | None, pydantic.Field(default=None)] = None
+    """The build metadata according to semver as a `.` separated list of identifiers."""
+
+
+class InfoGit(PayloadBase):
+    """
+    Git information.
+
+    All of the information about the lavalink git information.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#git-object)
+    """
+
+    branch: str
+    """The branch this Lavalink server was built on."""
+    commit: str
+    """The commit this Lavalink server was built on."""
+    commit_time: t.Annotated[int, pydantic.Field(alias="commitTime")]
+    """The millisecond unix timestamp for when the commit was created."""
+
+
+class InfoPlugin(PayloadBase):
+    """
+    Plugin information.
+
+    All of the Information about the currently loaded plugins.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#plugin-object)
+    """
+
+    name: str
+    """The name of the plugin."""
+    version: str
+    """The version of the plugin."""
+
+
+class Info(PayloadBase):
+    """
+    Information.
+
+    All of the Info Version information.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#info-response)
+    """
+
+    version: InfoVersion
+    """The version of this Lavalink server."""
+    build_time: t.Annotated[int, pydantic.Field(alias="buildTime")]
+    """The millisecond unix timestamp when this Lavalink jar was built."""
+    git: InfoGit
+    """The git information of this Lavalink server."""
+    jvm: str
+    """The JVM version this Lavalink server runs on."""
+    lavaplayer: str
+    """The Lavaplayer version being used by this server."""
+    source_managers: t.Annotated[
+        t.Sequence[str], pydantic.Field(alias="sourceManagers")
+    ]
+    """The enabled source managers for this server."""
+    filters: t.Sequence[str]
+    """The enabled filters for this server."""
+    plugins: t.Sequence[InfoPlugin]
+    """The enabled plugins for this server."""

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import typing as t
 
+from pydantic import Field
+
 from ..enums import IPBlockType
 from ..enums import RoutePlannerType
 from .bases import PayloadBase
@@ -26,12 +28,27 @@ class FailingAddress(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
-    failing_address: str
+    failing_address: t.Annotated[str, Field(alias="failingAddress")]
     """The failing address."""
-    failing_timestamp: int
+    failing_timestamp: t.Annotated[int, Field(alias="failingTimestamp")]
     """The timestamp when the address failed."""
-    failing_time: str
+    failing_time: t.Annotated[str, Field(alias="failingTime")]
     """The timestamp when the address failed as a pretty string."""
+
+
+class IPBlock(PayloadBase):
+    """
+    Route Planner IP Block.
+
+    All of the information about the IP Block
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
+    """
+
+    type: IPBlockType
+    """The type of the ip block."""
+    size: str
+    """The size of the ip block."""
 
 
 class RoutePlannerDetails(PayloadBase):
@@ -43,19 +60,25 @@ class RoutePlannerDetails(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
-    ip_block: IPBlockType
+    ip_block: t.Annotated[IPBlock, Field(alias="ipBlock")]
     """The ip block being used."""
-    failing_addresses: t.Sequence[FailingAddress]
+    failing_addresses: t.Annotated[
+        t.Sequence[FailingAddress], Field(alias="failingAddresses")
+    ]
     """The failing addresses."""
-    rotate_index: str
+    rotate_index: t.Annotated[str | None, Field(default=None, alias="rotateIndex")]
     """The number of rotations."""
-    ip_index: str
+    ip_index: t.Annotated[str | None, Field(default=None, alias="ipIndex")]
     """The current offset in the block."""
-    current_address: str
+    current_address: t.Annotated[
+        str | None, Field(default=None, alias="currentAddress")
+    ]
     """The current address being used."""
-    current_address_index: str
+    current_address_index: t.Annotated[
+        str | None, Field(default=None, alias="currentAddressIndex")
+    ]
     """The current offset in the ip block."""
-    block_index: str
+    block_index: t.Annotated[str | None, Field(default=None, alias="blockIndex")]
     """The current offset in the ip block."""
 
 
@@ -68,9 +91,9 @@ class RoutePlannerStatus(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
-    class_type: RoutePlannerType | None
+    class_type: t.Annotated[RoutePlannerType | None, Field(default=None, alias="class")]
     """The name of the RoutePlanner implementation being used by this server."""
-    details: RoutePlannerDetails | None
+    details: t.Annotated[RoutePlannerDetails | None, Field(default=None)]
     """The status details of the RoutePlanner."""
 
 

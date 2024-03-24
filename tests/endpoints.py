@@ -14,7 +14,8 @@ import typing as t
 
 import attrs
 
-from tests import objects
+from tests import payload
+from ongaku.abc import Track
 
 
 class _HttpMethod(enum.Enum):
@@ -93,7 +94,7 @@ TEST_PASSWORD = "password"
 DECODE_TRACK = PayloadInformation.build(
     "/decodetrack",
     _HttpMethod.GET,
-    objects.test_track,
+    Track._from_payload(payload.convert(payload.TRACK)),
     True,
     True,
     params={"encodedTrack": "{BASE64}"},
@@ -102,7 +103,7 @@ DECODE_TRACK = PayloadInformation.build(
 DECODE_TRACKS = PayloadInformation.build(
     "/decodetracks",
     _HttpMethod.POST,
-    [objects.test_track],
+    [Track._from_payload(payload.convert(payload.TRACK))],
     True,
     True,
     json=["{encoded_track}"],
