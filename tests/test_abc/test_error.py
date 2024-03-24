@@ -2,8 +2,8 @@
 
 import unittest
 
-
-from ongaku.abc.error import RestError, ExceptionError
+from ongaku.abc.error import ExceptionError
+from ongaku.abc.error import RestError
 from ongaku.enums import SeverityType
 from tests import payload
 
@@ -11,12 +11,12 @@ from tests import payload
 class TestRestError(unittest.TestCase):
     def test_base(self):
         error = RestError(
-            timestamp=1, 
-            status=404, 
-            error="test_error", 
-            trace="...", 
-            message="test_message", 
-            path="test_path"
+            timestamp=1,
+            status=404,
+            error="test_error",
+            trace="...",
+            message="test_message",
+            path="test_path",
         )
 
         assert error.timestamp == 1
@@ -39,9 +39,12 @@ class TestRestError(unittest.TestCase):
 
         assert error._to_payload == payload.REST_ERROR
 
+
 class TestExceptionError(unittest.TestCase):
     def test_base(self):
-        error = ExceptionError(message="test_message", severity=SeverityType.COMMON, cause="test_cause")
+        error = ExceptionError(
+            message="test_message", severity=SeverityType.COMMON, cause="test_cause"
+        )
 
         assert error.message == "test_message"
         assert error.severity == SeverityType.COMMON
@@ -58,4 +61,3 @@ class TestExceptionError(unittest.TestCase):
         error = ExceptionError._from_payload(payload.convert(payload.EXCEPTION))
 
         assert error._to_payload == payload.EXCEPTION
-

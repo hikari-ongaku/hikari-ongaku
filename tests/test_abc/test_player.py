@@ -1,10 +1,14 @@
 # ruff: noqa: D100, D101, D102
 
 import unittest
+
 import hikari
 
+from ongaku.abc import Player
+from ongaku.abc import PlayerState
+from ongaku.abc import PlayerVoice
+from ongaku.abc import Track
 from tests import payload
-from ongaku.abc import PlayerState, PlayerVoice, Player, Track
 
 
 class TestPlayerState(unittest.TestCase):
@@ -32,7 +36,9 @@ class TestPlayerState(unittest.TestCase):
 
 class TestPlayerVoice(unittest.TestCase):
     def test_base(self):
-        player_voice = PlayerVoice(token="test_token", endpoint="test_endpoint", session_id="test_session_id")
+        player_voice = PlayerVoice(
+            token="test_token", endpoint="test_endpoint", session_id="test_session_id"
+        )
 
         assert player_voice.token == "test_token"
         assert player_voice.endpoint == "test_endpoint"
@@ -63,7 +69,7 @@ class TestPlayer(unittest.TestCase):
             is_paused=False,
             state=state,
             voice=voice,
-            filters={}
+            filters={},
         )
 
         assert player.guild_id == hikari.Snowflake(1234567890)
@@ -92,6 +98,3 @@ class TestPlayer(unittest.TestCase):
         player = Player._from_payload(payload.convert(payload.PLAYER))
 
         assert player._to_payload == payload.PLAYER
-
-
-        

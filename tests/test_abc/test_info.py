@@ -2,12 +2,23 @@
 
 import unittest
 
-from ongaku.abc.info import InfoVersion, InfoGit, InfoPlugin, Info
+from ongaku.abc.info import Info
+from ongaku.abc.info import InfoGit
+from ongaku.abc.info import InfoPlugin
+from ongaku.abc.info import InfoVersion
 from tests import payload
+
 
 class TestInfoVersion(unittest.TestCase):
     def test_base(self):
-        version = InfoVersion(semver="test_semver", major=1, minor=2, patch=3, pre_release="test_pre_release", build="test_build")
+        version = InfoVersion(
+            semver="test_semver",
+            major=1,
+            minor=2,
+            patch=3,
+            pre_release="test_pre_release",
+            build="test_build",
+        )
 
         assert version.semver == "test_semver"
         assert version.major == 1
@@ -31,6 +42,7 @@ class TestInfoVersion(unittest.TestCase):
 
         assert version._to_payload == payload.INFO_VERSION
 
+
 class TestInfoGit(unittest.TestCase):
     def test_base(self):
         git = InfoGit(branch="test_branch", commit="test_commit", commit_time=1)
@@ -51,6 +63,7 @@ class TestInfoGit(unittest.TestCase):
 
         assert git._to_payload == payload.INFO_GIT
 
+
 class TestInfoPlugin(unittest.TestCase):
     def test_base(self):
         plugin = InfoPlugin(name="test_name", version="test_version")
@@ -69,20 +82,21 @@ class TestInfoPlugin(unittest.TestCase):
 
         assert plugin._to_payload == payload.INFO_PLUGIN
 
+
 class TestInfo(unittest.TestCase):
     def test_base(self):
         version = InfoVersion._from_payload(payload.convert(payload.INFO_VERSION))
         git = InfoGit._from_payload(payload.convert(payload.INFO_GIT))
         plugin = InfoPlugin._from_payload(payload.convert(payload.INFO_PLUGIN))
         info = Info(
-            version=version, 
-            build_time=1, 
-            git=git, 
-            jvm="test_jvm", 
-            lavaplayer="test_lavaplayer", 
-            source_managers=["test_source_manager"], 
-            filters=["equalizer", "karaoke", "timescale", "channelMix"], 
-            plugins=[plugin]
+            version=version,
+            build_time=1,
+            git=git,
+            jvm="test_jvm",
+            lavaplayer="test_lavaplayer",
+            source_managers=["test_source_manager"],
+            filters=["equalizer", "karaoke", "timescale", "channelMix"],
+            plugins=[plugin],
         )
 
         assert info.version == version
@@ -113,5 +127,3 @@ class TestInfo(unittest.TestCase):
         info = Info._from_payload(payload.convert(payload.REST_INFO))
 
         assert info._to_payload == payload.REST_INFO
-
-

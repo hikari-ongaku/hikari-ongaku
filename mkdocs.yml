@@ -107,9 +107,10 @@ nav:
     - Handlers: api/handlers.md
     - ABC:
       - Bases: api/abc/bases.md
+      - Error: api/abc/error.md
       - Events: api/abc/events.md
       - Filters: api/abc/filters.md
-      - Lavalink: api/abc/lavalink.md
+      - Info: api/abc/info.md
       - Player: api/abc/player.md
       - Playlist: api/abc/playlist.md
       - Route Planner: api/abc/route_planner.md

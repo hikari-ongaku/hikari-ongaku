@@ -8,12 +8,22 @@ from __future__ import annotations
 
 import typing as t
 
-from hikari import UNDEFINED
-from hikari import UndefinedNoneOr
+from pydantic import Field
 
 from ..enums import BandType
+from .bases import PayloadBase
 
-__all__ = ("Filter",)
+__all__ = (
+    "FilterEqualizer",
+    "FilterKaraoke",
+    "FilterTimescale",
+    "FilterTremolo",
+    "FilterVibrato",
+    "FilterRotation",
+    "FilterDistortion",
+    "FilterChannelMix",
+    "FilterLowPass",
+)
 
 if t.TYPE_CHECKING:
     BuildT = dict[
@@ -21,446 +31,232 @@ if t.TYPE_CHECKING:
     ]
 
 
-class Filter:
+class Filters(PayloadBase):
     """
-    create a filter object.
+    The base filters.
 
-    The builder for your filter needs.
+    Build a new filter, or view the current filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
+
+    !!! note
+        They will only actually update, if you parse this to the player.
     """
 
-    _volume: float | None = None
-    _equalizer: dict[BandType, float] = {}
-    _karaoke: dict[str, float] = {}
-    _timescale: dict[str, float] = {}
-    _tremolo: dict[str, float] = {}
-    _vibrato: dict[str, float] = {}
-    _rotation: dict[str, float] = {}
-    _distortion: dict[str, float] = {}
-    _channel_mix: dict[str, float] = {}
-    _low_pass: dict[str, float] = {}
-
-    def volume(self, value: float | None = None) -> None:
+    @classmethod
+    def build(cls) -> Filters:
         """
-        Set the volume.
+        build a filters object.
 
-        Set the volume for the player.
+        Build an empty filters object to pass to the bot.
         """
-        self._volume = value
-
-    def set_equalizer(
-        self, band: BandType, gain: UndefinedNoneOr[float] = UNDEFINED
-    ) -> float | None:
-        """
-        Set the equalizer value.
-
-        !!! note
-            If the gain is set to `None`, then the gain band will be removed, if `UNDEFINED` is used (leaving it empty), it will return the value, if it exists.
-
-        Parameters
-        ----------
-        band : BandType
-            The band type.
-        gain : UndefinedNoneOr[float]
-            The gain of the band.
-
-
-        """
-        if gain == UNDEFINED:
-            return self._equalizer.get(band)
-
-        if not gain:
-            try:
-                self._equalizer.pop(band)
-            except KeyError:
-                pass
-            return
-
-        if -0.25 > gain or gain > 1:
-            raise ValueError(
-                f"The value {gain} ({band}) must be between -0.25, and 1.0."
-            )
-
-        self._equalizer.update({band: gain})
-
-    def set_karaoke(
-        self,
-        *,
-        level: UndefinedNoneOr[float] = UNDEFINED,
-        mono_level: UndefinedNoneOr[float] = UNDEFINED,
-        filter_band: UndefinedNoneOr[float] = UNDEFINED,
-        filter_width: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set the equalizer value.
-
-        Parameters
-        ----------
-        level : UndefinedNoneOr[float]
-            The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)
-        mono_level : UndefinedNoneOr[float]
-            The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)
-        filter_band : UndefinedNoneOr[float]
-            The filter band (in Hz)
-        filter_width : UndefinedNoneOr[float]
-            The filter width
-        """
-        if level is None:
-            self._karaoke.pop("level")
-
-        if mono_level is None:
-            self._karaoke.pop("monoLevel")
-
-        if filter_band is None:
-            self._karaoke.pop("filterBand")
-
-        if filter_width is None:
-            self._karaoke.pop("filterWidth")
-
-        if isinstance(filter_band, float):
-            self._karaoke.update({"filterBand": filter_band})
-
-        if isinstance(filter_width, float):
-            self._karaoke.update({"filterWidth": filter_width})
-
-        if isinstance(level, float):
-            if 0 > level or level > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._karaoke.update({"level": level})
-
-        if isinstance(mono_level, float):
-            if 0 > mono_level or mono_level > 1:
-                raise ValueError("Outside of value range for value mono_level.")
-            else:
-                self._karaoke.update({"monoLevel": mono_level})
-
-    def set_timescale(
-        self,
-        *,
-        speed: UndefinedNoneOr[float] = UNDEFINED,
-        pitch: UndefinedNoneOr[float] = UNDEFINED,
-        rate: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set timescale.
-
-        Parameters
-        ----------
-        speed : UndefinedNoneOr[float]
-            The playback speed 0.0 ≤ x
-        pitch : UndefinedNoneOr[float]
-            The pitch 0.0 ≤ x
-        rate : UndefinedNoneOr[float]
-            The rate 0.0 ≤ x
-        """
-        if speed is None:
-            self._timescale.pop("speed")
-
-        if isinstance(speed, float):
-            self._timescale = {"speed": speed}
-
-        if pitch is None:
-            self._timescale.pop("pitch")
-
-        if isinstance(pitch, float):
-            self._timescale = {"pitch": pitch}
-
-        if rate is None:
-            self._timescale.pop("rate")
-
-        if isinstance(rate, float):
-            self._timescale = {"rate": rate}
-
-    def set_tremolo(
-        self,
-        *,
-        frequency: UndefinedNoneOr[float] = UNDEFINED,
-        depth: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set tremolo.
-
-        Parameters
-        ----------
-        frequency : UndefinedNoneOr[float]
-            The frequency 0.0 < x
-        depth : UndefinedNoneOr[float]
-            The tremolo depth 0.0 < x ≤ 1.0
-        """
-        if frequency is None:
-            self._tremolo.pop("frequency")
-
-        if depth is None:
-            self._tremolo.pop("depth")
-
-        if isinstance(frequency, float):
-            if 0 > frequency:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._tremolo.update({"frequency": frequency})
-
-        if isinstance(depth, float):
-            if 0 > depth or depth > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._tremolo.update({"depth": depth})
-
-    def set_vibrato(
-        self,
-        *,
-        frequency: UndefinedNoneOr[float] = UNDEFINED,
-        depth: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set vibrato.
-
-        Parameters
-        ----------
-        frequency : UndefinedNoneOr[float]
-                The frequency 0.0 < x ≤ 14.0
-        depth : UndefinedNoneOr[float]
-            The tremolo depth 0.0 < x ≤ 1.0
-        """
-        if frequency is None:
-            self._vibrato.pop("frequency")
-
-        if depth is None:
-            self._vibrato.pop("depth")
-
-        if isinstance(frequency, float):
-            if 0 > frequency or frequency > 14:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._vibrato.update({"frequency": frequency})
-
-        if isinstance(depth, float):
-            if 0 > depth or depth > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._vibrato.update({"depth": depth})
-
-    def set_rotation(
-        self,
-        *,
-        rotation_hz: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set rotation.
-
-        Parameters
-        ----------
-        rotation_hz : UndefinedNoneOr[float]
-            The frequency of the audio rotating around the listener in Hz.
-        """
-        if rotation_hz is None:
-            self._rotation.pop("rotationHz")
-
-        if isinstance(rotation_hz, float):
-            self._vibrato.update({"rotationHz": rotation_hz})
-
-    def set_distortion(
-        self,
-        *,
-        sin_offset: UndefinedNoneOr[float] = UNDEFINED,
-        sin_scale: UndefinedNoneOr[float] = UNDEFINED,
-        cos_offset: UndefinedNoneOr[float] = UNDEFINED,
-        cos_scale: UndefinedNoneOr[float] = UNDEFINED,
-        tan_offset: UndefinedNoneOr[float] = UNDEFINED,
-        tan_scale: UndefinedNoneOr[float] = UNDEFINED,
-        offset: UndefinedNoneOr[float] = UNDEFINED,
-        scale: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set distortion.
-
-        Parameters
-        ----------
-        sin_offset : UndefinedNoneOr[float]
-            The sin offset
-        sin_scale : UndefinedNoneOr[float]
-            The sin scale
-        cos_offset : UndefinedNoneOr[float]
-            The cos offset
-        cos_scale : UndefinedNoneOr[float]
-            The cos scale
-        tan_offset : UndefinedNoneOr[float]
-            The tan offset
-        tan_scale : UndefinedNoneOr[float]
-            The tan scale
-        offset : UndefinedNoneOr[float]
-            The offset
-        scale : UndefinedNoneOr[float]
-            The scale
-        """
-        if sin_offset is None:
-            self._distortion.pop("sinOffset")
-
-        if isinstance(sin_offset, float):
-            self._distortion.update({"sinOffset": sin_offset})
-
-        if sin_scale is None:
-            self._distortion.pop("sinScale")
-
-        if isinstance(sin_scale, float):
-            self._distortion.update({"sinScale": sin_scale})
-
-        if cos_offset is None:
-            self._distortion.pop("sinOffset")
-
-        if isinstance(cos_offset, float):
-            self._distortion.update({"sinOffset": cos_offset})
-
-        if cos_scale is None:
-            self._distortion.pop("cosScale")
-
-        if isinstance(cos_scale, float):
-            self._distortion.update({"cosScale": cos_scale})
-
-        if tan_offset is None:
-            self._distortion.pop("tanOffset")
-
-        if isinstance(tan_offset, float):
-            self._distortion.update({"tanOffset": tan_offset})
-
-        if tan_scale is None:
-            self._distortion.pop("tanScale")
-
-        if isinstance(tan_scale, float):
-            self._distortion.update({"tanScale": tan_scale})
-
-        if offset is None:
-            self._distortion.pop("offset")
-
-        if isinstance(offset, float):
-            self._distortion.update({"offset": offset})
-
-        if scale is None:
-            self._distortion.pop("scale")
-
-        if isinstance(scale, float):
-            self._distortion.update({"scale": scale})
-
-    def set_channel_mix(
-        self,
-        *,
-        left_to_left: UndefinedNoneOr[float] = UNDEFINED,
-        left_to_right: UndefinedNoneOr[float] = UNDEFINED,
-        right_to_left: UndefinedNoneOr[float] = UNDEFINED,
-        right_to_right: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set channel mix.
-
-        Parameters
-        ----------
-        left_to_left : UndefinedNoneOr[float]
-            The left to left channel mix factor (0.0 ≤ x ≤ 1.0)
-        left_to_right : UndefinedNoneOr[float]
-            The left to right channel mix factor (0.0 ≤ x ≤ 1.0)
-        right_to_left : UndefinedNoneOr[float]
-            The right to left channel mix factor (0.0 ≤ x ≤ 1.0)
-        right_to_right : UndefinedNoneOr[float]
-            The right to right channel mix factor (0.0 ≤ x ≤ 1.0)
-        """
-        if left_to_left is None:
-            self._channel_mix.pop("leftToLeft")
-
-        if isinstance(left_to_left, float):
-            if 0 > left_to_left or left_to_left > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"leftToLeft": left_to_left})
-
-        if left_to_right is None:
-            self._channel_mix.pop("leftToRight")
-
-        if isinstance(left_to_right, float):
-            if 0 > left_to_right or left_to_right > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"leftToRight": left_to_right})
-
-        if right_to_left is None:
-            self._channel_mix.pop("rightToLeft")
-
-        if isinstance(right_to_left, float):
-            if 0 > right_to_left or right_to_left > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"rightToLeft": right_to_left})
-
-        if right_to_right is None:
-            self._channel_mix.pop("rightToRight")
-
-        if isinstance(right_to_right, float):
-            if 0 > right_to_right or right_to_right > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"rightToRight": right_to_right})
-
-    def set_low_pass(
-        self,
-        *,
-        smoothing: UndefinedNoneOr[float] = UNDEFINED,
-    ) -> None:
-        """
-        Set low pass.
-
-        Parameters
-        ----------
-        smoothing : UndefinedNoneOr[float]
-            The smoothing factor (1.0 < x)
-        """
-        if smoothing is None:
-            self._low_pass.pop("left_to_left")
-
-        if isinstance(smoothing, float):
-            if 0 > smoothing:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._low_pass.update({"smoothing": smoothing})
-
-    def _build(
-        self,
-    ) -> BuildT:
-        build_dict: BuildT = {}
-
-        if self._volume:
-            build_dict.update({"volume": self._volume})
-
-        if len(self._equalizer) > 0:
-            eq_bands: list[dict[str, float | int]] = []
-
-            for key, value in self._equalizer.items():
-                eq_bands.append({"band": key.value, "gain": value})
-
-            build_dict.update({"equalizer": eq_bands})
-
-        if len(self._karaoke) > 0:
-            build_dict.update({"karaoke": self._karaoke})
-
-        if len(self._timescale) > 0:
-            build_dict.update({"timescale": self._timescale})
-
-        if len(self._tremolo) > 0:
-            build_dict.update({"tremolo": self._tremolo})
-
-        if len(self._vibrato) > 0:
-            build_dict.update({"vibrato": self._vibrato})
-
-        if len(self._rotation) > 0:
-            build_dict.update({"rotation": self._rotation})
-
-        if len(self._distortion) > 0:
-            build_dict.update({"distortion": self._distortion})
-
-        if len(self._channel_mix) > 0:
-            build_dict.update({"channelMix": self._channel_mix})
-
-        if len(self._low_pass) > 0:
-            build_dict.update({"lowPass": self._low_pass})
-
-        return build_dict
+        return Filters(
+            volume=None,
+            equalizer=[],
+            karaoke=None,
+            timescale=None,
+            tremolo=None,
+            vibrato=None,
+            rotation=None,
+            distortion=None,
+            channel_mix=None,
+            low_pass=None,
+            plugin_filters={},
+        )
+
+    volume: t.Annotated[float | None, Field(default=None, ge=0.0, le=5.0)]
+    """Adjusts the player volume from 0.0 to 5.0, where 1.0 is 100%. Values >1.0 may cause clipping."""
+    equalizer: t.Annotated[t.MutableSequence[FilterEqualizer], Field(default=[])]
+    """Adjusts 15 different bands."""
+    karaoke: t.Annotated[FilterKaraoke | None, Field(default=None)]
+    """Eliminates part of a band, usually targeting vocals."""
+    timescale: t.Annotated[FilterTimescale | None, Field(default=None)]
+    """Changes the speed, pitch, and rate."""
+    tremolo: t.Annotated[FilterTremolo | None, Field(default=None)]
+    """Creates a shuddering effect, where the volume quickly oscillates."""
+    vibrato: t.Annotated[FilterVibrato | None, Field(default=None)]
+    """Creates a shuddering effect, where the pitch quickly oscillates."""
+    rotation: t.Annotated[FilterRotation | None, Field(default=None)]
+    """Rotates the audio around the stereo channels/user headphones (aka Audio Panning)."""
+    distortion: t.Annotated[FilterDistortion | None, Field(default=None)]
+    """Distorts the audio."""
+    channel_mix: t.Annotated[
+        FilterChannelMix | None, Field(default=None, alias="channelMix")
+    ]
+    """Mixes both channels (left and right)."""
+    low_pass: t.Annotated[FilterLowPass | None, Field(default=None, alias="lowPass")]
+    """Filters higher frequencies."""
+    plugin_filters: t.Annotated[
+        t.MutableMapping[str, t.Any], Field(default={}, alias="pluginFilters")
+    ]
+    """Filter plugin configurations."""
+
+
+class FilterEqualizer(PayloadBase):
+    """
+    Filter Equalizer.
+
+    The filter equilizer, that allows you to set different values for different gains.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
+    """
+
+    band: BandType
+    """The band (HZ25 to HZ16000)."""
+    value: t.Annotated[float | None, Field(default=None, ge=-0.25, le=1.0)]
+    """The gain (-0.25 to 1.0)."""
+
+
+class FilterKaraoke(PayloadBase):
+    """
+    Filter Karaoke.
+
+    The karaoke portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#karaoke)
+    """
+
+    level: t.Annotated[float | None, Field(default=None, ge=0.0, le=1.0)]
+    """The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
+    mono_level: t.Annotated[
+        float | None, Field(default=None, alias="monoLevel", ge=0.0, le=1.0)
+    ]
+    """The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
+    filter_band: t.Annotated[
+        float | None, Field(default=None, alias="filterBand", ge=0)
+    ]
+    """The filter band (in Hz)."""
+    filter_width: t.Annotated[float | None, Field(default=None, alias="filterWidth")]
+    """The filter width."""
+
+
+class FilterTimescale(PayloadBase):
+    """
+    Filter Timescale.
+
+    The timescale portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#timescale)
+    """
+
+    speed: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The playback speed 0.0 ≤ x."""
+    pitch: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The pitch 0.0 ≤ x."""
+    rate: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The rate 0.0 ≤ x."""
+
+
+class FilterTremolo(PayloadBase):
+    """
+    Filter Tremolo.
+
+    The tremolo portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#tremolo)
+    """
+
+    frequency: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The frequency 0.0 < x."""
+    depth: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The tremolo depth 0.0 < x ≤ 1.0."""
+
+
+class FilterVibrato(PayloadBase):
+    """
+    Filter Vibrato.
+
+    The vibrato portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#vibrato)
+    """
+
+    frequency: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The frequency 0.0 < x ≤ 14.0"""
+    depth: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    """The tremolo depth 0.0 < x ≤ 1.0."""
+
+
+class FilterRotation(PayloadBase):
+    """
+    Filter Rotation.
+
+    The rotation portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#rotation)
+    """
+
+    rotation_hz: t.Annotated[
+        float | None, Field(default=None, alias="rotationHz", ge=0.0)
+    ]
+    """The frequency of the audio rotating around the listener in Hz. 0.2 is similar to the example video above."""
+
+
+class FilterDistortion(PayloadBase):
+    """
+    Filter Distortion.
+
+    The distortion portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#distortion)
+    """
+
+    sin_offset: t.Annotated[float | None, Field(default=None, alias="sinOffset")]
+    """The sin offset."""
+    sin_scale: t.Annotated[float | None, Field(default=None, alias="sinScale")]
+    """The sin scale."""
+    cos_offset: t.Annotated[float | None, Field(default=None, alias="cosOffset")]
+    """The cos offset."""
+    cos_scale: t.Annotated[float | None, Field(default=None, alias="cosScale")]
+    """The cos scale."""
+    tan_offset: t.Annotated[float | None, Field(default=None, alias="tanOffset")]
+    """The tan offset."""
+    tan_scale: t.Annotated[float | None, Field(default=None, alias="tanScale")]
+    """The tan scale."""
+    offset: t.Annotated[float | None, Field(default=None)]
+    """The offset."""
+    scale: t.Annotated[float | None, Field(default=None)]
+    """The scale."""
+
+
+class FilterChannelMix(PayloadBase):
+    """
+    Filter Channel Mix.
+
+    The channel mix portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#channel-mix)
+    """
+
+    left_to_left: t.Annotated[
+        float | None, Field(default=None, alias="leftToLeft", ge=0.0, le=1.0)
+    ]
+    """The left to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
+    left_to_right: t.Annotated[
+        float | None, Field(default=None, alias="leftToRight", ge=0.0, le=1.0)
+    ]
+    """The left to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
+    right_to_left: t.Annotated[
+        float | None, Field(default=None, alias="rightToLeft", ge=0.0, le=1.0)
+    ]
+    """The right to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
+    right_to_right: t.Annotated[
+        float | None, Field(default=None, alias="rightToRight", ge=0.0, le=1.0)
+    ]
+    """The right to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
+
+
+class FilterLowPass(PayloadBase):
+    """
+    Filter Low Pass.
+
+    The low pass portion of the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#low-pass)
+    """
+
+    smoothing: t.Annotated[float | None, Field(default=None)]
+    """The smoothing factor (1.0 < x)."""
 
 
 # MIT License

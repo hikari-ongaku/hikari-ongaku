@@ -381,9 +381,9 @@ class RestTrackTest(unittest.IsolatedAsyncioTestCase):
 
 class NewRestSessionTest(unittest.IsolatedAsyncioTestCase):
     async def test_session_update(self):
-        await objects.test_ongaku_client.rest.track.decode("{BASE64}") # result = 
+        await objects.test_ongaku_client.rest.track.decode("{BASE64}")  # result =
 
-        #assert result == objects.test_track
+        # assert result == objects.test_track
 
 
 @mock.patch("aiohttp.ClientSession.request")

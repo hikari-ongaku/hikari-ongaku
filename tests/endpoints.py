@@ -14,8 +14,8 @@ import typing as t
 
 import attrs
 
-from tests import payload
 from ongaku.abc import Track
+from tests import payload
 
 
 class _HttpMethod(enum.Enum):
