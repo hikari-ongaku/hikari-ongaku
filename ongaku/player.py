@@ -17,21 +17,21 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
-from .abc.events import PlayerUpdateEvent
-from .abc.events import QueueEmptyEvent
-from .abc.events import QueueNextEvent
-from .abc.events import TrackEndEvent
-from .abc.filters import Filter
-from .abc.player import Player as ABCPlayer
-from .abc.player import PlayerVoice
-from .abc.track import Track
-from .enums import TrackEndReasonType
-from .exceptions import BuildException
-from .exceptions import LavalinkException
-from .exceptions import PlayerConnectException
-from .exceptions import PlayerQueueException
-from .internal import Trace
-from .internal import logger
+from ongaku.abc.events import PlayerUpdateEvent
+from ongaku.abc.events import QueueEmptyEvent
+from ongaku.abc.events import QueueNextEvent
+from ongaku.abc.events import TrackEndEvent
+from ongaku.abc.filters import Filters
+from ongaku.abc.player import Player as ABCPlayer
+from ongaku.abc.player import PlayerVoice
+from ongaku.abc.track import Track
+from ongaku.enums import TrackEndReasonType
+from ongaku.errors import BuildException
+from ongaku.errors import LavalinkException
+from ongaku.errors import PlayerConnectException
+from ongaku.errors import PlayerQueueException
+from ongaku.internal import TRACE_LEVEL
+from ongaku.internal import logger
 
 if t.TYPE_CHECKING:
     from .session import Session
@@ -75,7 +75,7 @@ class Player:
 
         self._connected: bool = False
 
-        self._filter: Filter | None = None
+        self._filter: Filters | None = None
 
         self._volume: int = -1
 
@@ -156,7 +156,7 @@ class Player:
         return self._queue
 
     @property
-    def audio_filter(self) -> Filter | None:
+    def audio_filter(self) -> Filters | None:
         """The current filters applied to this player."""
         return self._filter
 
@@ -228,7 +228,7 @@ class Player:
         session = self.session._get_session_id()
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Attempting connection to voice channel: {channel_id} in guild: {self.guild_id}",
         )
 
@@ -242,7 +242,7 @@ class Player:
             raise ConnectionError(e)
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             "waiting for voice events for channel: {channel_id} in guild: {self.guild_id}",
         )
 
@@ -270,7 +270,7 @@ class Player:
             )
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Successfully received events for channel: {channel_id} in guild: {self.guild_id}",
         )
 
@@ -300,7 +300,7 @@ class Player:
         self._connected = True
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Successfully connected, and sent data to lavalink for channel: {channel_id} in guild: {self.guild_id}",
         )
 
@@ -325,7 +325,7 @@ class Player:
         await self.clear()
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
@@ -335,21 +335,21 @@ class Player:
             raise
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Successfully deleted player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         self._connected = False
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Updating voice state for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         await self.bot.update_voice_state(self.guild_id, None)
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Successfully updated voice state for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
@@ -677,7 +677,7 @@ class Player:
 
         await self._update(player)
 
-    async def filter(self, filter: Filter | None = None):
+    async def filter(self, filter: Filters | None = None):
         """
         Filter.
 
@@ -834,7 +834,7 @@ class Player:
         # TODO: Somehow do the filter and the track.
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
@@ -852,13 +852,13 @@ class Player:
             return
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         if int(event.guild_id) == int(self.guild_id):
             _logger.log(
-                Trace.LEVEL,
+                TRACE_LEVEL,
                 f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
             )
             try:
@@ -876,7 +876,7 @@ class Player:
 
             if len(self.queue) <= 0:
                 _logger.log(
-                    Trace.LEVEL,
+                    TRACE_LEVEL,
                     f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
                 )
                 await self.bot.dispatch(
@@ -890,7 +890,7 @@ class Player:
                 return
 
             _logger.log(
-                Trace.LEVEL,
+                TRACE_LEVEL,
                 f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
             )
 
@@ -908,7 +908,7 @@ class Player:
             )
 
             _logger.log(
-                Trace.LEVEL,
+                TRACE_LEVEL,
                 f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
             )
 

@@ -17,7 +17,7 @@ from hikari import StartedEvent
 from hikari import StoppingEvent
 
 from .enums import VersionType
-from .internal import Trace
+from .internal import TRACE_LEVEL
 from .internal import logger as _logger
 from .player import Player
 from .rest import RESTClient
@@ -63,11 +63,11 @@ class Client:
         self._session: ClientSession | None = None
         self._attempts: t.Final[int] = max_attempts
         self._session_handler = session_handler(self)
-        _logger.log(Trace.LEVEL, "Creating starting event...")
+        _logger.log(TRACE_LEVEL, "Creating starting event...")
         bot.subscribe(StartedEvent, self._handle_startup)
-        _logger.log(Trace.LEVEL, "Creating stopping event...")
+        _logger.log(TRACE_LEVEL, "Creating stopping event...")
         bot.subscribe(StoppingEvent, self._handle_shutdown)
-        _logger.log(Trace.LEVEL, "Successfully setup events.")
+        _logger.log(TRACE_LEVEL, "Successfully setup events.")
 
     @property
     def sessions(self) -> t.Sequence[Session]:

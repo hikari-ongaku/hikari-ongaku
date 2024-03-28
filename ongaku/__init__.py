@@ -13,7 +13,7 @@ import logging
 
 from . import internal
 
-logging.addLevelName(internal.Trace.LEVEL, internal.Trace.NAME)
+logging.addLevelName(internal.TRACE_LEVEL, internal.TRACE_NAME)
 
 
 from .abc.bases import OngakuEvent
@@ -29,18 +29,18 @@ from .abc.events import TrackExceptionEvent
 from .abc.events import TrackStartEvent
 from .abc.events import TrackStuckEvent
 from .abc.events import WebsocketClosedEvent
-from .abc.filters import Filter
+from .abc.filters import Filters
 from .abc.playlist import Playlist
 from .abc.statistics import StatsCpu
 from .abc.statistics import StatsFrameStatistics
 from .abc.statistics import StatsMemory
 from .abc.track import Track
-from .about import __author__
-from .about import __author_email__
-from .about import __license__
-from .about import __maintainer__
-from .about import __url__
-from .about import __version__
+from .internal.about import __author__
+from .internal.about import __author_email__
+from .internal.about import __license__
+from .internal.about import __maintainer__
+from .internal.about import __url__
+from .internal.about import __version__
 from .client import Client
 from .enums import BandType
 from .enums import ConnectionType
@@ -49,19 +49,19 @@ from .enums import RoutePlannerType
 from .enums import SeverityType
 from .enums import TrackEndReasonType
 from .enums import VersionType
-from .exceptions import BuildException
-from .exceptions import LavalinkException
-from .exceptions import OngakuException
-from .exceptions import PlayerConnectException
-from .exceptions import PlayerException
-from .exceptions import PlayerMissingException
-from .exceptions import PlayerQueueException
-from .exceptions import SessionConnectionException
-from .exceptions import SessionException
-from .exceptions import SessionHandlerException
-from .exceptions import WebsocketClosureException
-from .exceptions import WebsocketException
-from .exceptions import WebsocketTypeException
+from .errors import BuildException
+from .errors import LavalinkException
+from .errors import OngakuException
+from .errors import PlayerConnectException
+from .errors import PlayerException
+from .errors import PlayerMissingException
+from .errors import PlayerQueueException
+from .errors import SessionConnectionException
+from .errors import SessionException
+from .errors import SessionHandlerException
+from .errors import WebsocketClosureException
+from .errors import WebsocketException
+from .errors import WebsocketTypeException
 from .player import Player
 from .session import Session
 
@@ -122,7 +122,7 @@ __all__ = (
     "Track",
     "Playlist",
     # .abc.filter
-    "Filter",
+    "Filters",
 )
 
 

@@ -19,10 +19,10 @@ from pydantic import ValidationInfo
 from pydantic import ValidatorFunctionWrapHandler
 
 if t.TYPE_CHECKING:
-    from ..client import Client
-    from ..session import Session
+    from ongaku.client import Client
+    from ongaku.session import Session
 
-from ..internal import Trace
+from ..internal import TRACE_LEVEL
 from ..internal import logger
 
 __all__ = (
@@ -78,12 +78,12 @@ class PayloadBase(BaseModel):
         """
         name = cls.__qualname__
 
-        _logger.log(Trace.LEVEL, f"Validating payload: {payload} to {name}")
+        _logger.log(TRACE_LEVEL, f"Validating payload: {payload} to {name}")
 
         cls = cls.model_validate_json(payload, strict=True)
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"Payload validation to {name} completed successfully.",
         )
 

@@ -13,13 +13,13 @@ import typing as t
 import aiohttp
 import hikari
 
-from .about import __version__
+from .internal.about import __version__
 from .enums import ConnectionType
 from .enums import VersionType
-from .exceptions import PlayerMissingException
-from .exceptions import SessionConnectionException
+from .errors import PlayerMissingException
+from .errors import SessionConnectionException
 from .handlers import _WSHandler
-from .internal import Trace
+from .internal import TRACE_LEVEL
 from .internal import logger
 from .player import Player
 
@@ -118,7 +118,7 @@ class Session:
             ) as ws:
                 self.status = ConnectionType.CONNECTED
                 _logger.log(
-                    Trace.LEVEL,
+                    TRACE_LEVEL,
                     f"Websocket connection on session {self.host}:{self.port} successful.",
                 )
                 async for msg in ws:
@@ -154,7 +154,7 @@ class Session:
 
         self.base_headers.update(new_headers)
 
-        _logger.log(Trace.LEVEL, "Starting websocket connection...")
+        _logger.log(TRACE_LEVEL, "Starting websocket connection...")
 
         self._connection = asyncio.create_task(self._create_connection())
 

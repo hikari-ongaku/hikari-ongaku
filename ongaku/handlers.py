@@ -23,8 +23,8 @@ from .abc import TrackStuckEvent
 from .abc import WebsocketClosedEvent
 from .enums import WebsocketEventType
 from .enums import WebsocketOPCodeType
-from .exceptions import WebsocketTypeException
-from .internal import Trace
+from .errors import WebsocketTypeException
+from .internal import TRACE_LEVEL
 from .internal import logger
 
 if t.TYPE_CHECKING:
@@ -152,7 +152,7 @@ class _WSHandler:
                 await self._session.client._session_handler.switch_session()
 
             case _:
-                _logger.log(Trace.LEVEL, f"Received a {message.type}. Ignoring.")
+                _logger.log(TRACE_LEVEL, f"Received a {message.type}. Ignoring.")
 
 
 # MIT License

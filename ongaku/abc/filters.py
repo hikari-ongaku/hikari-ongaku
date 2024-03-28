@@ -10,10 +10,11 @@ import typing as t
 
 from pydantic import Field
 
-from ..enums import BandType
-from .bases import PayloadBase
+from ongaku.enums import BandType
+from ongaku.abc.bases import PayloadBase
 
 __all__ = (
+    "Filters",
     "FilterEqualizer",
     "FilterKaraoke",
     "FilterTimescale",
@@ -44,14 +45,14 @@ class Filters(PayloadBase):
     """
 
     @classmethod
-    def build(cls) -> Filters:
+    def create(cls) -> Filters:
         """
-        build a filters object.
+        Create a filters object.
 
-        Build an empty filters object to pass to the bot.
+        Create an empty filters object to pass to the bot.
         """
         return Filters(
-            volume=None,
+            volume=1.0,
             equalizer=[],
             karaoke=None,
             timescale=None,
@@ -64,12 +65,116 @@ class Filters(PayloadBase):
             plugin_filters={},
         )
 
-    volume: t.Annotated[float | None, Field(default=None, ge=0.0, le=5.0)]
+    volume: t.Annotated[float, Field(default=0, ge=0.0, le=5.0)]
     """Adjusts the player volume from 0.0 to 5.0, where 1.0 is 100%. Values >1.0 may cause clipping."""
+
+    def set_volume(self, volume: float):
+        """
+        Set volume.
+
+        Set the volume of the players filters.
+
+        Parameters
+        ----------
+        volume : hikari.UndefinedNoneOr[float]
+            The volume you wish to set.
+        """
+        if volume > 5.0:
+            raise ValueError("Volume must be lower than 5.0")
+        
+        if volume < 0.0:
+            raise ValueError("Volume must be higher than or equal to 0.")
+        
+        self.volume = volume
+
     equalizer: t.Annotated[t.MutableSequence[FilterEqualizer], Field(default=[])]
     """Adjusts 15 different bands."""
+
+    def set_equalizer_band(
+        self,
+        band: BandType,
+        gain: float
+    ) -> None:
+        """
+        Set equalizer band.
+
+        Set, or override a new equalizer band.
+        """
+        if gain < -0.25:
+            raise ValueError("Gain must be greater than -0.25")
+        if gain > 1.0:
+            raise ValueError("Gain must be less than 1.0")
+
+        for item in self.equalizer:
+            if item.band == band:
+                self.equalizer.remove(item)
+
+        self.equalizer.append(FilterEqualizer(band=band, gain=gain))
+
+    def remove_equalizer_band(
+        self,
+        band: BandType
+    ) -> None:
+        """
+        Remove equalizer band.
+
+        Remove, an equalizer band if it existed.
+        """
+        for item in self.equalizer:
+            if item.band == band:
+                self.equalizer.remove(item)
+
+    def clear_equalizer_bands(
+        self
+    ) -> None:
+        """
+        Clear equalizer bands.
+
+        Clear all equalizer bands.
+        """
+        self.equalizer.clear()
+
     karaoke: t.Annotated[FilterKaraoke | None, Field(default=None)]
     """Eliminates part of a band, usually targeting vocals."""
+
+    def set_karaoke(
+        self,
+        level: float,
+        mono_level: float,
+        filter_band: float,
+        filter_width: float,
+    ) -> None:
+        """
+        Set the karaoke levels.
+
+        Set new karaoke levels for the current filter.
+
+        Parameters
+        ----------
+        level : float
+            The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect).
+        mono_level : float
+            The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect).
+        filter_band : float
+            The filter band (in Hz).
+        filter_width : float
+            The filter width.
+        """
+        self.karaoke = FilterKaraoke(
+            level=level, 
+            mono_level=mono_level, 
+            filter_band=filter_band, 
+            filter_width=filter_width
+        )
+
+    def clear_karaoke(self) -> None:
+        """
+        Clear karaoke.
+
+        This will completely remove the current karaoke setup.
+        """
+        self.karaoke = None
+
     timescale: t.Annotated[FilterTimescale | None, Field(default=None)]
     """Changes the speed, pitch, and rate."""
     tremolo: t.Annotated[FilterTremolo | None, Field(default=None)]
@@ -103,7 +208,7 @@ class FilterEqualizer(PayloadBase):
 
     band: BandType
     """The band (HZ25 to HZ16000)."""
-    value: t.Annotated[float | None, Field(default=None, ge=-0.25, le=1.0)]
+    gain: t.Annotated[float | None, Field(default=None, ge=-0.25, le=1.0)]
     """The gain (-0.25 to 1.0)."""
 
 

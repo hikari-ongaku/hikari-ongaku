@@ -15,7 +15,7 @@ import ujson
 
 from .abc.error import ExceptionError
 from .abc.error import RestError
-from .abc.filters import Filter
+from .abc.filters import Filters
 from .abc.info import Info
 from .abc.player import Player
 from .abc.player import PlayerVoice
@@ -24,29 +24,17 @@ from .abc.route_planner import RoutePlannerStatus
 from .abc.session import Session
 from .abc.statistics import Statistics
 from .abc.track import Track
-from .exceptions import BuildException
-from .exceptions import LavalinkException
-from .internal import Trace
+from .errors import BuildException
+from .errors import LavalinkException
+from .internal import TRACE_LEVEL
 from .internal import logger
 
 _logger = logger.getChild("rest")
 
 if t.TYPE_CHECKING:
-    from .client import Client
+    from ongaku.client import Client
+    from ongaku.internal.types import RESTClientT
 
-RestT = t.TypeVar(
-    "RestT",
-    Info,
-    Player,
-    PlayerVoice,
-    Session,
-    Playlist,
-    Track,
-    RoutePlannerStatus,
-    Statistics,
-    str,
-    dict[str, t.Any],
-)
 
 __all__ = ("RESTClient",)
 
@@ -118,7 +106,7 @@ class RESTClient:
         str
             The version, in string format.
         """
-        _logger.log(Trace.LEVEL, f"running GET /version")
+        _logger.log(TRACE_LEVEL, f"running GET /version")
 
         resp = await self._handle_rest(
             "/version",
@@ -157,7 +145,7 @@ class RESTClient:
         Statistics
             The Statistics object.
         """
-        _logger.log(Trace.LEVEL, f"running GET /stats")
+        _logger.log(TRACE_LEVEL, f"running GET /stats")
 
         resp = await self._handle_rest(
             "/stats",
@@ -192,7 +180,7 @@ class RESTClient:
         Info
             The Info object.
         """
-        _logger.log(Trace.LEVEL, f"running GET /info")
+        _logger.log(TRACE_LEVEL, f"running GET /info")
 
         resp = await self._handle_rest(
             "/info",
@@ -210,41 +198,41 @@ class RESTClient:
         self,
         url: str,
         method: _HttpMethod,
-        return_type: t.Type[RestT] | None,
+        return_type: t.Type[RESTClientT] | None,
         *,
         headers: t.Mapping[str, t.Any] = {},
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: t.Literal[False] = False,
         version: bool = True,
-    ) -> RestT: ...
+    ) -> RESTClientT: ...
 
     @t.overload
     async def _handle_rest(
         self,
         url: str,
         method: _HttpMethod,
-        return_type: t.Type[RestT] | None,
+        return_type: t.Type[RESTClientT] | None,
         *,
         headers: t.Mapping[str, t.Any] = {},
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: t.Literal[True] = True,
         version: bool = True,
-    ) -> t.Sequence[RestT]: ...
+    ) -> t.Sequence[RESTClientT]: ...
 
     async def _handle_rest(
         self,
         url: str,
         method: _HttpMethod,
-        return_type: t.Type[RestT] | None,
+        return_type: t.Type[RESTClientT] | None,
         *,
         headers: t.Mapping[str, t.Any] = {},
         json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
         params: t.Mapping[str, t.Any] = {},
         sequence: bool = False,
         version: bool = True,
-    ) -> RestT | t.Sequence[RestT] | None:
+    ) -> RESTClientT | t.Sequence[RESTClientT] | None:
         """
         Handle rest.
 
@@ -278,7 +266,7 @@ class RESTClient:
                 params=params,
             ) as response:
                 _logger.log(
-                    Trace.LEVEL,
+                    TRACE_LEVEL,
                     f"Received code: {response.status} with response {await response.text()} on url {response.url}",
                 )
                 if response.status >= 400:
@@ -364,7 +352,7 @@ class RESTSession:
         Session
             The Session object.
         """
-        _logger.log(Trace.LEVEL, f"running PATCH /sessions/{session_id}")
+        _logger.log(TRACE_LEVEL, f"running PATCH /sessions/{session_id}")
 
         resp = await self._rest._handle_rest(
             "/sessions/" + session_id,
@@ -416,7 +404,7 @@ class RESTPlayer:
         typing.Sequence[Player]
             The Sequence of player objects.
         """
-        _logger.log(Trace.LEVEL, f"running GET /sessions/{session_id}/players")
+        _logger.log(TRACE_LEVEL, f"running GET /sessions/{session_id}/players")
 
         resp = await self._rest._handle_rest(
             "/sessions/" + session_id + "/players",
@@ -460,7 +448,7 @@ class RESTPlayer:
             The player object.
         """
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"running GET /sessions/{session_id}/players/{guild_id}",
         )
 
@@ -485,7 +473,7 @@ class RESTPlayer:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        filter: hikari.UndefinedNoneOr[Filter] = hikari.UNDEFINED,
+        filter: hikari.UndefinedNoneOr[Filters] = hikari.UNDEFINED,
         voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> Player:
@@ -597,7 +585,7 @@ class RESTPlayer:
             if filter is None:
                 patch_data.update({"filters": None})
             else:
-                patch_data.update({"filters": filter._build()})
+                patch_data.update({"filters": filter._to_payload})
 
         params = {"noReplace": "false"}
 
@@ -605,7 +593,7 @@ class RESTPlayer:
             params.update({"noReplace": "true"})
 
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"running PATCH /sessions/{session_id}/players/{guild_id} with params: {params} and json: {patch_data}",
         )
 
@@ -644,7 +632,7 @@ class RESTPlayer:
             Raise when a invalid response type is received.
         """
         _logger.log(
-            Trace.LEVEL,
+            TRACE_LEVEL,
             f"running DELETE /sessions/{session_id}/players/{guild_id}",
         )
 
@@ -699,7 +687,7 @@ class RESTTrack:
         """
         params = {"identifier": query}
 
-        _logger.log(Trace.LEVEL, f"running GET /loadtracks with params: {params}")
+        _logger.log(TRACE_LEVEL, f"running GET /loadtracks with params: {params}")
 
         resp = await self._rest._handle_rest(
             "/loadtracks", _HttpMethod.GET, dict, params=params
@@ -708,17 +696,17 @@ class RESTTrack:
         load_type: str = resp["loadType"]
 
         if load_type == "empty":
-            _logger.log(Trace.LEVEL, f"loadType is empty.")
+            _logger.log(TRACE_LEVEL, f"loadType is empty.")
             return
 
         elif load_type == "error":
-            _logger.log(Trace.LEVEL, f"loadType caused an error.")
+            _logger.log(TRACE_LEVEL, f"loadType caused an error.")
             raise LavalinkException(
                 ExceptionError._from_payload(ujson.dumps(resp["data"]))
             )
 
         elif load_type == "search":
-            _logger.log(Trace.LEVEL, f"loadType was a search result.")
+            _logger.log(TRACE_LEVEL, f"loadType was a search result.")
             tracks: t.Sequence[Track] = []
             for trk in resp["data"]:
                 try:
@@ -731,11 +719,11 @@ class RESTTrack:
             build = tracks
 
         elif load_type == "track":
-            _logger.log(Trace.LEVEL, f"loadType was a track link.")
+            _logger.log(TRACE_LEVEL, f"loadType was a track link.")
             build = Track._from_payload(ujson.dumps(resp["data"]))
 
         elif load_type == "playlist":
-            _logger.log(Trace.LEVEL, f"loadType was a playlist link.")
+            _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
             build = Playlist._from_payload(ujson.dumps(resp["data"]))
 
         else:
@@ -772,7 +760,7 @@ class RESTTrack:
         """
         params = {"encodedTrack": code}
 
-        _logger.log(Trace.LEVEL, f"running GET /decodetrack with params: {params}")
+        _logger.log(TRACE_LEVEL, f"running GET /decodetrack with params: {params}")
 
         resp = await self._rest._handle_rest(
             "/decodetrack",
@@ -809,7 +797,7 @@ class RESTTrack:
         typing.Sequence[Track]
             The Track object.
         """
-        _logger.log(Trace.LEVEL, f"running GET /decodetracks with json: {[*codes]}")
+        _logger.log(TRACE_LEVEL, f"running GET /decodetracks with json: {[*codes]}")
 
         resp = await self._rest._handle_rest(
             "/decodetracks",
@@ -858,7 +846,7 @@ class RESTRoutePlanner:
         RoutePlannerStatus
             The RoutePlannerStatus object.
         """
-        _logger.log(Trace.LEVEL, f"running GET /routeplanner/status")
+        _logger.log(TRACE_LEVEL, f"running GET /routeplanner/status")
 
         resp = await self._rest._handle_rest(
             "/loadtracks",
@@ -886,7 +874,7 @@ class RESTRoutePlanner:
         LavalinkException
             Raise when a invalid response type is received.
         """
-        _logger.log(Trace.LEVEL, f"running POST /routeplanner/free/{address}")
+        _logger.log(TRACE_LEVEL, f"running POST /routeplanner/free/{address}")
 
         await self._rest._handle_rest(
             "/routeplanner/free/" + address,
@@ -907,7 +895,7 @@ class RESTRoutePlanner:
         LavalinkException
             Raise when a invalid response type is received.
         """
-        _logger.log(Trace.LEVEL, f"running POST /routeplanner/free/all")
+        _logger.log(TRACE_LEVEL, f"running POST /routeplanner/free/all")
 
         await self._rest._handle_rest(
             "/routeplanner/free/all",

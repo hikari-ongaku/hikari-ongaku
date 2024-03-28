@@ -4,42 +4,42 @@ Abstract classes.
 All of the abstract classes for Ongaku.
 """
 
-from .bases import OngakuEvent
-from .error import ExceptionError
-from .error import RestError
-from .events import PlayerBase
-from .events import PlayerUpdateEvent
-from .events import QueueEmptyEvent
-from .events import QueueNextEvent
-from .events import ReadyEvent
-from .events import StatisticsEvent
-from .events import TrackBase
-from .events import TrackEndEvent
-from .events import TrackExceptionEvent
-from .events import TrackStartEvent
-from .events import TrackStuckEvent
-from .events import WebsocketClosedEvent
-from .filters import Filter
-from .info import Info
-from .info import InfoGit
-from .info import InfoPlugin
-from .info import InfoVersion
-from .player import Player
-from .player import PlayerState
-from .player import PlayerVoice
-from .playlist import Playlist
-from .playlist import PlaylistInfo
-from .route_planner import FailingAddress
-from .route_planner import IPBlock
-from .route_planner import RoutePlannerDetails
-from .route_planner import RoutePlannerStatus
-from .session import Session
-from .statistics import Statistics
-from .statistics import StatsCpu
-from .statistics import StatsFrameStatistics
-from .statistics import StatsMemory
-from .track import Track
-from .track import TrackInfo
+from ongaku.abc.bases import OngakuEvent
+from ongaku.abc.error import ExceptionError
+from ongaku.abc.error import RestError
+from ongaku.abc.events import PlayerBase
+from ongaku.abc.events import PlayerUpdateEvent
+from ongaku.abc.events import QueueEmptyEvent
+from ongaku.abc.events import QueueNextEvent
+from ongaku.abc.events import ReadyEvent
+from ongaku.abc.events import StatisticsEvent
+from ongaku.abc.events import TrackBase
+from ongaku.abc.events import TrackEndEvent
+from ongaku.abc.events import TrackExceptionEvent
+from ongaku.abc.events import TrackStartEvent
+from ongaku.abc.events import TrackStuckEvent
+from ongaku.abc.events import WebsocketClosedEvent
+from ongaku.abc.filters import Filters, FilterEqualizer, FilterKaraoke, FilterTimescale, FilterTremolo, FilterVibrato, FilterRotation, FilterDistortion, FilterChannelMix, FilterLowPass
+from ongaku.abc.info import Info
+from ongaku.abc.info import InfoGit
+from ongaku.abc.info import InfoPlugin
+from ongaku.abc.info import InfoVersion
+from ongaku.abc.player import Player
+from ongaku.abc.player import PlayerState
+from ongaku.abc.player import PlayerVoice
+from ongaku.abc.playlist import Playlist
+from ongaku.abc.playlist import PlaylistInfo
+from ongaku.abc.route_planner import FailingAddress
+from ongaku.abc.route_planner import IPBlock
+from ongaku.abc.route_planner import RoutePlannerDetails
+from ongaku.abc.route_planner import RoutePlannerStatus
+from ongaku.abc.session import Session
+from ongaku.abc.statistics import Statistics
+from ongaku.abc.statistics import StatsCpu
+from ongaku.abc.statistics import StatsFrameStatistics
+from ongaku.abc.statistics import StatsMemory
+from ongaku.abc.track import Track
+from ongaku.abc.track import TrackInfo
 
 __all__ = (
     # .events
@@ -57,7 +57,16 @@ __all__ = (
     "QueueEmptyEvent",
     "QueueNextEvent",
     # .filters
-    "Filter",
+    "Filters",
+    "FilterEqualizer",
+    "FilterKaraoke",
+    "FilterTimescale",
+    "FilterTremolo",
+    "FilterVibrato",
+    "FilterRotation",
+    "FilterDistortion",
+    "FilterChannelMix",
+    "FilterLowPass",
     # .lavalink
     "InfoVersion",
     "InfoGit",
