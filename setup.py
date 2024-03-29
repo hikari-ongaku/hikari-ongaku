@@ -20,7 +20,7 @@ def parse_requirements_file(path: str) -> t.List[str]:
         return [d for d in dependencies if not d.startswith("#")]
 
 def parse_meta() -> types.SimpleNamespace:
-    with open(os.path.join(name, "about.py")) as fp:
+    with open(os.path.join(name, "internal", "about.py")) as fp:
         code = fp.read()
 
     token_pattern = re.compile(
