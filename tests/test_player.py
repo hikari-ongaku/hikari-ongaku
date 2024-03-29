@@ -1,8 +1,6 @@
 # ruff: noqa: D100, D101, D102
 
 import unittest
-from unittest.mock import AsyncMock
-from unittest.mock import patch
 
 import hikari
 
