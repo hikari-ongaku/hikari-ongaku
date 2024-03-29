@@ -35,12 +35,6 @@ from .abc.statistics import StatsCpu
 from .abc.statistics import StatsFrameStatistics
 from .abc.statistics import StatsMemory
 from .abc.track import Track
-from .internal.about import __author__
-from .internal.about import __author_email__
-from .internal.about import __license__
-from .internal.about import __maintainer__
-from .internal.about import __url__
-from .internal.about import __version__
 from .client import Client
 from .enums import BandType
 from .enums import ConnectionType
@@ -62,6 +56,12 @@ from .errors import SessionHandlerException
 from .errors import WebsocketClosureException
 from .errors import WebsocketException
 from .errors import WebsocketTypeException
+from .internal.about import __author__
+from .internal.about import __author_email__
+from .internal.about import __license__
+from .internal.about import __maintainer__
+from .internal.about import __url__
+from .internal.about import __version__
 from .player import Player
 from .session import Session
 

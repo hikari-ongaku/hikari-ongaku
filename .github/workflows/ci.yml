@@ -1,40 +1,37 @@
-name: build
+name: CodeClimate Test Coverage
+
 on:
   push:
     branches:
-      - master
-    tags:
-      - '!*' # Do not execute on tags
-    paths:
-      - src/*
-      - test/*
-      - '*.json'
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   test:
-    name: test
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-    - run: |
-        pip install .
-        pip install -r test_requirements.txt
-        unittest discover
-        
-  coverage:
-    needs: [ test ]
-    name: coverage
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-    - uses: paambaati/codeclimate-action@v2.2.4
-      env:
-        CC_TEST_REPORTER_ID: ${{ secrets.CC_ID }}
-      with:
-        coverageCommand: coverage run -m unittest discover
-    
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install codeclimate-test-reporter
+
+      - name: Run tests
+        run: |
+          python -m unittest discover ./tests
+
+      - name: Upload coverage report to CodeClimate
+        run: |
+          codeclimate-test-reporter
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_ID }}

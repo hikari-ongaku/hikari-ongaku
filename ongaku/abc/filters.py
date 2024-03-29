@@ -6,12 +6,12 @@ The filter abstract classes.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from pydantic import Field
+import pydantic
 
-from ongaku.enums import BandType
 from ongaku.abc.bases import PayloadBase
+from ongaku.enums import BandType
 
 __all__ = (
     "Filters",
@@ -26,17 +26,12 @@ __all__ = (
     "FilterLowPass",
 )
 
-if t.TYPE_CHECKING:
-    BuildT = dict[
-        str, float | t.Mapping[str, float] | t.Sequence[dict[str, float | int]]
-    ]
-
 
 class Filters(PayloadBase):
     """
     The base filters.
 
-    Build a new filter, or view the current filter.
+    View the current filter.
 
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
 
@@ -45,13 +40,13 @@ class Filters(PayloadBase):
     """
 
     @classmethod
-    def create(cls) -> Filters:
+    def create(cls) -> EditableFilters:
         """
-        Create a filters object.
+        Create a filters objectyping.
 
-        Create an empty filters object to pass to the bot.
+        Create an empty filters object to pass to the botyping.
         """
-        return Filters(
+        return EditableFilters(
             volume=1.0,
             equalizer=[],
             karaoke=None,
@@ -65,8 +60,47 @@ class Filters(PayloadBase):
             plugin_filters={},
         )
 
-    volume: t.Annotated[float, Field(default=0, ge=0.0, le=5.0)]
+    volume: typing.Annotated[float, pydantic.Field(default=0, ge=0.0, le=5.0)]
     """Adjusts the player volume from 0.0 to 5.0, where 1.0 is 100%. Values >1.0 may cause clipping."""
+    equalizer: typing.Annotated[
+        typing.MutableSequence[FilterEqualizer], pydantic.Field(default=[])
+    ]
+    """Adjusts 15 different bands."""
+    karaoke: typing.Annotated[FilterKaraoke | None, pydantic.Field(default=None)]
+    """Eliminates part of a band, usually targeting vocals."""
+    timescale: typing.Annotated[FilterTimescale | None, pydantic.Field(default=None)]
+    """Changes the speed, pitch, and rate."""
+    tremolo: typing.Annotated[FilterTremolo | None, pydantic.Field(default=None)]
+    """Creates a shuddering effect, where the volume quickly oscillates."""
+    vibrato: typing.Annotated[FilterVibrato | None, pydantic.Field(default=None)]
+    """Creates a shuddering effect, where the pitch quickly oscillates."""
+    rotation: typing.Annotated[FilterRotation | None, pydantic.Field(default=None)]
+    """Rotates the audio around the stereo channels/user headphones (aka Audio Panning)."""
+    distortion: typing.Annotated[FilterDistortion | None, pydantic.Field(default=None)]
+    """Distorts the audio."""
+    channel_mix: typing.Annotated[
+        FilterChannelMix | None, pydantic.Field(default=None, alias="channelMix")
+    ]
+    """Mixes both channels (left and right)."""
+    low_pass: typing.Annotated[
+        FilterLowPass | None, pydantic.Field(default=None, alias="lowPass")
+    ]
+    """Filters higher frequencies."""
+    plugin_filters: typing.Annotated[
+        typing.MutableMapping[str, typing.Any],
+        pydantic.Field(default={}, alias="pluginFilters"),
+    ]
+    """Filter plugin configurations."""
+
+
+class EditableFilters(Filters):
+    """
+    Editable Filters.
+
+    Allows for the user to edit the filter object.
+    """
+
+    # Volume
 
     def set_volume(self, volume: float):
         """
@@ -77,24 +111,19 @@ class Filters(PayloadBase):
         Parameters
         ----------
         volume : hikari.UndefinedNoneOr[float]
-            The volume you wish to set.
+            The volume you wish to setyping.
         """
         if volume > 5.0:
             raise ValueError("Volume must be lower than 5.0")
-        
+
         if volume < 0.0:
             raise ValueError("Volume must be higher than or equal to 0.")
-        
+
         self.volume = volume
 
-    equalizer: t.Annotated[t.MutableSequence[FilterEqualizer], Field(default=[])]
-    """Adjusts 15 different bands."""
+    # Equalizer
 
-    def set_equalizer_band(
-        self,
-        band: BandType,
-        gain: float
-    ) -> None:
+    def set_equalizer_band(self, band: BandType, gain: float) -> None:
         """
         Set equalizer band.
 
@@ -111,10 +140,7 @@ class Filters(PayloadBase):
 
         self.equalizer.append(FilterEqualizer(band=band, gain=gain))
 
-    def remove_equalizer_band(
-        self,
-        band: BandType
-    ) -> None:
+    def remove_equalizer_band(self, band: BandType) -> None:
         """
         Remove equalizer band.
 
@@ -124,9 +150,7 @@ class Filters(PayloadBase):
             if item.band == band:
                 self.equalizer.remove(item)
 
-    def clear_equalizer_bands(
-        self
-    ) -> None:
+    def clear_equalizer_bands(self) -> None:
         """
         Clear equalizer bands.
 
@@ -134,8 +158,7 @@ class Filters(PayloadBase):
         """
         self.equalizer.clear()
 
-    karaoke: t.Annotated[FilterKaraoke | None, Field(default=None)]
-    """Eliminates part of a band, usually targeting vocals."""
+    # Karaoke
 
     def set_karaoke(
         self,
@@ -161,10 +184,10 @@ class Filters(PayloadBase):
             The filter width.
         """
         self.karaoke = FilterKaraoke(
-            level=level, 
-            mono_level=mono_level, 
-            filter_band=filter_band, 
-            filter_width=filter_width
+            level=level,
+            mono_level=mono_level,
+            filter_band=filter_band,
+            filter_width=filter_width,
         )
 
     def clear_karaoke(self) -> None:
@@ -175,26 +198,13 @@ class Filters(PayloadBase):
         """
         self.karaoke = None
 
-    timescale: t.Annotated[FilterTimescale | None, Field(default=None)]
-    """Changes the speed, pitch, and rate."""
-    tremolo: t.Annotated[FilterTremolo | None, Field(default=None)]
-    """Creates a shuddering effect, where the volume quickly oscillates."""
-    vibrato: t.Annotated[FilterVibrato | None, Field(default=None)]
-    """Creates a shuddering effect, where the pitch quickly oscillates."""
-    rotation: t.Annotated[FilterRotation | None, Field(default=None)]
-    """Rotates the audio around the stereo channels/user headphones (aka Audio Panning)."""
-    distortion: t.Annotated[FilterDistortion | None, Field(default=None)]
-    """Distorts the audio."""
-    channel_mix: t.Annotated[
-        FilterChannelMix | None, Field(default=None, alias="channelMix")
-    ]
-    """Mixes both channels (left and right)."""
-    low_pass: t.Annotated[FilterLowPass | None, Field(default=None, alias="lowPass")]
-    """Filters higher frequencies."""
-    plugin_filters: t.Annotated[
-        t.MutableMapping[str, t.Any], Field(default={}, alias="pluginFilters")
-    ]
-    """Filter plugin configurations."""
+    # Timescale
+
+    def set_timescale(self, speed: float, pitch: float, rate: float) -> None:
+        self.timescale = FilterTimescale(speed=speed, pitch=pitch, rate=rate)
+
+    def clear_timescale(self) -> None:
+        self.timescale = None
 
 
 class FilterEqualizer(PayloadBase):
@@ -208,7 +218,7 @@ class FilterEqualizer(PayloadBase):
 
     band: BandType
     """The band (HZ25 to HZ16000)."""
-    gain: t.Annotated[float | None, Field(default=None, ge=-0.25, le=1.0)]
+    gain: typing.Annotated[float | None, pydantic.Field(default=None, ge=-0.25, le=1.0)]
     """The gain (-0.25 to 1.0)."""
 
 
@@ -221,17 +231,19 @@ class FilterKaraoke(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#karaoke)
     """
 
-    level: t.Annotated[float | None, Field(default=None, ge=0.0, le=1.0)]
+    level: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0, le=1.0)]
     """The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
-    mono_level: t.Annotated[
-        float | None, Field(default=None, alias="monoLevel", ge=0.0, le=1.0)
+    mono_level: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="monoLevel", ge=0.0, le=1.0)
     ]
     """The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
-    filter_band: t.Annotated[
-        float | None, Field(default=None, alias="filterBand", ge=0)
+    filter_band: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="filterBand", ge=0)
     ]
     """The filter band (in Hz)."""
-    filter_width: t.Annotated[float | None, Field(default=None, alias="filterWidth")]
+    filter_width: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="filterWidth")
+    ]
     """The filter width."""
 
 
@@ -244,11 +256,11 @@ class FilterTimescale(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#timescale)
     """
 
-    speed: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    speed: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The playback speed 0.0 ≤ x."""
-    pitch: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    pitch: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The pitch 0.0 ≤ x."""
-    rate: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    rate: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The rate 0.0 ≤ x."""
 
 
@@ -261,9 +273,9 @@ class FilterTremolo(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#tremolo)
     """
 
-    frequency: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    frequency: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The frequency 0.0 < x."""
-    depth: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    depth: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The tremolo depth 0.0 < x ≤ 1.0."""
 
 
@@ -276,9 +288,9 @@ class FilterVibrato(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#vibrato)
     """
 
-    frequency: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    frequency: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The frequency 0.0 < x ≤ 14.0"""
-    depth: t.Annotated[float | None, Field(default=None, ge=0.0)]
+    depth: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
     """The tremolo depth 0.0 < x ≤ 1.0."""
 
 
@@ -291,8 +303,8 @@ class FilterRotation(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#rotation)
     """
 
-    rotation_hz: t.Annotated[
-        float | None, Field(default=None, alias="rotationHz", ge=0.0)
+    rotation_hz: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="rotationHz", ge=0.0)
     ]
     """The frequency of the audio rotating around the listener in Hz. 0.2 is similar to the example video above."""
 
@@ -306,21 +318,33 @@ class FilterDistortion(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#distortion)
     """
 
-    sin_offset: t.Annotated[float | None, Field(default=None, alias="sinOffset")]
-    """The sin offset."""
-    sin_scale: t.Annotated[float | None, Field(default=None, alias="sinScale")]
+    sin_offset: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="sinOffset")
+    ]
+    """The sin offsetyping."""
+    sin_scale: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="sinScale")
+    ]
     """The sin scale."""
-    cos_offset: t.Annotated[float | None, Field(default=None, alias="cosOffset")]
-    """The cos offset."""
-    cos_scale: t.Annotated[float | None, Field(default=None, alias="cosScale")]
+    cos_offset: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="cosOffset")
+    ]
+    """The cos offsetyping."""
+    cos_scale: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="cosScale")
+    ]
     """The cos scale."""
-    tan_offset: t.Annotated[float | None, Field(default=None, alias="tanOffset")]
-    """The tan offset."""
-    tan_scale: t.Annotated[float | None, Field(default=None, alias="tanScale")]
+    tan_offset: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="tanOffset")
+    ]
+    """The tan offsetyping."""
+    tan_scale: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="tanScale")
+    ]
     """The tan scale."""
-    offset: t.Annotated[float | None, Field(default=None)]
-    """The offset."""
-    scale: t.Annotated[float | None, Field(default=None)]
+    offset: typing.Annotated[float | None, pydantic.Field(default=None)]
+    """The offsetyping."""
+    scale: typing.Annotated[float | None, pydantic.Field(default=None)]
     """The scale."""
 
 
@@ -333,20 +357,20 @@ class FilterChannelMix(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#channel-mix)
     """
 
-    left_to_left: t.Annotated[
-        float | None, Field(default=None, alias="leftToLeft", ge=0.0, le=1.0)
+    left_to_left: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="leftToLeft", ge=0.0, le=1.0)
     ]
     """The left to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
-    left_to_right: t.Annotated[
-        float | None, Field(default=None, alias="leftToRight", ge=0.0, le=1.0)
+    left_to_right: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="leftToRight", ge=0.0, le=1.0)
     ]
     """The left to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
-    right_to_left: t.Annotated[
-        float | None, Field(default=None, alias="rightToLeft", ge=0.0, le=1.0)
+    right_to_left: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="rightToLeft", ge=0.0, le=1.0)
     ]
     """The right to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
-    right_to_right: t.Annotated[
-        float | None, Field(default=None, alias="rightToRight", ge=0.0, le=1.0)
+    right_to_right: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="rightToRight", ge=0.0, le=1.0)
     ]
     """The right to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
 
@@ -360,7 +384,7 @@ class FilterLowPass(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#low-pass)
     """
 
-    smoothing: t.Annotated[float | None, Field(default=None)]
+    smoothing: typing.Annotated[float | None, pydantic.Field(default=None)]
     """The smoothing factor (1.0 < x)."""
 
 
@@ -380,7 +404,7 @@ class FilterLowPass(PayloadBase):
 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENtyping. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE

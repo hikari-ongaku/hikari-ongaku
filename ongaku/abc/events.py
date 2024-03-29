@@ -6,33 +6,31 @@ The session abstract classes and hikari events.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from hikari import Snowflake
-from pydantic import Field
-from pydantic import WrapSerializer
-from pydantic import WrapValidator
+import pydantic
 
-from ..enums import TrackEndReasonType
-from .bases import PayloadBaseApp
-from .bases import _snowflake_to_string
-from .bases import _string_to_snowflake
-from .error import ExceptionError
-from .player import PlayerState
-from .statistics import Statistics
-from .track import Track
+from ongaku.abc.bases import PayloadBaseApp
+from ongaku.abc.bases import PlayerBase
+from ongaku.abc.bases import TrackBase
+from ongaku.abc.error import ExceptionError
+from ongaku.abc.player import PlayerState
+from ongaku.abc.statistics import Statistics
+from ongaku.abc.track import Track
+from ongaku.enums import TrackEndReasonType
+
+if typing.TYPE_CHECKING:
+    from ongaku.internal.types import GuildIdT
 
 __all__ = (
     "ReadyEvent",
     "PlayerUpdateEvent",
     "StatisticsEvent",
     "WebsocketClosedEvent",
-    "TrackBase",
     "TrackStartEvent",
     "TrackEndEvent",
     "TrackExceptionEvent",
     "TrackStuckEvent",
-    "PlayerBase",
     "QueueEmptyEvent",
     "QueueNextEvent",
 )
@@ -47,7 +45,7 @@ class ReadyEvent(PayloadBaseApp):
 
     resumed: bool
     """Whether or not the session has been resumed, or is a new session."""
-    session_id: t.Annotated[str, Field(alias="sessionId")]
+    session_id: typing.Annotated[str, pydantic.Field(alias="sessionId")]
     """The lavalink session id, for the current session."""
 
 
@@ -58,12 +56,7 @@ class PlayerUpdateEvent(PayloadBaseApp):
     The event that is dispatched when a player is updated.
     """
 
-    guild_id: t.Annotated[
-        Snowflake,
-        WrapValidator(_string_to_snowflake),
-        WrapSerializer(_snowflake_to_string),
-        Field(alias="guildId"),
-    ]
+    guild_id: GuildIdT
 
     state: PlayerState
 
@@ -89,37 +82,14 @@ class WebsocketClosedEvent(PayloadBaseApp):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
-    guild_id: t.Annotated[
-        Snowflake,
-        WrapValidator(_string_to_snowflake),
-        WrapSerializer(_snowflake_to_string),
-        Field(alias="guildId"),
-    ]
+    guild_id: GuildIdT
     """The guild that had their websocket closed in."""
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
     reason: str
     """The close reason."""
-    by_remote: t.Annotated[bool, Field(alias="byRemote")]
+    by_remote: typing.Annotated[bool, pydantic.Field(alias="byRemote")]
     """Whether the connection was closed by Discord."""
-
-
-class TrackBase(PayloadBaseApp):
-    """
-    Base track class.
-
-    The class that all Track based events, inherit.
-    """
-
-    guild_id: t.Annotated[
-        Snowflake,
-        WrapValidator(_string_to_snowflake),
-        WrapSerializer(_snowflake_to_string),
-        Field(alias="guildId"),
-    ]
-    """The guild the track is playing in."""
-    track: Track
-    """The track that the event is attached too."""
 
 
 class TrackStartEvent(TrackBase):
@@ -159,27 +129,8 @@ class TrackStuckEvent(TrackBase):
     The event that is dispatched when a track gets stuck.
     """
 
-    threshold_ms: t.Annotated[int, Field(alias="thresholdMs")]
+    threshold_ms: typing.Annotated[int, pydantic.Field(alias="thresholdMs")]
     """The threshold in milliseconds that was exceeded."""
-
-
-class PlayerBase(PayloadBaseApp):
-    """
-    Player base.
-
-    This is the base player object for all Ongaku player events.
-
-    !!! note
-        All player based events, are ongaku related. Not lavalink related.
-    """
-
-    guild_id: t.Annotated[
-        Snowflake,
-        WrapValidator(_string_to_snowflake),
-        WrapSerializer(_snowflake_to_string),
-        Field(alias="guildId"),
-    ]
-    """The guild id of the player."""
 
 
 class QueueEmptyEvent(PlayerBase):

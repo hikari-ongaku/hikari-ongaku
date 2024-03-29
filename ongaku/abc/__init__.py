@@ -4,6 +4,8 @@ Abstract classes.
 All of the abstract classes for Ongaku.
 """
 
+from __future__ import annotations
+
 from ongaku.abc.bases import OngakuEvent
 from ongaku.abc.error import ExceptionError
 from ongaku.abc.error import RestError
@@ -19,7 +21,16 @@ from ongaku.abc.events import TrackExceptionEvent
 from ongaku.abc.events import TrackStartEvent
 from ongaku.abc.events import TrackStuckEvent
 from ongaku.abc.events import WebsocketClosedEvent
-from ongaku.abc.filters import Filters, FilterEqualizer, FilterKaraoke, FilterTimescale, FilterTremolo, FilterVibrato, FilterRotation, FilterDistortion, FilterChannelMix, FilterLowPass
+from ongaku.abc.filters import FilterChannelMix
+from ongaku.abc.filters import FilterDistortion
+from ongaku.abc.filters import FilterEqualizer
+from ongaku.abc.filters import FilterKaraoke
+from ongaku.abc.filters import FilterLowPass
+from ongaku.abc.filters import FilterRotation
+from ongaku.abc.filters import Filters
+from ongaku.abc.filters import FilterTimescale
+from ongaku.abc.filters import FilterTremolo
+from ongaku.abc.filters import FilterVibrato
 from ongaku.abc.info import Info
 from ongaku.abc.info import InfoGit
 from ongaku.abc.info import InfoPlugin

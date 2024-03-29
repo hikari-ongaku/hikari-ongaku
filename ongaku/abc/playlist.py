@@ -4,12 +4,12 @@ Playlist ABC's.
 The playlist abstract classes.
 """
 
-import typing as t
+import typing
 
-from pydantic import Field
+import pydantic
 
-from .bases import PayloadBase
-from .track import Track
+from ongaku.abc.bases import PayloadBase
+from ongaku.abc.track import Track
 
 __all__ = ("PlaylistInfo", "Playlist")
 
@@ -25,8 +25,8 @@ class PlaylistInfo(PayloadBase):
 
     name: str
     """The name of the playlist."""
-    selected_track: t.Annotated[
-        int | None, Field(default=-1, alias="selectedTrack")
+    selected_track: typing.Annotated[
+        int | None, pydantic.Field(default=-1, alias="selectedTrack")
     ] = None
     """The selected track of the playlist (`-1` if no track is selected)."""
 
@@ -42,9 +42,12 @@ class Playlist(PayloadBase):
 
     info: PlaylistInfo
     """The info of the playlist."""
-    plugin_info: t.Annotated[t.Mapping[t.Any, t.Any] | None, Field(alias="pluginInfo")]
+    plugin_info: typing.Annotated[
+        typing.Mapping[typing.Any, typing.Any] | None,
+        pydantic.Field(alias="pluginInfo"),
+    ]
     """Addition playlist info provided by plugins."""
-    tracks: t.Sequence[Track]
+    tracks: typing.Sequence[Track]
     """The tracks in this playlist."""
 
 

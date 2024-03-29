@@ -6,17 +6,15 @@ The player Abstract classes.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from hikari import Snowflake
-from pydantic import Field
-from pydantic import WrapSerializer
-from pydantic import WrapValidator
+import pydantic
 
-from .bases import PayloadBase
-from .bases import _snowflake_to_string
-from .bases import _string_to_snowflake
-from .track import Track
+from ongaku.abc.bases import PayloadBase
+from ongaku.abc.track import Track
+
+if typing.TYPE_CHECKING:
+    from ongaku.internal.types import GuildIdT
 
 __all__ = (
     "PlayerState",
@@ -57,7 +55,7 @@ class PlayerVoice(PayloadBase):
     """The Discord voice token to authenticate with."""
     endpoint: str
     """The Discord voice endpoint to connect to."""
-    session_id: t.Annotated[str, Field(alias="sessionId")]
+    session_id: typing.Annotated[str, pydantic.Field(alias="sessionId")]
     """The Discord voice session id to authenticate with."""
 
 
@@ -70,24 +68,19 @@ class Player(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
-    guild_id: t.Annotated[
-        Snowflake,
-        WrapValidator(_string_to_snowflake),
-        WrapSerializer(_snowflake_to_string),
-        Field(alias="guildId"),
-    ]
+    guild_id: GuildIdT
     """The guild id this player is currently in."""
-    track: t.Annotated[Track | None, Field(default=None)]
+    track: typing.Annotated[Track | None, pydantic.Field(default=None)]
     """The track the player is currently playing. None means its not currently playing any track."""
     volume: int
     """The volume of the player."""
-    is_paused: t.Annotated[bool, Field(alias="paused")]
+    is_paused: typing.Annotated[bool, pydantic.Field(alias="paused")]
     """Whether the player is paused or not."""
     state: PlayerState
     """The [PlayerState][ongaku.abc.player.PlayerState] object."""
     voice: PlayerVoice
     """the [PlayerVoice][ongaku.abc.player.PlayerVoice] object."""
-    filters: dict[t.Any, t.Any]
+    filters: dict[typing.Any, typing.Any]
     """The filter object."""
 
 

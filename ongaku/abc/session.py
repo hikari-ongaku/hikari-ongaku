@@ -6,7 +6,7 @@ The session abstract classes.
 
 from __future__ import annotations
 
-from .bases import PayloadBase
+from ongaku.abc.bases import PayloadBase
 
 __all__ = ("Session",)
 

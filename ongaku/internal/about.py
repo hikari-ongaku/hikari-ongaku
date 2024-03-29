@@ -1,13 +1,13 @@
 """About this library."""
 
-import typing as t
+import typing
 
-__author__: t.Final[str] = "mplaty"
-__author_email__: t.Final[str] = "contact@mplaty.com"
-__maintainer__: t.Final[str] = "MPlaty"
-__license__: t.Final[str] = "MIT"
-__url__: t.Final[str] = "https://github.com/MPlatypus/hikari-ongaku"
-__version__: t.Final[str] = "0.5.0"
+__author__: typing.Final[str] = "mplaty"
+__author_email__: typing.Final[str] = "contact@mplaty.com"
+__maintainer__: typing.Final[str] = "MPlaty"
+__license__: typing.Final[str] = "MIT"
+__url__: typing.Final[str] = "https://github.com/MPlatypus/hikari-ongaku"
+__version__: typing.Final[str] = "0.5.0"
 
 # MIT License
 

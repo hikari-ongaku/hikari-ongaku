@@ -12,23 +12,23 @@ import ujson
 from aiohttp import WSMessage
 from aiohttp import WSMsgType
 
-from .abc import OngakuEvent
-from .abc import PlayerUpdateEvent
-from .abc import ReadyEvent
-from .abc import StatisticsEvent
-from .abc import TrackEndEvent
-from .abc import TrackExceptionEvent
-from .abc import TrackStartEvent
-from .abc import TrackStuckEvent
-from .abc import WebsocketClosedEvent
-from .enums import WebsocketEventType
-from .enums import WebsocketOPCodeType
-from .errors import WebsocketTypeException
-from .internal import TRACE_LEVEL
-from .internal import logger
+from ongaku.abc.bases import OngakuEvent
+from ongaku.abc.events import PlayerUpdateEvent
+from ongaku.abc.events import ReadyEvent
+from ongaku.abc.events import StatisticsEvent
+from ongaku.abc.events import TrackEndEvent
+from ongaku.abc.events import TrackExceptionEvent
+from ongaku.abc.events import TrackStartEvent
+from ongaku.abc.events import TrackStuckEvent
+from ongaku.abc.events import WebsocketClosedEvent
+from ongaku.enums import WebsocketEventType
+from ongaku.enums import WebsocketOPCodeType
+from ongaku.errors import WebsocketTypeException
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
-    from .session import Session
+    from ongaku.session import Session
 
 __all__ = (
     "_EventHandler",

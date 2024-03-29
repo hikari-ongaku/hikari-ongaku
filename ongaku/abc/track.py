@@ -6,12 +6,12 @@ The tracks abstract classes.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from hikari import Snowflake
-from pydantic import Field
+import hikari
+import pydantic
 
-from .bases import PayloadBase
+from ongaku.abc.bases import PayloadBase
 
 __all__ = (
     "TrackInfo",
@@ -30,25 +30,27 @@ class TrackInfo(PayloadBase):
 
     identifier: str
     """The track identifier."""
-    is_seekable: t.Annotated[bool, Field(alias="isSeekable")]
+    is_seekable: typing.Annotated[bool, pydantic.Field(alias="isSeekable")]
     """Whether the track is seekable."""
     author: str
     """The track author."""
     length: int
     """The track length in milliseconds."""
-    is_stream: t.Annotated[bool, Field(alias="isStream")]
+    is_stream: typing.Annotated[bool, pydantic.Field(alias="isStream")]
     """Whether the track is a stream."""
     position: int
     """The track position in milliseconds."""
     title: str
     """The track title."""
-    source_name: t.Annotated[str, Field(alias="sourceName")]
+    source_name: typing.Annotated[str, pydantic.Field(alias="sourceName")]
     """The tracks source name."""
-    uri: t.Annotated[str | None, Field(default=None)] = None
+    uri: typing.Annotated[str | None, pydantic.Field(default=None)] = None
     """The track uri."""
-    artwork_url: t.Annotated[str | None, Field(default=None, alias="artworkUrl")] = None
+    artwork_url: typing.Annotated[
+        str | None, pydantic.Field(default=None, alias="artworkUrl")
+    ] = None
     """The track artwork url"""
-    isrc: t.Annotated[str | None, Field(default=None)] = None
+    isrc: typing.Annotated[str | None, pydantic.Field(default=None)] = None
     """The track ISRC"""
 
 
@@ -64,15 +66,19 @@ class Track(PayloadBase):
     """The base64 encoded track data."""
     info: TrackInfo
     """Information about the track."""
-    plugin_info: t.Annotated[
-        t.Mapping[t.Any, t.Any] | None, Field(default={}, alias="pluginInfo")
+    plugin_info: typing.Annotated[
+        typing.Mapping[typing.Any, typing.Any] | None,
+        pydantic.Field(default={}, alias="pluginInfo"),
     ] = {}
     """Additional track info provided by plugins."""
-    user_data: t.Annotated[
-        t.Mapping[t.Any, t.Any] | None, Field(default={}, alias="userData")
+    user_data: typing.Annotated[
+        typing.Mapping[typing.Any, typing.Any] | None,
+        pydantic.Field(default={}, alias="userData"),
     ] = {}
     """Additional track data."""
-    requestor: t.Annotated[Snowflake | None, Field(default=None, exclude=True)] = None
+    requestor: typing.Annotated[
+        hikari.Snowflake | None, pydantic.Field(default=None, exclude=True)
+    ] = None
     """
     The user who requested this track.
 

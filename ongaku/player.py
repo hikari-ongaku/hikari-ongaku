@@ -34,7 +34,7 @@ from ongaku.internal import TRACE_LEVEL
 from ongaku.internal import logger
 
 if t.TYPE_CHECKING:
-    from .session import Session
+    from ongaku.session import Session
 
 _logger = logger.getChild("player")
 

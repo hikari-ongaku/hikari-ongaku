@@ -6,13 +6,13 @@ Route planner abstract classes.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from pydantic import Field
+import pydantic
 
-from ..enums import IPBlockType
-from ..enums import RoutePlannerType
-from .bases import PayloadBase
+from ongaku.abc.bases import PayloadBase
+from ongaku.enums import IPBlockType
+from ongaku.enums import RoutePlannerType
 
 __all__ = (
     "FailingAddress",
@@ -28,11 +28,11 @@ class FailingAddress(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
-    failing_address: t.Annotated[str, Field(alias="failingAddress")]
+    failing_address: typing.Annotated[str, pydantic.Field(alias="failingAddress")]
     """The failing address."""
-    failing_timestamp: t.Annotated[int, Field(alias="failingTimestamp")]
+    failing_timestamp: typing.Annotated[int, pydantic.Field(alias="failingTimestamp")]
     """The timestamp when the address failed."""
-    failing_time: t.Annotated[str, Field(alias="failingTime")]
+    failing_time: typing.Annotated[str, pydantic.Field(alias="failingTime")]
     """The timestamp when the address failed as a pretty string."""
 
 
@@ -60,25 +60,31 @@ class RoutePlannerDetails(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
-    ip_block: t.Annotated[IPBlock, Field(alias="ipBlock")]
+    ip_block: typing.Annotated[IPBlock, pydantic.Field(alias="ipBlock")]
     """The ip block being used."""
-    failing_addresses: t.Annotated[
-        t.Sequence[FailingAddress], Field(alias="failingAddresses")
+    failing_addresses: typing.Annotated[
+        typing.Sequence[FailingAddress], pydantic.Field(alias="failingAddresses")
     ]
     """The failing addresses."""
-    rotate_index: t.Annotated[str | None, Field(default=None, alias="rotateIndex")]
+    rotate_index: typing.Annotated[
+        str | None, pydantic.Field(default=None, alias="rotateIndex")
+    ]
     """The number of rotations."""
-    ip_index: t.Annotated[str | None, Field(default=None, alias="ipIndex")]
+    ip_index: typing.Annotated[
+        str | None, pydantic.Field(default=None, alias="ipIndex")
+    ]
     """The current offset in the block."""
-    current_address: t.Annotated[
-        str | None, Field(default=None, alias="currentAddress")
+    current_address: typing.Annotated[
+        str | None, pydantic.Field(default=None, alias="currentAddress")
     ]
     """The current address being used."""
-    current_address_index: t.Annotated[
-        str | None, Field(default=None, alias="currentAddressIndex")
+    current_address_index: typing.Annotated[
+        str | None, pydantic.Field(default=None, alias="currentAddressIndex")
     ]
     """The current offset in the ip block."""
-    block_index: t.Annotated[str | None, Field(default=None, alias="blockIndex")]
+    block_index: typing.Annotated[
+        str | None, pydantic.Field(default=None, alias="blockIndex")
+    ]
     """The current offset in the ip block."""
 
 
@@ -91,9 +97,11 @@ class RoutePlannerStatus(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
-    class_type: t.Annotated[RoutePlannerType | None, Field(default=None, alias="class")]
+    class_type: typing.Annotated[
+        RoutePlannerType | None, pydantic.Field(default=None, alias="class")
+    ]
     """The name of the RoutePlanner implementation being used by this server."""
-    details: t.Annotated[RoutePlannerDetails | None, Field(default=None)]
+    details: typing.Annotated[RoutePlannerDetails | None, pydantic.Field(default=None)]
     """The status details of the RoutePlanner."""
 
 

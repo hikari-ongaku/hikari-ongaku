@@ -13,7 +13,6 @@ import typing as t
 import aiohttp
 import hikari
 
-from .internal.about import __version__
 from .enums import ConnectionType
 from .enums import VersionType
 from .errors import PlayerMissingException
@@ -21,6 +20,7 @@ from .errors import SessionConnectionException
 from .handlers import _WSHandler
 from .internal import TRACE_LEVEL
 from .internal import logger
+from .internal.about import __version__
 from .player import Player
 
 if t.TYPE_CHECKING:

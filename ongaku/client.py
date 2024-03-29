@@ -16,14 +16,14 @@ from hikari import SnowflakeishOr
 from hikari import StartedEvent
 from hikari import StoppingEvent
 
-from .enums import VersionType
-from .internal import TRACE_LEVEL
-from .internal import logger as _logger
-from .player import Player
-from .rest import RESTClient
-from .session import BaseSessionHandler
-from .session import GeneralSessionHandler
-from .session import Session
+from ongaku.enums import VersionType
+from ongaku.internal import TRACE_LEVEL
+from ongaku.internal import logger as _logger
+from ongaku.player import Player
+from ongaku.rest import RESTClient
+from ongaku.session import BaseSessionHandler
+from ongaku.session import GeneralSessionHandler
+from ongaku.session import Session
 
 __all__ = ("Client",)
 

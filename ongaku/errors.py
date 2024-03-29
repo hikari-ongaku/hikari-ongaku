@@ -10,8 +10,8 @@ from aiohttp import WSCloseCode
 from attrs import define
 from hikari import Snowflake
 
-from .enums import WebsocketEventType
-from .enums import WebsocketOPCodeType
+from ongaku.enums import WebsocketEventType
+from ongaku.enums import WebsocketOPCodeType
 
 __all__ = (
     "OngakuException",

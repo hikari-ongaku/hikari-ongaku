@@ -6,11 +6,11 @@ The statistic abstract classes.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from pydantic import Field
+import pydantic
 
-from .bases import PayloadBase
+from ongaku.abc.bases import PayloadBase
 
 __all__ = ("StatsMemory", "StatsCpu", "StatsFrameStatistics", "Statistics")
 
@@ -45,9 +45,9 @@ class StatsCpu(PayloadBase):
 
     cores: int
     """The amount of cores the server has."""
-    system_load: t.Annotated[float | int, Field(alias="systemLoad")]
+    system_load: typing.Annotated[float | int, pydantic.Field(alias="systemLoad")]
     """The system load of the server."""
-    lavalink_load: t.Annotated[float | int, Field(alias="lavalinkLoad")]
+    lavalink_load: typing.Annotated[float | int, pydantic.Field(alias="lavalinkLoad")]
     """The load of Lavalink on the server."""
 
 
@@ -79,7 +79,7 @@ class Statistics(PayloadBase):
 
     players: int
     """The amount of players connected to the session."""
-    playing_players: t.Annotated[int, Field(alias="playingPlayers")]
+    playing_players: typing.Annotated[int, pydantic.Field(alias="playingPlayers")]
     """The amount of players playing a track."""
     uptime: int
     """The uptime of the session in milliseconds."""
@@ -87,8 +87,8 @@ class Statistics(PayloadBase):
     """The memory stats of the session."""
     cpu: StatsCpu
     """The cpu stats of the session."""
-    frame_statistics: t.Annotated[
-        StatsFrameStatistics | None, Field(default=None, alias="frameStats")
+    frame_statistics: typing.Annotated[
+        StatsFrameStatistics | None, pydantic.Field(default=None, alias="frameStats")
     ] = None
     """The frame stats of the session."""
 

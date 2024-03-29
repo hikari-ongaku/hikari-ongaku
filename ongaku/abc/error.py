@@ -6,12 +6,12 @@ The error abstract classes.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
 import pydantic
 
-from ..enums import SeverityType
-from .bases import PayloadBase
+from ongaku.abc.bases import PayloadBase
+from ongaku.enums import SeverityType
 
 __all__ = (
     "RestError",
@@ -34,7 +34,7 @@ class RestError(PayloadBase):
     """The HTTP status code."""
     error: str
     """The HTTP status code message."""
-    trace: t.Annotated[str | None, pydantic.Field(default=None)] = None
+    trace: typing.Annotated[str | None, pydantic.Field(default=None)] = None
     """The stack trace of the error."""
     message: str
     """The error message."""

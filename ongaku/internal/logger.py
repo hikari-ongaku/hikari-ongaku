@@ -7,7 +7,7 @@ All logger functions, and trace related items.
 from __future__ import annotations
 
 import logging
-import typing as t
+import typing
 
 __all__ = (
     "TRACE_LEVEL",
@@ -15,8 +15,8 @@ __all__ = (
     "logger",
 )
 
-TRACE_LEVEL: t.Final[int] = logging.DEBUG - 5
-TRACE_NAME: t.Final[str] = "TRACE_ONGAKU"
+TRACE_LEVEL: typing.Final[int] = logging.DEBUG - 5
+TRACE_NAME: typing.Final[str] = "TRACE_ONGAKU"
 
 
 logger = logging.getLogger("ongaku")
