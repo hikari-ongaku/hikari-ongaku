@@ -1,79 +1,136 @@
-"""Errors.
+"""
+Errors.
 
 All of the ongaku errors.
 """
 
 from __future__ import annotations
 
+from aiohttp import WSCloseCode
+from attrs import define
+from hikari import Snowflake
+
+from ongaku.enums import WebsocketEventType
+from ongaku.enums import WebsocketOPCodeType
+
 __all__ = (
-    "OngakuBaseException",
-    "GatewayRequiredException",
-    "BuildException",
+    "OngakuException",
+    "WebsocketException",
+    "WebsocketClosureException",
+    "WebsocketTypeException",
     "SessionException",
-    "TimeoutException",
-    "RequiredException",
+    "SessionConnectionException",
     "PlayerException",
-    "PlayerCreateException",
+    "PlayerConnectException",
+    "PlayerQueueException",
     "PlayerMissingException",
+    "BuildException",
+    "SessionHandlerException",
 )
 
 
-class OngakuBaseException(Exception):
-    """The base exception for all Ongaku related exceptions."""
+class OngakuException(Exception):
+    """The base ongaku exception."""
 
 
-class GatewayRequiredException(OngakuBaseException):
-    """Raised when Gateway bot is not used. [more info](https://ongaku.mplaty.com/getting_started/#qs-and-as)."""
+# Websocket related:
 
 
-class BuildException(OngakuBaseException):
-    """Raised when a model fails to build correctly."""
+class WebsocketException(OngakuException):
+    """Base websocket exception."""
 
 
-class TimeoutException(OngakuBaseException):
-    """Raised when a timeout has exceed its timer."""
+@define
+class WebsocketClosureException(WebsocketException):
+    """When a websocket has closed."""
+
+    code: WSCloseCode
+    """The disconnection code."""
+    reason: str | None
+    """The reason for the disconnection."""
 
 
-class RequiredException(OngakuBaseException):
-    """Raised when a value is required, but is None, or missing."""
+@define
+class WebsocketTypeException(WebsocketException):
+    """When a event has an issue decoding."""
+
+    op: WebsocketOPCodeType | WebsocketEventType | None
+    """The op code or event type that this event error is attached too. If unknown, this will be none."""
+    reason: str
+    """The reason for the events error."""
+
+
+# Session related:
+
+
+@define
+class SessionException(OngakuException):
+    """Base session exception."""
+
+    session_id: str | None
+    """The session ID that this exception is related to."""
+
+
+@define
+class SessionConnectionException(SessionException):
+    """Raised when the session has either failed to connect, or is not connected."""
+
+    reason: str = "Session is missing."
+    """The reason for the connection exception."""
 
 
 # Player related:
 
 
-class PlayerException(OngakuBaseException):
-    """Base player related exceptions."""
+@define
+class PlayerException(OngakuException):
+    """Base player exception."""
+
+    guild_id: Snowflake
+    """The guild id that this player is attached to."""
 
 
-class PlayerCreateException(PlayerException):
-    """Raised when ongaku failed to build a new player, or connect to the channel."""
+@define
+class PlayerConnectException(PlayerException):
+    """raised when the player fails to connect to a channel."""
+
+    reason: str
+    """The reason for the failed connection."""
+
+
+@define
+class PlayerQueueException(PlayerException):
+    """Raised when an issue occurs within the queue of a player."""
+
+    reason: str
+    """The reason for the failed queuing."""
 
 
 class PlayerMissingException(PlayerException):
-    """Raised when the player does not exist."""
+    """Raised when the player was unable to be found."""
 
 
-class PlayerQueueException(PlayerException):
-    """Raised when there is a problem with the queue."""
+# Other:
 
 
-# Lavalink related:
+@define
+class BuildException(OngakuException):
+    """Raised when something fails to be built."""
+
+    reason: str
+    """The reason for the failed build."""
 
 
-class LavalinkException(OngakuBaseException):
-    """Raised when an error is returned on the websocket, or a rest action."""
+class LavalinkException(OngakuException):
+    """Raised when an issue occurs with lavalink or rest actions."""
 
 
-class LavalinkConnectionException(LavalinkException):
-    """Raised when any Rest action (or a websocket connection) fails to connect to the lavalink server."""
+@define
+class SessionHandlerException(OngakuException):
+    """Raised when an issue occurs within a session handler."""
 
-
-class SessionException(LavalinkException):
-    """Raised when an error occurs with the Lavalink websocket connection."""
-
-
-class SessionStartException(SessionException):
-    """Raised when a session has not been started yet."""
+    reason: str
+    """The reason for the session handler exception."""
 
 
 # MIT License

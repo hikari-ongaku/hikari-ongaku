@@ -3,6 +3,7 @@ Checker.
 
 A extension, that checks if your query, is a track/playlist, or just a query.
 """
+
 from __future__ import annotations
 
 import enum
@@ -19,7 +20,8 @@ class Checked:
     """
 
     value: str
-    """The value.
+    """
+    The value.
     
     This is the value, based on the [type][ongaku.ext.checker.abc.CheckedType] it is.
     """

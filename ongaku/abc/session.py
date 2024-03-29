@@ -1,23 +1,23 @@
-"""Session ABC's.
+"""
+Session ABC's.
 
-The session abstract classes. [more here](https://ongaku.mplaty.com/api/abc/session)
+The session abstract classes.
 """
 
 from __future__ import annotations
 
-import typing as t
-
-from .base import PayloadBase
+from ongaku.abc.bases import PayloadBase
 
 __all__ = ("Session",)
 
 
-class Session(PayloadBase[t.Mapping[str, t.Any]]):
-    """Session information.
+class Session(PayloadBase):
+    """
+    Session information.
 
     All of the specified session information.
 
-    Find out more [here](https://lavalink.dev/api/rest.html#update-session).
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
     resuming: bool

@@ -1,0 +1,3 @@
+# Statistics
+
+::: ongaku.abc.statistics

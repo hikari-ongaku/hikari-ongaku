@@ -12,11 +12,6 @@ class ClientTest(unittest.TestCase):
         test_bot = hikari.GatewayBot("", banner=None)
         test_client = ongaku.Client(
             test_bot,
-            host="test_host",
-            port=1234,
-            password="test_password",
-            version=ongaku.VersionType.V4,
-            auto_sessions=False,
         )
 
         assert test_client.bot == test_bot

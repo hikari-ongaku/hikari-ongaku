@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 # ╔════════════════╗
 # ║ Hikari example ║
 # ╚════════════════╝
@@ -14,7 +12,12 @@ from ongaku.ext import checker
 
 bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
 
-ongaku_client = ongaku.Client(bot, host="192.168.68.55", password="youshallnotpass", logs="TRACE_ONGAKU")
+ongaku_client = ongaku.Client(bot)
+
+ongaku_client.add_server(
+    host="127.0.0.1",
+    password="youshallnotpass"
+)
 
 
 # ╔════════╗
@@ -126,14 +129,14 @@ async def play_command(
 
     track: ongaku.Track
 
-    if isinstance(result, ongaku.SearchResult):
+    if isinstance(result, ongaku.Playlist):
         track = result.tracks[0]
 
     elif isinstance(result, ongaku.Track):
         track = result
 
     else:
-        track = result.tracks[0]
+        track = result[0]
 
     embed = hikari.Embed(
         title=f"[{track.info.title}]({track.info.uri})",
@@ -141,9 +144,9 @@ async def play_command(
     )
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except ongaku.PlayerMissingException:
-        player = await ongaku_client.player.create(event.guild_id)
+        player = await ongaku_client.create_player(event.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -176,7 +179,7 @@ async def add_command(
         return
     
     try:
-        current_player = await ongaku_client.player.fetch(event.guild_id)
+        current_player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -202,13 +205,16 @@ async def add_command(
 
     tracks: list[ongaku.Track] = []
 
-    if isinstance(result, ongaku.Track):
-        await current_player.add((result,))
+    if isinstance(result, ongaku.Playlist):
+        tracks.extend(result.tracks)
+
+    elif isinstance(result, ongaku.Track):
         tracks.append(result)
 
     else:
-        await current_player.add(result.tracks)
-        tracks.extend(result.tracks)
+        tracks.extend(result)
+
+    await current_player.add(tracks)
 
     embed = hikari.Embed(
         title="Tracks added",
@@ -243,7 +249,7 @@ async def pause_command(
         return
 
     try:
-        current_player = await ongaku_client.player.fetch(event.guild_id)
+        current_player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -285,7 +291,7 @@ async def queue_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -341,7 +347,7 @@ async def volume_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -400,7 +406,7 @@ async def skip_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,
@@ -460,7 +466,7 @@ async def stop_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(event.guild_id)
+        player = await ongaku_client.fetch_player(event.guild_id)
     except Exception:
         await bot.rest.create_message(
             event.channel_id,

@@ -18,7 +18,12 @@ bot = hikari.GatewayBot("...")
 
 client = tanjun.Client.from_gateway_bot(bot)
 
-ongaku_client = ongaku.Client(bot, password="youshallnotpass")
+ongaku_client = ongaku.Client(bot)
+
+ongaku_client.add_server(
+    host="127.0.0.1",
+    password="youshallnotpass"
+)
 
 client.injector.set_type_dependency(ongaku.Client, ongaku_client)
 
@@ -127,14 +132,14 @@ async def play_command(
 
     track: ongaku.Track
 
-    if isinstance(result, ongaku.SearchResult):
+    if isinstance(result, ongaku.Playlist):
         track = result.tracks[0]
 
     elif isinstance(result, ongaku.Track):
         track = result
 
     else:
-        track = result.tracks[0]
+        track = result[0]
 
     embed = hikari.Embed(
         title=f"[{track.info.title}]({track.info.uri})",
@@ -142,9 +147,9 @@ async def play_command(
     )
 
     try:
-        player = await ongaku_client.player.fetch(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except ongaku.PlayerMissingException:
-        player = await ongaku_client.player.create(ctx.guild_id)
+        player = await ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -175,7 +180,7 @@ async def add_command(
         return
 
     try:
-        current_player = await ongaku_client.player.fetch(ctx.guild_id)
+        current_player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "You must have a player currently running!",
@@ -199,13 +204,16 @@ async def add_command(
 
     tracks: list[ongaku.Track] = []
 
-    if isinstance(result, ongaku.Track):
-        await current_player.add((result,))
+    if isinstance(result, ongaku.Playlist):
+        tracks.extend(result.tracks)
+
+    elif isinstance(result, ongaku.Track):
         tracks.append(result)
 
     else:
-        await current_player.add(result.tracks)
-        tracks.extend(result.tracks)
+        tracks.extend(result)
+
+    await current_player.add(tracks)
 
     embed = hikari.Embed(
         title="Tracks added",
@@ -231,7 +239,7 @@ async def pause_command(
         )
         return
     try:
-        current_player = await ongaku_client.player.fetch(ctx.guild_id)
+        current_player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "You must have a player currently running!",
@@ -264,7 +272,7 @@ async def queue_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -313,7 +321,7 @@ async def volume_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -355,7 +363,7 @@ async def skip_command(
         return
 
     try:
-        player = await ongaku_client.player.fetch(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -388,7 +396,7 @@ async def stop_command(
         )
         return
     try:
-        player = await ongaku_client.player.fetch(ctx.guild_id)
+        player = await ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",

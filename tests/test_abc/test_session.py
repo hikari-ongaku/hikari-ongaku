@@ -3,23 +3,23 @@
 import unittest
 
 from ongaku.abc.session import Session
+from tests import payload
 
 
-class SessionTest(unittest.TestCase):
-    payload = {"resuming": True, "timeout": 10}
+class TestSession(unittest.TestCase):
+    def test_base(self):
+        session = Session(resuming=False, timeout=1)
 
-    def test_session(self):
-        test_session = Session(resuming=True, timeout=10)
+        assert session.resuming == False
+        assert session.timeout == 1
 
-        assert test_session.resuming is True
-        assert test_session.timeout == 10
+    def test_from_payload(self):
+        session = Session._from_payload(payload.convert(payload.REST_SESSION_UPDATE))
 
-        assert test_session._to_payload == self.payload
+        assert session.resuming == False
+        assert session.timeout == 1
 
-    def test_session_payload(self):
-        test_session = Session._from_payload(self.payload)
+    def test_to_payload(self):
+        session = Session._from_payload(payload.convert(payload.REST_SESSION_UPDATE))
 
-        assert test_session.resuming is True
-        assert test_session.timeout == 10
-
-        assert test_session._to_payload == self.payload
+        assert session._to_payload == payload.REST_SESSION_UPDATE

@@ -16,16 +16,17 @@ bot = hikari.GatewayBot(
 )
 ```
 
-You then must create an ongaku class, that attaches to that bot.
+You then must create an ongaku class, that attaches to that bot and attach a server to said ongaku class.
 
 ```python
 import ongaku
 
-client = ongaku.Client(
-    bot,
-    password="youshallnotpass"
-)
+client = ongaku.Client(bot)
+
+client.add_server(password="youshallnotpass")
 ```
+
+
 
 then, you have to run the bot:
 
@@ -47,7 +48,7 @@ The method, will then return one of the following:
 
  * `Track` - This is a singular track, because a url to a video/song was originally sent.
 
- * `SearchResult` - This is a list of songs, that are usually going to be very similar to each other.
+ * `typing.Sequence[Track]` - This is a list of songs, that are usually going to be very similar to each other.
 
  * `None` - Your result returned absolutely nothing!
 

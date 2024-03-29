@@ -1,463 +1,391 @@
-"""Filter ABC.
+"""
+Filter ABC's.
 
-All of the filter related functions.
+The filter abstract classes.
 """
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-import hikari
+import pydantic
 
-from ..enums import BandType
+from ongaku.abc.bases import PayloadBase
+from ongaku.enums import BandType
 
-__all__ = ("Filter",)
+__all__ = (
+    "Filters",
+    "FilterEqualizer",
+    "FilterKaraoke",
+    "FilterTimescale",
+    "FilterTremolo",
+    "FilterVibrato",
+    "FilterRotation",
+    "FilterDistortion",
+    "FilterChannelMix",
+    "FilterLowPass",
+)
 
-if t.TYPE_CHECKING:
-    BuildT = dict[
-        str, float | t.Mapping[str, float] | t.Sequence[dict[str, float | int]]
+
+class Filters(PayloadBase):
+    """
+    The base filters.
+
+    View the current filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
+
+    !!! note
+        They will only actually update, if you parse this to the player.
+    """
+
+    @classmethod
+    def create(cls) -> EditableFilters:
+        """
+        Create a filters objectyping.
+
+        Create an empty filters object to pass to the botyping.
+        """
+        return EditableFilters(
+            volume=1.0,
+            equalizer=[],
+            karaoke=None,
+            timescale=None,
+            tremolo=None,
+            vibrato=None,
+            rotation=None,
+            distortion=None,
+            channel_mix=None,
+            low_pass=None,
+            plugin_filters={},
+        )
+
+    volume: typing.Annotated[float, pydantic.Field(default=0, ge=0.0, le=5.0)]
+    """Adjusts the player volume from 0.0 to 5.0, where 1.0 is 100%. Values >1.0 may cause clipping."""
+    equalizer: typing.Annotated[
+        typing.MutableSequence[FilterEqualizer], pydantic.Field(default=[])
     ]
+    """Adjusts 15 different bands."""
+    karaoke: typing.Annotated[FilterKaraoke | None, pydantic.Field(default=None)]
+    """Eliminates part of a band, usually targeting vocals."""
+    timescale: typing.Annotated[FilterTimescale | None, pydantic.Field(default=None)]
+    """Changes the speed, pitch, and rate."""
+    tremolo: typing.Annotated[FilterTremolo | None, pydantic.Field(default=None)]
+    """Creates a shuddering effect, where the volume quickly oscillates."""
+    vibrato: typing.Annotated[FilterVibrato | None, pydantic.Field(default=None)]
+    """Creates a shuddering effect, where the pitch quickly oscillates."""
+    rotation: typing.Annotated[FilterRotation | None, pydantic.Field(default=None)]
+    """Rotates the audio around the stereo channels/user headphones (aka Audio Panning)."""
+    distortion: typing.Annotated[FilterDistortion | None, pydantic.Field(default=None)]
+    """Distorts the audio."""
+    channel_mix: typing.Annotated[
+        FilterChannelMix | None, pydantic.Field(default=None, alias="channelMix")
+    ]
+    """Mixes both channels (left and right)."""
+    low_pass: typing.Annotated[
+        FilterLowPass | None, pydantic.Field(default=None, alias="lowPass")
+    ]
+    """Filters higher frequencies."""
+    plugin_filters: typing.Annotated[
+        typing.MutableMapping[str, typing.Any],
+        pydantic.Field(default={}, alias="pluginFilters"),
+    ]
+    """Filter plugin configurations."""
 
 
-class Filter:
+class EditableFilters(Filters):
     """
-    create a filter object.
+    Editable Filters.
 
-    The builder for your filter needs.
+    Allows for the user to edit the filter object.
     """
 
-    _volume: float | None = None
-    _equalizer: dict[BandType, float] = {}
-    _karaoke: dict[str, float] = {}
-    _timescale: dict[str, float] = {}
-    _tremolo: dict[str, float] = {}
-    _vibrato: dict[str, float] = {}
-    _rotation: dict[str, float] = {}
-    _distortion: dict[str, float] = {}
-    _channel_mix: dict[str, float] = {}
-    _low_pass: dict[str, float] = {}
+    # Volume
 
-    def volume(self, value: float | None = None) -> None:
-        """Set the volume.
-
-        Set the volume for the player.
+    def set_volume(self, volume: float):
         """
-        self._volume = value
+        Set volume.
 
-    def set_equalizer(
-        self, band: BandType, gain: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED
-    ) -> float | None:
-        """
-        Set the equalizer value.
-
-        !!! note
-            If the gain is set to `None`, then the gain band will be removed, if `UNDEFINED` is used (leaving it empty), it will return the value, if it exists.
+        Set the volume of the players filters.
 
         Parameters
         ----------
-        band : BandType
-            The band type.
-        gain : hikari.UndefinedNoneOr[float]
-            The gain of the band.
-
-
+        volume : hikari.UndefinedNoneOr[float]
+            The volume you wish to setyping.
         """
-        if gain == hikari.UNDEFINED:
-            return self._equalizer.get(band)
+        if volume > 5.0:
+            raise ValueError("Volume must be lower than 5.0")
 
-        if not gain:
-            try:
-                self._equalizer.pop(band)
-            except KeyError:
-                pass
-            return
+        if volume < 0.0:
+            raise ValueError("Volume must be higher than or equal to 0.")
 
-        if -0.25 > gain or gain > 1:
-            raise ValueError(
-                f"The value {gain} ({band}) must be between -0.25, and 1.0."
-            )
+        self.volume = volume
 
-        self._equalizer.update({band: gain})
+    # Equalizer
+
+    def set_equalizer_band(self, band: BandType, gain: float) -> None:
+        """
+        Set equalizer band.
+
+        Set, or override a new equalizer band.
+        """
+        if gain < -0.25:
+            raise ValueError("Gain must be greater than -0.25")
+        if gain > 1.0:
+            raise ValueError("Gain must be less than 1.0")
+
+        for item in self.equalizer:
+            if item.band == band:
+                self.equalizer.remove(item)
+
+        self.equalizer.append(FilterEqualizer(band=band, gain=gain))
+
+    def remove_equalizer_band(self, band: BandType) -> None:
+        """
+        Remove equalizer band.
+
+        Remove, an equalizer band if it existed.
+        """
+        for item in self.equalizer:
+            if item.band == band:
+                self.equalizer.remove(item)
+
+    def clear_equalizer_bands(self) -> None:
+        """
+        Clear equalizer bands.
+
+        Clear all equalizer bands.
+        """
+        self.equalizer.clear()
+
+    # Karaoke
 
     def set_karaoke(
         self,
-        *,
-        level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        mono_level: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        filter_band: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        filter_width: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
+        level: float,
+        mono_level: float,
+        filter_band: float,
+        filter_width: float,
     ) -> None:
         """
-        Set the equalizer value.
+        Set the karaoke levels.
+
+        Set new karaoke levels for the current filter.
 
         Parameters
         ----------
-        level : hikari.UndefinedNoneOr[float]
-            The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)
-        mono_level : hikari.UndefinedNoneOr[float]
-            The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)
-        filter_band : hikari.UndefinedNoneOr[float]
-            The filter band (in Hz)
-        filter_width : hikari.UndefinedNoneOr[float]
-            The filter width
+        level : float
+            The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect).
+        mono_level : float
+            The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect).
+        filter_band : float
+            The filter band (in Hz).
+        filter_width : float
+            The filter width.
         """
-        if level is None:
-            self._karaoke.pop("level")
+        self.karaoke = FilterKaraoke(
+            level=level,
+            mono_level=mono_level,
+            filter_band=filter_band,
+            filter_width=filter_width,
+        )
 
-        if mono_level is None:
-            self._karaoke.pop("monoLevel")
-
-        if filter_band is None:
-            self._karaoke.pop("filterBand")
-
-        if filter_width is None:
-            self._karaoke.pop("filterWidth")
-
-        if isinstance(filter_band, float):
-            self._karaoke.update({"filterBand": filter_band})
-
-        if isinstance(filter_width, float):
-            self._karaoke.update({"filterWidth": filter_width})
-
-        if isinstance(level, float):
-            if 0 > level or level > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._karaoke.update({"level": level})
-
-        if isinstance(mono_level, float):
-            if 0 > mono_level or mono_level > 1:
-                raise ValueError("Outside of value range for value mono_level.")
-            else:
-                self._karaoke.update({"monoLevel": mono_level})
-
-    def set_timescale(
-        self,
-        *,
-        speed: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        pitch: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        rate: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
+    def clear_karaoke(self) -> None:
         """
-        Set timescale.
+        Clear karaoke.
 
-        Parameters
-        ----------
-        speed : hikari.UndefinedNoneOr[float]
-            The playback speed 0.0 ≤ x
-        pitch : hikari.UndefinedNoneOr[float]
-            The pitch 0.0 ≤ x
-        rate : hikari.UndefinedNoneOr[float]
-            The rate 0.0 ≤ x
+        This will completely remove the current karaoke setup.
         """
-        if speed is None:
-            self._timescale.pop("speed")
+        self.karaoke = None
 
-        if isinstance(speed, float):
-            self._timescale = {"speed": speed}
+    # Timescale
 
-        if pitch is None:
-            self._timescale.pop("pitch")
+    def set_timescale(self, speed: float, pitch: float, rate: float) -> None:
+        self.timescale = FilterTimescale(speed=speed, pitch=pitch, rate=rate)
 
-        if isinstance(pitch, float):
-            self._timescale = {"pitch": pitch}
+    def clear_timescale(self) -> None:
+        self.timescale = None
 
-        if rate is None:
-            self._timescale.pop("rate")
 
-        if isinstance(rate, float):
-            self._timescale = {"rate": rate}
+class FilterEqualizer(PayloadBase):
+    """
+    Filter Equalizer.
 
-    def set_tremolo(
-        self,
-        *,
-        frequency: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
-        """
-        Set tremolo.
+    The filter equilizer, that allows you to set different values for different gains.
 
-        Parameters
-        ----------
-        frequency : hikari.UndefinedNoneOr[float]
-            The frequency 0.0 < x
-        depth : hikari.UndefinedNoneOr[float]
-            The tremolo depth 0.0 < x ≤ 1.0
-        """
-        if frequency is None:
-            self._tremolo.pop("frequency")
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
+    """
 
-        if depth is None:
-            self._tremolo.pop("depth")
+    band: BandType
+    """The band (HZ25 to HZ16000)."""
+    gain: typing.Annotated[float | None, pydantic.Field(default=None, ge=-0.25, le=1.0)]
+    """The gain (-0.25 to 1.0)."""
 
-        if isinstance(frequency, float):
-            if 0 > frequency:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._tremolo.update({"frequency": frequency})
 
-        if isinstance(depth, float):
-            if 0 > depth or depth > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._tremolo.update({"depth": depth})
+class FilterKaraoke(PayloadBase):
+    """
+    Filter Karaoke.
 
-    def set_vibrato(
-        self,
-        *,
-        frequency: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
-        """
-        Set vibrato.
+    The karaoke portion of the filter.
 
-        Parameters
-        ----------
-        frequency : hikari.UndefinedNoneOr[float]
-                The frequency 0.0 < x ≤ 14.0
-        depth : hikari.UndefinedNoneOr[float]
-            The tremolo depth 0.0 < x ≤ 1.0
-        """
-        if frequency is None:
-            self._vibrato.pop("frequency")
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#karaoke)
+    """
 
-        if depth is None:
-            self._vibrato.pop("depth")
+    level: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0, le=1.0)]
+    """The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
+    mono_level: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="monoLevel", ge=0.0, le=1.0)
+    ]
+    """The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
+    filter_band: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="filterBand", ge=0)
+    ]
+    """The filter band (in Hz)."""
+    filter_width: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="filterWidth")
+    ]
+    """The filter width."""
 
-        if isinstance(frequency, float):
-            if 0 > frequency or frequency > 14:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._vibrato.update({"frequency": frequency})
 
-        if isinstance(depth, float):
-            if 0 > depth or depth > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._vibrato.update({"depth": depth})
+class FilterTimescale(PayloadBase):
+    """
+    Filter Timescale.
 
-    def set_rotation(
-        self,
-        *,
-        rotation_hz: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
-        """
-        Set rotation.
+    The timescale portion of the filter.
 
-        Parameters
-        ----------
-        rotation_hz : hikari.UndefinedNoneOr[float]
-            The frequency of the audio rotating around the listener in Hz.
-        """
-        if rotation_hz is None:
-            self._rotation.pop("rotationHz")
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#timescale)
+    """
 
-        if isinstance(rotation_hz, float):
-            self._vibrato.update({"rotationHz": rotation_hz})
+    speed: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The playback speed 0.0 ≤ x."""
+    pitch: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The pitch 0.0 ≤ x."""
+    rate: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The rate 0.0 ≤ x."""
 
-    def set_distortion(
-        self,
-        *,
-        sin_offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        sin_scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        cos_offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        cos_scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        tan_offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        tan_scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
-        """
-        Set distortion.
 
-        Parameters
-        ----------
-        sin_offset : hikari.UndefinedNoneOr[float]
-            The sin offset
-        sin_scale : hikari.UndefinedNoneOr[float]
-            The sin scale
-        cos_offset : hikari.UndefinedNoneOr[float]
-            The cos offset
-        cos_scale : hikari.UndefinedNoneOr[float]
-            The cos scale
-        tan_offset : hikari.UndefinedNoneOr[float]
-            The tan offset
-        tan_scale : hikari.UndefinedNoneOr[float]
-            The tan scale
-        offset : hikari.UndefinedNoneOr[float]
-            The offset
-        scale : hikari.UndefinedNoneOr[float]
-            The scale
-        """
-        if sin_offset is None:
-            self._distortion.pop("sinOffset")
+class FilterTremolo(PayloadBase):
+    """
+    Filter Tremolo.
 
-        if isinstance(sin_offset, float):
-            self._distortion.update({"sinOffset": sin_offset})
+    The tremolo portion of the filter.
 
-        if sin_scale is None:
-            self._distortion.pop("sinScale")
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#tremolo)
+    """
 
-        if isinstance(sin_scale, float):
-            self._distortion.update({"sinScale": sin_scale})
+    frequency: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The frequency 0.0 < x."""
+    depth: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The tremolo depth 0.0 < x ≤ 1.0."""
 
-        if cos_offset is None:
-            self._distortion.pop("sinOffset")
 
-        if isinstance(cos_offset, float):
-            self._distortion.update({"sinOffset": cos_offset})
+class FilterVibrato(PayloadBase):
+    """
+    Filter Vibrato.
 
-        if cos_scale is None:
-            self._distortion.pop("cosScale")
+    The vibrato portion of the filter.
 
-        if isinstance(cos_scale, float):
-            self._distortion.update({"cosScale": cos_scale})
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#vibrato)
+    """
 
-        if tan_offset is None:
-            self._distortion.pop("tanOffset")
+    frequency: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The frequency 0.0 < x ≤ 14.0"""
+    depth: typing.Annotated[float | None, pydantic.Field(default=None, ge=0.0)]
+    """The tremolo depth 0.0 < x ≤ 1.0."""
 
-        if isinstance(tan_offset, float):
-            self._distortion.update({"tanOffset": tan_offset})
 
-        if tan_scale is None:
-            self._distortion.pop("tanScale")
+class FilterRotation(PayloadBase):
+    """
+    Filter Rotation.
 
-        if isinstance(tan_scale, float):
-            self._distortion.update({"tanScale": tan_scale})
+    The rotation portion of the filter.
 
-        if offset is None:
-            self._distortion.pop("offset")
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#rotation)
+    """
 
-        if isinstance(offset, float):
-            self._distortion.update({"offset": offset})
+    rotation_hz: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="rotationHz", ge=0.0)
+    ]
+    """The frequency of the audio rotating around the listener in Hz. 0.2 is similar to the example video above."""
 
-        if scale is None:
-            self._distortion.pop("scale")
 
-        if isinstance(scale, float):
-            self._distortion.update({"scale": scale})
+class FilterDistortion(PayloadBase):
+    """
+    Filter Distortion.
 
-    def set_channel_mix(
-        self,
-        *,
-        left_to_left: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        left_to_right: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        right_to_left: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-        right_to_right: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
-        """
-        Set channel mix.
+    The distortion portion of the filter.
 
-        Parameters
-        ----------
-        left_to_left : hikari.UndefinedNoneOr[float]
-            The left to left channel mix factor (0.0 ≤ x ≤ 1.0)
-        left_to_right : hikari.UndefinedNoneOr[float]
-            The left to right channel mix factor (0.0 ≤ x ≤ 1.0)
-        right_to_left : hikari.UndefinedNoneOr[float]
-            The right to left channel mix factor (0.0 ≤ x ≤ 1.0)
-        right_to_right : hikari.UndefinedNoneOr[float]
-            The right to right channel mix factor (0.0 ≤ x ≤ 1.0)
-        """
-        if left_to_left is None:
-            self._channel_mix.pop("leftToLeft")
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#distortion)
+    """
 
-        if isinstance(left_to_left, float):
-            if 0 > left_to_left or left_to_left > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"leftToLeft": left_to_left})
+    sin_offset: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="sinOffset")
+    ]
+    """The sin offsetyping."""
+    sin_scale: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="sinScale")
+    ]
+    """The sin scale."""
+    cos_offset: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="cosOffset")
+    ]
+    """The cos offsetyping."""
+    cos_scale: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="cosScale")
+    ]
+    """The cos scale."""
+    tan_offset: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="tanOffset")
+    ]
+    """The tan offsetyping."""
+    tan_scale: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="tanScale")
+    ]
+    """The tan scale."""
+    offset: typing.Annotated[float | None, pydantic.Field(default=None)]
+    """The offsetyping."""
+    scale: typing.Annotated[float | None, pydantic.Field(default=None)]
+    """The scale."""
 
-        if left_to_right is None:
-            self._channel_mix.pop("leftToRight")
 
-        if isinstance(left_to_right, float):
-            if 0 > left_to_right or left_to_right > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"leftToRight": left_to_right})
+class FilterChannelMix(PayloadBase):
+    """
+    Filter Channel Mix.
 
-        if right_to_left is None:
-            self._channel_mix.pop("rightToLeft")
+    The channel mix portion of the filter.
 
-        if isinstance(right_to_left, float):
-            if 0 > right_to_left or right_to_left > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"rightToLeft": right_to_left})
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#channel-mix)
+    """
 
-        if right_to_right is None:
-            self._channel_mix.pop("rightToRight")
+    left_to_left: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="leftToLeft", ge=0.0, le=1.0)
+    ]
+    """The left to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
+    left_to_right: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="leftToRight", ge=0.0, le=1.0)
+    ]
+    """The left to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
+    right_to_left: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="rightToLeft", ge=0.0, le=1.0)
+    ]
+    """The right to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
+    right_to_right: typing.Annotated[
+        float | None, pydantic.Field(default=None, alias="rightToRight", ge=0.0, le=1.0)
+    ]
+    """The right to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
 
-        if isinstance(right_to_right, float):
-            if 0 > right_to_right or right_to_right > 1:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._channel_mix.update({"rightToRight": right_to_right})
 
-    def set_low_pass(
-        self,
-        *,
-        smoothing: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
-    ) -> None:
-        """
-        Set low pass.
+class FilterLowPass(PayloadBase):
+    """
+    Filter Low Pass.
 
-        Parameters
-        ----------
-        smoothing : hikari.UndefinedNoneOr[float]
-            The smoothing factor (1.0 < x)
-        """
-        if smoothing is None:
-            self._low_pass.pop("left_to_left")
+    The low pass portion of the filter.
 
-        if isinstance(smoothing, float):
-            if 0 > smoothing:
-                raise ValueError("Outside of value range for value level.")
-            else:
-                self._low_pass.update({"smoothing": smoothing})
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#low-pass)
+    """
 
-    def _build(
-        self,
-    ) -> BuildT:
-        build_dict: BuildT = {}
-
-        if self._volume:
-            build_dict.update({"volume": self._volume})
-
-        if len(self._equalizer) > 0:
-            eq_bands: list[dict[str, float | int]] = []
-
-            for key, value in self._equalizer.items():
-                eq_bands.append({"band": key.value, "gain": value})
-
-            build_dict.update({"equalizer": eq_bands})
-
-        if len(self._karaoke) > 0:
-            build_dict.update({"karaoke": self._karaoke})
-
-        if len(self._timescale) > 0:
-            build_dict.update({"timescale": self._timescale})
-
-        if len(self._tremolo) > 0:
-            build_dict.update({"tremolo": self._tremolo})
-
-        if len(self._vibrato) > 0:
-            build_dict.update({"vibrato": self._vibrato})
-
-        if len(self._rotation) > 0:
-            build_dict.update({"rotation": self._rotation})
-
-        if len(self._distortion) > 0:
-            build_dict.update({"distortion": self._distortion})
-
-        if len(self._channel_mix) > 0:
-            build_dict.update({"channelMix": self._channel_mix})
-
-        if len(self._low_pass) > 0:
-            build_dict.update({"lowPass": self._low_pass})
-
-        return build_dict
+    smoothing: typing.Annotated[float | None, pydantic.Field(default=None)]
+    """The smoothing factor (1.0 < x)."""
 
 
 # MIT License
@@ -476,7 +404,7 @@ class Filter:
 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENtyping. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE

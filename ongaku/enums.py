@@ -1,8 +1,8 @@
-"""Enums.
+"""
+Enums.
 
 All of the enums for the entire library.
 """
-
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ __all__ = (
     "VersionType",
     "ConnectionType",
     "BandType",
+    "RoutePlannerType",
+    "IPBlockType",
 )
 
 
@@ -22,7 +24,8 @@ class SeverityType(str, enum.Enum):
     Track error severity type.
 
     The severity type of the lavalink track error.
-    Find out more [here](https://lavalink.dev/api/websocket#severity).
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket#severity)
     """
 
     COMMON = "common"
@@ -38,50 +41,55 @@ class TrackEndReasonType(str, enum.Enum):
     Track end reason type.
 
     The track end reason type for the track that was just playing.
-    Find out more [here](https://lavalink.dev/api/websocket#track-end-reason).
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket#track-end-reason)
     """
 
     FINISHED = "finished"
-    """The track finished playing"""
+    """The track finished playing."""
     LOADFAILED = "loadFailed"
-    """The track failed to load"""
+    """The track failed to load."""
     STOPPED = "stopped"
-    """The track was stopped"""
+    """The track was stopped."""
     REPLACED = "replaced"
-    """The track was replaced"""
+    """The track was replaced."""
     CLEANUP = "cleanup"
-    """The track was cleaned up"""
+    """The track was cleaned up."""
 
 
 class VersionType(str, enum.Enum):
-    """The lavalink server version.
+    """
+    The lavalink server version.
 
     The lavalink server version you wish to use.
     """
 
-    V4 = "v4"
-    """V4 Servers"""
+    V4 = "/v4"
+    """V4 Servers."""
 
 
 class ConnectionType(enum.IntEnum):
-    """Connection type.
+    """
+    Connection type.
 
     The connection type, or status for the session.
     """
 
     FAILURE = 0
     """The session has failed to connect to the lavalink server."""
-    LOADING = 1
+    NOT_CONNECTED = 1
     """The session has not yet attempted to connect to the server."""
     CONNECTED = 2
-    """The session has successfully connected to the lavalink server"""
+    """The session has successfully connected to the lavalink server."""
 
 
 class BandType(enum.IntEnum):
-    """Band type.
+    """
+    Band type.
 
     The band values, available for use in lavalink
-    Read more [here](https://lavalink.dev/api/rest#equalizer).
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
     """
 
     HZ25 = 0
@@ -114,6 +122,55 @@ class BandType(enum.IntEnum):
     """10000 Hz"""
     HZ16000 = 14
     """16000 Hz"""
+
+
+class RoutePlannerType(str, enum.Enum):
+    """
+    Route Planner Type.
+
+    The type of routeplanner that the server is currently using.
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#route-planner-types)
+    """
+
+    ROTATING_ROUTE_PLANNER = "RotatingIpRoutePlanner"
+    """IP address used is switched on ban. Recommended for IPv4 blocks or IPv6 blocks smaller than a /64."""
+    NANO_IP_ROUTE_PLANNER = "NanoIpRoutePlanner"
+    """IP address used is switched on clock update. Use with at least 1 /64 IPv6 block."""
+    ROTATING_NANO_IP_ROUTE_PLANNER = "RotatingNanoIpRoutePlanner"
+    """IP address used is switched on clock update, rotates to a different /64 block on ban. Use with at least 2x /64 IPv6 blocks."""
+    BALANCING_IP_ROUTE_PLANNER = "BalancingIpRoutePlanner"
+    """IP address used is selected at random per request. Recommended for larger IP blocks."""
+
+
+class IPBlockType(str, enum.Enum):
+    """
+    IP Block Type.
+
+    The IP Block type, 4, or 6.
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#ip-block-type)
+    """
+
+    INET_4_ADDRESS = "Inet4Address"
+    """The ipv4 block type"""
+    INET_6_ADDRESS = "Inet6Address"
+    """The ipv6 block type"""
+
+
+class WebsocketOPCodeType(str, enum.Enum):
+    READY = "ready"
+    PLAYER_UPDATE = "playerUpdate"
+    STATS = "stats"
+    EVENT = "event"
+
+
+class WebsocketEventType(str, enum.Enum):
+    TRACK_START_EVENT = "TrackStartEvent"
+    TRACK_END_EVENT = "TrackEndEvent"
+    TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
+    TRACK_STUCK_EVENT = "TrackStuckEvent"
+    WEBSOCKET_CLOSED_EVENT = "WebSocketClosedEvent"
 
 
 # MIT License

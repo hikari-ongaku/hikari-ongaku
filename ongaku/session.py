@@ -1,4 +1,5 @@
-"""Sessions.
+"""
+Sessions.
 
 The base hikari session.
 """
@@ -10,15 +11,16 @@ import asyncio
 import typing as t
 
 import aiohttp
-import attrs
 import hikari
 
-from . import internal
 from .enums import ConnectionType
+from .enums import VersionType
 from .errors import PlayerMissingException
-from .errors import RequiredException
-from .errors import SessionException
-from .events import EventHandler
+from .errors import SessionConnectionException
+from .handlers import _WSHandler
+from .internal import TRACE_LEVEL
+from .internal import logger
+from .internal.about import __version__
 from .player import Player
 
 if t.TYPE_CHECKING:
@@ -26,310 +28,375 @@ if t.TYPE_CHECKING:
 
 __all__ = ("Session",)
 
-_logger = internal.logger.getChild("session")
+_logger = logger.getChild("session")
 
 
-@attrs.define
-class _SessionInternal:
-    attempts: int
-    remaining_attempts: int
-    base_uri: str
-    headers: dict[str, t.Any]
-    session_id: str | None = None
-    connection_status: ConnectionType = ConnectionType.LOADING
-    connection_failure_reason: str = ""
+class Session:
+    """
+    Session.
 
-    @classmethod
-    def build(
-        cls, uri: str, headers: dict[str, t.Any], attempts: int
-    ) -> _SessionInternal:
-        return cls(attempts, attempts, uri, headers)
-
-
-class Session(abc.ABC):
-    """Session.
-
-    A base session item, for sharding the sets of players.
-
-    Parameters
-    ----------
-    client : Client
-        The Ongaku client that it will be connected too.
-    name : str
-        The name of the session. This can be anything.
+    The session object, for a specific lavalink server session, or connection.
     """
 
-    def __init__(self, client: Client, name: str) -> None:
+    ssl: t.Final[bool]
+    host: t.Final[str]
+    port: t.Final[int]
+    password: t.Final[str] | None
+    version: t.Final[VersionType]
+    remaining_attempts: int
+    total_attempts: int
+
+    base_uri: t.Final[str]
+    base_headers: dict[str, t.Any]
+    status: ConnectionType = ConnectionType.NOT_CONNECTED
+    session_id: str | None = None
+    players: t.MutableSequence[Player] = []
+    _connection: asyncio.Task[None] | None = None
+
+    def __init__(
+        self,
+        client: Client,
+        ssl: bool,
+        host: str,
+        port: int,
+        password: str | None,
+        version: VersionType,
+        attempts: int,
+    ) -> None:
         self._client = client
-        self._name = name
-
-        self._players: dict[hikari.Snowflake, Player] = {}
-
-        self._internal = _SessionInternal.build(
-            self.client._internal.base_uri,
-            self.client._internal.headers,
-            self.client._internal.attempts,
-        )
-
-        self._event_handler = EventHandler(self)
-
-        self._connection: asyncio.Task[t.Any] | None = None
-
-        self._player_session = PlayerSession(self)
-
-    @property
-    def name(self) -> str:
-        """The name of the session."""
-        return self._name
+        self.ssl = ssl
+        self.host = host
+        self.port = port
+        self.password = password
+        self.version = version
+        self.remaining_attempts = attempts
+        self.total_attempts = attempts
+        self.base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
+        self.base_headers = {"Authorization": password} if password else {}
+        self._handler = _WSHandler(self)
 
     @property
     def client(self) -> Client:
-        """The [client][ongaku.Client] object that this session has attached to."""
+        """The Ongaku client."""
         return self._client
 
-    @property
-    def players(self) -> t.Sequence[Player]:
-        """The players, that are attached to this session."""
-        return list(self._players.values())
+    def _get_session_id(self) -> str:
+        """
+        Get session id.
 
-    @property
-    def player(self) -> PlayerSession:
-        """The player functions."""
-        return self._player_session
+        Returns the session ID, or raises a SessionConnectionException
+        """
+        if self.session_id:
+            return self.session_id
 
-    async def _websocket(self, new_headers: dict[str, t.Any]):
-        while self._internal.remaining_attempts > 1:
-            if self._internal.remaining_attempts < self._internal.attempts:
-                await asyncio.sleep(3)
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.ws_connect(
-                        self._internal.base_uri + "/websocket", headers=new_headers
-                    ) as ws:
-                        _logger.log(
-                            internal.Trace.LEVEL, "Websocket connection successful!"
-                        )
-                        async for msg in ws:
-                            _logger.log(
-                                internal.Trace.LEVEL,
-                                f"Received message, with data: {msg.data}",
-                            )
-                            if msg.type == aiohttp.WSMsgType.ERROR:
-                                _logger.warning(
-                                    f"An error has occurred with the websocket connection. Reason: {msg.data}"
-                                )
-                                self._internal.connection_status = (
-                                    ConnectionType.FAILURE
-                                )
-                                self._internal.connection_failure_reason = msg.data
-                                raise SessionException(
-                                    "An internal error has happened to this lavalink connection: "
-                                    + msg.data
-                                )
+        raise SessionConnectionException(None)
 
-                            if msg.type == aiohttp.WSMsgType.CLOSED:
-                                raise SessionException(
-                                    "Session has received a closure message."
-                                )
+    def _strike_server(self, reason: str) -> None:
+        self.remaining_attempts -= 1
 
-                            if msg.type == aiohttp.WSMsgType.TEXT:
-                                _logger.log(
-                                    internal.Trace.LEVEL, f"Decoding payload..."
-                                )
-                                try:
-                                    json_data = msg.json()
-                                except Exception as e:
-                                    _logger.warning(
-                                        f"Failed to decode payload. Error {e}, payload: {msg.data}"
-                                    )
-                                    raise SessionException(
-                                        "Failed to decode payload: " + msg.data
-                                    )
-                                else:
-                                    self._internal.connection_status = (
-                                        ConnectionType.CONNECTED
-                                    )
-                                    self._internal.connection_failure_reason = ""
-
-                                    await self._event_handler.handle_payload(json_data)
-
-                except Exception as e:
-                    self._internal.remaining_attempts -= 1
-                    self._internal.connection_status = ConnectionType.FAILURE
-                    self._internal.connection_failure_reason = f"Exception Raised: {e}"
-                    raise
-
-        raise SessionException(
-            f"Maximum connection attempts reached. Reason: {self._internal.connection_failure_reason}"
+        _logger.warning(
+            f"server: {self.host}:{self.port} has failed to load properly. Remaining attempts: {self.remaining_attempts}. Reason: {reason}."
         )
 
-    async def _connect(self):
-        """Connect to the lavalink websocket."""
-        if (
-            self._internal.connection_status == ConnectionType.CONNECTED
-            or self._internal.connection_status == ConnectionType.FAILURE
-        ):
-            raise SessionException(
-                "This session has failed its connection attempts. Please check your lavalink connection."
+        if self.remaining_attempts == 0:
+            _logger.critical(
+                f"server: {self.host}:{self.port} has completely failed. Reason: {reason}."
             )
 
+            self.status = ConnectionType.FAILURE
+
+            asyncio.Task(self.client._session_handler.switch_session())
+
+    async def _create_connection(self) -> None:
+        session = await self.client._get_session()
+
+        try:
+            async with session.ws_connect(
+                self.base_uri + self.version.value + "/websocket",
+                headers=self.base_headers,
+                timeout=5,
+            ) as ws:
+                self.status = ConnectionType.CONNECTED
+                _logger.log(
+                    TRACE_LEVEL,
+                    f"Websocket connection on session {self.host}:{self.port} successful.",
+                )
+                async for msg in ws:
+                    await self._handler.handle_message(msg)
+        except aiohttp.ClientConnectionError:
+            self._strike_server("Client Timeout")
+
+        except Exception as e:
+            self._strike_server(str(e))
+
+    def start(self) -> None:
+        """
+        Start up the session.
+
+        Starts up a new session, and attempts a connection to the lavalink server.
+        """
         try:
             bot = self._client.bot.get_me()
         except Exception:
-            self._internal.remaining_attempts = -1
-            self._internal.connection_status = ConnectionType.FAILURE
-            self._internal.connection_failure_reason = "Bot ID could not be found."
-            _logger.warning("Bot ID cannot be None.")
-            raise SessionException(
-                "Ongaku could not start, due to the bot ID not being found."
-            )
+            reason = f"Session: {self.host}:{self.port} could not start, due to the bot ID not being found."
+            _logger.warning(reason)
+            raise SessionConnectionException(None, reason)
 
         if bot is None:
-            self._internal.remaining_attempts = -1
-            self._internal.connection_status = ConnectionType.FAILURE
-            self._internal.connection_failure_reason = "Bot ID could not be found."
-            _logger.warning("Bot ID cannot be None.")
-            raise SessionException(
-                "Ongaku could not start, due to the bot ID not being found."
-            )
+            reason = f"Session: {self.host}:{self.port} could not start, due to the bot ID not being found."
+            _logger.warning(reason)
+            raise SessionConnectionException(None, reason)
 
-        new_header = {
+        new_headers = {
             "User-Id": str(bot.id),
-            "Client-Name": f"{str(bot.id)}::Unknown",
+            "Client-Name": f"{bot.username.replace(' ', '_').strip()}::{__version__}",
         }
 
-        new_header.update(self._internal.headers)
-        _logger.log(internal.Trace.LEVEL, "Starting websocket connection...")
-        task = asyncio.create_task(self._websocket(new_header))
+        self.base_headers.update(new_headers)
 
-        self._connection = task
+        _logger.log(TRACE_LEVEL, "Starting websocket connection...")
 
-    async def _disconnect(self) -> None:
-        _logger.log(internal.Trace.LEVEL, "Destroying connection...")
+        self._connection = asyncio.create_task(self._create_connection())
+
+    def stop(self) -> None:
+        """
+        Stop the session.
+
+        Stops and shuts down the sessions' connection, if it existed.
+        """
         if self._connection:
             self._connection.cancel()
+            self._connection = None
 
-        _logger.log(internal.Trace.LEVEL, f"successfully destroyed connection.")
+
+class BaseSessionHandler(abc.ABC):
+    """
+    Base Session handler.
+
+    The base class for creating a new session handler.
+
+    Raises
+    ------
+    SessionConnectionException
+        You should raise this, when it cannot find an available session.
+    """
+
+    def __init__(self, client: Client) -> None: ...
+
+    @abc.abstractproperty
+    def sessions(self) -> t.Sequence[Session]:
+        """All available sessions."""
+        ...
+
+    @abc.abstractproperty
+    def players(self) -> t.Sequence[Player]:
+        """All players, across all sessions."""
+        ...
+
+    @abc.abstractmethod
+    def add_server(
+        self,
+        *,
+        ssl: bool = False,
+        host: str = "localhost",
+        port: int = 2333,
+        password: str | None = "youshallnotpass",
+        version: VersionType = VersionType.V4,
+    ) -> None:
+        """Add a server to the handler."""
+        ...
+
+    @abc.abstractmethod
+    async def start(self) -> None:
+        """Start all of the servers up."""
+        ...
+
+    @abc.abstractmethod
+    async def stop(self) -> None:
+        """Stop all of the servers."""
+        ...
+
+    @abc.abstractmethod
+    async def fetch_session(self) -> Session:
+        """Fetch the current session."""
+        ...
+
+    @abc.abstractmethod
+    async def switch_session(self) -> Session:
+        """
+        Switch session.
+
+        called when a session fails.
+        """
+        ...
+
+    @abc.abstractmethod
+    async def create_player(self, guild_id: hikari.Snowflake) -> Player:
+        """
+        Create a player.
+
+        Creates a player for the specified session.
+        """
+        ...
+
+    @abc.abstractmethod
+    async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
+        """
+        Fetch a player.
+
+        Fetches a player from the current session that its in.
+        """
+        ...
+
+    @abc.abstractmethod
+    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
+        """
+        Delete a player.
+
+        Deletes a player from the current session that its in.
+        """
+        ...
 
 
-class PlayerSession:
-    def __init__(self, session: Session) -> None:
-        self._session = session
+class GeneralSessionHandler(BaseSessionHandler):
+    """
+    General session handler.
+
+    This simply just returns the next available, and working server.
+    """
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+        self._sessions: list[Session] = []
+
+        self._started = False
+
+        self._current_session: Session | None = None
+
+    @property
+    def sessions(self) -> t.Sequence[Session]:
+        """All available sessions."""
+        return self._sessions
+
+    @property
+    def players(self) -> t.Sequence[Player]:
+        players_sequence: t.MutableSequence[Player] = []
+
+        for session in self.sessions:
+            players_sequence.extend(session.players)
+
+        return players_sequence
+
+    def add_server(
+        self,
+        *,
+        ssl: bool = False,
+        host: str = "localhost",
+        port: int = 2333,
+        password: str | None = "youshallnotpass",
+        version: VersionType = VersionType.V4,
+    ) -> None:
+        new_server = Session(
+            self._client, ssl, host, port, password, version, self._client._attempts
+        )
+
+        self._sessions.append(new_server)
+
+        if self._started:
+            new_server.start()
+
+    async def start(self) -> None:
+        self._started = True
+
+        sessions = self.sessions
+
+        pos = 0
+
+        started_servers = 0
+        while started_servers != len(sessions):
+            await asyncio.sleep(1)
+
+            if pos >= len(sessions):
+                pos = 0
+            else:
+                pos += 1
+
+            session = sessions[pos - 1]
+
+            if session.status == ConnectionType.CONNECTED:
+                started_servers += 1
+                continue
+
+            if session.status == ConnectionType.NOT_CONNECTED:
+                if session.remaining_attempts >= 1:
+                    session.remaining_attempts -= 1
+                    session.start()
+                else:
+                    continue
+
+    async def stop(self) -> None:
+        for server in self.sessions:
+            server.stop()
+
+    async def fetch_session(self) -> Session:
+        if (
+            self._current_session
+            and self._current_session.status == ConnectionType.CONNECTED
+        ):
+            return self._current_session
+
+        for session in self.sessions:
+            if session.status == ConnectionType.CONNECTED:
+                self._current_session = session
+                return self._current_session
+
+        raise SessionConnectionException(None)
+
+    async def switch_session(self) -> Session:
+        current_session = self._current_session
+
+        new_session = await self.fetch_session()
+
+        if current_session is None:
+            return new_session
+
+        current_session.stop()
+
+        for player in current_session.players:
+            new_player = await player._transfer_player(new_session)
+            new_session.players.append(new_player)
+
+        self._current_session = new_session
+
+        return new_session
 
     async def create_player(self, guild_id: hikari.Snowflake) -> Player:
-        """Create a new player.
+        for player in self.players:
+            if player.guild_id == guild_id:
+                return player
 
-        Creates a new player for the specified guild, and places it in the specified channel.
+        session = await self.fetch_session()
 
-        Parameters
-        ----------
-        guild_id : hikari.Snowflake
-            The Guild ID the player will be in.
+        new_player = Player(session, guild_id)
 
-        Raises
-        ------
-        PlayerException
-            Raised when the player failed to be created.
-
-        Returns
-        -------
-        Player
-            The player that has been successfully created.
-        """
-        _logger.log(
-            internal.Trace.LEVEL,
-            f"bot player: {guild_id} in node: {self._session.name}",
-        )
-        bot = self._session.client.bot.get_me()
-
-        if bot is None:
-            raise RequiredException("The bot is required to be able to connect.")
-
-        bot_state = self._session.client.bot.cache.get_voice_state(guild_id, bot.id)
-
-        if bot_state is not None and bot_state.channel_id is not None:
-            try:
-                self._session._players.pop(guild_id)
-            except KeyError:
-                raise SessionException("This session has not yet been started.")
-
-        new_player = Player(self._session, guild_id)
-
-        self._session._players.update({guild_id: new_player})
-
-        _logger.log(
-            internal.Trace.LEVEL,
-            f"successfully created player: {guild_id} in node: {self._session.name}",
-        )
+        session.players.append(new_player)
 
         return new_player
 
     async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
-        """Fetch a player.
-
-        Fetch a player for the specified guild.
-
-        Parameters
-        ----------
-        guild_id : hikari.Snowflake
-            The guild id that the player belongs to.
-
-        Raises
-        ------
-        PlayerMissingException
-            The player was not found for the guild specified.
-
-        Returns
-        -------
-        Player
-            The player that belongs to the specified guild.
-        """
-        _logger.log(
-            internal.Trace.LEVEL,
-            f"finding player: {guild_id} in node: {self._session.name}",
-        )
-
-        for player in self._session._players.values():
+        for player in self.players:
             if player.guild_id == guild_id:
-                _logger.log(
-                    internal.Trace.LEVEL,
-                    f"successfully found player: {guild_id} in node: {self._session.name}",
-                )
                 return player
 
         raise PlayerMissingException(guild_id)
 
     async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        """Delete a player.
-
-        Deletes a player from the specified guild, and disconnects it, if it has not been disconnected already.
-
-        Parameters
-        ----------
-        guild_id : hikari.Snowflake
-            The guild id that the player belongs to.
-
-        Raises
-        ------
-        PlayerMissingException
-            The player was not found for the guild specified.
-
-        """
-        _logger.log(
-            internal.Trace.LEVEL,
-            f"deleting player: {guild_id} in node: {self._session.name}",
-        )
-
         player = await self.fetch_player(guild_id)
 
         await player.disconnect()
 
-        self._session._players.pop(guild_id)
-
-        _logger.log(
-            internal.Trace.LEVEL,
-            f"successfully deleted player: {guild_id} in node: {self._session.name}",
-        )
+        player.session.players.remove(player)
 
 
 # MIT License

@@ -23,7 +23,12 @@ class OngakuModel:
 
 bot = hikari.GatewayBot("...")
 
-ongaku_client = ongaku.Client(bot, password="youshallnotpass")
+ongaku_client = ongaku.Client(bot)
+
+ongaku_client.add_server(
+    host="127.0.0.1",
+    password="youshallnotpass"
+)
 
 client = crescent.Client(bot, OngakuModel(ongaku_client))
 
@@ -140,14 +145,14 @@ class Play:
 
         track: ongaku.Track
 
-        if isinstance(result, ongaku.SearchResult):
+        if isinstance(result, ongaku.Playlist):
             track = result.tracks[0]
 
         elif isinstance(result, ongaku.Track):
             track = result
 
         else:
-            track = result.tracks[0]
+            track = result[0]
 
         embed = hikari.Embed(
             title=f"[{track.info.title}]({track.info.uri})",
@@ -217,13 +222,16 @@ class Add:
 
         tracks: list[ongaku.Track] = []
 
-        if isinstance(result, ongaku.Track):
-            await current_player.add((result,))
+        if isinstance(result, ongaku.Playlist):
+            tracks.extend(result.tracks)
+
+        elif isinstance(result, ongaku.Track):
             tracks.append(result)
 
         else:
-            await current_player.add(result.tracks)
-            tracks.extend(result.tracks)
+            tracks.extend(result)
+
+        await current_player.add(tracks)
 
         embed = hikari.Embed(
             title="Tracks added",

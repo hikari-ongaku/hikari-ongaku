@@ -74,6 +74,8 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - attr_list
+  - md_in_html
 
 
 copyright: Copyright &copy; 2023 MPlaty
@@ -102,14 +104,19 @@ nav:
     - Rest: api/rest.md
     - Enums: api/enums.md
     - Errors: api/errors.md
+    - Handlers: api/handlers.md
     - ABC:
-      - Base: api/abc/base.md
+      - Bases: api/abc/bases.md
+      - Error: api/abc/error.md
       - Events: api/abc/events.md
-      - Lavalink: api/abc/lavalink.md
-      - Player: api/abc/player.md
-      - Session: api/abc/session.md
-      - Track: api/abc/track.md
       - Filters: api/abc/filters.md
+      - Info: api/abc/info.md
+      - Player: api/abc/player.md
+      - Playlist: api/abc/playlist.md
+      - Route Planner: api/abc/route_planner.md
+      - Session: api/abc/session.md
+      - Statistics: api/abc/statistics.md
+      - Track: api/abc/track.md
   - Extensions:
     - ext/index.md
     - Creation: ext/creation.md
