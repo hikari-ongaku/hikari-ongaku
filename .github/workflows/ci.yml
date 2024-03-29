@@ -24,11 +24,15 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install codeclimate-test-reporter
+          pip install coverage codeclimate-test-reporter
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
-          python -m unittest discover ./tests
+          coverage run -m unittest discover ./tests
+
+      - name: Generate coverage report
+        run: |
+          coverage xml
 
       - name: Upload coverage report to CodeClimate
         run: |
