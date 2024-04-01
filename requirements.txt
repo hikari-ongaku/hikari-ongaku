@@ -1,4 +1,4 @@
-hikari==2.0.0.dev122
+hikari==2.0.0.dev123
 aiohttp==3.9.3
 pydantic==2.6.4
 ujson==5.9.0
