@@ -3,7 +3,7 @@ hikari-miru==4.1.1
 hikari-arc==1.2.1
 hikari-crescent==0.6.6
 hikari-lightbulb==2.3.5
-hikari-tanjun==2.17.2
+hikari-tanjun==2.17.3
 
 # Hidden:
 python-dotenv==1.0.1
