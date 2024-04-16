@@ -1,4 +1,6 @@
 ---
+title: Home
+description: Ongaku documentation
 hide:
   - navigation
   - toc
