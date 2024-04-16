@@ -34,7 +34,8 @@ plugins:
   - search
   - social:
       cards_layout_options:
-        color: "#ff6b61"
+        background_image: docs/assets/social_background.png
+        background_color: "#ff6b61"
   - mkdocstrings:
       default_handler: python
       handlers:
