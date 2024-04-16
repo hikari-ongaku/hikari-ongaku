@@ -32,6 +32,7 @@ extra_css:
 
 plugins:
   - search
+  - social
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -70,7 +71,11 @@ markdown_extensions:
       alternate_style: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - pymdownx.details
   - pymdownx.superfences
