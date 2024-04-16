@@ -1,3 +1,8 @@
+---
+title: Basics
+description: Basics of creating and using ongaku
+---
+
 # The basics
 
 This will show you how to get started with creating your first music bot.

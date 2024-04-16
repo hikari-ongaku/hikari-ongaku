@@ -1,3 +1,8 @@
+---
+title: Filters
+description: Basics of creating and using filters.
+---
+
 # Filters
 
 Filters are a feature, that allows for modifying the audio effects

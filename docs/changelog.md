@@ -1,4 +1,6 @@
 ---
+title: Changelog
+description: Changelog for Ongaku
 hide:
   - navigation
   - toc

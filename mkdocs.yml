@@ -32,7 +32,9 @@ extra_css:
 
 plugins:
   - search
-  - social
+  - social:
+      cards_layout_options:
+        color: "#ff6b61"
   - mkdocstrings:
       default_handler: python
       handlers:

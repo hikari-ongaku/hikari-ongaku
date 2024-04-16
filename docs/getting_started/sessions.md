@@ -1,3 +1,8 @@
+---
+title: Sessions
+description: Using, switching and creating session handlers
+---
+
 # sessions
 
 There is two options for sessions. The first one is enabled by default.
