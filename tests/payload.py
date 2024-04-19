@@ -5,13 +5,12 @@ This is where all payloads are stored, and accessed for easy modification and up
 
 from __future__ import annotations
 
+import json
 import typing as t
-
-import ujson
 
 
 def convert(object: dict[str, t.Any]) -> str:  # noqa: D103
-    return ujson.dumps(object)
+    return json.dumps(object)
 
 
 # ╔════════╗
