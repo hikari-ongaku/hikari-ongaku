@@ -11,23 +11,24 @@ import enum
 import typing as t
 
 import hikari
-import ujson
 
-from .abc.error import ExceptionError
-from .abc.error import RestError
-from .abc.filters import Filters
-from .abc.info import Info
-from .abc.player import Player
-from .abc.player import PlayerVoice
-from .abc.playlist import Playlist
-from .abc.route_planner import RoutePlannerStatus
-from .abc.session import Session
-from .abc.statistics import Statistics
-from .abc.track import Track
-from .errors import BuildException
-from .errors import LavalinkException
-from .internal import TRACE_LEVEL
-from .internal import logger
+from ongaku.abc.error import ExceptionError
+from ongaku.abc.error import RestError
+from ongaku.abc.filters import Filters
+from ongaku.abc.info import Info
+from ongaku.abc.player import Player
+from ongaku.abc.player import PlayerVoice
+from ongaku.abc.playlist import Playlist
+from ongaku.abc.route_planner import RoutePlannerStatus
+from ongaku.abc.session import Session
+from ongaku.abc.statistics import Statistics
+from ongaku.abc.track import Track
+from ongaku.errors import BuildException
+from ongaku.errors import LavalinkException
+from ongaku.internal.converters import default_json_dumps
+from ongaku.internal.converters import default_json_loads
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import logger
 
 _logger = logger.getChild("rest")
 
@@ -291,7 +292,7 @@ class RESTClient:
                     return return_type(payload)
 
                 if issubclass(return_type, dict):
-                    return return_type(ujson.loads(payload))
+                    return return_type(default_json_loads(payload))
 
                 if sequence:
                     model_seq: list[t.Any] = []
@@ -690,7 +691,7 @@ class RESTTrack:
         _logger.log(TRACE_LEVEL, f"running GET /loadtracks with params: {params}")
 
         resp = await self._rest._handle_rest(
-            "/loadtracks", _HttpMethod.GET, dict, params=params
+            "/loadtracks", _HttpMethod.GET, dict[str, t.Any], params=params
         )
 
         load_type: str = resp["loadType"]
@@ -702,7 +703,7 @@ class RESTTrack:
         elif load_type == "error":
             _logger.log(TRACE_LEVEL, f"loadType caused an error.")
             raise LavalinkException(
-                ExceptionError._from_payload(ujson.dumps(resp["data"]))
+                ExceptionError._from_payload(default_json_dumps(resp["data"]))
             )
 
         elif load_type == "search":
@@ -710,7 +711,7 @@ class RESTTrack:
             tracks: t.Sequence[Track] = []
             for trk in resp["data"]:
                 try:
-                    track = Track._from_payload(ujson.dumps(trk))
+                    track = Track._from_payload(default_json_dumps(trk))
                 except Exception as e:
                     raise BuildException(str(e))
                 else:
@@ -720,11 +721,11 @@ class RESTTrack:
 
         elif load_type == "track":
             _logger.log(TRACE_LEVEL, f"loadType was a track link.")
-            build = Track._from_payload(ujson.dumps(resp["data"]))
+            build = Track._from_payload(default_json_dumps(resp["data"]))
 
         elif load_type == "playlist":
             _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
-            build = Playlist._from_payload(ujson.dumps(resp["data"]))
+            build = Playlist._from_payload(default_json_dumps(resp["data"]))
 
         else:
             raise Exception(f"An unknown loadType was received: {load_type}")

@@ -17,10 +17,6 @@ from hikari import UndefinedOr
 from hikari.events import VoiceServerUpdateEvent
 from hikari.events import VoiceStateUpdateEvent
 
-from ongaku.abc.events import PlayerUpdateEvent
-from ongaku.abc.events import QueueEmptyEvent
-from ongaku.abc.events import QueueNextEvent
-from ongaku.abc.events import TrackEndEvent
 from ongaku.abc.filters import Filters
 from ongaku.abc.player import Player as ABCPlayer
 from ongaku.abc.player import PlayerVoice
@@ -30,8 +26,12 @@ from ongaku.errors import BuildException
 from ongaku.errors import LavalinkException
 from ongaku.errors import PlayerConnectException
 from ongaku.errors import PlayerQueueException
-from ongaku.internal import TRACE_LEVEL
-from ongaku.internal import logger
+from ongaku.events import PlayerUpdateEvent
+from ongaku.events import QueueEmptyEvent
+from ongaku.events import QueueNextEvent
+from ongaku.events import TrackEndEvent
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
     from ongaku.session import Session

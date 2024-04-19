@@ -6,28 +6,36 @@ Handles all payload related events.
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-import ujson
 from aiohttp import WSMessage
 from aiohttp import WSMsgType
 
-from ongaku.abc.bases import OngakuEvent
-from ongaku.abc.events import PlayerUpdateEvent
-from ongaku.abc.events import ReadyEvent
-from ongaku.abc.events import StatisticsEvent
-from ongaku.abc.events import TrackEndEvent
-from ongaku.abc.events import TrackExceptionEvent
-from ongaku.abc.events import TrackStartEvent
-from ongaku.abc.events import TrackStuckEvent
-from ongaku.abc.events import WebsocketClosedEvent
+from ongaku.abc.events import PlayerUpdate
+from ongaku.abc.events import Ready
+from ongaku.abc.events import TrackEnd
+from ongaku.abc.events import TrackException
+from ongaku.abc.events import TrackStart
+from ongaku.abc.events import TrackStuck
+from ongaku.abc.events import WebsocketClosed
+from ongaku.abc.statistics import Statistics
 from ongaku.enums import WebsocketEventType
 from ongaku.enums import WebsocketOPCodeType
 from ongaku.errors import WebsocketTypeException
+from ongaku.events import OngakuEvent
+from ongaku.events import PlayerUpdateEvent
+from ongaku.events import ReadyEvent
+from ongaku.events import StatisticsEvent
+from ongaku.events import TrackEndEvent
+from ongaku.events import TrackExceptionEvent
+from ongaku.events import TrackStartEvent
+from ongaku.events import TrackStuckEvent
+from ongaku.events import WebsocketClosedEvent
+from ongaku.internal.converters import default_json_loads
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from ongaku.session import Session
 
 __all__ = (
@@ -44,7 +52,7 @@ class _EventHandler:
         self._session = session
 
     async def _handle_event(
-        self, payload: str, event_payload: dict[str, t.Any]
+        self, payload: str, event_payload: typing.Mapping[str, typing.Any]
     ) -> OngakuEvent:
         event_type: WebsocketEventType | str | None = event_payload.get("type")
 
@@ -58,28 +66,68 @@ class _EventHandler:
 
         match event_type:
             case WebsocketEventType.TRACK_START_EVENT:
-                event = TrackStartEvent._build(payload, self._session, self._client.bot)
+                base = TrackStart._from_payload(payload)
+                event = TrackStartEvent(
+                    base.guild_id,
+                    base.track,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
+                )
 
             case WebsocketEventType.TRACK_END_EVENT:
-                event = TrackEndEvent._build(payload, self._session, self._client.bot)
+                base = TrackEnd._from_payload(payload)
+                event = TrackEndEvent(
+                    base.guild_id,
+                    base.track,
+                    base.reason,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
+                )
 
             case WebsocketEventType.TRACK_EXCEPTION_EVENT:
-                event = TrackExceptionEvent._build(
-                    payload, self._session, self._client.bot
+                base = TrackException._from_payload(payload)
+                event = TrackExceptionEvent(
+                    base.guild_id,
+                    base.track,
+                    base.exception,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
                 )
 
             case WebsocketEventType.TRACK_STUCK_EVENT:
-                event = TrackStuckEvent._build(payload, self._session, self._client.bot)
+                base = TrackStuck._from_payload(payload)
+                event = TrackStuckEvent(
+                    base.guild_id,
+                    base.track,
+                    base.threshold_ms,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
+                )
 
             case WebsocketEventType.WEBSOCKET_CLOSED_EVENT:
-                event = WebsocketClosedEvent._build(
-                    payload, self._session, self._client.bot
+                base = WebsocketClosed._from_payload(payload)
+                event = WebsocketClosedEvent(
+                    base.guild_id,
+                    base.code,
+                    base.reason,
+                    base.by_remote,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
                 )
 
         return event
 
     async def handle_event(self, payload: str) -> None:
-        event_payload: dict[str, t.Any] = ujson.loads(payload)
+        event_payload = default_json_loads(payload)
+
+        if isinstance(event_payload, typing.Sequence):
+            _logger.warn("Invalid payload response.")
+            return
 
         op_code: WebsocketOPCodeType | str | None = event_payload.get("op")
 
@@ -93,17 +141,40 @@ class _EventHandler:
 
         match op_code:
             case WebsocketOPCodeType.READY:
-                event = ReadyEvent._build(payload, self._session, self._client.bot)
+                base = Ready._from_payload(payload)
+                event = ReadyEvent(
+                    base.resumed,
+                    base.session_id,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
+                )
 
                 self._session.session_id = event.session_id
 
             case WebsocketOPCodeType.PLAYER_UPDATE:
-                event = PlayerUpdateEvent._build(
-                    payload, self._session, self._client.bot
+                base = PlayerUpdate._from_payload(payload)
+                event = PlayerUpdateEvent(
+                    base.guild_id,
+                    base.state,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
                 )
 
             case WebsocketOPCodeType.STATS:
-                event = StatisticsEvent._build(payload, self._session, self._client.bot)
+                base = Statistics._from_payload(payload)
+                event = StatisticsEvent(
+                    base.players,
+                    base.playing_players,
+                    base.uptime,
+                    base.memory,
+                    base.cpu,
+                    base.frame_statistics,
+                    _app=self._client.bot,
+                    _client=self._client,
+                    _session=self._session,
+                )
 
             case WebsocketOPCodeType.EVENT:
                 event = await self._handle_event(payload, event_payload)
