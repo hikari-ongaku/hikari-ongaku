@@ -13,18 +13,18 @@ import typing as t
 import aiohttp
 import hikari
 
-from .enums import ConnectionType
-from .enums import VersionType
-from .errors import PlayerMissingException
-from .errors import SessionConnectionException
-from .handlers import _WSHandler
-from .internal import TRACE_LEVEL
-from .internal import logger
-from .internal.about import __version__
-from .player import Player
+from ongaku.enums import ConnectionType
+from ongaku.enums import VersionType
+from ongaku.errors import PlayerMissingException
+from ongaku.errors import SessionConnectionException
+from ongaku.handlers import _WSHandler
+from ongaku.internal.about import __version__
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import logger
+from ongaku.player import Player
 
 if t.TYPE_CHECKING:
-    from .client import Client
+    from ongaku.client import Client
 
 __all__ = ("Session",)
 
@@ -183,12 +183,14 @@ class BaseSessionHandler(abc.ABC):
 
     def __init__(self, client: Client) -> None: ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sessions(self) -> t.Sequence[Session]:
         """All available sessions."""
         ...
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def players(self) -> t.Sequence[Player]:
         """All players, across all sessions."""
         ...
