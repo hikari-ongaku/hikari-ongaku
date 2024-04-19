@@ -56,10 +56,11 @@ setup(
     zip_safe=False,
     install_requires=parse_requirements_file("requirements.txt"),
     extras_require={
-        "docs": parse_requirements_file("doc_requirements.txt"),
-        "dev": parse_requirements_file("dev_requirements.txt"),
+        "docs": parse_requirements_file("requirements/doc.txt"),
+        "dev": parse_requirements_file("requirements/dev.txt"),
+        "speedups": parse_requirements_file("requirements/speedups.txt"),
     },
-    python_requires=">=3.11.0, <3.13",
+    python_requires=">=3.10.0, <3.13",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: AsyncIO",
