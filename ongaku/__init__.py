@@ -11,59 +11,58 @@ from __future__ import annotations
 
 import logging
 
-from . import internal
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import TRACE_NAME
 
-logging.addLevelName(internal.TRACE_LEVEL, internal.TRACE_NAME)
+logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
 
 
-from .abc.bases import OngakuEvent
-from .abc.events import PlayerBase
-from .abc.events import PlayerUpdateEvent
-from .abc.events import QueueEmptyEvent
-from .abc.events import QueueNextEvent
-from .abc.events import ReadyEvent
-from .abc.events import StatisticsEvent
-from .abc.events import TrackBase
-from .abc.events import TrackEndEvent
-from .abc.events import TrackExceptionEvent
-from .abc.events import TrackStartEvent
-from .abc.events import TrackStuckEvent
-from .abc.events import WebsocketClosedEvent
-from .abc.filters import Filters
-from .abc.playlist import Playlist
-from .abc.statistics import StatsCpu
-from .abc.statistics import StatsFrameStatistics
-from .abc.statistics import StatsMemory
-from .abc.track import Track
-from .client import Client
-from .enums import BandType
-from .enums import ConnectionType
-from .enums import IPBlockType
-from .enums import RoutePlannerType
-from .enums import SeverityType
-from .enums import TrackEndReasonType
-from .enums import VersionType
-from .errors import BuildException
-from .errors import LavalinkException
-from .errors import OngakuException
-from .errors import PlayerConnectException
-from .errors import PlayerException
-from .errors import PlayerMissingException
-from .errors import PlayerQueueException
-from .errors import SessionConnectionException
-from .errors import SessionException
-from .errors import SessionHandlerException
-from .errors import WebsocketClosureException
-from .errors import WebsocketException
-from .errors import WebsocketTypeException
-from .internal.about import __author__
-from .internal.about import __author_email__
-from .internal.about import __license__
-from .internal.about import __maintainer__
-from .internal.about import __url__
-from .internal.about import __version__
-from .player import Player
-from .session import Session
+from ongaku.abc.bases import OngakuEvent
+from ongaku.abc.filters import Filters
+from ongaku.abc.playlist import Playlist
+from ongaku.abc.statistics import StatsCpu
+from ongaku.abc.statistics import StatsFrameStatistics
+from ongaku.abc.statistics import StatsMemory
+from ongaku.abc.track import Track
+from ongaku.client import Client
+from ongaku.enums import BandType
+from ongaku.enums import ConnectionType
+from ongaku.enums import IPBlockType
+from ongaku.enums import RoutePlannerType
+from ongaku.enums import SeverityType
+from ongaku.enums import TrackEndReasonType
+from ongaku.enums import VersionType
+from ongaku.errors import BuildException
+from ongaku.errors import LavalinkException
+from ongaku.errors import OngakuException
+from ongaku.errors import PlayerConnectException
+from ongaku.errors import PlayerException
+from ongaku.errors import PlayerMissingException
+from ongaku.errors import PlayerQueueException
+from ongaku.errors import SessionConnectionException
+from ongaku.errors import SessionException
+from ongaku.errors import SessionHandlerException
+from ongaku.errors import WebsocketClosureException
+from ongaku.errors import WebsocketException
+from ongaku.errors import WebsocketTypeException
+from ongaku.events import PlayerUpdateEvent
+from ongaku.events import QueueEmptyEvent
+from ongaku.events import QueueNextEvent
+from ongaku.events import ReadyEvent
+from ongaku.events import StatisticsEvent
+from ongaku.events import TrackEndEvent
+from ongaku.events import TrackExceptionEvent
+from ongaku.events import TrackStartEvent
+from ongaku.events import TrackStuckEvent
+from ongaku.events import WebsocketClosedEvent
+from ongaku.internal.about import __author__
+from ongaku.internal.about import __author_email__
+from ongaku.internal.about import __license__
+from ongaku.internal.about import __maintainer__
+from ongaku.internal.about import __url__
+from ongaku.internal.about import __version__
+from ongaku.player import Player
+from ongaku.session import Session
 
 __all__ = (
     # .about
@@ -110,12 +109,10 @@ __all__ = (
     "StatsFrameStatistics",
     "StatisticsEvent",
     "WebsocketClosedEvent",
-    "TrackBase",
     "TrackStartEvent",
     "TrackEndEvent",
     "TrackExceptionEvent",
     "TrackStuckEvent",
-    "PlayerBase",
     "QueueEmptyEvent",
     "QueueNextEvent",
     # .abc.track
