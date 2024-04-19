@@ -6,152 +6,128 @@ The session abstract classes and hikari events.
 
 from __future__ import annotations
 
-import typing
+import hikari
+import msgspec
 
-import pydantic
-
-from ongaku.abc.bases import PayloadBaseApp
-from ongaku.abc.bases import PlayerBase
-from ongaku.abc.bases import TrackBase
+from ongaku.abc.bases import PayloadBase
 from ongaku.abc.error import ExceptionError
 from ongaku.abc.player import PlayerState
-from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.enums import TrackEndReasonType
 
-if typing.TYPE_CHECKING:
-    from ongaku.internal.types import GuildIdT
-
 __all__ = (
-    "ReadyEvent",
-    "PlayerUpdateEvent",
-    "StatisticsEvent",
-    "WebsocketClosedEvent",
-    "TrackStartEvent",
-    "TrackEndEvent",
-    "TrackExceptionEvent",
-    "TrackStuckEvent",
-    "QueueEmptyEvent",
-    "QueueNextEvent",
+    "Ready",
+    "PlayerUpdate",
+    "WebsocketClosed",
+    "TrackStart",
+    "TrackEnd",
+    "TrackException",
+    "TrackStuck",
 )
 
 
-class ReadyEvent(PayloadBaseApp):
+class Ready(PayloadBase):
     """
-    Ready event.
+    Ready Event Base.
 
-    The event that is dispatched when lavalink is ready for new players, discord connections, and song requests.
+    The base for the ready event.
     """
 
     resumed: bool
     """Whether or not the session has been resumed, or is a new session."""
-    session_id: typing.Annotated[str, pydantic.Field(alias="sessionId")]
+    session_id: str = msgspec.field(name="sessionId")
     """The lavalink session id, for the current session."""
 
 
-class PlayerUpdateEvent(PayloadBaseApp):
+class PlayerUpdate(PayloadBase):
     """
-    Player update event.
+    Player update event base.
 
-    The event that is dispatched when a player is updated.
+    The base for the player update event.
     """
 
-    guild_id: GuildIdT
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
+    """The Guild ID."""
 
     state: PlayerState
+    """The player state."""
 
 
-class StatisticsEvent(PayloadBaseApp, Statistics):
+class WebsocketClosed(PayloadBase):
     """
-    Statistics Event.
+    Websocket closed event base.
 
-    The event that is dispatched when the statistics of the server is updated.
-
-    Includes this information from [Statistics][ongaku.abc.statistics.Statistics].
-
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#stats-object)
-    """
-
-
-class WebsocketClosedEvent(PayloadBaseApp):
-    """
-    Websocket closed event.
-
-    The event that is dispatched when a discord websocket closes.
+    The base for the websocket closed event.
 
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
-    guild_id: GuildIdT
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
     """The guild that had their websocket closed in."""
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
     reason: str
     """The close reason."""
-    by_remote: typing.Annotated[bool, pydantic.Field(alias="byRemote")]
+    by_remote: bool = msgspec.field(name="byRemote")
     """Whether the connection was closed by Discord."""
 
 
-class TrackStartEvent(TrackBase):
+class TrackStart(PayloadBase):
     """
-    Track start event.
+    Track start event base.
 
-    The event that is dispatched when a track starts playing.
-    """
-
-
-class TrackEndEvent(TrackBase):
-    """
-    Track end event.
-
-    The event that is dispatched when a track ends.
+    The base for the track start event.
     """
 
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
+    """The guild related to this event."""
+    track: Track
+    """The track related to this event."""
+
+
+class TrackEnd(PayloadBase):
+    """
+    Track end event base.
+
+    The base for the track end event.
+    """
+
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
+    """The guild related to this event."""
+    track: Track
+    """The track related to this event."""
     reason: TrackEndReasonType
     """The reason for the track ending."""
 
 
-class TrackExceptionEvent(TrackBase):
+class TrackException(PayloadBase):
     """
-    Track exception event.
+    Track exception event base.
 
-    The event that is dispatched when an exception happens with a track.
+    The base for track exception event.
     """
 
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
+    """The guild related to this event."""
+    track: Track
+    """The track related to this event."""
     exception: ExceptionError
     """The exception error that was returned."""
 
 
-class TrackStuckEvent(TrackBase):
+class TrackStuck(PayloadBase):
     """
-    Track stuck event.
+    Track stuck event base.
 
-    The event that is dispatched when a track gets stuck.
-    """
-
-    threshold_ms: typing.Annotated[int, pydantic.Field(alias="thresholdMs")]
-    """The threshold in milliseconds that was exceeded."""
-
-
-class QueueEmptyEvent(PlayerBase):
-    """
-    Queue empty event.
-
-    The event that is dispatched, when a players queue is empty.
+    The base for track stuck event.
     """
 
-
-class QueueNextEvent(PlayerBase):
-    """
-    Queue next event.
-
-    The event that is dispatched when a queue is playing the next song.
-    """
-
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
+    """The guild related to this event."""
     track: Track
-    """The track that is now playing."""
-    old_track: Track
-    """The track that was playing."""
+    """The track related to this event."""
+    threshold_ms: int = msgspec.field(name="thresholdMs")
+    """The threshold in milliseconds that was exceeded."""
 
 
 # MIT License

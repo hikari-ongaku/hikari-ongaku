@@ -6,9 +6,7 @@ The error abstract classes.
 
 from __future__ import annotations
 
-import typing
-
-import pydantic
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 from ongaku.enums import SeverityType
@@ -34,12 +32,12 @@ class RestError(PayloadBase):
     """The HTTP status code."""
     error: str
     """The HTTP status code message."""
-    trace: typing.Annotated[str | None, pydantic.Field(default=None)] = None
-    """The stack trace of the error."""
     message: str
     """The error message."""
     path: str
     """The request path."""
+    trace: str | None = msgspec.field(default=None)
+    """The stack trace of the error."""
 
 
 class ExceptionError(PayloadBase):

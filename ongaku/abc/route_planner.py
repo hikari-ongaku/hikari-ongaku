@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import typing
 
-import pydantic
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 from ongaku.enums import IPBlockType
@@ -28,11 +28,11 @@ class FailingAddress(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
-    failing_address: typing.Annotated[str, pydantic.Field(alias="failingAddress")]
+    failing_address: str = msgspec.field(name="failingAddress")
     """The failing address."""
-    failing_timestamp: typing.Annotated[int, pydantic.Field(alias="failingTimestamp")]
+    failing_timestamp: int = msgspec.field(name="failingTimestamp")
     """The timestamp when the address failed."""
-    failing_time: typing.Annotated[str, pydantic.Field(alias="failingTime")]
+    failing_time: str = msgspec.field(name="failingTime")
     """The timestamp when the address failed as a pretty string."""
 
 
@@ -60,31 +60,23 @@ class RoutePlannerDetails(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
-    ip_block: typing.Annotated[IPBlock, pydantic.Field(alias="ipBlock")]
+    ip_block: IPBlock = msgspec.field(name="ipBlock")
     """The ip block being used."""
-    failing_addresses: typing.Annotated[
-        typing.Sequence[FailingAddress], pydantic.Field(alias="failingAddresses")
-    ]
+    failing_addresses: typing.Sequence[FailingAddress] = msgspec.field(
+        name="failingAddresses"
+    )
     """The failing addresses."""
-    rotate_index: typing.Annotated[
-        str | None, pydantic.Field(default=None, alias="rotateIndex")
-    ]
+    rotate_index: str | None = msgspec.field(default=None, name="rotateIndex")
     """The number of rotations."""
-    ip_index: typing.Annotated[
-        str | None, pydantic.Field(default=None, alias="ipIndex")
-    ]
+    ip_index: str | None = msgspec.field(default=None, name="ipIndex")
     """The current offset in the block."""
-    current_address: typing.Annotated[
-        str | None, pydantic.Field(default=None, alias="currentAddress")
-    ]
+    current_address: str | None = msgspec.field(default=None, name="currentAddress")
     """The current address being used."""
-    current_address_index: typing.Annotated[
-        str | None, pydantic.Field(default=None, alias="currentAddressIndex")
-    ]
+    current_address_index: str | None = msgspec.field(
+        default=None, name="currentAddressIndex"
+    )
     """The current offset in the ip block."""
-    block_index: typing.Annotated[
-        str | None, pydantic.Field(default=None, alias="blockIndex")
-    ]
+    block_index: str | None = msgspec.field(default=None, name="blockIndex")
     """The current offset in the ip block."""
 
 
@@ -97,11 +89,9 @@ class RoutePlannerStatus(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
-    class_type: typing.Annotated[
-        RoutePlannerType | None, pydantic.Field(default=None, alias="class")
-    ]
+    class_type: RoutePlannerType | None = msgspec.field(default=None, name="class")
     """The name of the RoutePlanner implementation being used by this server."""
-    details: typing.Annotated[RoutePlannerDetails | None, pydantic.Field(default=None)]
+    details: RoutePlannerDetails | None = msgspec.field(default=None)
     """The status details of the RoutePlanner."""
 
 

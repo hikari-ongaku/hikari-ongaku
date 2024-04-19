@@ -8,13 +8,11 @@ from __future__ import annotations
 
 import typing
 
-import pydantic
+import hikari
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 from ongaku.abc.track import Track
-
-if typing.TYPE_CHECKING:
-    from ongaku.internal.types import GuildIdT
 
 __all__ = (
     "PlayerState",
@@ -55,7 +53,7 @@ class PlayerVoice(PayloadBase):
     """The Discord voice token to authenticate with."""
     endpoint: str
     """The Discord voice endpoint to connect to."""
-    session_id: typing.Annotated[str, pydantic.Field(alias="sessionId")]
+    session_id: str = msgspec.field(name="sessionId")
     """The Discord voice session id to authenticate with."""
 
 
@@ -68,13 +66,13 @@ class Player(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
-    guild_id: GuildIdT
+    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
     """The guild id this player is currently in."""
-    track: typing.Annotated[Track | None, pydantic.Field(default=None)]
+    track: Track | None
     """The track the player is currently playing. None means its not currently playing any track."""
     volume: int
     """The volume of the player."""
-    is_paused: typing.Annotated[bool, pydantic.Field(alias="paused")]
+    is_paused: bool = msgspec.field(name="paused")
     """Whether the player is paused or not."""
     state: PlayerState
     """The [PlayerState][ongaku.abc.player.PlayerState] object."""

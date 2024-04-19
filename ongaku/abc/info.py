@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import typing
 
-import pydantic
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 
@@ -37,9 +37,9 @@ class InfoVersion(PayloadBase):
     """The minor version of this Lavalink server."""
     patch: int
     """The patch version of this Lavalink server."""
-    pre_release: typing.Annotated[str, pydantic.Field(alias="preRelease")]
+    pre_release: str = msgspec.field(name="preRelease")
     """The pre-release version according to semver as a `.` separated list of identifiers."""
-    build: typing.Annotated[str | None, pydantic.Field(default=None)] = None
+    build: str | None = msgspec.field(default=None)
     """The build metadata according to semver as a `.` separated list of identifiers."""
 
 
@@ -56,7 +56,7 @@ class InfoGit(PayloadBase):
     """The branch this Lavalink server was built on."""
     commit: str
     """The commit this Lavalink server was built on."""
-    commit_time: typing.Annotated[int, pydantic.Field(alias="commitTime")]
+    commit_time: int = msgspec.field(name="commitTime")
     """The millisecond unix timestamp for when the commit was created."""
 
 
@@ -86,7 +86,7 @@ class Info(PayloadBase):
 
     version: InfoVersion
     """The version of this Lavalink server."""
-    build_time: typing.Annotated[int, pydantic.Field(alias="buildTime")]
+    build_time: int = msgspec.field(name="buildTime")
     """The millisecond unix timestamp when this Lavalink jar was built."""
     git: InfoGit
     """The git information of this Lavalink server."""
@@ -94,9 +94,7 @@ class Info(PayloadBase):
     """The JVM version this Lavalink server runs on."""
     lavaplayer: str
     """The Lavaplayer version being used by this server."""
-    source_managers: typing.Annotated[
-        typing.Sequence[str], pydantic.Field(alias="sourceManagers")
-    ]
+    source_managers: typing.Sequence[str] = msgspec.field(name="sourceManagers")
     """The enabled source managers for this server."""
     filters: typing.Sequence[str]
     """The enabled filters for this server."""
