@@ -17,8 +17,8 @@ from hikari import StartedEvent
 from hikari import StoppingEvent
 
 from ongaku.enums import VersionType
-from ongaku.internal import TRACE_LEVEL
-from ongaku.internal import logger as _logger
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import logger as _logger
 from ongaku.player import Player
 from ongaku.rest import RESTClient
 from ongaku.session import BaseSessionHandler
