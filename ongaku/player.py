@@ -322,7 +322,6 @@ class Player:
             raise
         except ValueError:
             raise
-            raise
 
         _logger.log(
             TRACE_LEVEL,
