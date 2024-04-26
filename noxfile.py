@@ -26,7 +26,7 @@ options.sessions = [
 def format_fix(session: nox.Session) -> None:
     session.install("-U", "ruff")
     session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS)
-    session.run("python", "-m", "ruff", *SCRIPT_PATHS, "--fix")
+    session.run("python", "-m", "ruff", "check", *SCRIPT_PATHS, "--fix")
 
 
 @nox.session()
@@ -63,7 +63,7 @@ def pytest(session: nox.Session) -> None:
 
 @nox.session()
 def docs(session: nox.Session) -> None:
-    session.install("-Ur", "doc_requirements.txt")
+    session.install("-Ur", "requirements/doc.txt")
     session.install("-Ur", "requirements.txt")
     session.install("-U", "black")
     session.run("python", "-m", "mkdocs", "build", "-q", "-s")
