@@ -50,10 +50,6 @@ class PayloadBase(msgspec.Struct):
         return str(type)
 
 
-class OngakuEvent(hikari.Event):
-    """The base event for ongaku."""
-
-
 # MIT License
 
 # Copyright (c) 2023 MPlatypus
