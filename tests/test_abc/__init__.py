@@ -1,3 +1,5 @@
+# ruff: noqa: D104
+
 from __future__ import annotations
 
 from tests.test_abc.test_track import TestTrack
