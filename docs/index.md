@@ -10,9 +10,10 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 <br>
 
+
 Not sure what to do? Check out [Getting Started](getting_started/index.md) for examples on how to setup a bot!
 
-!!! WARNING
+!!! warning
     This voice handler will not be complete, until version **1.0**. Anything prior to it, may have massive breaking changes.
 
 ## Resources
@@ -24,3 +25,5 @@ Not sure what to do? Check out [Getting Started](getting_started/index.md) for e
 ## Notable mentions
 
 A big thanks to [Hyper](https://github.com/hypergonial), for their amazing help towards my program :D Would not have been here without them.
+
+Another large thank you to all of the staff and contributors to hikari for their amazing support in my journey of building ongaku.
