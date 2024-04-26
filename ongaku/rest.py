@@ -7,44 +7,36 @@ All REST based actions, happen in here.
 from __future__ import annotations
 
 import asyncio
-import enum
-import typing as t
+import typing
 
 import hikari
 
 from ongaku.abc.error import ExceptionError
 from ongaku.abc.error import RestError
-from ongaku.abc.filters import Filters
 from ongaku.abc.info import Info
 from ongaku.abc.player import Player
 from ongaku.abc.player import PlayerVoice
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.route_planner import RoutePlannerStatus
-from ongaku.abc.session import Session
+from ongaku.abc.session import Session as ABCSession
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.errors import BuildException
 from ongaku.errors import LavalinkException
-from ongaku.internal.converters import default_json_dumps
-from ongaku.internal.converters import default_json_loads
+from ongaku.internal import routes
+from ongaku.internal.converters import json_dumps
+from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 _logger = logger.getChild("rest")
 
-if t.TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from ongaku.client import Client
     from ongaku.internal.types import RESTClientT
 
 
 __all__ = ("RESTClient",)
-
-
-class _HttpMethod(enum.Enum):
-    GET = "GET"
-    POST = "POST"
-    PATCH = "PATCH"
-    DELETE = "DELETE"
 
 
 class RESTClient:
@@ -60,38 +52,20 @@ class RESTClient:
     def __init__(self, client: Client) -> None:
         self._client = client
 
-        self._rest_track = RESTTrack(self)
-        self._rest_player = RESTPlayer(self)
-        self._rest_session = RESTSession(self)
-        self._rest_route_planner = RESTRoutePlanner(self)
-
-    @property
-    def track(self) -> RESTTrack:
-        """The track related rest actions."""
-        return self._rest_track
-
-    @property
-    def player(self) -> RESTPlayer:
-        """The player related rest actions."""
-        return self._rest_player
-
-    @property
-    def session(self) -> RESTSession:
-        """The session related rest actions."""
-        return self._rest_session
-
-    @property
-    def route_planner(self) -> RESTRoutePlanner:
-        """The route planner related rest actions."""
-        return self._rest_route_planner
-
-    async def version(self) -> str:
+    async def load_track(
+        self, query: str
+    ) -> Playlist | typing.Sequence[Track] | Track | None:
         """
-        Get Lavalink version.
+        Load tracks.
 
-        Gets the current lavalink version.
+        Loads tracks, from a site, or a link to a song, to play on a player.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-loading)
+
+        Parameters
+        ----------
+        query
+            The query for the search/link.
 
         Raises
         ------
@@ -100,244 +74,75 @@ class RESTClient:
         ValueError
             Raised when a return type is set, and no data was received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the object could not be built. Or no valid type was found.
 
         Returns
         -------
-        str
-            The version, in string format.
+        typing.Sequence[Track]
+            A sequence of tracks (a search result)
+        Playlist
+            A Playlist object.
+        Track
+            A Track object.
         """
-        _logger.log(TRACE_LEVEL, f"running GET /version")
+        route = routes.GET_LOAD_TRACKS
 
-        resp = await self._handle_rest(
-            "/version",
-            _HttpMethod.GET,
-            str,
-            version=False,
-        )
+        params = {"identifier": query}
 
-        if resp:
-            return resp
+        _logger.log(TRACE_LEVEL, str(route))
 
-        raise TypeError("Session update requires an object to be returned.")
+        resp = await self._handle_request(route.build(), dict, params=params)
 
-    async def stats(self) -> Statistics:
-        """
-        Get server statistics.
+        load_type: str = resp["loadType"]
 
-        Gets the current Lavalink statistics.
+        if load_type == "empty":
+            _logger.log(TRACE_LEVEL, f"loadType is empty.")
+            return
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
+        elif load_type == "error":
+            _logger.log(TRACE_LEVEL, f"loadType caused an error.")
+            raise LavalinkException(
+                ExceptionError._from_payload(json_dumps(resp["data"]))
+            )
 
-        !!! note
-            frame_statistics will always be None.
-
-        Raises
-        ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
-
-        Returns
-        -------
-        Statistics
-            The Statistics object.
-        """
-        _logger.log(TRACE_LEVEL, f"running GET /stats")
-
-        resp = await self._handle_rest(
-            "/stats",
-            _HttpMethod.GET,
-            Statistics,
-        )
-
-        if resp:
-            return resp
-
-        raise TypeError("Session update requires an object to be returned.")
-
-    async def info(self) -> Info:
-        """
-        Get server statistics.
-
-        Gets the current Lavalink statistics.
-
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
-
-        Raises
-        ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
-
-        Returns
-        -------
-        Info
-            The Info object.
-        """
-        _logger.log(TRACE_LEVEL, f"running GET /info")
-
-        resp = await self._handle_rest(
-            "/info",
-            _HttpMethod.GET,
-            Info,
-        )
-
-        if resp:
-            return resp
-
-        raise TypeError("Session update requires an object to be returned.")
-
-    @t.overload
-    async def _handle_rest(
-        self,
-        url: str,
-        method: _HttpMethod,
-        return_type: t.Type[RESTClientT] | None,
-        *,
-        headers: t.Mapping[str, t.Any] = {},
-        json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
-        params: t.Mapping[str, t.Any] = {},
-        sequence: t.Literal[False] = False,
-        version: bool = True,
-    ) -> RESTClientT: ...
-
-    @t.overload
-    async def _handle_rest(
-        self,
-        url: str,
-        method: _HttpMethod,
-        return_type: t.Type[RESTClientT] | None,
-        *,
-        headers: t.Mapping[str, t.Any] = {},
-        json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
-        params: t.Mapping[str, t.Any] = {},
-        sequence: t.Literal[True] = True,
-        version: bool = True,
-    ) -> t.Sequence[RESTClientT]: ...
-
-    async def _handle_rest(
-        self,
-        url: str,
-        method: _HttpMethod,
-        return_type: t.Type[RESTClientT] | None,
-        *,
-        headers: t.Mapping[str, t.Any] = {},
-        json: t.Mapping[str, t.Any] | t.Sequence[t.Any] = {},
-        params: t.Mapping[str, t.Any] = {},
-        sequence: bool = False,
-        version: bool = True,
-    ) -> RESTClientT | t.Sequence[RESTClientT] | None:
-        """
-        Handle rest.
-
-        Raises
-        ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
-        """
-        session = await self._client._get_session()
-
-        server = await self._client._session_handler.fetch_session()
-
-        new_headers = server.base_headers.copy()
-
-        new_headers.update(headers)
-
-        server_version = ""
-        if version:
-            server_version = server.version.value
-
-        try:
-            async with session.request(
-                method.value,
-                server.base_uri + server_version + url,
-                headers=new_headers,
-                json=json,
-                params=params,
-            ) as response:
-                _logger.log(
-                    TRACE_LEVEL,
-                    f"Received code: {response.status} with response {await response.text()} on url {response.url}",
-                )
-                if response.status >= 400:
-                    try:
-                        payload = await response.text()
-                    except Exception:
-                        raise LavalinkException(
-                            f"A {response.status} error has occurred."
-                        )
-                    else:
-                        raise LavalinkException(RestError._from_payload(payload))
-
-                if not return_type:
-                    return
-
+        elif load_type == "search":
+            _logger.log(TRACE_LEVEL, f"loadType was a search result.")
+            tracks: typing.Sequence[Track] = []
+            for trk in resp["data"]:
                 try:
-                    payload = await response.text()
-                except Exception:
-                    raise ValueError("Payload required for this response.")
-
-                if issubclass(return_type, str):
-                    return return_type(payload)
-
-                if issubclass(return_type, dict):
-                    return return_type(default_json_loads(payload))
-
-                if sequence:
-                    model_seq: list[t.Any] = []
-                    for item in payload:
-                        try:
-                            model = return_type._from_payload(item)
-                        except Exception as e:
-                            raise BuildException(str(e))
-                        else:
-                            model_seq.append(model)
-
-                    return model_seq
+                    track = Track._from_payload(json_dumps(trk))
+                except Exception as e:
+                    raise BuildException(str(e))
                 else:
-                    try:
-                        model = return_type._from_payload(payload)
-                    except Exception as e:
-                        raise BuildException(str(e))
-                    else:
-                        return model
-        except asyncio.TimeoutError:
-            server._strike_server("Timeout")
+                    tracks.append(track)
 
-        except Exception as e:
-            server._strike_server(str(e))
-            raise LavalinkException(e)
+            build = tracks
 
+        elif load_type == "track":
+            _logger.log(TRACE_LEVEL, f"loadType was a track link.")
+            build = Track._from_payload(json_dumps(resp["data"]))
 
-class RESTSession:
-    """
-    REST Session.
+        elif load_type == "playlist":
+            _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
+            build = Playlist._from_payload(json_dumps(resp["data"]))
 
-    !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
-    """
+        else:
+            raise BuildException(f"An unknown loadType was received: {load_type}")
 
-    def __init__(self, rest: RESTClient) -> None:
-        self._rest = rest
+        return build
 
-    async def update(self, session_id: str) -> Session:
+    async def decode_track(self, track: str) -> Track:
         """
-        Update Lavalink session.
+        Decode a track.
 
-        Updates the lavalink session.
+        Decode a track from its encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-session)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
+
+        Parameters
+        ----------
+        track
+            The BASE64 code, from a previously encoded track.
 
         Raises
         ------
@@ -350,35 +155,63 @@ class RESTSession:
 
         Returns
         -------
-        Session
-            The Session object.
+        Track
+            The Track object.
         """
-        _logger.log(TRACE_LEVEL, f"running PATCH /sessions/{session_id}")
+        route = routes.GET_DECODE_TRACK
 
-        resp = await self._rest._handle_rest(
-            "/sessions/" + session_id,
-            _HttpMethod.PATCH,
-            Session,
+        params = {"encoded_track": track}
+
+        _logger.log(TRACE_LEVEL, f"running GET /decodetrack with params: {params}")
+
+        resp = await self._handle_request(route.build(), Track, params=params)
+
+        return resp
+
+    async def decode_many_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
+        """
+        Decode multiple tracks.
+
+        Decode multiple tracks from their encoded state.
+
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
+
+        Parameters
+        ----------
+        tracks
+            The BASE64 codes, from all the previously encoded tracks.
+
+        Raises
+        ------
+        LavalinkException
+            Raise when a invalid response type is received.
+        ValueError
+            Raised when a return type is set, and no data was received.
+        BuildException
+            Raised when the object could not be built.
+
+        Returns
+        -------
+        typing.Sequence[Track]
+            The Track object.
+        """
+        route = routes.GET_DECODE_TRACKS
+
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build(),
+            Track,
+            json=[*tracks],
+            sequence=True,
         )
 
         if resp:
             return resp
 
-        raise TypeError("Session update requires an object to be returned.")
+        raise TypeError("decode_many requires an object to be returned.")
 
-
-class RESTPlayer:
-    """
-    REST Player.
-
-    !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
-    """
-
-    def __init__(self, rest: RESTClient) -> None:
-        self._rest = rest
-
-    async def fetch_all(self, session_id: str) -> t.Sequence[Player] | None:
+    async def fetch_players(self, session_id: str) -> typing.Sequence[Player]:
         """
         Fetch all players.
 
@@ -388,7 +221,7 @@ class RESTPlayer:
 
         Parameters
         ----------
-        session_id : str
+        session_id
             The Session ID that the players are attached too.
 
         Raises
@@ -405,11 +238,12 @@ class RESTPlayer:
         typing.Sequence[Player]
             The Sequence of player objects.
         """
-        _logger.log(TRACE_LEVEL, f"running GET /sessions/{session_id}/players")
+        route = routes.GET_PLAYERS
 
-        resp = await self._rest._handle_rest(
-            "/sessions/" + session_id + "/players",
-            _HttpMethod.GET,
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build({"session_id": session_id}),
             Player,
             sequence=True,
         )
@@ -419,7 +253,9 @@ class RESTPlayer:
 
         raise TypeError("fetch_all requires an object to be returned.")
 
-    async def fetch(self, session_id: str, guild_id: hikari.Snowflake) -> Player | None:
+    async def fetch_player(
+        self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
+    ) -> Player | None:
         """
         Fetch a player.
 
@@ -429,9 +265,9 @@ class RESTPlayer:
 
         Parameters
         ----------
-        session_id : str
+        session_id
             The Session ID that the players are attached too.
-        guild_id : hikari.Snowflake
+        guild
             The Guild ID that the player is attached to.
 
         Raises
@@ -448,14 +284,14 @@ class RESTPlayer:
         Player
             The player object.
         """
-        _logger.log(
-            TRACE_LEVEL,
-            f"running GET /sessions/{session_id}/players/{guild_id}",
-        )
+        route = routes.GET_PLAYER
 
-        resp = await self._rest._handle_rest(
-            "/sessions/" + session_id,
-            _HttpMethod.GET,
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build(
+                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
+            ),
             Player,
         )
 
@@ -464,17 +300,16 @@ class RESTPlayer:
 
         raise TypeError("fetch update requires an object to be returned.")
 
-    async def update(
+    async def update_player(
         self,
-        guild_id: hikari.Snowflake,
         session_id: str,
+        guild: hikari.SnowflakeishOr[hikari.Guild],
         *,
         track: hikari.UndefinedNoneOr[Track] = hikari.UNDEFINED,
         position: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        filter: hikari.UndefinedNoneOr[Filters] = hikari.UNDEFINED,
         voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> Player:
@@ -490,25 +325,23 @@ class RESTPlayer:
 
         Parameters
         ----------
-        session_id : str
+        session_id
             The Session ID that the players are attached too.
-        guild_id : hikari.Snowflake
+        guild
             The Guild ID that the player is attached to.
-        track : hikari.UndefinedNoneOr[Track]
+        track
             The track you wish to set, or remove
-        position : hikari.UndefinedNoneOr[int]
+        position
             The new position for the track.
-        end_time : hikari.UndefinedNoneOr[int]
+        end_time
             The end time for the track.
-        volume : hikari.UndefinedNoneOr[int]
+        volume
             The volume of the player.
-        paused : hikari.UndefinedNoneOr[bool]
+        paused
             Whether or not to pause the player.
-        filter : hikari.UndefinedNoneOr[Filter]
-            The filter you wish to set, or remove.
-        voice : hikari.UndefinedNoneOr[PlayerVoice]
+        voice
             The player voice object you wish to set.
-        no_replace : bool
+        no_replace
             Whether or not the track can be replaced.
 
         Raises
@@ -539,7 +372,7 @@ class RESTPlayer:
         ):
             raise ValueError("Update requires at least one change.")
 
-        patch_data: dict[str, t.Any] = {}
+        patch_data: typing.MutableMapping[str, typing.Any] = {}
 
         if track != hikari.UNDEFINED:
             if track is None:
@@ -582,25 +415,22 @@ class RESTPlayer:
                 }
             )
 
-        if filter != hikari.UNDEFINED:
-            if filter is None:
-                patch_data.update({"filters": None})
-            else:
-                patch_data.update({"filters": filter._to_payload})
-
         params = {"noReplace": "false"}
 
         if no_replace:
             params.update({"noReplace": "true"})
 
+        route = routes.PATCH_PLAYER_UPDATE
+
         _logger.log(
             TRACE_LEVEL,
-            f"running PATCH /sessions/{session_id}/players/{guild_id} with params: {params} and json: {patch_data}",
+            str(route),
         )
 
-        resp = await self._rest._handle_rest(
-            "/sessions/" + session_id + "/players/" + str(guild_id),
-            _HttpMethod.PATCH,
+        resp = await self._handle_request(
+            route.build(
+                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
+            ),
             Player,
             headers={"Content-Type": "application/json"},
             json=patch_data,
@@ -612,7 +442,9 @@ class RESTPlayer:
 
         raise TypeError("fetch update requires an object to be returned.")
 
-    async def delete(self, session_id: str, guild_id: hikari.Snowflake) -> None:
+    async def delete_player(
+        self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
+    ) -> None:
         """
         Delete a player.
 
@@ -622,9 +454,9 @@ class RESTPlayer:
 
         Parameters
         ----------
-        session_id : str
+        session_id
             The Session ID that the players are attached too.
-        guild_id : hikari.Snowflake
+        guild
             The Guild ID that the player is attached to.
 
         Raises
@@ -632,41 +464,29 @@ class RESTPlayer:
         LavalinkException
             Raise when a invalid response type is received.
         """
-        _logger.log(
-            TRACE_LEVEL,
-            f"running DELETE /sessions/{session_id}/players/{guild_id}",
-        )
+        route = routes.DELETE_PLAYER
 
-        await self._rest._handle_rest(
-            "/sessions/" + session_id + "/players/" + str(guild_id),
-            _HttpMethod.DELETE,
+        _logger.log(TRACE_LEVEL, str(route))
+
+        await self._handle_request(
+            route.build(
+                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
+            ),
             None,
         )
 
-
-class RESTTrack:
-    """
-    REST Track.
-
-    !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
-    """
-
-    def __init__(self, rest: RESTClient) -> None:
-        self._rest = rest
-
-    async def load(self, query: str) -> Playlist | t.Sequence[Track] | Track | None:
+    async def update_session(self, session_id: str) -> ABCSession:
         """
-        Load tracks.
+        Update Lavalink session.
 
-        Loads tracks, from a site, or a link to a song, to play on a player.
+        Updates the lavalink session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-loading)
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-session)
 
         Parameters
         ----------
-        query : str
-            The query for the search/link.
+        session_id
+            The session you wish to update.
 
         Raises
         ------
@@ -679,153 +499,135 @@ class RESTTrack:
 
         Returns
         -------
-        typing.Sequence[Track]
-            A sequence of tracks (a search result)
-        Playlist
-            A Playlist object.
-        Track
-            A Track object.
+        Session
+            The Session object.
         """
-        params = {"identifier": query}
+        route = routes.PATCH_SESSION_UPDATE
 
-        _logger.log(TRACE_LEVEL, f"running GET /loadtracks with params: {params}")
+        _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._rest._handle_rest(
-            "/loadtracks", _HttpMethod.GET, dict[str, t.Any], params=params
-        )
-
-        load_type: str = resp["loadType"]
-
-        if load_type == "empty":
-            _logger.log(TRACE_LEVEL, f"loadType is empty.")
-            return
-
-        elif load_type == "error":
-            _logger.log(TRACE_LEVEL, f"loadType caused an error.")
-            raise LavalinkException(
-                ExceptionError._from_payload(default_json_dumps(resp["data"]))
-            )
-
-        elif load_type == "search":
-            _logger.log(TRACE_LEVEL, f"loadType was a search result.")
-            tracks: t.Sequence[Track] = []
-            for trk in resp["data"]:
-                try:
-                    track = Track._from_payload(default_json_dumps(trk))
-                except Exception as e:
-                    raise BuildException(str(e))
-                else:
-                    tracks.append(track)
-
-            build = tracks
-
-        elif load_type == "track":
-            _logger.log(TRACE_LEVEL, f"loadType was a track link.")
-            build = Track._from_payload(default_json_dumps(resp["data"]))
-
-        elif load_type == "playlist":
-            _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
-            build = Playlist._from_payload(default_json_dumps(resp["data"]))
-
-        else:
-            raise Exception(f"An unknown loadType was received: {load_type}")
-
-        return build
-
-    async def decode(self, code: str) -> Track:
-        """
-        Decode a track.
-
-        Decode a track from its encoded state.
-
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
-
-        Parameters
-        ----------
-        code : str
-            The BASE64 code, from a previously encoded track.
-
-        Raises
-        ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
-
-        Returns
-        -------
-        Track
-            The Track object.
-        """
-        params = {"encodedTrack": code}
-
-        _logger.log(TRACE_LEVEL, f"running GET /decodetrack with params: {params}")
-
-        resp = await self._rest._handle_rest(
-            "/decodetrack",
-            _HttpMethod.GET,
-            Track,
-        )
-
-        return resp
-
-    async def decode_many(self, codes: t.Sequence[str]) -> t.Sequence[Track]:
-        """
-        Decode multiple tracks.
-
-        Decode multiple tracks from their encoded state.
-
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
-
-        Parameters
-        ----------
-        codes : typing.Sequence[str]
-            The BASE64 codes, from all the previously encoded tracks.
-
-        Raises
-        ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
-
-        Returns
-        -------
-        typing.Sequence[Track]
-            The Track object.
-        """
-        _logger.log(TRACE_LEVEL, f"running GET /decodetracks with json: {[*codes]}")
-
-        resp = await self._rest._handle_rest(
-            "/decodetracks",
-            _HttpMethod.GET,
-            Track,
-            json=[*codes],
-            sequence=True,
+        resp = await self._handle_request(
+            route.build({"session_id": session_id}),
+            ABCSession,
         )
 
         if resp:
             return resp
 
-        raise TypeError("decode_many requires an object to be returned.")
+        raise TypeError("Session update requires an object to be returned.")
 
+    async def fetch_info(self) -> Info:
+        """
+        Get server statistics.
 
-class RESTRoutePlanner:
-    """
-    REST RoutePlanner.
+        Gets the current Lavalink statistics.
 
-    !!! WARNING
-        Please do not create this on your own. Please use the rest attribute, in the base client object you created.
-    """
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
 
-    def __init__(self, rest: RESTClient) -> None:
-        self._rest = rest
+        Raises
+        ------
+        LavalinkException
+            Raise when a invalid response type is received.
+        ValueError
+            Raised when a return type is set, and no data was received.
+        BuildException
+            Raised when the object could not be built.
 
-    async def status(self) -> RoutePlannerStatus:
+        Returns
+        -------
+        Info
+            The Info object.
+        """
+        route = routes.GET_INFO
+
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build(),
+            Info,
+        )
+
+        if resp:
+            return resp
+
+        raise TypeError("Session update requires an object to be returned.")
+
+    async def fetch_version(self) -> str:
+        """
+        Get Lavalink version.
+
+        Gets the current lavalink version.
+
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
+
+        Raises
+        ------
+        LavalinkException
+            Raise when a invalid response type is received.
+        ValueError
+            Raised when a return type is set, and no data was received.
+        BuildException
+            Raised when the object could not be built.
+
+        Returns
+        -------
+        str
+            The version, in string format.
+        """
+        route = routes.GET_VERSION
+
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build(),
+            str,
+        )
+
+        if resp:
+            return resp
+
+        raise TypeError("Session update requires an object to be returned.")
+
+    async def fetch_stats(self) -> Statistics:
+        """
+        Get server statistics.
+
+        Gets the current Lavalink statistics.
+
+        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
+
+        !!! note
+            frame_statistics will always be None.
+
+        Raises
+        ------
+        LavalinkException
+            Raise when a invalid response type is received.
+        ValueError
+            Raised when a return type is set, and no data was received.
+        BuildException
+            Raised when the object could not be built.
+
+        Returns
+        -------
+        Statistics
+            The Statistics object.
+        """
+        route = routes.GET_STATISTICS
+
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build(),
+            Statistics,
+        )
+
+        if resp:
+            return resp
+
+        raise TypeError("Session update requires an object to be returned.")
+
+    async def fetch_routeplanner_status(self) -> RoutePlannerStatus:
         """
         Fetch routeplanner status.
 
@@ -847,17 +649,18 @@ class RESTRoutePlanner:
         RoutePlannerStatus
             The RoutePlannerStatus object.
         """
-        _logger.log(TRACE_LEVEL, f"running GET /routeplanner/status")
+        route = routes.GET_ROUTEPLANNER_STATUS
 
-        resp = await self._rest._handle_rest(
-            "/loadtracks",
-            _HttpMethod.GET,
+        _logger.log(TRACE_LEVEL, str(route))
+
+        resp = await self._handle_request(
+            route.build(),
             RoutePlannerStatus,
         )
 
         return resp
 
-    async def free(self, address: str) -> None:
+    async def update_routeplanner_address(self, address: str) -> None:
         """
         Free routeplanner address.
 
@@ -867,7 +670,7 @@ class RESTRoutePlanner:
 
         Parameters
         ----------
-        address : str
+        address
             The address you wish to free.
 
         Raises
@@ -875,15 +678,17 @@ class RESTRoutePlanner:
         LavalinkException
             Raise when a invalid response type is received.
         """
-        _logger.log(TRACE_LEVEL, f"running POST /routeplanner/free/{address}")
+        route = routes.POST_ROUTEPLANNER_FREE_ADDRESS
 
-        await self._rest._handle_rest(
-            "/routeplanner/free/" + address,
-            _HttpMethod.POST,
+        _logger.log(TRACE_LEVEL, str(route))
+
+        await self._handle_request(
+            route.build(),
             None,
+            json={"address": address},
         )
 
-    async def free_all(self) -> None:
+    async def update_all_routeplanner_addresses(self) -> None:
         """
         Free all routeplanner addresses.
 
@@ -896,13 +701,132 @@ class RESTRoutePlanner:
         LavalinkException
             Raise when a invalid response type is received.
         """
-        _logger.log(TRACE_LEVEL, f"running POST /routeplanner/free/all")
+        route = routes.POST_ROUTEPLANNER_FREE_ALL
 
-        await self._rest._handle_rest(
-            "/routeplanner/free/all",
-            _HttpMethod.POST,
+        _logger.log(TRACE_LEVEL, str(route))
+
+        await self._handle_request(
+            route.build(),
             None,
         )
+
+    @typing.overload
+    async def _handle_request(
+        self,
+        route: routes.Route,
+        return_type: typing.Type[RESTClientT] | None,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, typing.Any] = {},
+        sequence: typing.Literal[False] = False,
+    ) -> RESTClientT: ...
+
+    @typing.overload
+    async def _handle_request(
+        self,
+        route: routes.Route,
+        return_type: typing.Type[RESTClientT] | None,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, typing.Any] = {},
+        sequence: typing.Literal[True] = True,
+    ) -> typing.Sequence[RESTClientT]: ...
+
+    async def _handle_request(
+        self,
+        route: routes.Route,
+        return_type: typing.Type[RESTClientT] | None,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, typing.Any] = {},
+        sequence: bool = False,
+    ) -> RESTClientT | typing.Sequence[RESTClientT] | None:
+        """
+        Handle rest.
+
+        Raises
+        ------
+        LavalinkException
+            Raise when a invalid response type is received.
+        ValueError
+            Raised when a return type is set, and no data was received.
+        BuildException
+            Raised when the object could not be built.
+        """
+        session = self._client._get_client_session()
+
+        current_session = self._client._session_handler.fetch_session()
+
+        new_headers: typing.MutableMapping[str, typing.Any] = dict(
+            current_session._base_headers
+        )
+
+        new_headers.update(headers)
+
+        try:
+            async with session.request(
+                route.route.method,
+                route.build_url(current_session.base_uri),
+                headers=new_headers,
+                json=json,
+                params=params,
+            ) as response:
+                _logger.log(
+                    TRACE_LEVEL,
+                    f"Received code: {response.status} with response {await response.text()} on url {response.url}",
+                )
+                if response.status >= 400:
+                    try:
+                        payload = await response.text()
+                    except Exception:
+                        raise LavalinkException(
+                            f"A {response.status} error has occurred."
+                        )
+                    else:
+                        raise LavalinkException(RestError._from_payload(payload))
+
+                if not return_type:
+                    return
+
+                try:
+                    payload = await response.text()
+                except Exception:
+                    raise ValueError("Payload required for this response.")
+
+                if issubclass(return_type, str):
+                    return return_type(payload)
+
+                if issubclass(return_type, dict):
+                    return return_type(json_loads(payload))
+
+                if sequence:
+                    model_seq: list[typing.Any] = []
+                    for item in payload:
+                        try:
+                            model = return_type._from_payload(item)
+                        except Exception as e:
+                            raise BuildException(str(e))
+                        else:
+                            model_seq.append(model)
+
+                    return model_seq
+                else:
+                    try:
+                        model = return_type._from_payload(payload)
+                    except Exception as e:
+                        raise BuildException(str(e))
+                    else:
+                        return model
+        except asyncio.TimeoutError:
+            _logger.warning(f"timed out on {str(route)}")
+            raise LavalinkException("Timeout")
+
+        except Exception as e:
+            _logger.warning(f"{e} occurred on {str(route)}")
+            raise LavalinkException(e)
 
 
 # MIT License
