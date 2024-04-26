@@ -11,20 +11,19 @@ import typing
 import attrs
 import hikari
 
-from ongaku.abc.error import ExceptionError
-from ongaku.abc.player import PlayerState
-from ongaku.abc.statistics import StatsCpu
-from ongaku.abc.statistics import StatsFrameStatistics
-from ongaku.abc.statistics import StatsMemory
-from ongaku.abc.track import Track
-from ongaku.enums import TrackEndReasonType
-
 if typing.TYPE_CHECKING:
+    from ongaku.abc.error import ExceptionError
+    from ongaku.abc.player import PlayerState
+    from ongaku.abc.statistics import StatsCpu
+    from ongaku.abc.statistics import StatsFrameStatistics
+    from ongaku.abc.statistics import StatsMemory
+    from ongaku.abc.track import Track
     from ongaku.client import Client
+    from ongaku.enums import TrackEndReasonType
     from ongaku.session import Session
 
 
-@attrs.define(kw_only=True)
+@attrs.define
 class OngakuEvent(hikari.Event):
     """The base ongaku event, that all events subclass."""
 
@@ -208,3 +207,26 @@ class QueueNextEvent(OngakuEvent):
     """The track that is now playing."""
     old_track: Track
     """The track that was playing."""
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
