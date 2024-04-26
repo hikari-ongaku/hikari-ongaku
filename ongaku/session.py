@@ -267,8 +267,6 @@ class Session:
             await self.transfer(self.client._session_handler)
 
     async def _websocket(self) -> None:
-
-
         bot = self.app.get_me()
 
         if not bot:
@@ -304,7 +302,9 @@ class Session:
             try:
                 async with self.client._get_client_session() as session:
                     async with session.ws_connect(
-                        self.base_uri + "/v4/websocket", headers=headers
+                        self.base_uri + "/v4/websocket",
+                        headers=headers,
+                        autoclose=False,
                     ) as ws:
                         self._status = enums.SessionStatus.CONNECTED
                         async for msg in ws:
@@ -313,7 +313,6 @@ class Session:
             except Exception as e:
                 _logger.warning(f"Websocket connection failure: {e}")
                 self._status = enums.SessionStatus.NOT_CONNECTED
-                
 
         else:
             _logger.critical(f"Server has no more attempts.")

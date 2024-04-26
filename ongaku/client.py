@@ -91,6 +91,9 @@ class Client:
         if not self._client_session:
             self._client_session = aiohttp.ClientSession()
 
+        if self._client_session.closed:
+            self._client_session = aiohttp.ClientSession()
+
         return self._client_session
 
     def _fetch_live_server(self) -> Session:
