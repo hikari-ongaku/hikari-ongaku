@@ -29,6 +29,8 @@ if typing.TYPE_CHECKING:
     from ongaku.handlers import SessionHandlerBase
     from ongaku.player import Player
 
+__all__ = ("Session",)
+
 
 class Session:
     """
@@ -265,7 +267,7 @@ class Session:
             await self.transfer(self.client._session_handler)
 
     async def _websocket(self) -> None:
-        self._remaining_attempts -= 1
+
 
         bot = self.app.get_me()
 
@@ -295,18 +297,27 @@ class Session:
 
         self._base_headers = headers
 
-        try:
-            async with self.client._get_client_session() as session:
-                async with session.ws_connect(
-                    self.base_uri + "/v4/websocket", headers=headers
-                ) as ws:
-                    self._status = enums.SessionStatus.CONNECTED
-                    async for msg in ws:
-                        await self._handle_ws_message(msg)
+        while self._remaining_attempts >= 1:
+            if self._remaining_attempts != self._attempts:
+                await asyncio.sleep(2.5)
+            self._remaining_attempts -= 1
+            try:
+                async with self.client._get_client_session() as session:
+                    async with session.ws_connect(
+                        self.base_uri + "/v4/websocket", headers=headers
+                    ) as ws:
+                        self._status = enums.SessionStatus.CONNECTED
+                        async for msg in ws:
+                            await self._handle_ws_message(msg)
 
-        except Exception as e:
-            _logger.warning(f"Websocket connection failure: {e}")
-            self._status = enums.SessionStatus.FAILURE
+            except Exception as e:
+                _logger.warning(f"Websocket connection failure: {e}")
+                self._status = enums.SessionStatus.NOT_CONNECTED
+                
+
+        else:
+            _logger.critical(f"Server has no more attempts.")
+            self._status = enums.SessionStatus.NOT_CONNECTED
 
     def _get_session_id(self) -> str:
         if self._session_id:

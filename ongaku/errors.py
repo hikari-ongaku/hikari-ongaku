@@ -15,6 +15,8 @@ from ongaku.enums import WebsocketOPCode
 
 __all__ = (
     "OngakuException",
+    "ClientException",
+    "ClientAliveException",
     "WebsocketException",
     "WebsocketClosureException",
     "WebsocketTypeException",

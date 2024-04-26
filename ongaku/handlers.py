@@ -20,6 +20,11 @@ from ongaku.session import Session
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
 
+__all__ = (
+    "SessionHandlerBase",
+    "BasicSessionHandler",
+)
+
 
 class SessionHandlerBase(abc.ABC):
     """
