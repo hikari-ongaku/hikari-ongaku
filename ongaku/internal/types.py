@@ -8,24 +8,19 @@ from __future__ import annotations
 
 import typing
 
-import hikari
-import pydantic
+if typing.TYPE_CHECKING:
+    import hikari
 
-from ongaku.abc.bases import _snowflake_to_string
-from ongaku.abc.bases import _string_to_snowflake
-from ongaku.abc.info import Info
-from ongaku.abc.player import Player
-from ongaku.abc.player import PlayerVoice
-from ongaku.abc.playlist import Playlist
-from ongaku.abc.route_planner import RoutePlannerStatus
-from ongaku.abc.session import Session
-from ongaku.abc.statistics import Statistics
-from ongaku.abc.track import Track
+    from ongaku.abc.info import Info
+    from ongaku.abc.player import Player
+    from ongaku.abc.player import PlayerVoice
+    from ongaku.abc.playlist import Playlist
+    from ongaku.abc.route_planner import RoutePlannerStatus
+    from ongaku.abc.session import Session
+    from ongaku.abc.statistics import Statistics
+    from ongaku.abc.track import Track
 
-__all__ = (
-    "RESTClientT",
-    "GuildIdT",
-)
+__all__ = ("RESTClientT",)
 
 # Type Variables.
 
@@ -43,5 +38,31 @@ RESTClientT = typing.TypeVar(
     dict[str, typing.Any],
 )
 
+
 # Type Aliases
-GuildIdT: typing.TypeAlias = "typing.Annotated[hikari.Snowflake, pydantic.WrapValidator(_string_to_snowflake), pydantic.WrapSerializer(_snowflake_to_string), pydantic.Field(alias='guildId')]"
+
+RequestorT: typing.TypeAlias = (
+    hikari.SnowflakeishOr[hikari.User] | hikari.SnowflakeishOr[hikari.Member]
+)
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

@@ -9,7 +9,7 @@ from __future__ import annotations
 import typing
 
 import hikari
-import pydantic
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 
@@ -30,27 +30,25 @@ class TrackInfo(PayloadBase):
 
     identifier: str
     """The track identifier."""
-    is_seekable: typing.Annotated[bool, pydantic.Field(alias="isSeekable")]
+    is_seekable: bool = msgspec.field(name="isSeekable")
     """Whether the track is seekable."""
     author: str
     """The track author."""
     length: int
     """The track length in milliseconds."""
-    is_stream: typing.Annotated[bool, pydantic.Field(alias="isStream")]
+    is_stream: bool = msgspec.field(name="isStream")
     """Whether the track is a stream."""
     position: int
     """The track position in milliseconds."""
     title: str
     """The track title."""
-    source_name: typing.Annotated[str, pydantic.Field(alias="sourceName")]
+    source_name: str = msgspec.field(name="sourceName")
     """The tracks source name."""
-    uri: typing.Annotated[str | None, pydantic.Field(default=None)] = None
+    uri: str | None = msgspec.field(default=None)
     """The track uri."""
-    artwork_url: typing.Annotated[
-        str | None, pydantic.Field(default=None, alias="artworkUrl")
-    ] = None
+    artwork_url: str | None = msgspec.field(default=None, name="artworkUrl")
     """The track artwork url"""
-    isrc: typing.Annotated[str | None, pydantic.Field(default=None)] = None
+    isrc: str | None = msgspec.field(default=None)
     """The track ISRC"""
 
 
@@ -66,19 +64,15 @@ class Track(PayloadBase):
     """The base64 encoded track data."""
     info: TrackInfo
     """Information about the track."""
-    plugin_info: typing.Annotated[
-        typing.Mapping[typing.Any, typing.Any] | None,
-        pydantic.Field(default={}, alias="pluginInfo"),
-    ] = {}
+    plugin_info: typing.Mapping[typing.Any, typing.Any] | None = msgspec.field(
+        default=None, name="pluginInfo"
+    )
     """Additional track info provided by plugins."""
-    user_data: typing.Annotated[
-        typing.Mapping[typing.Any, typing.Any] | None,
-        pydantic.Field(default={}, alias="userData"),
-    ] = {}
+    user_data: typing.Mapping[typing.Any, typing.Any] | None = msgspec.field(
+        default=None, name="userData"
+    )
     """Additional track data."""
-    requestor: typing.Annotated[
-        hikari.Snowflake | None, pydantic.Field(default=None, exclude=True)
-    ] = None
+    requestor: hikari.Snowflake | None = msgspec.field(default=None)
     """
     The user who requested this track.
 

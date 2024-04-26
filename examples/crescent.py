@@ -25,7 +25,7 @@ bot = hikari.GatewayBot("...")
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_server(
+ongaku_client.add_session(
     host="127.0.0.1",
     password="youshallnotpass"
 )

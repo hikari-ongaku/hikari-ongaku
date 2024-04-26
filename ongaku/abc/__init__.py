@@ -6,31 +6,15 @@ All of the abstract classes for Ongaku.
 
 from __future__ import annotations
 
-from ongaku.abc.bases import OngakuEvent
 from ongaku.abc.error import ExceptionError
 from ongaku.abc.error import RestError
-from ongaku.abc.events import PlayerBase
-from ongaku.abc.events import PlayerUpdateEvent
-from ongaku.abc.events import QueueEmptyEvent
-from ongaku.abc.events import QueueNextEvent
-from ongaku.abc.events import ReadyEvent
-from ongaku.abc.events import StatisticsEvent
-from ongaku.abc.events import TrackBase
-from ongaku.abc.events import TrackEndEvent
-from ongaku.abc.events import TrackExceptionEvent
-from ongaku.abc.events import TrackStartEvent
-from ongaku.abc.events import TrackStuckEvent
-from ongaku.abc.events import WebsocketClosedEvent
-from ongaku.abc.filters import FilterChannelMix
-from ongaku.abc.filters import FilterDistortion
-from ongaku.abc.filters import FilterEqualizer
-from ongaku.abc.filters import FilterKaraoke
-from ongaku.abc.filters import FilterLowPass
-from ongaku.abc.filters import FilterRotation
-from ongaku.abc.filters import Filters
-from ongaku.abc.filters import FilterTimescale
-from ongaku.abc.filters import FilterTremolo
-from ongaku.abc.filters import FilterVibrato
+from ongaku.abc.events import PlayerUpdate
+from ongaku.abc.events import Ready
+from ongaku.abc.events import TrackEnd
+from ongaku.abc.events import TrackException
+from ongaku.abc.events import TrackStart
+from ongaku.abc.events import TrackStuck
+from ongaku.abc.events import WebsocketClosed
 from ongaku.abc.info import Info
 from ongaku.abc.info import InfoGit
 from ongaku.abc.info import InfoPlugin
@@ -54,30 +38,13 @@ from ongaku.abc.track import TrackInfo
 
 __all__ = (
     # .events
-    "OngakuEvent",
-    "ReadyEvent",
-    "PlayerUpdateEvent",
-    "StatisticsEvent",
-    "WebsocketClosedEvent",
-    "TrackBase",
-    "TrackStartEvent",
-    "TrackEndEvent",
-    "TrackExceptionEvent",
-    "TrackStuckEvent",
-    "PlayerBase",
-    "QueueEmptyEvent",
-    "QueueNextEvent",
-    # .filters
-    "Filters",
-    "FilterEqualizer",
-    "FilterKaraoke",
-    "FilterTimescale",
-    "FilterTremolo",
-    "FilterVibrato",
-    "FilterRotation",
-    "FilterDistortion",
-    "FilterChannelMix",
-    "FilterLowPass",
+    "Ready",
+    "PlayerUpdate",
+    "WebsocketClosed",
+    "TrackStart",
+    "TrackEnd",
+    "TrackException",
+    "TrackStuck",
     # .lavalink
     "InfoVersion",
     "InfoGit",

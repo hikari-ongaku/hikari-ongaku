@@ -14,7 +14,7 @@ bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikar
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_server(
+ongaku_client.add_session(
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -115,9 +115,9 @@ async def play_command(
     checked_query = await checker.check(args[0])
 
     if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.track.load(f"ytsearch:{checked_query.value}")
+        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
     else:
-        result = await ongaku_client.rest.track.load(checked_query.value)
+        result = await ongaku_client.rest.load_track(checked_query.value)
 
     if result is None:
         await bot.rest.create_message(
@@ -191,9 +191,9 @@ async def add_command(
     checked_query = await checker.check(args[0])
 
     if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.track.load(f"ytsearch:{checked_query.value}")
+        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
     else:
-        result = await ongaku_client.rest.track.load(checked_query.value)
+        result = await ongaku_client.rest.load_track(checked_query.value)
 
     if result is None:
         await bot.rest.create_message(

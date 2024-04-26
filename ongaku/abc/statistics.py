@@ -6,9 +6,7 @@ The statistic abstract classes.
 
 from __future__ import annotations
 
-import typing
-
-import pydantic
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 
@@ -45,9 +43,9 @@ class StatsCpu(PayloadBase):
 
     cores: int
     """The amount of cores the server has."""
-    system_load: typing.Annotated[float | int, pydantic.Field(alias="systemLoad")]
+    system_load: float | int = msgspec.field(name="systemLoad")
     """The system load of the server."""
-    lavalink_load: typing.Annotated[float | int, pydantic.Field(alias="lavalinkLoad")]
+    lavalink_load: float | int = msgspec.field(name="lavalinkLoad")
     """The load of Lavalink on the server."""
 
 
@@ -79,7 +77,7 @@ class Statistics(PayloadBase):
 
     players: int
     """The amount of players connected to the session."""
-    playing_players: typing.Annotated[int, pydantic.Field(alias="playingPlayers")]
+    playing_players: int = msgspec.field(name="playingPlayers")
     """The amount of players playing a track."""
     uptime: int
     """The uptime of the session in milliseconds."""
@@ -87,9 +85,9 @@ class Statistics(PayloadBase):
     """The memory stats of the session."""
     cpu: StatsCpu
     """The cpu stats of the session."""
-    frame_statistics: typing.Annotated[
-        StatsFrameStatistics | None, pydantic.Field(default=None, alias="frameStats")
-    ] = None
+    frame_statistics: StatsFrameStatistics | None = msgspec.field(
+        default=None, name="frameStats"
+    )
     """The frame stats of the session."""
 
 

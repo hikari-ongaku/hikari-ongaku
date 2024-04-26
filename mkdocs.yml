@@ -117,7 +117,6 @@ nav:
       - Bases: api/abc/bases.md
       - Error: api/abc/error.md
       - Events: api/abc/events.md
-      - Filters: api/abc/filters.md
       - Info: api/abc/info.md
       - Player: api/abc/player.md
       - Playlist: api/abc/playlist.md

@@ -13,7 +13,7 @@ bot = lightbulb.BotApp(token="...f", banner=None)
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_server(
+ongaku_client.add_session(
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -110,7 +110,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
         hikari.ResponseType.DEFERRED_MESSAGE_CREATE, flags=hikari.MessageFlag.EPHEMERAL
     )
 
-    result = await ongaku_client.rest.track.load(query)
+    result = await ongaku_client.rest.load_track(query)
 
     if result is None:
         await ctx.respond(
@@ -173,7 +173,7 @@ async def add_command(
 
     query = ctx.options.query
 
-    result = await ongaku_client.rest.track.load(query)
+    result = await ongaku_client.rest.load_track(query)
 
     if result is None:
         await ctx.respond(

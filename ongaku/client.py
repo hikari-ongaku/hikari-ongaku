@@ -1,29 +1,31 @@
 """
-# Ongaku Client.
+Client.
 
-Ongaku base client where all functions like rest, creating/deleting/fetching players and more start from!
+The base client for ongaku.
 """
 
 from __future__ import annotations
 
-import typing as t
+import typing
 
-from aiohttp import ClientSession
-from hikari import GatewayBot
-from hikari import Guild
-from hikari import Snowflake
-from hikari import SnowflakeishOr
-from hikari import StartedEvent
-from hikari import StoppingEvent
+import aiohttp
+import hikari
 
-from ongaku.enums import VersionType
-from ongaku.internal import TRACE_LEVEL
-from ongaku.internal import logger as _logger
-from ongaku.player import Player
+from ongaku import enums
+from ongaku.errors import ClientAliveException
+from ongaku.errors import SessionAvailabilityException
+from ongaku.handlers import BasicSessionHandler
+from ongaku.internal.logger import logger
 from ongaku.rest import RESTClient
-from ongaku.session import BaseSessionHandler
-from ongaku.session import GeneralSessionHandler
-from ongaku.session import Session
+
+if typing.TYPE_CHECKING:
+    from ongaku.handlers import SessionHandlerBase
+    from ongaku.player import Player
+    from ongaku.session import Session
+
+
+_logger = logger.getChild("client")
+
 
 __all__ = ("Client",)
 
@@ -32,173 +34,166 @@ class Client:
     """
     Client.
 
-    The client, where everything comes from.
-
-    !!! warning
-        Do not change `max_attempts` unless you know what you are doing. If your websocket does not stay connected/doesn't connect on the first try, do not use this as a fix. Try and solve the issue first.
+    The client for ongaku.
 
     Parameters
     ----------
-    bot : hikari.GatewayBot
-        The bot that ongaku will attach to.
-    max_attempts : int
-        The maximum amount of attempts for the Websocket or rest actions.
-    session_handler : typing.Type[BaseSessionHandler]
-        The session handler that handles your sessions.
-    logs : str | int
-        The log level of ongaku. Setting this to `TRACE_ONGAKU` will give you trace messages.
+    app
+        The application that the client will attach too.
+    attempts
+        The amount of attempts a session will try to connect to the server.
+    session_handler
+        The session handler to use for the current client.
     """
 
     def __init__(
         self,
-        bot: GatewayBot,
-        *,
-        max_attempts: int = 3,
-        session_handler: t.Type[BaseSessionHandler] = GeneralSessionHandler,
-        logs: str | int = "INFO",
+        app: hikari.GatewayBot,
+        session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
+        attempts: int = 3,
     ) -> None:
-        _logger.setLevel(logs)
-        self._bot = bot
-        self._rest = RESTClient(self)
-        self._session: ClientSession | None = None
-        self._attempts: t.Final[int] = max_attempts
+        self._attempts = attempts
+        self._app = app
+        self._selected_session: Session | None = None
+        self._sessions: typing.MutableSequence[Session] = []
+        self._client_session: aiohttp.ClientSession | None = None
+
+        self._rest_client = RESTClient(self)
+
+        self._is_alive = False
+
         self._session_handler = session_handler(self)
-        _logger.log(TRACE_LEVEL, "Creating starting event...")
-        bot.subscribe(StartedEvent, self._handle_startup)
-        _logger.log(TRACE_LEVEL, "Creating stopping event...")
-        bot.subscribe(StoppingEvent, self._handle_shutdown)
-        _logger.log(TRACE_LEVEL, "Successfully setup events.")
+
+        app.subscribe(hikari.StartedEvent, self._start_event)
+        app.subscribe(hikari.StoppingEvent, self._stop_event)
 
     @property
-    def sessions(self) -> t.Sequence[Session]:
-        """All the available sessions."""
-        return self._session_handler.sessions
-
-    @property
-    def players(self) -> t.Sequence[Player]:
-        """The players, attached to all sessions."""
-        return self._session_handler.players
+    def app(self) -> hikari.GatewayBot:
+        """The application attached to this bot."""
+        return self._app
 
     @property
     def rest(self) -> RESTClient:
-        """The REST actions, for the lavalink server."""
-        return self._rest
+        """The rest client for all the rest actions."""
+        return self._rest_client
 
     @property
-    def bot(self) -> GatewayBot:
-        """The App or Bot that lavalink is connected too."""
-        return self._bot
-
-    async def _get_session(self) -> ClientSession:
+    def is_alive(self) -> bool:
         """
-        Get session.
+        Whether or not the session handler is alive.
 
-        Get the `aiohttp.ClientSession`, or creates a new one.
+        !!! note
+            If the hikari.StartedEvent has already happened, and this is False, ongaku is no longer running and has crashed. Check your logs.
         """
-        if not self._session:
-            self._session = ClientSession()
+        return self._session_handler.is_alive
 
-        return self._session
+    def _get_client_session(self) -> aiohttp.ClientSession:
+        if not self._client_session:
+            self._client_session = aiohttp.ClientSession()
 
-    async def _handle_startup(self, event: StartedEvent):
-        """
-        Handle startup.
+        if self._client_session.closed:
+            self._client_session = aiohttp.ClientSession()
 
-        Handles startup for the session handler.
-        """
+        return self._client_session
+
+    def _fetch_live_server(self) -> Session:
+        if not self.app.is_alive:
+            raise ClientAliveException()
+
+        if not self.is_alive:
+            raise ClientAliveException("Ongaku has crashed.")
+
+        if self._selected_session:
+            return self._selected_session
+
+        for session in self._sessions:
+            if session.status == enums.SessionStatus.CONNECTED:
+                self._selected_session = session
+
+        if self._selected_session == None:
+            _logger.warning(
+                "Ongaku is shutting down, due to no sessions currently working."
+            )
+            raise SessionAvailabilityException(None)
+
+        return self._selected_session
+
+    async def _start_event(self, event: hikari.StartedEvent) -> None:
         await self._session_handler.start()
 
-    async def _handle_shutdown(self, event: StoppingEvent):
-        """
-        Handle shutdown.
-
-        Handles shutdown for both the session handler, and the client session.
-        """
-        _logger.info("Shutting down handler...")
+    async def _stop_event(self, event: hikari.StoppingEvent) -> None:
         await self._session_handler.stop()
 
-        _logger.info("shutting down client session...")
-
-        if self._session:
-            await self._session.close()
-
-        _logger.info("Shutdown complete.")
-
-    def add_server(
+    def add_session(
         self,
-        *,
-        host: str = "localhost",
-        port: int = 2333,
-        password: str | None = "youshallnotpass",
-        version: VersionType = VersionType.V4,
         ssl: bool = False,
+        host: str = "127.0.0.1",
+        port: int = 2333,
+        password: str = "youshallnotpass",
     ) -> None:
         """
-        Add a new server.
+        Add Session.
 
-        Add a new server to the list of servers you allow. You must have at least one.
+        Add a new session to the session pool.
+
+        Parameters
+        ----------
+        ssl
+            Whether the server is https or just http.
+        host
+            The host of the lavalink server.
+        port
+            The port of the lavalink server.
+        password
+            The password of the lavalink server.
         """
-        self._session_handler.add_server(
-            ssl=ssl, host=host, port=port, password=password, version=version
-        )
+        self._session_handler.add_session(ssl, host, port, password, self._attempts)
 
-    async def create_player(self, guild: SnowflakeishOr[Guild]) -> Player:
+    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Create a player.
 
-        Create a new player, for a guild.
+        Create a new player for this session.
 
         Parameters
         ----------
-        guild : hikari.SnowflakeishOr[Guild]
-            The guild or guild ID you wish to set the new player to.
-
-        Raises
-        ------
-        SessionConnectionException
-            Raised when no available sessions exist, to create the player on.
+        guild
+            The guild, or guild id you wish to delete the player from.
         """
-        return await self._session_handler.create_player(Snowflake(guild))
+        return await self._session_handler.create_player(guild)
 
-    async def fetch_player(self, guild: SnowflakeishOr[Guild]) -> Player:
+    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.
 
-        Fetch a player, for a guild.
+        Fetches an existing player.
 
         Parameters
         ----------
-        guild : hikari.SnowflakeishOr[Guild]
-            The guild or guild ID you wish to fetch the player for.
-
-        Raises
-        ------
-        PlayerMissingException
-            Raised when no player exists for this guild.
+        guild
+            The guild, or guild id you wish to delete the player from.
         """
-        return await self._session_handler.fetch_player(Snowflake(guild))
+        return await self._session_handler.fetch_player(guild)
 
-    async def delete_player(self, guild: SnowflakeishOr[Guild]) -> None:
+    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
         """
         Delete a player.
 
-        Delete a player, for a guild.
+        Delete a pre-existing player.
 
         Parameters
         ----------
-        guild : hikari.SnowflakeishOr[Guild]
-            The guild id you wish to delete the player from.
+        guild
+            The guild, or guild id you wish to delete the player from.
 
-        Raises
-        ------
-        PlayerMissingException
-            Raised when no player exists for this guild.
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
+
         """
-        await self._session_handler.delete_player(Snowflake(guild))
+        player = await self.fetch_player(guild)
+
+        if player.connected:
+            await player.disconnect()
+
+        await self._session_handler.delete_player(guild)
 
 
 # MIT License

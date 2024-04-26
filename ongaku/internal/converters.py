@@ -1,54 +1,41 @@
 """
-Base's ABCs.
+Converters.
 
-The bases for all abstract classes.
+All internal converters.
 """
 
 from __future__ import annotations
 
 import typing
 
-import hikari
-import msgspec
+__all__ = ("json_dumps", "json_loads")
 
-if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+json_dumps: typing.Callable[
+    [typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]], bytes
+]
 
+json_loads: typing.Callable[
+    [str | bytes], typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]
+]
 
-from ongaku.internal.logger import logger
+try:
+    import orjson
 
-__all__ = ("PayloadBase",)
+    json_dumps = orjson.dumps
+    json_loads = orjson.loads
 
-_logger = logger.getChild("abc.base")
+except ModuleNotFoundError:
+    import json
 
+    def basic_json_dumps(
+        obj: typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any],
+    ) -> bytes:
+        """Encode a JSON object to a str."""
+        return json.dumps(obj).encode("utf-8")
 
-class PayloadBase(msgspec.Struct):
-    """
-    Payload base.
+    json_dumps = basic_json_dumps
 
-    The base class for all lavalink functions.
-    """
-
-    @classmethod
-    def _from_payload(cls, payload: str | bytes) -> Self:
-        return msgspec.json.decode(
-            payload, type=cls, strict=False, dec_hook=cls._decode_hook
-        )
-
-    @property
-    def _to_payload(self) -> str:
-        return msgspec.json.encode(self, enc_hook=self._encode_hook).decode()
-
-    @classmethod
-    def _decode_hook(cls, type: typing.Type[typing.Any], obj: typing.Any) -> typing.Any:
-        if type == hikari.Snowflake:
-            return hikari.Snowflake(int(obj))
-        raise ValueError("Sorry, but this value does not exist.")
-
-    @classmethod
-    def _encode_hook(cls, type: typing.Type[hikari.Snowflake]) -> typing.Any:
-        return str(type)
-
+    json_loads = json.loads
 
 # MIT License
 

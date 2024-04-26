@@ -6,7 +6,7 @@ The playlist abstract classes.
 
 import typing
 
-import pydantic
+import msgspec
 
 from ongaku.abc.bases import PayloadBase
 from ongaku.abc.track import Track
@@ -25,9 +25,7 @@ class PlaylistInfo(PayloadBase):
 
     name: str
     """The name of the playlist."""
-    selected_track: typing.Annotated[
-        int | None, pydantic.Field(default=-1, alias="selectedTrack")
-    ] = None
+    selected_track: int | None = msgspec.field(default=-1, name="selectedTrack")
     """The selected track of the playlist (`-1` if no track is selected)."""
 
 
@@ -42,10 +40,9 @@ class Playlist(PayloadBase):
 
     info: PlaylistInfo
     """The info of the playlist."""
-    plugin_info: typing.Annotated[
-        typing.Mapping[typing.Any, typing.Any] | None,
-        pydantic.Field(alias="pluginInfo"),
-    ]
+    plugin_info: typing.Mapping[typing.Any, typing.Any] | None = msgspec.field(
+        name="pluginInfo"
+    )
     """Addition playlist info provided by plugins."""
     tracks: typing.Sequence[Track]
     """The tracks in this playlist."""
