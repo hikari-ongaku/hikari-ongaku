@@ -275,7 +275,9 @@ class Player:
                 voice=self._voice,
                 no_replace=False,
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -314,7 +316,9 @@ class Player:
 
         try:
             await self.session.client.rest.delete_player(session, self._guild_id)
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -393,7 +397,9 @@ class Player:
                 track=self.queue[0],
                 no_replace=False,
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -470,7 +476,9 @@ class Player:
             player = await self.session.client.rest.update_player(
                 session, self.guild_id, paused=self.is_paused
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -506,7 +514,9 @@ class Player:
                 track=None,
                 no_replace=False,
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -559,7 +569,9 @@ class Player:
                     track=None,
                     no_replace=False,
                 )
-            except LavalinkException | BuildException:
+            except LavalinkException:
+                raise
+            except BuildException:
                 raise
             except ValueError:
                 raise
@@ -573,7 +585,9 @@ class Player:
                     track=self.queue[0],
                     no_replace=False,
                 )
-            except LavalinkException | BuildException:
+            except LavalinkException:
+                raise
+            except BuildException:
                 raise
             except ValueError:
                 raise
@@ -658,7 +672,9 @@ class Player:
                 track=None,
                 no_replace=False,
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -722,7 +738,9 @@ class Player:
                 volume=volume,
                 no_replace=False,
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
             raise
@@ -769,10 +787,11 @@ class Player:
                 position=value,
                 no_replace=False,
             )
-        except LavalinkException | BuildException:
+        except LavalinkException:
+            raise
+        except BuildException:
             raise
         except ValueError:
-            raise
             raise
 
         await self._update(player)
