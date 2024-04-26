@@ -8,6 +8,31 @@ hide:
 
 All the changelogs for `hikari-ongaku`.
 
+## **v0.6.0**
+ - JSON -> ORJSON: switched libraries, due to performance increases. (only if you do `pip install ongaku[speedups])
+ - SearchResult -> typing.Sequence[Track]: This has been changed, so there is less boilerplate within ongaku. This may break your code, so please check it.
+ - channel_id and guild_id: channel and guild id related things, have been modified, so they now support either giving them a guild/channel object, or just a snowflake.
+ - Client:
+   - session handling: All session handling has been completely redesigned. auto_sessions no longer exists, and has been replaced by a session class, that anyone can easily build their own sessions within.
+   - server connection: All server connections have been re-built, to support more than one server connection (it will not use multiple servers, but it does use the other servers as fallbacks).
+   - all methods within ongaku have been re-written to be cleaner, and easier to understand.
+ - Routeplanner:
+   - Docs: added route planner Docs
+   - ABC: added route planner abstract classes.
+ - Player:
+   - Add: Add now supports a singular track, or a sequence of tracks.
+   - Fixed issue where the track would continue playing, if you disconnected the bot.
+  - Rest:
+   - ClientSession: Client session is now re-used instead of creating and deleting a session, everytime a new rest action is done.
+   - RoutePlanner: added route planner endpoints (`fetch_routeplanner_status`, `update_routeplanner_address` and `update_all_routeplanner_addresses`)
+   - new handling: All rest methods are now handled in a new way, that both makes them safer, and the code is also shorter.
+   - all events are no longer split apart. They are all within rest. e.g. from `rest.player.update()` to `rest.update_player()`
+ - Events:
+   - Session and client: All events now have the client, and session attached to them.
+ - Fixes:
+   - Fixed rare disconnection issue where the endpoint would fail.
+   - Errors now actually report their errors in the terminal, meaning that if your lavalink server is not online, and you try to connect, you will get warnings if it can't do it.
+
 ## **v0.5.0**
 
  - About: Added about, so a few terminal commands can be used, to check the version of ongaku your using, about ongaku, and where it is installed.
