@@ -10,17 +10,9 @@ import typing as t
 from asyncio import TimeoutError
 from asyncio import gather
 
-from hikari import UNDEFINED
-from hikari import GatewayBot
-from hikari import Snowflake
-from hikari import UndefinedOr
-from hikari.events import VoiceServerUpdateEvent
-from hikari.events import VoiceStateUpdateEvent
+import hikari
 
-from ongaku.abc.filters import Filters
-from ongaku.abc.player import Player as ABCPlayer
 from ongaku.abc.player import PlayerVoice
-from ongaku.abc.track import Track
 from ongaku.enums import TrackEndReasonType
 from ongaku.errors import BuildException
 from ongaku.errors import LavalinkException
@@ -34,6 +26,9 @@ from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
+    from ongaku.abc.player import Player as ABCPlayer
+    from ongaku.abc.track import Track
+    from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
 _logger = logger.getChild("player")
@@ -49,19 +44,19 @@ class Player:
 
     Parameters
     ----------
-    session : Session
+    session
         The session that the player is attached too.
-    guild_id : hikari.Snowflake
-        The Guild ID the bot is attached too.
+    guild
+        The Guild the bot is attached too.
     """
 
     def __init__(
         self,
         session: Session,
-        guild_id: Snowflake,
+        guild: hikari.SnowflakeishOr[hikari.Guild],
     ):
         self._session = session
-        self._guild_id = guild_id
+        self._guild_id = hikari.Snowflake(guild)
         self._channel_id = None
 
         self._is_alive = False
@@ -75,8 +70,6 @@ class Player:
 
         self._connected: bool = False
 
-        self._filter: Filters | None = None
-
         self._volume: int = -1
 
         self._auto_play = True
@@ -88,18 +81,18 @@ class Player:
 
     @property
     def session(self) -> Session:
-        """The session that this guild is attached to."""
+        """The session attached to this player."""
         return self._session
 
     @property
-    def bot(self) -> GatewayBot:
-        """The bot that the server is on."""
-        return self.session.client.bot
+    def bot(self) -> hikari.GatewayBot:
+        """The bot attached to this player."""
+        return self.session.client.app
 
     @property
-    def channel_id(self) -> Snowflake | None:
+    def channel_id(self) -> hikari.Snowflake | None:
         """
-        ID of the voice channel this voice connection is currently in.
+        ID of the voice channel this player is currently connected too.
 
         Returns
         -------
@@ -111,8 +104,8 @@ class Player:
         return self._channel_id
 
     @property
-    def guild_id(self) -> Snowflake:
-        """The guild id, that this player is attached to."""
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild id attached to this player."""
         return self._guild_id
 
     @property
@@ -141,7 +134,7 @@ class Player:
         return self._is_paused
 
     @property
-    def auto_play(self) -> bool:
+    def autoplay(self) -> bool:
         """Whether or not the next song will play, when this song ends."""
         return self._auto_play
 
@@ -154,11 +147,6 @@ class Player:
     def queue(self) -> t.Sequence[Track]:
         """Returns the current queue of tracks."""
         return self._queue
-
-    @property
-    def audio_filter(self) -> Filters | None:
-        """The current filters applied to this player."""
-        return self._filter
 
     async def _transfer_player(self, session: Session) -> Player:
         """
@@ -183,10 +171,10 @@ class Player:
 
     async def connect(
         self,
-        channel_id: Snowflake,
+        channel: hikari.SnowflakeishOr[hikari.GuildVoiceChannel],
         *,
-        mute: UndefinedOr[bool] = UNDEFINED,
-        deaf: UndefinedOr[bool] = UNDEFINED,
+        mute: bool = False,
+        deaf: bool = True,
         timeout: int = 5,
     ) -> None:
         """
@@ -194,18 +182,15 @@ class Player:
 
         Connect this player to the specified channel.
 
-        !!! WARNING
-            If you set the `mute` parameter to True, the bot will not be able to transmit audio.
-
         Parameters
         ----------
-        channel_id : Snowflake
-            The channel ID you wish to connect the bot too.
-        mute : UndefinedOr[bool]
+        channel
+            The channel you wish to connect the player to.
+        mute
             Whether or not to mute the bot.
-        deaf : UndefinedOr[bool]
+        deaf
             Whether or not to deafen the bot.
-        timeout : int
+        timeout
             The amount of time to wait for the events.
 
         Raises
@@ -229,10 +214,10 @@ class Player:
 
         _logger.log(
             TRACE_LEVEL,
-            f"Attempting connection to voice channel: {channel_id} in guild: {self.guild_id}",
+            f"Attempting connection to voice channel: {hikari.Snowflake(channel)} in guild: {self.guild_id}",
         )
 
-        self._channel_id = channel_id
+        self._channel_id = hikari.Snowflake(channel)
 
         try:
             await self.bot.update_voice_state(
@@ -243,35 +228,35 @@ class Player:
 
         _logger.log(
             TRACE_LEVEL,
-            "waiting for voice events for channel: {channel_id} in guild: {self.guild_id}",
+            f"waiting for voice events for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         try:
             state_event, server_event = await gather(
                 self.bot.wait_for(
-                    VoiceStateUpdateEvent,
+                    hikari.VoiceStateUpdateEvent,
                     timeout=timeout,
                 ),
                 self.bot.wait_for(
-                    VoiceServerUpdateEvent,
+                    hikari.VoiceServerUpdateEvent,
                     timeout=timeout,
                 ),
             )
         except TimeoutError as e:
             raise PlayerConnectException(
                 self.guild_id,
-                f"Could not connect to voice channel {channel_id} due to events not being received.",
+                f"Could not connect to voice channel {self.channel_id} due to events not being received.",
             )
 
         if server_event.endpoint is None:
             raise PlayerConnectException(
                 self.guild_id,
-                f"Endpoint missing for attempted server connection in {channel_id}",
+                f"Endpoint missing for attempted server connection in {self.channel_id}",
             )
 
         _logger.log(
             TRACE_LEVEL,
-            f"Successfully received events for channel: {channel_id} in guild: {self.guild_id}",
+            f"Successfully received events for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         try:
@@ -284,15 +269,13 @@ class Player:
             raise BuildException(f"Failed to build player voice: {e}")
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
+            player = await self.session.client.rest.update_player(
                 session,
+                self.guild_id,
                 voice=self._voice,
                 no_replace=False,
             )
-        except LavalinkException:
-            raise
-        except BuildException:
+        except LavalinkException | BuildException:
             raise
         except ValueError:
             raise
@@ -301,7 +284,7 @@ class Player:
 
         _logger.log(
             TRACE_LEVEL,
-            f"Successfully connected, and sent data to lavalink for channel: {channel_id} in guild: {self.guild_id}",
+            f"Successfully connected, and sent data to lavalink for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         await self._update(player)
@@ -330,8 +313,11 @@ class Player:
         )
 
         try:
-            await self.session.client.rest.player.delete(session, self._guild_id)
-        except LavalinkException:
+            await self.session.client.rest.delete_player(session, self._guild_id)
+        except LavalinkException | BuildException:
+            raise
+        except ValueError:
+            raise
             raise
 
         _logger.log(
@@ -354,7 +340,7 @@ class Player:
         )
 
     async def play(
-        self, track: Track | None = None, requestor: Snowflake | None = None
+        self, track: Track | None = None, requestor: RequestorT | None = None
     ) -> None:
         """
         Play a track.
@@ -364,9 +350,9 @@ class Player:
 
         Parameters
         ----------
-        track : abc.Track | None
-            the track you wish to play. If empty, it will pull from the queue.
-        requestor : Snowflake | None
+        track
+            The track you wish to play. If empty, it will pull from the queue.
+        requestor
             The user/member id that requested the song.
 
         Raises
@@ -396,22 +382,21 @@ class Player:
 
         if track:
             if requestor:
-                track.requestor = requestor
+                track.requestor = hikari.Snowflake(requestor)
 
             self._queue.insert(0, track)
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
+            player = await self.session.client.rest.update_player(
                 session,
+                self.guild_id,
                 track=self.queue[0],
                 no_replace=False,
             )
-        except LavalinkException:
-            raise
-        except BuildException:
+        except LavalinkException | BuildException:
             raise
         except ValueError:
+            raise
             raise
 
         self._is_paused = False
@@ -419,7 +404,7 @@ class Player:
         await self._update(player)
 
     async def add(
-        self, tracks: t.Sequence[Track] | Track, requestor: Snowflake | None = None
+        self, tracks: t.Sequence[Track] | Track, requestor: RequestorT | None = None
     ) -> None:
         """
         Add tracks.
@@ -428,22 +413,28 @@ class Player:
 
         Parameters
         ----------
-        tracks : t.Sequence[abc.Track] | Track
+        tracks
             The list of tracks or a singular track you wish to add to the queue.
-        requestor : Snowflake | None
+        requestor
             The user/member id that requested the song.
         """
+        new_requestor = None
+
+        if requestor:
+            new_requestor = hikari.Snowflake(requestor)
+
         if isinstance(tracks, Track):
-            tracks.requestor = requestor
+            if requestor:
+                tracks.requestor = new_requestor
             self._queue.append(tracks)
             return
 
         for track in tracks:
             if requestor:
-                track.requestor = requestor
+                track.requestor = new_requestor
             self._queue.append(track)
 
-    async def pause(self, value: UndefinedOr[bool] = UNDEFINED) -> None:
+    async def pause(self, value: bool | None = None) -> None:
         """
         Pause the player.
 
@@ -454,7 +445,7 @@ class Player:
 
         Parameters
         ----------
-        value : hikari.UndefinedOr[bool]
+        value
             How you wish to pause the bot.
 
         Raises
@@ -470,20 +461,19 @@ class Player:
         """
         session = self.session._get_session_id()
 
-        if value == UNDEFINED:
-            self._is_paused = not self.is_paused
-        else:
+        if value:
             self._is_paused = value
+        else:
+            self._is_paused = not self.is_paused
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id, session, paused=self.is_paused
+            player = await self.session.client.rest.update_player(
+                session, self.guild_id, paused=self.is_paused
             )
-        except LavalinkException:
-            raise
-        except BuildException:
+        except LavalinkException | BuildException:
             raise
         except ValueError:
+            raise
             raise
 
         await self._update(player)
@@ -510,17 +500,16 @@ class Player:
         session = self.session._get_session_id()
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
+            player = await self.session.client.rest.update_player(
                 session,
+                self.guild_id,
                 track=None,
                 no_replace=False,
             )
-        except LavalinkException:
-            raise
-        except BuildException:
+        except LavalinkException | BuildException:
             raise
         except ValueError:
+            raise
             raise
 
         self._is_paused = True
@@ -535,7 +524,7 @@ class Player:
 
         Parameters
         ----------
-        amount : int
+        amount
             The amount of songs you wish to skip.
 
         Raises
@@ -564,15 +553,13 @@ class Player:
 
         if len(self.queue) <= 0:
             try:
-                player = await self.session.client.rest.player.update(
-                    self.guild_id,
+                player = await self.session.client.rest.update_player(
                     session,
+                    self.guild_id,
                     track=None,
                     no_replace=False,
                 )
-            except LavalinkException:
-                raise
-            except BuildException:
+            except LavalinkException | BuildException:
                 raise
             except ValueError:
                 raise
@@ -580,15 +567,13 @@ class Player:
             await self._update(player)
         else:
             try:
-                player = await self.session.client.rest.player.update(
-                    self.guild_id,
+                player = await self.session.client.rest.update_player(
                     session,
+                    self.guild_id,
                     track=self.queue[0],
                     no_replace=False,
                 )
-            except LavalinkException:
-                raise
-            except BuildException:
+            except LavalinkException | BuildException:
                 raise
             except ValueError:
                 raise
@@ -601,9 +586,12 @@ class Player:
 
         Removes the track, or the track in that position.
 
+        !!! warning
+            This does not stop the track if its in the first position
+
         Parameters
         ----------
-        value : abc.Track | int
+        value
             Remove a selected track. If [Track][ongaku.abc.track.Track], then it will remove the first occurrence of that track. If an integer, it will remove the track at that number.
 
         Raises
@@ -664,75 +652,36 @@ class Player:
         session = self.session._get_session_id()
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
+            player = await self.session.client.rest.update_player(
                 session,
+                self.guild_id,
                 track=None,
                 no_replace=False,
             )
-        except LavalinkException:
+        except LavalinkException | BuildException:
             raise
-        except BuildException:
+        except ValueError:
             raise
-
-        await self._update(player)
-
-    async def filter(self, filter: Filters | None = None):
-        """
-        Filter.
-
-        Set, or remove a filter for the player.
-
-        Parameters
-        ----------
-        filter : Filter
-            the filter you wish to add.
-
-        Raises
-        ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
-        """
-        session = self.session._get_session_id()
-
-        self._filter = filter
-
-        try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
-                session,
-                filter=filter,
-                no_replace=False,
-            )
-        except LavalinkException:
-            raise
-        except BuildException:
             raise
 
         await self._update(player)
 
-    async def set_auto_play(self, toggle: UndefinedOr[bool] = UNDEFINED) -> bool:
+    async def set_autoplay(self, enable: bool | None = None) -> bool:
         """
-        Set auto play.
+        Set autoplay.
 
-        whether or not to enable or disable auto play.
+        whether or not to enable or disable autoplay.
 
         Parameters
         ----------
-        toggle : hikari.UndefinedOr[bool]
-            Whether or not to toggle the auto play on or off. If left empty, it will toggle the current status.
+        enable
+            Whether or not to enable autoplay. If left empty, it will toggle the current status.
         """
-        if toggle == UNDEFINED:
-            self._auto_play = not self._auto_play
+        if enable:
+            self._auto_play = enable
             return self._auto_play
 
-        self._auto_play = toggle
+        self._auto_play = not self._auto_play
         return self._auto_play
 
     async def set_volume(self, volume: int) -> None:
@@ -743,7 +692,7 @@ class Player:
 
         Parameters
         ----------
-        volume : int
+        volume
             The volume you wish to set, from 0 to 1000.
 
         Raises
@@ -767,17 +716,16 @@ class Player:
             raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
+            player = await self.session.client.rest.update_player(
                 session,
+                self.guild_id,
                 volume=volume,
                 no_replace=False,
             )
-        except LavalinkException:
-            raise
-        except BuildException:
+        except LavalinkException | BuildException:
             raise
         except ValueError:
+            raise
             raise
 
         await self._update(player)
@@ -790,7 +738,7 @@ class Player:
 
         Parameters
         ----------
-        value : int
+        value
             The value, of the position, in milliseconds.
 
         Raises
@@ -815,24 +763,21 @@ class Player:
             raise PlayerQueueException(self.guild_id, "The queue is empty.")
 
         try:
-            player = await self.session.client.rest.player.update(
-                self.guild_id,
+            player = await self.session.client.rest.update_player(
                 session,
+                self.guild_id,
                 position=value,
                 no_replace=False,
             )
-        except LavalinkException:
-            raise
-        except BuildException:
+        except LavalinkException | BuildException:
             raise
         except ValueError:
+            raise
             raise
 
         await self._update(player)
 
     async def _update(self, player: ABCPlayer) -> None:
-        # TODO: Somehow do the filter and the track.
-
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
@@ -866,10 +811,10 @@ class Player:
             except ValueError:
                 await self.bot.dispatch(
                     QueueEmptyEvent(
-                        _client=event.client,
-                        _session=event.session,
-                        _app=self.bot,
-                        guild_id=self.guild_id,
+                        self.bot,
+                        event.client,
+                        event.session,
+                        self.guild_id,
                     )
                 )
                 return
@@ -881,10 +826,10 @@ class Player:
                 )
                 await self.bot.dispatch(
                     QueueEmptyEvent(
-                        _client=event.client,
-                        _session=event.session,
-                        _app=self.bot,
-                        guild_id=self.guild_id,
+                        self.bot,
+                        event.client,
+                        event.session,
+                        self.guild_id,
                     )
                 )
                 return
@@ -898,12 +843,12 @@ class Player:
 
             await self.bot.dispatch(
                 QueueNextEvent(
-                    _client=event.client,
-                    _session=event.session,
-                    _app=self.bot,
-                    guild_id=self.guild_id,
-                    track=self._queue[0],
-                    old_track=event.track,
+                    self.bot,
+                    event.client,
+                    event.session,
+                    self.guild_id,
+                    self._queue[0],
+                    event.track,
                 )
             )
 
@@ -916,8 +861,10 @@ class Player:
         if event.guild_id != self.guild_id:
             return
 
-        self.position
-        event.state.position
+        if not event.state.connected:
+            await self.stop()
+
+        self._position = event.state.position
 
 
 # MIT License
