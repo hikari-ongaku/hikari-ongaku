@@ -1,229 +1,220 @@
 """
-Handler.
+Handlers.
 
-Handles all payload related events.
+All the handlers for Lavalink.
 """
 
 from __future__ import annotations
 
+import abc
+import asyncio
 import typing
 
-from aiohttp import WSMessage
-from aiohttp import WSMsgType
+import hikari
 
-from ongaku.abc.events import PlayerUpdate
-from ongaku.abc.events import Ready
-from ongaku.abc.events import TrackEnd
-from ongaku.abc.events import TrackException
-from ongaku.abc.events import TrackStart
-from ongaku.abc.events import TrackStuck
-from ongaku.abc.events import WebsocketClosed
-from ongaku.abc.statistics import Statistics
-from ongaku.enums import WebsocketEventType
-from ongaku.enums import WebsocketOPCodeType
-from ongaku.errors import WebsocketTypeException
-from ongaku.events import OngakuEvent
-from ongaku.events import PlayerUpdateEvent
-from ongaku.events import ReadyEvent
-from ongaku.events import StatisticsEvent
-from ongaku.events import TrackEndEvent
-from ongaku.events import TrackExceptionEvent
-from ongaku.events import TrackStartEvent
-from ongaku.events import TrackStuckEvent
-from ongaku.events import WebsocketClosedEvent
-from ongaku.internal.converters import default_json_loads
-from ongaku.internal.logger import TRACE_LEVEL
-from ongaku.internal.logger import logger
+from ongaku import enums
+from ongaku import errors
+from ongaku.player import Player
+from ongaku.session import Session
 
 if typing.TYPE_CHECKING:
-    from ongaku.session import Session
-
-__all__ = (
-    "_EventHandler",
-    "_WSHandler",
-)
-
-_logger = logger.getChild("handlers")
+    from ongaku.client import Client
 
 
-class _EventHandler:
-    def __init__(self, session: Session) -> None:
-        self._client = session.client
-        self._session = session
+class SessionHandlerBase(abc.ABC):
+    """
+    Session handler base.
 
-    async def _handle_event(
-        self, payload: str, event_payload: typing.Mapping[str, typing.Any]
-    ) -> OngakuEvent:
-        event_type: WebsocketEventType | str | None = event_payload.get("type")
+    The base session handler object.
 
-        if event_type is None:
-            raise WebsocketTypeException(None, "OP code not found.")
+    Parameters
+    ----------
+    client
+        The base ongaku client.
+    """
 
-        try:
-            event_type = WebsocketEventType(event_type)
-        except Exception:
-            raise WebsocketTypeException(None, f"OP code: {event_type} is not known.")
+    @abc.abstractmethod
+    def __init__(self, client: Client): ...
 
-        match event_type:
-            case WebsocketEventType.TRACK_START_EVENT:
-                base = TrackStart._from_payload(payload)
-                event = TrackStartEvent(
-                    base.guild_id,
-                    base.track,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
+    @property
+    @abc.abstractmethod
+    def sessions(self) -> typing.Sequence[Session]:
+        """The sessions attached to this handler."""
+        ...
 
-            case WebsocketEventType.TRACK_END_EVENT:
-                base = TrackEnd._from_payload(payload)
-                event = TrackEndEvent(
-                    base.guild_id,
-                    base.track,
-                    base.reason,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
+    @property
+    @abc.abstractmethod
+    def players(self) -> typing.Sequence[Player]:
+        """The players attached to this handler."""
+        ...
 
-            case WebsocketEventType.TRACK_EXCEPTION_EVENT:
-                base = TrackException._from_payload(payload)
-                event = TrackExceptionEvent(
-                    base.guild_id,
-                    base.track,
-                    base.exception,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
+    @property
+    @abc.abstractmethod
+    def is_alive(self) -> bool:
+        """Whether the handler is alive or not."""
+        ...
 
-            case WebsocketEventType.TRACK_STUCK_EVENT:
-                base = TrackStuck._from_payload(payload)
-                event = TrackStuckEvent(
-                    base.guild_id,
-                    base.track,
-                    base.threshold_ms,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
+    @abc.abstractmethod
+    async def start(self) -> None:
+        """Start the session handler."""
+        ...
 
-            case WebsocketEventType.WEBSOCKET_CLOSED_EVENT:
-                base = WebsocketClosed._from_payload(payload)
-                event = WebsocketClosedEvent(
-                    base.guild_id,
-                    base.code,
-                    base.reason,
-                    base.by_remote,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
+    @abc.abstractmethod
+    async def stop(self) -> None:
+        """Stop the session handler."""
+        ...
 
-        return event
-
-    async def handle_event(self, payload: str) -> None:
-        event_payload = default_json_loads(payload)
-
-        if isinstance(event_payload, typing.Sequence):
-            _logger.warn("Invalid payload response.")
-            return
-
-        op_code: WebsocketOPCodeType | str | None = event_payload.get("op")
-
-        if op_code is None:
-            raise WebsocketTypeException(None, "OP code not found.")
-
-        try:
-            op_code = WebsocketOPCodeType(op_code)
-        except Exception:
-            raise WebsocketTypeException(None, f"OP code: {op_code} is not known.")
-
-        match op_code:
-            case WebsocketOPCodeType.READY:
-                base = Ready._from_payload(payload)
-                event = ReadyEvent(
-                    base.resumed,
-                    base.session_id,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
-
-                self._session.session_id = event.session_id
-
-            case WebsocketOPCodeType.PLAYER_UPDATE:
-                base = PlayerUpdate._from_payload(payload)
-                event = PlayerUpdateEvent(
-                    base.guild_id,
-                    base.state,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
-
-            case WebsocketOPCodeType.STATS:
-                base = Statistics._from_payload(payload)
-                event = StatisticsEvent(
-                    base.players,
-                    base.playing_players,
-                    base.uptime,
-                    base.memory,
-                    base.cpu,
-                    base.frame_statistics,
-                    _app=self._client.bot,
-                    _client=self._client,
-                    _session=self._session,
-                )
-
-            case WebsocketOPCodeType.EVENT:
-                event = await self._handle_event(payload, event_payload)
-
-        self._client.bot.dispatch(event)
-
-
-class _WSHandler:
-    def __init__(
-        self, session: Session, event_handler: _EventHandler | None = None
+    @abc.abstractmethod
+    def add_session(
+        self, ssl: bool, host: str, port: int, password: str, attempts: int
     ) -> None:
-        self._client = session.client
-        self._session = session
+        """Add a session."""
+        ...
 
-        if event_handler:
-            self._event_handler = event_handler
-        else:
-            self._event_handler = _EventHandler(session)
+    @abc.abstractmethod
+    def fetch_session(self) -> Session:
+        """Return a valid session."""
+        ...
 
-    async def handle_message(self, message: WSMessage) -> None:
-        match message.type:
-            case WSMsgType.TEXT:
-                # Handle a text response.
-                if not isinstance(message.data, str):
-                    raise WebsocketTypeException(
-                        None,
-                        "Unable to handle event due to data not being of type str.",
-                    )
+    @abc.abstractmethod
+    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+        """
+        Create a player.
 
-                await self._event_handler.handle_event(message.data)
+        Create a new player for this session.
+        """
+        ...
 
-            case WSMsgType.ERROR:
-                # handle error for the websocket.
-                _logger.warning(
-                    f"An error has occurred on websocket: {self._session.host}:{self._session.port} Reason: {message.data}"
-                )
+    @abc.abstractmethod
+    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+        """
+        Fetch a player.
 
-                self._session._strike_server(message.data)
+        Fetches an existing player.
+        """
+        ...
 
-            case WSMsgType.CLOSE:
-                # handle close event for websocket.
-                _logger.warning(
-                    f"Websocket has closed for: {self._session.host}:{self._session.port}. Closure code: {message.data}"
-                )
-                # self._session._strike_server(f"Websocket Closure. Reason: {message.data}")
-                await self._session.client._session_handler.switch_session()
+    @abc.abstractmethod
+    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+        """
+        Delete a player.
 
-            case _:
-                _logger.log(TRACE_LEVEL, f"Received a {message.type}. Ignoring.")
+        Delete a pre-existing player.
+        """
+        ...
+
+
+class BasicSessionHandler(SessionHandlerBase):
+    """
+    Basic Session Handler.
+
+    The basic session handler.
+
+    This session handler simply fetches the first working session, and returns it. If it dies, it switches to the next available one.
+    """
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+        self._is_alive = False
+        self._current_session: Session | None = None
+        self._sessions: typing.MutableMapping[str, Session] = {}
+        self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
+
+    @property
+    def sessions(self) -> typing.Sequence[Session]:
+        """The sessions attached to this handler."""
+        return tuple(self._sessions.values())
+
+    @property
+    def players(self) -> typing.Sequence[Player]:
+        """The players attached to this handler."""
+        return tuple(self._players.values())
+
+    @property
+    def is_alive(self) -> bool:
+        """Whether the handler is alive or not."""
+        return self._is_alive
+
+    async def start(self) -> None:
+        """Start the session handler."""
+        self._is_alive = True
+
+        for session in self.sessions:
+            if session.status == enums.SessionStatus.NOT_CONNECTED:
+                await session.start()
+
+    async def stop(self) -> None:
+        """Stop the session handler."""
+        for session in self.sessions:
+            await session.stop()
+
+        for player in self.players:
+            await player.disconnect()
+
+    def fetch_session(self) -> Session:
+        """Fetch a current session."""
+        if self._current_session:
+            return self._current_session
+
+        for session in self.sessions:
+            if session.status == enums.SessionStatus.CONNECTED:
+                self._current_session = session
+                return session
+
+        raise errors.SessionException(None)
+
+    def add_session(
+        self, ssl: bool, host: str, port: int, password: str, attempts: int
+    ) -> None:
+        """Add a session."""
+        new_session = Session(
+            self._client, str(len(self.sessions)), ssl, host, port, password, attempts
+        )
+
+        if self.is_alive:
+            asyncio.create_task(new_session.start())
+
+        self._sessions.update({new_session.name: new_session})
+
+    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+        """
+        Create a player.
+
+        Create a new player for this session.
+        """
+        try:
+            return await self.fetch_player(hikari.Snowflake(guild))
+        except Exception:
+            pass
+
+        session = self.fetch_session()
+
+        new_player = Player(session, hikari.Snowflake(guild))
+
+        self._players.update({hikari.Snowflake(guild): new_player})
+
+        return new_player
+
+    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+        """
+        Fetch a player.
+
+        Fetches an existing player.
+        """
+        player = self._players.get(hikari.Snowflake(guild))
+
+        if player:
+            return player
+
+        raise errors.PlayerMissingException(hikari.Snowflake(guild))
+
+    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+        """
+        Delete a player.
+
+        Delete a pre-existing player.
+        """
+        self._players.pop(hikari.Snowflake(guild))
 
 
 # MIT License

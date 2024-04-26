@@ -1,404 +1,351 @@
 """
-Sessions.
+Session.
 
-The base hikari session.
+Session related objects.
 """
 
 from __future__ import annotations
 
-import abc
 import asyncio
-import typing as t
+import typing
 
 import aiohttp
-import hikari
 
-from ongaku.enums import ConnectionType
-from ongaku.enums import VersionType
-from ongaku.errors import PlayerMissingException
-from ongaku.errors import SessionConnectionException
-from ongaku.handlers import _WSHandler
+from ongaku import enums
+from ongaku import errors
+from ongaku import events
+from ongaku.abc import events as abc_events
+from ongaku.abc import statistics
 from ongaku.internal.about import __version__
-from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import logger
-from ongaku.player import Player
-
-if t.TYPE_CHECKING:
-    from ongaku.client import Client
-
-__all__ = ("Session",)
 
 _logger = logger.getChild("session")
+
+if typing.TYPE_CHECKING:
+    import hikari
+
+    from ongaku.client import Client
+    from ongaku.handlers import SessionHandlerBase
+    from ongaku.player import Player
 
 
 class Session:
     """
     Session.
 
-    The session object, for a specific lavalink server session, or connection.
+    The base session object.
+
+    Parameters
+    ----------
+    client
+        The ongaku client attached to this session.
+    name
+        The name of the session.
+    ssl
+        Whether the server is https or just http.
+    host
+        The host of the lavalink server.
+    port
+        The port of the lavalink server.
+    password
+        The password of the lavalink server.
+    attempts
+        The attempts that the session is allowed to use, before completely shutting down.
     """
-
-    ssl: t.Final[bool]
-    host: t.Final[str]
-    port: t.Final[int]
-    password: t.Final[str] | None
-    version: t.Final[VersionType]
-    remaining_attempts: int
-    total_attempts: int
-
-    base_uri: t.Final[str]
-    base_headers: dict[str, t.Any]
-    status: ConnectionType = ConnectionType.NOT_CONNECTED
-    session_id: str | None = None
-    players: t.MutableSequence[Player] = []
-    _connection: asyncio.Task[None] | None = None
 
     def __init__(
         self,
         client: Client,
+        name: str,
         ssl: bool,
         host: str,
         port: int,
-        password: str | None,
-        version: VersionType,
+        password: str,
         attempts: int,
     ) -> None:
         self._client = client
-        self.ssl = ssl
-        self.host = host
-        self.port = port
-        self.password = password
-        self.version = version
-        self.remaining_attempts = attempts
-        self.total_attempts = attempts
-        self.base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
-        self.base_headers = {"Authorization": password} if password else {}
-        self._handler = _WSHandler(self)
+        self._name = name
+        self._ssl = ssl
+        self._host = host
+        self._port = port
+        self._password = password
+        self._attempts = attempts
+        self._remaining_attempts = attempts
+        self._base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
+        self._session_id = None
+        self._session_task: asyncio.Task[None] | None = None
+        self._status = enums.SessionStatus.NOT_CONNECTED
+        self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
+        self._base_headers: typing.MutableMapping[str, typing.Any]
 
     @property
     def client(self) -> Client:
-        """The Ongaku client."""
+        """The client attached to the bot."""
         return self._client
 
-    def _get_session_id(self) -> str:
+    @property
+    def app(self) -> hikari.GatewayBot:
+        """The application attached to this bot."""
+        return self.client.app
+
+    @property
+    def name(self) -> str:
+        """The name of the session."""
+        return self._name
+
+    @property
+    def ssl(self) -> bool:
+        """Whether the server uses https or just http."""
+        return self._ssl
+
+    @property
+    def host(self) -> str:
+        """The host, or domain of the site."""
+        return self._host
+
+    @property
+    def port(self) -> int:
+        """The port of the server."""
+        return self._port
+
+    @property
+    def password(self) -> str:
+        """The password for the server."""
+        return self._password
+
+    @property
+    def base_uri(self) -> str:
+        """The base uri for the server."""
+        return self._base_uri
+
+    @property
+    def status(self) -> enums.SessionStatus:
+        """The current status of the server."""
+        return self._status
+
+    @property
+    def session_id(self) -> str | None:
         """
-        Get session id.
+        The current session id.
 
-        Returns the session ID, or raises a SessionConnectionException
+        !!! note
+            Shows up as none if the current session failed to connect, or has not connected yet.
         """
-        if self.session_id:
-            return self.session_id
+        return self._session_id
 
-        raise SessionConnectionException(None)
+    async def _handle_op_code(self, data: str) -> None:
+        mapped_data = json_loads(data)
 
-    def _strike_server(self, reason: str) -> None:
-        self.remaining_attempts -= 1
-
-        _logger.warning(
-            f"server: {self.host}:{self.port} has failed to load properly. Remaining attempts: {self.remaining_attempts}. Reason: {reason}."
-        )
-
-        if self.remaining_attempts == 0:
-            _logger.critical(
-                f"server: {self.host}:{self.port} has completely failed. Reason: {reason}."
+        if isinstance(mapped_data, typing.Sequence):
+            raise errors.BuildException(
+                "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'"
             )
 
-            self.status = ConnectionType.FAILURE
+        op_code = enums.WebsocketOPCode(mapped_data["op"])
 
-            asyncio.Task(self.client._session_handler.switch_session())
+        if op_code == enums.WebsocketOPCode.READY:
+            parser = abc_events.Ready._from_payload(data)
 
-    async def _create_connection(self) -> None:
-        session = await self.client._get_session()
+            event = events.ReadyEvent(
+                self.app,
+                self.client,
+                self,
+                parser.resumed,
+                parser.session_id,
+            )
 
-        try:
-            async with session.ws_connect(
-                self.base_uri + self.version.value + "/websocket",
-                headers=self.base_headers,
-                timeout=5,
-            ) as ws:
-                self.status = ConnectionType.CONNECTED
-                _logger.log(
-                    TRACE_LEVEL,
-                    f"Websocket connection on session {self.host}:{self.port} successful.",
+            self._session_id = parser.session_id
+
+        elif op_code == enums.WebsocketOPCode.PLAYER_UPDATE:
+            parser = abc_events.PlayerUpdate._from_payload(data)
+
+            event = events.PlayerUpdateEvent(
+                self.app,
+                self.client,
+                self,
+                parser.guild_id,
+                parser.state,
+            )
+
+        elif op_code == enums.WebsocketOPCode.STATS:
+            parser = statistics.Statistics._from_payload(data)
+
+            event = events.StatisticsEvent(
+                self.app,
+                self.client,
+                self,
+                parser.players,
+                parser.playing_players,
+                parser.uptime,
+                parser.memory,
+                parser.cpu,
+                parser.frame_statistics,
+            )
+
+        else:
+            event_type = enums.WebsocketEvent(mapped_data["type"])
+
+            if event_type == enums.WebsocketEvent.TRACK_START_EVENT:
+                parser = abc_events.TrackStart._from_payload(data)
+
+                event = events.TrackStartEvent(
+                    self.app,
+                    self.client,
+                    self,
+                    parser.guild_id,
+                    parser.track,
                 )
-                async for msg in ws:
-                    await self._handler.handle_message(msg)
-        except aiohttp.ClientConnectionError:
-            self._strike_server("Client Timeout")
 
-        except Exception as e:
-            self._strike_server(str(e))
+            elif event_type == enums.WebsocketEvent.TRACK_END_EVENT:
+                parser = abc_events.TrackEnd._from_payload(data)
 
-    def start(self) -> None:
-        """
-        Start up the session.
+                event = events.TrackEndEvent(
+                    self.app,
+                    self.client,
+                    self,
+                    parser.guild_id,
+                    parser.track,
+                    parser.reason,
+                )
 
-        Starts up a new session, and attempts a connection to the lavalink server.
-        """
-        try:
-            bot = self._client.bot.get_me()
-        except Exception:
-            reason = f"Session: {self.host}:{self.port} could not start, due to the bot ID not being found."
-            _logger.warning(reason)
-            raise SessionConnectionException(None, reason)
+            elif event_type == enums.WebsocketEvent.TRACK_EXCEPTION_EVENT:
+                parser = abc_events.TrackException._from_payload(data)
 
-        if bot is None:
-            reason = f"Session: {self.host}:{self.port} could not start, due to the bot ID not being found."
-            _logger.warning(reason)
-            raise SessionConnectionException(None, reason)
+                event = events.TrackExceptionEvent(
+                    self.app,
+                    self.client,
+                    self,
+                    parser.guild_id,
+                    parser.track,
+                    parser.exception,
+                )
 
-        new_headers = {
-            "User-Id": str(bot.id),
-            "Client-Name": f"{bot.username.replace(' ', '_').strip()}::{__version__}",
+            elif event_type == enums.WebsocketEvent.TRACK_STUCK_EVENT:
+                parser = abc_events.TrackStuck._from_payload(data)
+
+                event = events.TrackStuckEvent(
+                    self.app,
+                    self.client,
+                    self,
+                    parser.guild_id,
+                    parser.track,
+                    parser.threshold_ms,
+                )
+
+            else:
+                parser = abc_events.WebsocketClosed._from_payload(data)
+
+                event = events.WebsocketClosedEvent(
+                    self.app,
+                    self.client,
+                    self,
+                    parser.guild_id,
+                    parser.code,
+                    parser.reason,
+                    parser.by_remote,
+                )
+
+        self.app.dispatch(event)
+
+    async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            await self._handle_op_code(msg.data)
+
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            self._status = enums.SessionStatus.FAILURE
+            _logger.warning("An error occurred.")
+            await self.transfer(self.client._session_handler)
+
+        elif msg.type == aiohttp.WSMsgType.CLOSED:
+            self._status = enums.SessionStatus.FAILURE
+            _logger.warning(
+                f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
+            )
+            await self.transfer(self.client._session_handler)
+
+    async def _websocket(self) -> None:
+        self._remaining_attempts -= 1
+
+        bot = self.app.get_me()
+
+        if not bot:
+            if self._remaining_attempts > 0:
+                self._status = enums.SessionStatus.NOT_CONNECTED
+
+                _logger.warning(
+                    "Attempted fetching the bot, but failed as it does not exist."
+                )
+            else:
+                self._status = enums.SessionStatus.FAILURE
+
+            _logger.warning(
+                "Attempted fetching the bot, but failed as it does not exist."
+            )
+
+            raise errors.SessionConnectionException(
+                None, "Bot is required for connect."
+            )
+
+        headers: typing.MutableMapping[str, typing.Any] = {
+            "Authorization": self.password,
+            "User-Id": str(int(bot.id)),
+            "Client-Name": f"{bot.global_name if bot.global_name else 'invalid'}/{__version__}",
         }
 
-        self.base_headers.update(new_headers)
+        self._base_headers = headers
 
-        _logger.log(TRACE_LEVEL, "Starting websocket connection...")
+        try:
+            async with self.client._get_client_session() as session:
+                async with session.ws_connect(
+                    self.base_uri + "/v4/websocket", headers=headers
+                ) as ws:
+                    self._status = enums.SessionStatus.CONNECTED
+                    async for msg in ws:
+                        await self._handle_ws_message(msg)
 
-        self._connection = asyncio.create_task(self._create_connection())
+        except Exception as e:
+            _logger.warning(f"Websocket connection failure: {e}")
+            self._status = enums.SessionStatus.FAILURE
 
-    def stop(self) -> None:
+    def _get_session_id(self) -> str:
+        if self._session_id:
+            return self._session_id
+
+        raise errors.SessionException(None)
+
+    async def transfer(self, session_handler: SessionHandlerBase) -> None:
+        """Transfer all the players from this session, to a different one."""
+        for id, player in self._players.items():
+            await player.disconnect()
+
+            new_player = await session_handler.create_player(id)
+
+            if player.channel_id:
+                await new_player.connect(player.channel_id)
+
+            await new_player.add(player.queue)
+
+            await new_player.set_autoplay(player.autoplay)
+
+        await self.stop()
+
+    async def start(self) -> None:
+        """
+        Start the session.
+
+        Starts up the session, to receive events.
+        """
+        self._session_task = asyncio.create_task(self._websocket())
+
+    async def stop(self) -> None:
         """
         Stop the session.
 
-        Stops and shuts down the sessions' connection, if it existed.
+        Stops the current session, if it is running.
         """
-        if self._connection:
-            self._connection.cancel()
-            self._connection = None
-
-
-class BaseSessionHandler(abc.ABC):
-    """
-    Base Session handler.
-
-    The base class for creating a new session handler.
-
-    Raises
-    ------
-    SessionConnectionException
-        You should raise this, when it cannot find an available session.
-    """
-
-    def __init__(self, client: Client) -> None: ...
-
-    @property
-    @abc.abstractmethod
-    def sessions(self) -> t.Sequence[Session]:
-        """All available sessions."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def players(self) -> t.Sequence[Player]:
-        """All players, across all sessions."""
-        ...
-
-    @abc.abstractmethod
-    def add_server(
-        self,
-        *,
-        ssl: bool = False,
-        host: str = "localhost",
-        port: int = 2333,
-        password: str | None = "youshallnotpass",
-        version: VersionType = VersionType.V4,
-    ) -> None:
-        """Add a server to the handler."""
-        ...
-
-    @abc.abstractmethod
-    async def start(self) -> None:
-        """Start all of the servers up."""
-        ...
-
-    @abc.abstractmethod
-    async def stop(self) -> None:
-        """Stop all of the servers."""
-        ...
-
-    @abc.abstractmethod
-    async def fetch_session(self) -> Session:
-        """Fetch the current session."""
-        ...
-
-    @abc.abstractmethod
-    async def switch_session(self) -> Session:
-        """
-        Switch session.
-
-        called when a session fails.
-        """
-        ...
-
-    @abc.abstractmethod
-    async def create_player(self, guild_id: hikari.Snowflake) -> Player:
-        """
-        Create a player.
-
-        Creates a player for the specified session.
-        """
-        ...
-
-    @abc.abstractmethod
-    async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
-        """
-        Fetch a player.
-
-        Fetches a player from the current session that its in.
-        """
-        ...
-
-    @abc.abstractmethod
-    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        """
-        Delete a player.
-
-        Deletes a player from the current session that its in.
-        """
-        ...
-
-
-class GeneralSessionHandler(BaseSessionHandler):
-    """
-    General session handler.
-
-    This simply just returns the next available, and working server.
-    """
-
-    def __init__(self, client: Client) -> None:
-        self._client = client
-
-        self._sessions: list[Session] = []
-
-        self._started = False
-
-        self._current_session: Session | None = None
-
-    @property
-    def sessions(self) -> t.Sequence[Session]:
-        """All available sessions."""
-        return self._sessions
-
-    @property
-    def players(self) -> t.Sequence[Player]:
-        players_sequence: t.MutableSequence[Player] = []
-
-        for session in self.sessions:
-            players_sequence.extend(session.players)
-
-        return players_sequence
-
-    def add_server(
-        self,
-        *,
-        ssl: bool = False,
-        host: str = "localhost",
-        port: int = 2333,
-        password: str | None = "youshallnotpass",
-        version: VersionType = VersionType.V4,
-    ) -> None:
-        new_server = Session(
-            self._client, ssl, host, port, password, version, self._client._attempts
-        )
-
-        self._sessions.append(new_server)
-
-        if self._started:
-            new_server.start()
-
-    async def start(self) -> None:
-        self._started = True
-
-        sessions = self.sessions
-
-        pos = 0
-
-        started_servers = 0
-        while started_servers != len(sessions):
-            await asyncio.sleep(1)
-
-            if pos >= len(sessions):
-                pos = 0
-            else:
-                pos += 1
-
-            session = sessions[pos - 1]
-
-            if session.status == ConnectionType.CONNECTED:
-                started_servers += 1
-                continue
-
-            if session.status == ConnectionType.NOT_CONNECTED:
-                if session.remaining_attempts >= 1:
-                    session.remaining_attempts -= 1
-                    session.start()
-                else:
-                    continue
-
-    async def stop(self) -> None:
-        for server in self.sessions:
-            server.stop()
-
-    async def fetch_session(self) -> Session:
-        if (
-            self._current_session
-            and self._current_session.status == ConnectionType.CONNECTED
-        ):
-            return self._current_session
-
-        for session in self.sessions:
-            if session.status == ConnectionType.CONNECTED:
-                self._current_session = session
-                return self._current_session
-
-        raise SessionConnectionException(None)
-
-    async def switch_session(self) -> Session:
-        current_session = self._current_session
-
-        new_session = await self.fetch_session()
-
-        if current_session is None:
-            return new_session
-
-        current_session.stop()
-
-        for player in current_session.players:
-            new_player = await player._transfer_player(new_session)
-            new_session.players.append(new_player)
-
-        self._current_session = new_session
-
-        return new_session
-
-    async def create_player(self, guild_id: hikari.Snowflake) -> Player:
-        for player in self.players:
-            if player.guild_id == guild_id:
-                return player
-
-        session = await self.fetch_session()
-
-        new_player = Player(session, guild_id)
-
-        session.players.append(new_player)
-
-        return new_player
-
-    async def fetch_player(self, guild_id: hikari.Snowflake) -> Player:
-        for player in self.players:
-            if player.guild_id == guild_id:
-                return player
-
-        raise PlayerMissingException(guild_id)
-
-    async def delete_player(self, guild_id: hikari.Snowflake) -> None:
-        player = await self.fetch_player(guild_id)
-
-        await player.disconnect()
-
-        player.session.players.remove(player)
+        if self._session_task:
+            self._session_task.cancel()
 
 
 # MIT License
