@@ -6,12 +6,12 @@ All of the ongaku errors.
 
 from __future__ import annotations
 
+import attrs
 from aiohttp import WSCloseCode
-from attrs import define
 from hikari import Snowflake
 
-from ongaku.enums import WebsocketEventType
-from ongaku.enums import WebsocketOPCodeType
+from ongaku.enums import WebsocketEvent
+from ongaku.enums import WebsocketOPCode
 
 __all__ = (
     "OngakuException",
@@ -33,6 +33,20 @@ class OngakuException(Exception):
     """The base ongaku exception."""
 
 
+# Client related:
+
+
+class ClientException(OngakuException):
+    """The base exception for the client."""
+
+
+class ClientAliveException(ClientException):
+    """Raised when the client is not alive."""
+
+    reason: str = "Client has not been initialized."
+    """Reason for client not being alive."""
+
+
 # Websocket related:
 
 
@@ -40,7 +54,7 @@ class WebsocketException(OngakuException):
     """Base websocket exception."""
 
 
-@define
+@attrs.define
 class WebsocketClosureException(WebsocketException):
     """When a websocket has closed."""
 
@@ -50,11 +64,11 @@ class WebsocketClosureException(WebsocketException):
     """The reason for the disconnection."""
 
 
-@define
+@attrs.define
 class WebsocketTypeException(WebsocketException):
     """When a event has an issue decoding."""
 
-    op: WebsocketOPCodeType | WebsocketEventType | None
+    op: WebsocketOPCode | WebsocketEvent | None
     """The op code or event type that this event error is attached too. If unknown, this will be none."""
     reason: str
     """The reason for the events error."""
@@ -63,7 +77,7 @@ class WebsocketTypeException(WebsocketException):
 # Session related:
 
 
-@define
+@attrs.define
 class SessionException(OngakuException):
     """Base session exception."""
 
@@ -71,7 +85,12 @@ class SessionException(OngakuException):
     """The session ID that this exception is related to."""
 
 
-@define
+@attrs.define
+class SessionAvailabilityException(SessionException):
+    """Raised when there is no available sessions."""
+
+
+@attrs.define
 class SessionConnectionException(SessionException):
     """Raised when the session has either failed to connect, or is not connected."""
 
@@ -82,7 +101,7 @@ class SessionConnectionException(SessionException):
 # Player related:
 
 
-@define
+@attrs.define
 class PlayerException(OngakuException):
     """Base player exception."""
 
@@ -90,7 +109,7 @@ class PlayerException(OngakuException):
     """The guild id that this player is attached to."""
 
 
-@define
+@attrs.define
 class PlayerConnectException(PlayerException):
     """raised when the player fails to connect to a channel."""
 
@@ -98,7 +117,7 @@ class PlayerConnectException(PlayerException):
     """The reason for the failed connection."""
 
 
-@define
+@attrs.define
 class PlayerQueueException(PlayerException):
     """Raised when an issue occurs within the queue of a player."""
 
@@ -113,7 +132,7 @@ class PlayerMissingException(PlayerException):
 # Other:
 
 
-@define
+@attrs.define
 class BuildException(OngakuException):
     """Raised when something fails to be built."""
 
@@ -125,7 +144,7 @@ class LavalinkException(OngakuException):
     """Raised when an issue occurs with lavalink or rest actions."""
 
 
-@define
+@attrs.define
 class SessionHandlerException(OngakuException):
     """Raised when an issue occurs within a session handler."""
 
