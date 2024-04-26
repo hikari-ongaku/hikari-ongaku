@@ -1,50 +1,60 @@
 """
 Converters.
 
-All internal converters for pydantic are stored.
+All internal converters.
 """
 
 from __future__ import annotations
 
 import typing
 
-__all__ = ("JSONObject", "JSONArray", "default_json_dumps", "default_json_loads")
+__all__ = ("json_dumps", "json_loads")
 
-# JSON loading and dumping
+json_dumps: typing.Callable[
+    [typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]], bytes
+]
 
-JSONObject: typing.TypeAlias = typing.Mapping[str, typing.Any]
-"""Type hint for a JSON-decoded object representation as a mapping."""
-
-JSONArray: typing.TypeAlias = typing.Sequence[typing.Any]
-"""Type hint for a JSON-decoded array representation as a sequence."""
-
-JSONEncoder: typing.TypeAlias = typing.Callable[[JSONArray | JSONObject], bytes]
-"""Type hint for JSON encoders."""
-
-JSONDecoder: typing.TypeAlias = typing.Callable[[str | bytes], JSONArray | JSONObject]
-"""Type hint for JSON decoder."""
-
-default_json_dumps: JSONEncoder
-"""Default json encoder to use."""
-
-default_json_loads: JSONDecoder
-"""Default json decoder to use."""
+json_loads: typing.Callable[
+    [str | bytes], typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]
+]
 
 try:
     import orjson
 
-    default_json_dumps = orjson.dumps
-    default_json_loads = orjson.loads
+    json_dumps = orjson.dumps
+    json_loads = orjson.loads
 
 except ModuleNotFoundError:
     import json
 
-    _json_separators = (",", ":")
-
-    def json_dumps(obj: JSONArray | JSONObject) -> bytes:
+    def basic_json_dumps(
+        obj: typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any],
+    ) -> bytes:
         """Encode a JSON object to a str."""
-        return json.dumps(obj, separators=_json_separators).encode("utf-8")
+        return json.dumps(obj).encode("utf-8")
 
-    default_json_dumps = json_dumps
+    json_dumps = basic_json_dumps
 
-    default_json_loads = json.loads
+    json_loads = json.loads
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
