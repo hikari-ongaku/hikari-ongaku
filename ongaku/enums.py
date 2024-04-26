@@ -11,12 +11,26 @@ import enum
 __all__ = (
     "SeverityType",
     "TrackEndReasonType",
-    "VersionType",
-    "ConnectionType",
     "BandType",
     "RoutePlannerType",
     "IPBlockType",
+    "SessionStatus",
 )
+
+
+class SessionStatus(int, enum.Enum):
+    """
+    Session Status.
+
+    The status of the session.
+    """
+
+    NOT_CONNECTED = 0
+    """Is not currently connected to its server."""
+    CONNECTED = 1
+    """Has successfully connected to its server."""
+    FAILURE = 2
+    """Failure to connect to its server."""
 
 
 class SeverityType(str, enum.Enum):
@@ -55,32 +69,6 @@ class TrackEndReasonType(str, enum.Enum):
     """The track was replaced."""
     CLEANUP = "cleanup"
     """The track was cleaned up."""
-
-
-class VersionType(str, enum.Enum):
-    """
-    The lavalink server version.
-
-    The lavalink server version you wish to use.
-    """
-
-    V4 = "/v4"
-    """V4 Servers."""
-
-
-class ConnectionType(enum.IntEnum):
-    """
-    Connection type.
-
-    The connection type, or status for the session.
-    """
-
-    FAILURE = 0
-    """The session has failed to connect to the lavalink server."""
-    NOT_CONNECTED = 1
-    """The session has not yet attempted to connect to the server."""
-    CONNECTED = 2
-    """The session has successfully connected to the lavalink server."""
 
 
 class BandType(enum.IntEnum):
@@ -158,14 +146,14 @@ class IPBlockType(str, enum.Enum):
     """The ipv6 block type"""
 
 
-class WebsocketOPCodeType(str, enum.Enum):
+class WebsocketOPCode(str, enum.Enum):
     READY = "ready"
     PLAYER_UPDATE = "playerUpdate"
     STATS = "stats"
     EVENT = "event"
 
 
-class WebsocketEventType(str, enum.Enum):
+class WebsocketEvent(str, enum.Enum):
     TRACK_START_EVENT = "TrackStartEvent"
     TRACK_END_EVENT = "TrackEndEvent"
     TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
