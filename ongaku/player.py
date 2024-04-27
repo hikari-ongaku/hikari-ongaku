@@ -24,10 +24,11 @@ from ongaku.events import QueueNextEvent
 from ongaku.events import TrackEndEvent
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
+from ongaku.abc.track import Track
 
 if t.TYPE_CHECKING:
     from ongaku.abc.player import Player as ABCPlayer
-    from ongaku.abc.track import Track
+    
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -401,7 +402,6 @@ class Player:
         except BuildException:
             raise
         except ValueError:
-            raise
             raise
 
         self._is_paused = False
