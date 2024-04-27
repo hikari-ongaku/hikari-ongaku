@@ -11,6 +11,7 @@ from asyncio import TimeoutError
 from asyncio import gather
 
 import hikari
+import random
 
 from ongaku.abc.player import PlayerVoice
 from ongaku.enums import TrackEndReasonType
@@ -73,50 +74,66 @@ class Player:
 
         self._volume: int = -1
 
-        self._auto_play = True
+        self._autoplay = True
 
         self._position: int = 0
 
-        self.bot.subscribe(TrackEndEvent, self._track_end_event)
-        self.bot.subscribe(PlayerUpdateEvent, self._player_update)
+        self.app.subscribe(TrackEndEvent, self._track_end_event)
+        self.app.subscribe(PlayerUpdateEvent, self._player_update)
 
     @property
     def session(self) -> Session:
-        """The session attached to this player."""
+        """Session.
+
+        The session that is attached to this player.
+        """
         return self._session
 
     @property
-    def bot(self) -> hikari.GatewayBot:
-        """The bot attached to this player."""
+    def app(self) -> hikari.GatewayBot:
+        """Application.
+
+        The application attached to this player.
+        """
         return self.session.client.app
 
     @property
     def channel_id(self) -> hikari.Snowflake | None:
-        """
-        ID of the voice channel this player is currently connected too.
+        """Channel ID.
+
+        The channel id the player is currently in.
 
         Returns
         -------
         hikari.Snowflake
-            The channel id.
+            The channel ID
         None
-            The bot is not currently connected to a channel.
+            The player is not in a channel.
         """
         return self._channel_id
 
     @property
     def guild_id(self) -> hikari.Snowflake:
-        """The guild id attached to this player."""
+        """Guild ID.
+
+        The guild id attached to this player.
+        """
         return self._guild_id
 
     @property
     def is_alive(self) -> bool:
-        """Whether the current connection is alive."""
+        """Is alive.
+
+        Whether the bot is alive or not. True if alive.
+        """
         return self._is_alive
 
     @property
     def position(self) -> int:
-        """The position of the track in milliseconds."""
+        """Position.
+        
+        The position of the track in milliseconds.
+        """
         return self._position
 
     @property
@@ -124,51 +141,42 @@ class Player:
         """
         The volume of the player.
 
-        !!! warning
+        !!! note
             If volume is -1, it has either not been updated, or connected to lavalink.
         """
         return self._volume
 
     @property
     def is_paused(self) -> bool:
-        """Whether the player is paused or not."""
+        """Is paused.
+        
+        Whether the player is paused or not. True if paused.
+        """
         return self._is_paused
 
     @property
     def autoplay(self) -> bool:
-        """Whether or not the next song will play, when this song ends."""
-        return self._auto_play
+        """Autoplay.
+        
+        Whether or not the next song will play, when this song ends.
+        """
+        return self._autoplay
 
     @property
     def connected(self) -> bool:
-        """Whether or not the bot is connected to a voice channel."""
+        """Connected.
+
+        Whether or not the bot is connected to a voice channel.
+        """
         return self._connected
 
     @property
     def queue(self) -> t.Sequence[Track]:
-        """Returns the current queue of tracks."""
+        """Queue.
+
+        Returns the current queue of tracks.
+        """
         return self._queue
-
-    async def _transfer_player(self, session: Session) -> Player:
-        """
-        Transfer player.
-
-        Transfers this player to another server. This will shutdown the current player, and makes sure the old one is dead.
-        """
-        new_player = Player(session, self.guild_id)
-
-        await new_player.add(self.queue)
-
-        if self.connected and self.channel_id:
-            await self.disconnect()
-
-            await new_player.connect(self.channel_id)
-
-            if not self.is_paused:
-                await new_player.play()
-                await new_player.set_position(self.position)
-
-        return new_player
 
     async def connect(
         self,
@@ -176,40 +184,36 @@ class Player:
         *,
         mute: bool = False,
         deaf: bool = True,
-        timeout: int = 5,
     ) -> None:
-        """
-        Connect to a channel.
-
-        Connect this player to the specified channel.
+        """Connect.
 
         Parameters
         ----------
         channel
-            The channel you wish to connect the player to.
+            The channel (or channel id) that you wish to connect the bot to.
         mute
-            Whether or not to mute the bot.
+            Whether or not to mute the app.
         deaf
-            Whether or not to deafen the bot.
-        timeout
-            The amount of time to wait for the events.
+            Whether or not to deafen the app.
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
         ConnectionError
-            When it fails to connect to the voice server.
-        PlayerConnectionException
-            Raised when the endpoint in the event is none.
-        PlayerConnectionException
-            Raised when the events fail to respond in time.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when the attempt to update the voice state of the bot fails.
+        PlayerConnectException
+            Raised when a timeout error occurs.
+        PlayerConnectException
+            Raised when there is no endpoint url.
         BuildException
-            Raised when the object could not be built.
+            Raised when the [VoiceState][ongaku.abc.player.PlayerVoiceState]
+        LavalinkException
+            Raised when a 4XX/5XX error is received.
+        BuildException
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -221,7 +225,7 @@ class Player:
         self._channel_id = hikari.Snowflake(channel)
 
         try:
-            await self.bot.update_voice_state(
+            await self.app.update_voice_state(
                 self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
             )
         except Exception as e:
@@ -234,13 +238,13 @@ class Player:
 
         try:
             state_event, server_event = await gather(
-                self.bot.wait_for(
+                self.app.wait_for(
                     hikari.VoiceStateUpdateEvent,
-                    timeout=timeout,
+                    timeout=5,
                 ),
-                self.bot.wait_for(
+                self.app.wait_for(
                     hikari.VoiceServerUpdateEvent,
-                    timeout=timeout,
+                    timeout=5,
                 ),
             )
         except TimeoutError as e:
@@ -300,10 +304,14 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
         LavalinkException
-            Raise when a invalid response type is received.
+            Raised when a 4XX/5XX error is received.
+        BuildException
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -336,7 +344,7 @@ class Player:
             f"Updating voice state for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        await self.bot.update_voice_state(self.guild_id, None)
+        await self.app.update_voice_state(self.guild_id, None)
 
         _logger.log(
             TRACE_LEVEL,
@@ -346,33 +354,31 @@ class Player:
     async def play(
         self, track: Track | None = None, requestor: RequestorT | None = None
     ) -> None:
-        """
-        Play a track.
+        """Play.
 
-        Allows for the user to play a track.
-        The current track will be stopped, and this will replace it.
+        Play a new track, or start the playing of the queue.
 
         Parameters
         ----------
         track
-            The track you wish to play. If empty, it will pull from the queue.
+            The track you wish to play. If none, pulls from the queue.
         requestor
-            The user/member id that requested the song.
+            The member who requested the track.
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        PlayerQueueException
-            The queue is empty and no track was given, so it cannot play songs.
+        SessionException
+            Raised when the session has not received the ready event.
         PlayerConnectException
-            The bot is not connected to a channel.
+            Raised when the player is not connected to a channel.
+        PlayerQueueException
+            Raised when the queue is empty, and no track was provided.
         LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -414,14 +420,17 @@ class Player:
         """
         Add tracks.
 
-        Add tracks to the queue. This will not automatically start playing the songs. please call `.play()` after, with no track.
+        Add tracks to the queue.
+
+        !!! note
+            This will not automatically start playing the songs. please call `.play()` after, with no track, if the player is not already playing.
 
         Parameters
         ----------
         tracks
             The list of tracks or a singular track you wish to add to the queue.
         requestor
-            The user/member id that requested the song.
+            The user/member who requested the song.
         """
         new_requestor = None
 
@@ -445,8 +454,8 @@ class Player:
 
         Allows for the user to pause the currently playing track on this player.
 
-        !!! INFO
-            `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it.
+        !!! info
+            `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it from its current state.
 
         Parameters
         ----------
@@ -455,14 +464,14 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
         LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -481,7 +490,6 @@ class Player:
             raise
         except ValueError:
             raise
-            raise
 
         await self._update(player)
 
@@ -490,19 +498,20 @@ class Player:
         Stop current track.
 
         Stops the audio, by setting the song to none.
-        This does not touch the queue.
-        To start playing again, run .play() without a track.
+        
+        !!! note
+            This does not touch the current queue, just clears the player of its track.
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
         LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -519,11 +528,36 @@ class Player:
             raise
         except ValueError:
             raise
-            raise
 
         self._is_paused = True
 
         await self._update(player)
+
+    async def shuffle(self) -> None:
+        """Shuffle.
+
+        Shuffle the current queue.
+
+        !!! note
+            This will not touch the first track.
+
+        Raises
+        ------
+        PlayerQueueException
+            Raised when the queue has 2 or less tracks in it.
+        """
+        if len(self.queue) <= 2:
+            raise PlayerQueueException(self.guild_id, "Queue must have more than 2 tracks to shuffle.")
+        
+        new_queue = list(self.queue)
+
+        first_track = new_queue.pop(0)
+
+        random.shuffle(new_queue)
+
+        new_queue.insert(0, first_track)
+
+        self._queue = new_queue
 
     async def skip(self, amount: int = 1) -> None:
         """
@@ -538,14 +572,18 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
+        SessionException
+            Raised when the session has not received the ready event.
         ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when the amount is 0, or a negative number.
+        PlayerQueueException
+            Raised when the queue is empty.
+        LavalinkException
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -600,30 +638,22 @@ class Player:
         Removes the track, or the track in that position.
 
         !!! warning
-            This does not stop the track if its in the first position
+            This does not stop the track if its in the first position.
 
         Parameters
         ----------
         value
-            Remove a selected track. If [Track][ongaku.abc.track.Track], then it will remove the first occurrence of that track. If an integer, it will remove the track at that number.
+            Remove a selected track. If [Track][ongaku.abc.track.Track], then it will remove the first occurrence of that track. If an integer, it will remove the track at that position.
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        ValueError
-            The track specified, does not exist in the current queue.
-        ValueError
-            The queue is empty.
-        BuildException
-            Raised when the object could not be built.
+        PlayerQueueException
+            Raised when the queue is empty.
+        PlayerQueueException
+            Raised when the track could not be removed.
         """
         if len(self.queue) == 0:
-            raise ValueError("Queue is empty.")
+            raise PlayerQueueException(self.guild_id, "Queue is empty.")
 
         if isinstance(value, Track):
             index = self._queue.index(value)
@@ -651,14 +681,14 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
         LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         self._queue.clear()
 
@@ -677,7 +707,6 @@ class Player:
             raise
         except ValueError:
             raise
-            raise
 
         await self._update(player)
 
@@ -693,11 +722,11 @@ class Player:
             Whether or not to enable autoplay. If left empty, it will toggle the current status.
         """
         if enable:
-            self._auto_play = enable
-            return self._auto_play
+            self._autoplay = enable
+            return self._autoplay
 
-        self._auto_play = not self._auto_play
-        return self._auto_play
+        self._autoplay = not self._autoplay
+        return self._autoplay
 
     async def set_volume(self, volume: int) -> None:
         """
@@ -712,16 +741,16 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
+        ValueError
+            Raised when the volume is below 0, or above 1000.
         LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        ValueError
-            Raised if the value is above, or below 0, or 1000.
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -743,7 +772,6 @@ class Player:
             raise
         except ValueError:
             raise
-            raise
 
         await self._update(player)
 
@@ -760,16 +788,18 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
+        SessionException
+            Raised when the session has not received the ready event.
+        ValueError
+            Raised when the value is below 0.
+        PlayerQueueException
+            Raised when the queue is empty.
         LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        ValueError
-            When the track position selected is not a valid position.
+            Raised when a 4XX/5XX error is received.
         BuildException
-            Raised when the object could not be built.
+            Raised when the request fails to parse the correct data.
+        ValueError
+            Raised when a return type is requested, but not received.
         """
         session = self.session._get_session_id()
 
@@ -795,6 +825,39 @@ class Player:
 
         await self._update(player)
 
+    async def transfer_player(self, session: Session) -> Player:
+        """Transfer player.
+
+        Transfer this player to another player.
+
+        !!! warning
+            This will kill the current player the function is ran on.
+
+        Parameters
+        ----------
+        session
+            The session you wish to add the new player to.
+
+        Returns
+        -------
+        Player
+            The new player.
+        """
+        new_player = Player(session, self.guild_id)
+
+        await new_player.add(self.queue)
+
+        if self.connected and self.channel_id:
+            await self.disconnect()
+
+            await new_player.connect(self.channel_id)
+
+            if not self.is_paused:
+                await new_player.play()
+                await new_player.set_position(self.position)
+
+        return new_player
+
     async def _update(self, player: ABCPlayer) -> None:
         _logger.log(
             TRACE_LEVEL,
@@ -808,7 +871,7 @@ class Player:
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
 
-        if not self._auto_play:
+        if not self.autoplay:
             return
 
         if event.reason != TrackEndReasonType.FINISHED:
@@ -827,9 +890,9 @@ class Player:
             try:
                 await self.remove(0)
             except ValueError:
-                await self.bot.dispatch(
+                await self.app.dispatch(
                     QueueEmptyEvent(
-                        self.bot,
+                        self.app,
                         event.client,
                         event.session,
                         self.guild_id,
@@ -842,9 +905,9 @@ class Player:
                     TRACE_LEVEL,
                     f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
                 )
-                await self.bot.dispatch(
+                await self.app.dispatch(
                     QueueEmptyEvent(
-                        self.bot,
+                        self.app,
                         event.client,
                         event.session,
                         self.guild_id,
@@ -859,9 +922,9 @@ class Player:
 
             await self.play()
 
-            await self.bot.dispatch(
+            await self.app.dispatch(
                 QueueNextEvent(
-                    self.bot,
+                    self.app,
                     event.client,
                     event.session,
                     self.guild_id,
