@@ -31,6 +31,8 @@ class Ready(PayloadBase):
     Ready Event Base.
 
     The base for the ready event.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#ready-op)
     """
 
     resumed: bool
@@ -44,10 +46,12 @@ class PlayerUpdate(PayloadBase):
     Player update event base.
 
     The base for the player update event.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#player-update-op)
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The Guild ID."""
+    """The guild related to this event."""
 
     state: PlayerState
     """The player state."""
@@ -63,7 +67,7 @@ class WebsocketClosed(PayloadBase):
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild that had their websocket closed in."""
+    """The guild related to this event."""
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
     reason: str
@@ -77,6 +81,8 @@ class TrackStart(PayloadBase):
     Track start event base.
 
     The base for the track start event.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")
@@ -90,6 +96,8 @@ class TrackEnd(PayloadBase):
     Track end event base.
 
     The base for the track end event.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")
@@ -105,6 +113,8 @@ class TrackException(PayloadBase):
     Track exception event base.
 
     The base for track exception event.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")
@@ -120,6 +130,8 @@ class TrackStuck(PayloadBase):
     Track stuck event base.
 
     The base for track stuck event.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")

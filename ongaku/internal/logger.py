@@ -16,7 +16,9 @@ __all__ = (
 )
 
 TRACE_LEVEL: typing.Final[int] = logging.DEBUG - 5
+"""The trace level for ongaku."""
 TRACE_NAME: typing.Final[str] = "TRACE_ONGAKU"
+"""The trace name for ongaku."""
 
 
 logger = logging.getLogger("ongaku")

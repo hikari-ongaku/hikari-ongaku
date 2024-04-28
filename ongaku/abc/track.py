@@ -47,9 +47,9 @@ class TrackInfo(PayloadBase):
     uri: str | None = msgspec.field(default=None)
     """The track uri."""
     artwork_url: str | None = msgspec.field(default=None, name="artworkUrl")
-    """The track artwork url"""
+    """The track artwork url."""
     isrc: str | None = msgspec.field(default=None)
-    """The track ISRC"""
+    """The track ISRC."""
 
 
 class Track(PayloadBase):

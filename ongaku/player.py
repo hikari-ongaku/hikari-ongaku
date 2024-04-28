@@ -12,23 +12,19 @@ from asyncio import gather
 
 import hikari
 
+from ongaku import errors
 from ongaku.abc.player import PlayerVoice
+from ongaku.abc.track import Track
 from ongaku.enums import TrackEndReasonType
-from ongaku.errors import BuildException
-from ongaku.errors import LavalinkException
-from ongaku.errors import PlayerConnectException
-from ongaku.errors import PlayerQueueException
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import QueueEmptyEvent
 from ongaku.events import QueueNextEvent
 from ongaku.events import TrackEndEvent
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
-from ongaku.abc.track import Track
 
 if t.TYPE_CHECKING:
     from ongaku.abc.player import Player as ABCPlayer
-    
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -196,20 +192,18 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        ConnectionError
-            When it fails to connect to the voice server.
-        PlayerConnectionException
-            Raised when the endpoint in the event is none.
-        PlayerConnectionException
-            Raised when the events fail to respond in time.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+        SessionStartException
+            Raised when the players session has not yet been started.
+        PlayerConnectException
+            Raised when the voice state of the bot cannot be updated, or the voice events required could not be received.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
@@ -225,7 +219,7 @@ class Player:
                 self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
             )
         except Exception as e:
-            raise ConnectionError(e)
+            raise errors.PlayerConnectException(str(e))
 
         _logger.log(
             TRACE_LEVEL,
@@ -244,15 +238,13 @@ class Player:
                 ),
             )
         except TimeoutError as e:
-            raise PlayerConnectException(
-                self.guild_id,
-                f"Could not connect to voice channel {self.channel_id} due to events not being received.",
+            raise errors.PlayerConnectException(
+                f"Could not connect to voice channel {self.channel_id} in {self.guild_id} due to events not being received.",
             )
 
         if server_event.endpoint is None:
-            raise PlayerConnectException(
-                self.guild_id,
-                f"Endpoint missing for attempted server connection in {self.channel_id}",
+            raise errors.PlayerConnectException(
+                f"Endpoint missing for attempted server connection for voice channel {self.channel_id} in {self.guild_id}",
             )
 
         _logger.log(
@@ -260,14 +252,11 @@ class Player:
             f"Successfully received events for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        try:
-            self._voice = PlayerVoice(
-                token=server_event.token,
-                endpoint=server_event.endpoint,
-                session_id=state_event.state.session_id,
-            )
-        except Exception as e:
-            raise BuildException(f"Failed to build player voice: {e}")
+        self._voice = PlayerVoice(
+            token=server_event.token,
+            endpoint=server_event.endpoint,
+            session_id=state_event.state.session_id,
+        )
 
         try:
             player = await self.session.client.rest.update_player(
@@ -276,11 +265,13 @@ class Player:
                 voice=self._voice,
                 no_replace=False,
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
+            raise
+        except errors.BuildException:
             raise
 
         self._connected = True
@@ -300,10 +291,16 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
+        SessionStartException
+            Raised when the players session has not yet been started.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
+        BuildException
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
@@ -317,11 +314,13 @@ class Player:
 
         try:
             await self.session.client.rest.delete_player(session, self._guild_id)
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
+            raise
+        except errors.BuildException:
             raise
 
         _logger.log(
@@ -361,28 +360,26 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        PlayerQueueException
-            The queue is empty and no track was given, so it cannot play songs.
+        SessionStartException
+            Raised when the players session has not yet been started.
         PlayerConnectException
-            The bot is not connected to a channel.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when the player is not connected to a channel.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
         if self.channel_id is None:
-            raise PlayerConnectException(self.guild_id, "Not connected to a channel.")
+            raise errors.PlayerConnectException("Not connected to a channel.")
 
         if len(self.queue) <= 0 and track == None:
-            raise PlayerQueueException(
-                self.guild_id, "You must provide a track if no tracks are in the queue."
-            )
+            raise errors.PlayerQueueException("Queue is empty.")
 
         if track:
             if requestor:
@@ -397,11 +394,13 @@ class Player:
                 track=self.queue[0],
                 no_replace=False,
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
+            raise
+        except errors.BuildException:
             raise
 
         self._is_paused = False
@@ -455,14 +454,16 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+        SessionStartException
+            Raised when the players session has not yet been started.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
@@ -475,12 +476,13 @@ class Player:
             player = await self.session.client.rest.update_player(
                 session, self.guild_id, paused=self.is_paused
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
             raise
+        except errors.BuildException:
             raise
 
         await self._update(player)
@@ -495,14 +497,16 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+        SessionStartException
+            Raised when the players session has not yet been started.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
@@ -513,12 +517,13 @@ class Player:
                 track=None,
                 no_replace=False,
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
             raise
+        except errors.BuildException:
             raise
 
         self._is_paused = True
@@ -538,21 +543,27 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
+        SessionStartException
+            Raised when the players session has not yet been started.
         ValueError
-            Raised when a return type is set, and no data was received.
+            Raised when the amount set is 0 or negative.
+        PlayerQueueException
+            Raised when the queue is empty.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
         if amount <= 0:
             raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
-            raise PlayerQueueException(self.guild_id, "No tracks in queue.")
+            raise errors.PlayerQueueException("Queue is empty.")
 
         for _ in range(amount):
             if len(self._queue) == 0:
@@ -568,11 +579,13 @@ class Player:
                     track=None,
                     no_replace=False,
                 )
-            except LavalinkException:
+            except errors.RestEmptyException:
                 raise
-            except BuildException:
+            except errors.RestStatusException:
                 raise
-            except ValueError:
+            except errors.RestErrorException:
+                raise
+            except errors.BuildException:
                 raise
 
             await self._update(player)
@@ -584,11 +597,13 @@ class Player:
                     track=self.queue[0],
                     no_replace=False,
                 )
-            except LavalinkException:
+            except errors.RestEmptyException:
                 raise
-            except BuildException:
+            except errors.RestStatusException:
                 raise
-            except ValueError:
+            except errors.RestErrorException:
+                raise
+            except errors.BuildException:
                 raise
 
             await self._update(player)
@@ -609,21 +624,11 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        ValueError
-            The track specified, does not exist in the current queue.
-        ValueError
-            The queue is empty.
-        BuildException
-            Raised when the object could not be built.
+        PlayerQueueException
+            Raised when the removal of a track fails.
         """
         if len(self.queue) == 0:
-            raise ValueError("Queue is empty.")
+            raise errors.PlayerQueueException("Queue is empty.")
 
         if isinstance(value, Track):
             index = self._queue.index(value)
@@ -635,12 +640,12 @@ class Player:
             self._queue.pop(index)
         except KeyError:
             if isinstance(value, Track):
-                raise PlayerQueueException(
-                    self.guild_id, f"Failed to remove song: {value.info.title}"
+                raise errors.PlayerQueueException(
+                    f"Failed to remove song: {value.info.title}"
                 )
             else:
-                raise PlayerQueueException(
-                    self.guild_id, f"Failed to remove song in position {value}"
+                raise errors.PlayerQueueException(
+                    f"Failed to remove song in position {value}"
                 )
 
     async def clear(self) -> None:
@@ -651,14 +656,16 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+        SessionStartException
+            Raised when the players session has not yet been started.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         self._queue.clear()
 
@@ -671,12 +678,13 @@ class Player:
                 track=None,
                 no_replace=False,
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
             raise
+        except errors.BuildException:
             raise
 
         await self._update(player)
@@ -712,16 +720,18 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
+        SessionStartException
+            Raised when the players session has not yet been started.
         ValueError
-            Raised when a return type is set, and no data was received.
-        ValueError
-            Raised if the value is above, or below 0, or 1000.
+            Raised when the value is below 0, or above 1000.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
@@ -737,12 +747,13 @@ class Player:
                 volume=volume,
                 no_replace=False,
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
             raise
+        except errors.BuildException:
             raise
 
         await self._update(player)
@@ -760,16 +771,20 @@ class Player:
 
         Raises
         ------
-        SessionConnectionException
-            The session id was null, or empty.
-        LavalinkException
-            Raise when a invalid response type is received.
+        SessionStartException
+            Raised when the players session has not yet been started.
         ValueError
-            Raised when a return type is set, and no data was received.
-        ValueError
-            When the track position selected is not a valid position.
+            Raised when the position is negative.
+        PlayerQueueException
+            Raised when the queue is empty.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
@@ -777,7 +792,7 @@ class Player:
             raise ValueError("Sorry, but a negative value is not allowed.")
 
         if len(self.queue) <= 0:
-            raise PlayerQueueException(self.guild_id, "The queue is empty.")
+            raise errors.PlayerQueueException("Queue is empty.")
 
         try:
             player = await self.session.client.rest.update_player(
@@ -786,11 +801,13 @@ class Player:
                 position=value,
                 no_replace=False,
             )
-        except LavalinkException:
+        except errors.RestEmptyException:
             raise
-        except BuildException:
+        except errors.RestStatusException:
             raise
-        except ValueError:
+        except errors.RestErrorException:
+            raise
+        except errors.BuildException:
             raise
 
         await self._update(player)

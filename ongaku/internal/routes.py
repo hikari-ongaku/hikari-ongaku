@@ -18,7 +18,7 @@ class Route:
     """
     Route.
 
-    The route object that has almost been built.
+    The route object that has mostly been built.
     """
 
     def __init__(self, built_path: str, route: BaseRoute) -> None:

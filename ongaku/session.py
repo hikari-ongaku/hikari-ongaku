@@ -283,9 +283,7 @@ class Session:
                 "Attempted fetching the bot, but failed as it does not exist."
             )
 
-            raise errors.SessionConnectionException(
-                None, "Bot is required for connect."
-            )
+            raise errors.SessionStartException
 
         headers: typing.MutableMapping[str, typing.Any] = {
             "Authorization": self.password,
@@ -322,10 +320,19 @@ class Session:
         if self._session_id:
             return self._session_id
 
-        raise errors.SessionException(None)
+        raise errors.SessionStartException
 
     async def transfer(self, session_handler: SessionHandlerBase) -> None:
-        """Transfer all the players from this session, to a different one."""
+        """
+        Transfer.
+
+        Transfer all the players from this session, to a different one.
+
+        Parameters
+        ----------
+        session_handler
+            The session handler, that will allow this session to move its players too.
+        """
         for id, player in self._players.items():
             await player.disconnect()
 

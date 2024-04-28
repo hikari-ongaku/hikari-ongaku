@@ -12,8 +12,7 @@ import aiohttp
 import hikari
 
 from ongaku import enums
-from ongaku.errors import ClientAliveException
-from ongaku.errors import SessionAvailabilityException
+from ongaku import errors
 from ongaku.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
 from ongaku.rest import RESTClient
@@ -98,10 +97,10 @@ class Client:
 
     def _fetch_live_server(self) -> Session:
         if not self.app.is_alive:
-            raise ClientAliveException()
+            raise errors.ClientAliveException("Hikari has not started.")
 
         if not self.is_alive:
-            raise ClientAliveException("Ongaku has crashed.")
+            raise errors.ClientAliveException("Ongaku has crashed.")
 
         if self._selected_session:
             return self._selected_session
@@ -114,7 +113,7 @@ class Client:
             _logger.warning(
                 "Ongaku is shutting down, due to no sessions currently working."
             )
-            raise SessionAvailabilityException(None)
+            raise errors.NoSessionsException
 
         return self._selected_session
 
@@ -172,6 +171,11 @@ class Client:
         ----------
         guild
             The guild, or guild id you wish to delete the player from.
+
+        Raises
+        ------
+        PlayerMissingException
+            Raised when the player for the guild, does not exist.
         """
         return await self._session_handler.fetch_player(guild)
 
@@ -186,7 +190,10 @@ class Client:
         guild
             The guild, or guild id you wish to delete the player from.
 
-
+        Raises
+        ------
+        PlayerMissingException
+            Raised when the player for the guild, does not exist.
         """
         player = await self.fetch_player(guild)
 

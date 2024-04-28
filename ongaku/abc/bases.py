@@ -31,12 +31,21 @@ class PayloadBase(msgspec.Struct):
 
     @classmethod
     def _from_payload(cls, payload: str | bytes) -> Self:
+        """From payload.
+
+        Takes a string or bytes, and converts it to the class.
+        """
         return msgspec.json.decode(
             payload, type=cls, strict=False, dec_hook=cls._decode_hook
         )
 
     @property
     def _to_payload(self) -> str:
+        """
+        To payload.
+
+        Takes itself, and converts it to a string.
+        """
         return msgspec.json.encode(self, enc_hook=self._encode_hook).decode()
 
     @classmethod

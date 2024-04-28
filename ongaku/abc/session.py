@@ -23,7 +23,7 @@ class Session(PayloadBase):
     resuming: bool
     """Whether resuming is enabled for this session or not."""
     timeout: int
-    """The timeout in seconds (default is 60s)."""
+    """The timeout in seconds."""
 
 
 # MIT License

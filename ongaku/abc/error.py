@@ -45,6 +45,8 @@ class ExceptionError(PayloadBase):
     Exception error.
 
     The exception error lavalink returns when a track has an exception.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#exception-object)
     """
 
     message: str

@@ -67,10 +67,12 @@ class ReadyEvent(OngakuEvent):
     Ready Event.
 
     The event that is dispatched when the lavalink server is ready for connections.
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#ready-op)
     """
 
     resumed: bool
-    """Whether or not the session has been resumed, or is a new session."""
+    """Whether the session has been resumed, or is a new session."""
     session_id: str
     """The lavalink session id, for the current session."""
 
@@ -81,10 +83,12 @@ class PlayerUpdateEvent(OngakuEvent):
     Player Update Event.
 
     The event that is dispatched when a players state has been updated.
+
+    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#player-update-op)
     """
 
     guild_id: hikari.Snowflake
-    """The Guild ID."""
+    """The guild related to this event."""
     state: PlayerState
     """The player state."""
 
@@ -96,7 +100,7 @@ class StatisticsEvent(OngakuEvent):
 
     All of the statistics about the current session.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#stats-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#stats-op)
     """
 
     players: int
@@ -124,7 +128,7 @@ class WebsocketClosedEvent(OngakuEvent):
     """
 
     guild_id: hikari.Snowflake
-    """The guild that had their websocket closed in."""
+    """The guild related to this event."""
     code: int
     """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
     reason: str
@@ -139,6 +143,8 @@ class TrackStartEvent(OngakuEvent):
     Track start event.
 
     The event that is dispatched when a track starts playing.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
     """
 
     guild_id: hikari.Snowflake
@@ -153,6 +159,8 @@ class TrackEndEvent(OngakuEvent):
     Track end event.
 
     The event that is dispatched when a track ends.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
     """
 
     guild_id: hikari.Snowflake
@@ -169,6 +177,8 @@ class TrackExceptionEvent(OngakuEvent):
     Track exception event.
 
     The event that is dispatched when an exception happens with a track.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
     """
 
     guild_id: hikari.Snowflake
@@ -185,6 +195,8 @@ class TrackStuckEvent(OngakuEvent):
     Track stuck event.
 
     The event that is dispatched when a track gets stuck.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
     """
 
     guild_id: hikari.Snowflake
