@@ -13,10 +13,12 @@ __all__ = ("json_dumps", "json_loads")
 json_dumps: typing.Callable[
     [typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]], bytes
 ]
+"""The json dumper."""
 
 json_loads: typing.Callable[
     [str | bytes], typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]
 ]
+"""The json loader."""
 
 try:
     import orjson

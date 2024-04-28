@@ -11,6 +11,7 @@ import typing
 
 import hikari
 
+from ongaku import errors
 from ongaku.abc.error import ExceptionError
 from ongaku.abc.error import RestError
 from ongaku.abc.info import Info
@@ -21,8 +22,6 @@ from ongaku.abc.route_planner import RoutePlannerStatus
 from ongaku.abc.session import Session as ABCSession
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
-from ongaku.errors import BuildException
-from ongaku.errors import LavalinkException
 from ongaku.internal import routes
 from ongaku.internal.converters import json_dumps
 from ongaku.internal.converters import json_loads
@@ -101,7 +100,7 @@ class RESTClient:
 
         elif load_type == "error":
             _logger.log(TRACE_LEVEL, f"loadType caused an error.")
-            raise LavalinkException(
+            raise errors.RestTrackException(
                 ExceptionError._from_payload(json_dumps(resp["data"]))
             )
 
@@ -112,7 +111,7 @@ class RESTClient:
                 try:
                     track = Track._from_payload(json_dumps(trk))
                 except Exception as e:
-                    raise BuildException(str(e))
+                    raise errors.BuildException(str(e))
                 else:
                     tracks.append(track)
 
@@ -127,7 +126,9 @@ class RESTClient:
             build = Playlist._from_payload(json_dumps(resp["data"]))
 
         else:
-            raise BuildException(f"An unknown loadType was received: {load_type}")
+            raise errors.BuildException(
+                f"An unknown loadType was received: {load_type}"
+            )
 
         return build
 
@@ -601,8 +602,10 @@ class RESTClient:
 
         Raises
         ------
+        SessionException
+            Raised when there is no available session.
         LavalinkException
-            Raise when a invalid response type is received.
+            Raised when a invalid response type is received.
         ValueError
             Raised when a return type is set, and no data was received.
         BuildException
@@ -637,8 +640,10 @@ class RESTClient:
 
         Raises
         ------
+        SessionException
+            Raised when there is no available session.
         LavalinkException
-            Raise when a invalid response type is received.
+            Raised when a invalid response type is received.
         ValueError
             Raised when a return type is set, and no data was received.
         BuildException
@@ -675,8 +680,14 @@ class RESTClient:
 
         Raises
         ------
+        SessionException
+            Raised when there is no available session.
         LavalinkException
-            Raise when a invalid response type is received.
+            Raised when a invalid response type is received.
+        ValueError
+            Raised when a return type is set, and no data was received.
+        BuildException
+            Raised when the object could not be built.
         """
         route = routes.POST_ROUTEPLANNER_FREE_ADDRESS
 
@@ -744,17 +755,38 @@ class RESTClient:
         params: typing.Mapping[str, typing.Any] = {},
         sequence: bool = False,
     ) -> RESTClientT | typing.Sequence[RESTClientT] | None:
-        """
-        Handle rest.
+        """Handle rest request.
+
+        Parameters
+        ----------
+        route
+            The route you wish to query.
+        return_type
+            The type that this function should return.
+        headers
+            The headers to attach to this request.
+        json
+            The json data to send to this request.
+        params
+            The parameters to add to this request.
+        sequence
+            Whether or not the return type is a list of return type, or just one.
+
+        Returns
+        -------
+        RESTClientT | typing.Sequence[RESTClientT] | None
+            the return type you requested.
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
+        RestEmptyException
+            Raised when a return type was requested, yet nothing was received.
+        RestStatusException
+            Raised when nothing was received, but a 4XX/5XX error was reported.
+        RestErrorException
+            Raised when a rest error is returned with a 4XX/5XX error.
         BuildException
-            Raised when the object could not be built.
+            Raised when a construction of a ABC class fails.
         """
         session = self._client._get_client_session()
 
@@ -778,15 +810,20 @@ class RESTClient:
                     TRACE_LEVEL,
                     f"Received code: {response.status} with response {await response.text()} on url {response.url}",
                 )
+                if response.status == 204 and return_type:
+                    raise errors.RestEmptyException
+
                 if response.status >= 400:
                     try:
                         payload = await response.text()
                     except Exception:
-                        raise LavalinkException(
-                            f"A {response.status} error has occurred."
+                        raise errors.RestStatusException(
+                            response.status, response.reason
                         )
                     else:
-                        raise LavalinkException(RestError._from_payload(payload))
+                        raise errors.RestErrorException(
+                            RestError._from_payload(payload)
+                        )
 
                 if not return_type:
                     return
@@ -794,7 +831,7 @@ class RESTClient:
                 try:
                     payload = await response.text()
                 except Exception:
-                    raise ValueError("Payload required for this response.")
+                    raise errors.RestEmptyException
 
                 if issubclass(return_type, str):
                     return return_type(payload)
@@ -808,7 +845,7 @@ class RESTClient:
                         try:
                             model = return_type._from_payload(item)
                         except Exception as e:
-                            raise BuildException(str(e))
+                            raise errors.BuildException(str(e))
                         else:
                             model_seq.append(model)
 
@@ -817,16 +854,16 @@ class RESTClient:
                     try:
                         model = return_type._from_payload(payload)
                     except Exception as e:
-                        raise BuildException(str(e))
+                        raise errors.BuildException(str(e))
                     else:
                         return model
         except asyncio.TimeoutError:
             _logger.warning(f"timed out on {str(route)}")
-            raise LavalinkException("Timeout")
+            raise errors.TimeoutException
 
         except Exception as e:
             _logger.warning(f"{e} occurred on {str(route)}")
-            raise LavalinkException(e)
+            raise errors.RestException
 
 
 # MIT License

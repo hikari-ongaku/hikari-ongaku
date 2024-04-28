@@ -4,7 +4,7 @@ A voice handling library for hikari.
 GitHub:
 https://github.com/MPlatypus/hikari-ongaku
 Docs:
-https://ongaku.mplaty.com/
+https://ongaku.mplaty.com
 """
 
 from __future__ import annotations
@@ -22,18 +22,23 @@ from ongaku.abc.track import Track
 from ongaku.client import Client
 from ongaku.enums import BandType
 from ongaku.errors import BuildException
-from ongaku.errors import LavalinkException
+from ongaku.errors import ClientAliveException
+from ongaku.errors import ClientException
+from ongaku.errors import NoSessionsException
 from ongaku.errors import OngakuException
 from ongaku.errors import PlayerConnectException
 from ongaku.errors import PlayerException
 from ongaku.errors import PlayerMissingException
 from ongaku.errors import PlayerQueueException
-from ongaku.errors import SessionConnectionException
+from ongaku.errors import RestEmptyException
+from ongaku.errors import RestErrorException
+from ongaku.errors import RestException
+from ongaku.errors import RestStatusException
+from ongaku.errors import RestTrackException
 from ongaku.errors import SessionException
 from ongaku.errors import SessionHandlerException
-from ongaku.errors import WebsocketClosureException
-from ongaku.errors import WebsocketException
-from ongaku.errors import WebsocketTypeException
+from ongaku.errors import SessionStartException
+from ongaku.errors import TimeoutException
 from ongaku.events import OngakuEvent
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import QueueEmptyEvent
@@ -72,18 +77,23 @@ __all__ = (
     "BandType",
     # .exceptions
     "OngakuException",
-    "WebsocketException",
-    "WebsocketClosureException",
-    "WebsocketTypeException",
+    "RestException",
+    "RestStatusException",
+    "RestErrorException",
+    "RestEmptyException",
+    "RestTrackException",
+    "ClientException",
+    "ClientAliveException",
     "SessionException",
-    "SessionConnectionException",
+    "SessionStartException",
+    "SessionHandlerException",
+    "NoSessionsException",
     "PlayerException",
     "PlayerConnectException",
     "PlayerQueueException",
     "PlayerMissingException",
     "BuildException",
-    "LavalinkException",
-    "SessionHandlerException",
+    "TimeoutException",
     # .abc.events
     "OngakuEvent",
     "ReadyEvent",

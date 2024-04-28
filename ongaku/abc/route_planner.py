@@ -40,7 +40,7 @@ class IPBlock(PayloadBase):
     """
     Route Planner IP Block.
 
-    All of the information about the IP Block
+    All of the information about the IP Block.
 
     ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
     """
