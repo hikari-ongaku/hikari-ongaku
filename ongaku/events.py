@@ -24,6 +24,7 @@ if typing.TYPE_CHECKING:
 
 __all__ = (
     "OngakuEvent",
+    "PayloadEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
     "StatisticsEvent",
@@ -59,6 +60,18 @@ class OngakuEvent(hikari.Event):
     def session(self) -> Session:
         """The session attached to the event."""
         return self._session
+
+
+@attrs.define
+class PayloadEvent(OngakuEvent):
+    """
+    Payload Event.
+
+    The event that is dispatched each time a message is received from the lavalink websocket.
+    """
+
+    payload: str
+    """The payload received."""
 
 
 @attrs.define

@@ -252,6 +252,9 @@ class Session:
 
     async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
         if msg.type == aiohttp.WSMsgType.TEXT:
+            event = events.PayloadEvent(self.app, self.client, self, msg.data)
+            self.app.dispatch(event)
+
             await self._handle_op_code(msg.data)
 
         elif msg.type == aiohttp.WSMsgType.ERROR:

@@ -6,14 +6,15 @@ The player function, for all player related things.
 
 from __future__ import annotations
 
+import random
 import typing as t
 from asyncio import TimeoutError
 from asyncio import gather
 
 import hikari
-import random
 
 from ongaku.abc.player import PlayerVoice
+from ongaku.abc.track import Track
 from ongaku.enums import TrackEndReasonType
 from ongaku.errors import BuildException
 from ongaku.errors import LavalinkException
@@ -25,11 +26,9 @@ from ongaku.events import QueueNextEvent
 from ongaku.events import TrackEndEvent
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
-from ongaku.abc.track import Track
 
 if t.TYPE_CHECKING:
     from ongaku.abc.player import Player as ABCPlayer
-    
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -131,7 +130,7 @@ class Player:
     @property
     def position(self) -> int:
         """Position.
-        
+
         The position of the track in milliseconds.
         """
         return self._position
@@ -149,7 +148,7 @@ class Player:
     @property
     def is_paused(self) -> bool:
         """Is paused.
-        
+
         Whether the player is paused or not. True if paused.
         """
         return self._is_paused
@@ -157,7 +156,7 @@ class Player:
     @property
     def autoplay(self) -> bool:
         """Autoplay.
-        
+
         Whether or not the next song will play, when this song ends.
         """
         return self._autoplay
@@ -498,7 +497,7 @@ class Player:
         Stop current track.
 
         Stops the audio, by setting the song to none.
-        
+
         !!! note
             This does not touch the current queue, just clears the player of its track.
 
@@ -547,8 +546,10 @@ class Player:
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
-            raise PlayerQueueException(self.guild_id, "Queue must have more than 2 tracks to shuffle.")
-        
+            raise PlayerQueueException(
+                self.guild_id, "Queue must have more than 2 tracks to shuffle."
+            )
+
         new_queue = list(self.queue)
 
         first_track = new_queue.pop(0)

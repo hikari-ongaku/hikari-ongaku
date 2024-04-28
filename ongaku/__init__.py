@@ -35,6 +35,7 @@ from ongaku.errors import WebsocketClosureException
 from ongaku.errors import WebsocketException
 from ongaku.errors import WebsocketTypeException
 from ongaku.events import OngakuEvent
+from ongaku.events import PayloadEvent
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import QueueEmptyEvent
 from ongaku.events import QueueNextEvent
@@ -86,6 +87,7 @@ __all__ = (
     "SessionHandlerException",
     # .abc.events
     "OngakuEvent",
+    "PayloadEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
     "StatisticsEvent",
