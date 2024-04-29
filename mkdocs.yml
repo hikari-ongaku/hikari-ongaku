@@ -109,6 +109,7 @@ nav:
     - Client: api/client.md
     - Session: api/session.md
     - Player: api/player.md
+    - Events: api/events.md
     - Rest: api/rest.md
     - Enums: api/enums.md
     - Errors: api/errors.md

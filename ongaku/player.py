@@ -6,12 +6,12 @@ The player function, for all player related things.
 
 from __future__ import annotations
 
+import random
 import typing as t
 from asyncio import TimeoutError
 from asyncio import gather
 
 import hikari
-import random
 
 from ongaku import errors
 from ongaku.abc.player import PlayerVoice
@@ -127,7 +127,7 @@ class Player:
     @property
     def position(self) -> int:
         """Position.
-        
+
         The position of the track in milliseconds.
         """
         return self._position
@@ -145,7 +145,7 @@ class Player:
     @property
     def is_paused(self) -> bool:
         """Is paused.
-        
+
         Whether the player is paused or not. True if paused.
         """
         return self._is_paused
@@ -153,7 +153,7 @@ class Player:
     @property
     def autoplay(self) -> bool:
         """Autoplay.
-        
+
         Whether or not the next song will play, when this song ends.
         """
         return self._autoplay
@@ -495,7 +495,7 @@ class Player:
         Stop current track.
 
         Stops the audio, by setting the song to none.
-        
+
         !!! note
             This does not touch the current queue, just clears the player of its track.
 
@@ -548,8 +548,10 @@ class Player:
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
-            raise PlayerQueueException(self.guild_id, "Queue must have more than 2 tracks to shuffle.")
-        
+            raise PlayerQueueException(
+                self.guild_id, "Queue must have more than 2 tracks to shuffle."
+            )
+
         new_queue = list(self.queue)
 
         first_track = new_queue.pop(0)

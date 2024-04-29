@@ -40,6 +40,7 @@ from ongaku.errors import SessionHandlerException
 from ongaku.errors import SessionStartException
 from ongaku.errors import TimeoutException
 from ongaku.events import OngakuEvent
+from ongaku.events import PayloadEvent
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import QueueEmptyEvent
 from ongaku.events import QueueNextEvent
@@ -96,6 +97,7 @@ __all__ = (
     "TimeoutException",
     # .abc.events
     "OngakuEvent",
+    "PayloadEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
     "StatisticsEvent",
