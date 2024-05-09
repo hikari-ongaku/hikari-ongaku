@@ -83,7 +83,11 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
 
 
 @bot.command
-@lightbulb.option("query", "Play a song. (must be a name, not a url.)")
+@lightbulb.option(
+    "query", 
+    "Play a song. (must be a name, not a url.)",
+    modifier=lightbulb.OptionModifier.CONSUME_REST
+)
 @lightbulb.command("play", "play a song")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def play_command(ctx: lightbulb.Context) -> None:
