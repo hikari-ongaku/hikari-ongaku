@@ -84,6 +84,9 @@ markdown_extensions:
   - pymdownx.superfences
   - attr_list
   - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 
 copyright: Copyright &copy; 2023 MPlaty
@@ -99,11 +102,12 @@ extra:
 nav:
   - home: index.md
   - Getting Started:
-    - getting_started/index.md
-    - Basics: getting_started/basics.md
-    - Filters: getting_started/filters.md
-    - Sessions: getting_started/sessions.md
-    - Plugins: getting_started/plugins.md
+    - gs/index.md
+    - Client as State: gs/client.md
+    - Player: gs/player.md
+    - Session: gs/session.md
+    - Filters: gs/filter.md
+    - Injection: gs/injection.md
   - API Reference:
     - api/index.md
     - Client: api/client.md
