@@ -53,6 +53,15 @@ pip install hikari-ongaku
 
     [:material-arrow-right: Learn more](./filter.md)
 
+ -  Injection
+
+    ---
+
+    Shows how to use the injection for arc, and tanjun.
+
+    [:material-arrow-right: Learn more](./injection.md)
+
+
 </div>
 
 ## Q's and A's
