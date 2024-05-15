@@ -39,7 +39,7 @@ class SeverityType(str, enum.Enum):
 
     The severity type of the lavalink track error.
 
-    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket#severity)
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#severity)
     """
 
     COMMON = "common"
@@ -56,7 +56,7 @@ class TrackEndReasonType(str, enum.Enum):
 
     The track end reason type for the track that was just playing.
 
-    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket#track-end-reason)
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#track-end-reason)
     """
 
     FINISHED = "finished"
@@ -77,7 +77,7 @@ class BandType(enum.IntEnum):
 
     The band values, available for use in lavalink
 
-    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#equalizer)
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#equalizer)
     """
 
     HZ25 = 0
@@ -118,7 +118,7 @@ class RoutePlannerType(str, enum.Enum):
 
     The type of routeplanner that the server is currently using.
 
-    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#route-planner-types)
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#route-planner-types)
     """
 
     ROTATING_ROUTE_PLANNER = "RotatingIpRoutePlanner"
@@ -137,7 +137,7 @@ class IPBlockType(str, enum.Enum):
 
     The IP Block type, 4, or 6.
 
-    ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#ip-block-type)
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#ip-block-type)
     """
 
     INET_4_ADDRESS = "Inet4Address"

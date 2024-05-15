@@ -17,7 +17,7 @@ class Session(PayloadBase):
 
     All of the specified session information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#update-session)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
     resuming: bool

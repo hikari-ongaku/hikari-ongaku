@@ -20,7 +20,7 @@ class PlaylistInfo(PayloadBase):
 
     The playlist info object.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#playlist-info)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#playlist-info)
     """
 
     name: str
@@ -35,7 +35,7 @@ class Playlist(PayloadBase):
 
     The playlist object.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
     """
 
     info: PlaylistInfo

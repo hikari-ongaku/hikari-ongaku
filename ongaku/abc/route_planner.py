@@ -25,7 +25,7 @@ class FailingAddress(PayloadBase):
     """
     Failing address.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#failing-address-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
     failing_address: str = msgspec.field(name="failingAddress")
@@ -42,7 +42,7 @@ class IPBlock(PayloadBase):
 
     All of the information about the IP Block.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
     """
 
     type: IPBlockType
@@ -57,7 +57,7 @@ class RoutePlannerDetails(PayloadBase):
 
     All of the information about the failing addresses.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#details-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
     ip_block: IPBlock = msgspec.field(name="ipBlock")
@@ -86,7 +86,7 @@ class RoutePlannerStatus(PayloadBase):
 
     The status of the route-planner.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
     class_type: RoutePlannerType | None = msgspec.field(default=None, name="class")

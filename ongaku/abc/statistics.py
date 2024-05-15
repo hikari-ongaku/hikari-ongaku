@@ -19,7 +19,7 @@ class StatsMemory(PayloadBase):
 
     All of the Statistics Memory information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#memory)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#memory)
     """
 
     free: int
@@ -38,7 +38,7 @@ class StatsCpu(PayloadBase):
 
     All of the Statistics CPU information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#cpu)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#cpu)
     """
 
     cores: int
@@ -55,7 +55,7 @@ class StatsFrameStatistics(PayloadBase):
 
     All of the Statistics frame statistics information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#frame-stats)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#frame-stats)
     """
 
     sent: int
@@ -72,7 +72,7 @@ class Statistics(PayloadBase):
 
     All of the Statistics information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#stats-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#stats-object)
     """
 
     players: int
