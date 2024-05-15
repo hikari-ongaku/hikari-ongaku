@@ -59,7 +59,15 @@ class RESTClient:
 
         Loads tracks, from a site, or a link to a song, to play on a player.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-loading)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-loading)
+
+        Example
+        -------
+        ```py
+        track = await client.rest.load_track("ytsearch:ajr")
+
+        await player.play(track)
+        ```
 
         Parameters
         ----------
@@ -138,7 +146,15 @@ class RESTClient:
 
         Decode a track from its encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-decoding)
+
+        Example
+        -------
+        ```py
+        track = await client.rest.decode_track("BASE64")
+
+        await player.play(track)
+        ```
 
         Parameters
         ----------
@@ -175,7 +191,15 @@ class RESTClient:
 
         Decode multiple tracks from their encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-decoding)
+
+        Example
+        -------
+        ```py
+        tracks = await client.rest.decode_many_tracks(["BASE64_1", "BASE64_2"])
+
+        await player.add(tracks)
+        ```
 
         Parameters
         ----------
@@ -218,7 +242,16 @@ class RESTClient:
 
         Fetches all players on this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-players)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-players)
+
+        Example
+        -------
+        ```py
+        players = await client.rest.fetch_players(session_id)
+
+        for player in players:
+            print(player.guild_id)
+        ```
 
         Parameters
         ----------
@@ -262,7 +295,15 @@ class RESTClient:
 
         Fetches a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-player)
+
+        Example
+        -------
+        ```py
+        player = await client.rest.fetch_player(session_id, guild_id)
+
+        print(player.volume)
+        ```
 
         Parameters
         ----------
@@ -319,10 +360,16 @@ class RESTClient:
 
         Fetches a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-player)
 
         !!! note
             Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None. To not modify them, do not set them to anything.
+
+        Example
+        -------
+        ```py
+        await client.rest.update_player(session_id, guild_id, paused=True)
+        ```
 
         Parameters
         ----------
@@ -451,7 +498,13 @@ class RESTClient:
 
         Deletes a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#destroy-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#destroy-player)
+
+        Example
+        -------
+        ```py
+        await client.rest.delete_player(session_id, guild_id)
+        ```
 
         Parameters
         ----------
@@ -482,7 +535,13 @@ class RESTClient:
 
         Updates the lavalink session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#update-session)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-session)
+
+        Example
+        -------
+        ```py
+        await client.rest.update_session(session_id)
+        ```
 
         Parameters
         ----------
@@ -523,7 +582,15 @@ class RESTClient:
 
         Gets the current Lavalink statistics.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
+
+        Example
+        -------
+        ```py
+        info = await client.rest.fetch_info()
+
+        print(info.version.semver)
+        ```
 
         Raises
         ------
@@ -559,7 +626,15 @@ class RESTClient:
 
         Gets the current lavalink version.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
+
+        Example
+        -------
+        ```py
+        version = await client.rest.fetch_version()
+
+        print(version)
+        ```
 
         Raises
         ------
@@ -595,10 +670,18 @@ class RESTClient:
 
         Gets the current Lavalink statistics.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
 
         !!! note
-            frame_statistics will always be None.
+            frame_statistics will always be `None`.
+
+        Example
+        -------
+        ```py
+        stats = await client.rest.fetch_stats()
+
+        print(stats.players)
+        ```
 
         Raises
         ------
@@ -636,7 +719,15 @@ class RESTClient:
 
         Fetches the routeplanner status.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
+
+        Example
+        -------
+        ```py
+        routeplanner_status = await client.rest.fetch_routeplanner_status()
+
+        print(routeplanner_status.class_type.name)
+        ```
 
         Raises
         ------
@@ -671,7 +762,13 @@ class RESTClient:
 
         Free's the specified routeplanner address.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#unmark-a-failed-address)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#unmark-a-failed-address)
+
+        Example
+        -------
+        ```py
+        await client.rest.update_routeplanner_address(address)
+        ```
 
         Parameters
         ----------
@@ -705,7 +802,13 @@ class RESTClient:
 
         Frees every blocked routeplanner address.
 
-        ![Lavalink](../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest#unmark-all-failed-address)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#unmark-all-failed-address)
+
+        Example
+        -------
+        ```py
+        await client.rest.update_all_routeplanner_addresses()
+        ```
 
         Raises
         ------
