@@ -3,9 +3,9 @@
 Below is an explanation of how ongaku supports injection.
 
 !!! warning "support"
-    Please note, that only the command handlers [tanjun]() and [arc]() are currently supported with ongaku's dependency injection.
+    Please note, that only the command handlers [tanjun](https://github.com/FasterSpeeding/Tanjun) and [arc](https://github.com/hypergonial/hikari-arc) are currently supported with ongaku's dependency injection.
 
-Ongaku relies on the framework [alluka]() for its dependency injection support.
+Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka) for its dependency injection support.
 
 
 === "Arc"
