@@ -17,6 +17,53 @@ To install Ongaku, simply run the following:
 pip install hikari-ongaku
 ```
 
+## Where to next?
+
+<div class="grid cards" markdown>
+
+ -  Client as State
+
+    ---
+
+    How to set client as state in all different libraries.
+
+    [:material-arrow-right: Learn more](./client.md)
+
+ -  Player control
+
+    ---
+
+    All the functions of a player and its features.
+
+    [:material-arrow-right: Learn more](./player.md)
+
+ -  Sessions
+
+    ---
+
+    How to change to a different session handler, and what all session handlers do.
+
+    [:material-arrow-right: Learn more](./session.md)
+
+ -  Filters
+
+    ---
+
+    All the filter options, and how to use them.
+
+    [:material-arrow-right: Learn more](./filter.md)
+
+ -  Injection
+
+    ---
+
+    Shows how to use the injection for arc, and tanjun.
+
+    [:material-arrow-right: Learn more](./injection.md)
+
+
+</div>
+
 ## Q's and A's
 Below, will be the most common questions, and some answers to said questions.
 

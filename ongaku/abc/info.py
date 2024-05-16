@@ -26,7 +26,7 @@ class InfoVersion(PayloadBase):
 
     All information, about the version of lavalink that is running.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#version-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#version-object)
     """
 
     semver: str
@@ -49,7 +49,7 @@ class InfoGit(PayloadBase):
 
     All of the information about the lavalink git information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#git-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#git-object)
     """
 
     branch: str
@@ -66,7 +66,7 @@ class InfoPlugin(PayloadBase):
 
     All of the Information about the currently loaded plugins.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#plugin-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#plugin-object)
     """
 
     name: str
@@ -81,7 +81,7 @@ class Info(PayloadBase):
 
     All of the Info Version information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#info-response)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#info-response)
     """
 
     version: InfoVersion

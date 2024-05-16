@@ -10,16 +10,36 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 <br>
 
-
-Not sure what to do? Check out [Getting Started](getting_started/index.md) for examples on how to setup a bot!
-
 !!! warning
     This voice handler will not be complete, until version **1.0**. Anything prior to it, may have massive breaking changes.
 
-## Resources
+<div class="grid cards" markdown>
 
- - [Hikari](https://hikari-py.dev/)
- - [Examples](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples)
+ -  Hikari
+
+    ---
+
+    Hikari is the discord bot framework that ongaku rely's on.
+
+    [:material-arrow-right: Learn more](https://hikari-py.dev/)
+
+ -  Guides
+
+    ---
+
+    Here you can find explanations on how to use ongaku, and its features.
+
+    [:material-arrow-right: Learn more](https://hikari-py.dev/)
+
+ -  Examples
+
+    ---
+
+    Here are some basic examples for ongaku.
+
+    [:material-arrow-right: Learn more](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples/)
+
+</div>
 
 
 ## Notable mentions

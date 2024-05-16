@@ -35,6 +35,13 @@ class Client:
 
     The client for ongaku.
 
+    Example
+    -------
+    ```py
+    bot = hikari.GatewayBot("...")
+    client = ongaku.Client(bot)
+    ```
+
     Parameters
     ----------
     app
@@ -135,6 +142,16 @@ class Client:
 
         Add a new session to the session pool.
 
+        Example
+        -------
+        ```py
+        client = ongaku.Client(...)
+
+        client.add_session(
+            host="192.168.68.69"
+        )
+        ```
+
         Parameters
         ----------
         ssl
@@ -154,6 +171,18 @@ class Client:
 
         Create a new player for this session.
 
+        Example
+        -------
+        ```py
+        client = ongaku.Client(...)
+
+        player = await client.create_player(guild_id)
+
+        await player.connect(channel_id)
+
+        await player.play(track)
+        ```
+
         Parameters
         ----------
         guild
@@ -166,6 +195,15 @@ class Client:
         Fetch a player.
 
         Fetches an existing player.
+
+        Example
+        -------
+        ```py
+        client = ongaku.Client(...)
+        player = await client.fetch_player(guild_id)
+
+        await player.pause()
+        ```
 
         Parameters
         ----------
@@ -184,6 +222,13 @@ class Client:
         Delete a player.
 
         Delete a pre-existing player.
+
+        Example
+        -------
+        ```py
+        client = ongaku.Client(...)
+        await client.delete_player(...)
+        ```
 
         Parameters
         ----------

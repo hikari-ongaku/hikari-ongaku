@@ -23,7 +23,7 @@ class RestError(PayloadBase):
 
     This is the error that is formed, when a call to a rest method fails.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#error-responses)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#error-responses)
     """
 
     timestamp: int
@@ -46,7 +46,7 @@ class ExceptionError(PayloadBase):
 
     The exception error lavalink returns when a track has an exception.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#exception-object)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#exception-object)
     """
 
     message: str

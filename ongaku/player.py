@@ -183,6 +183,12 @@ class Player:
     ) -> None:
         """Connect.
 
+        Example
+        -------
+        ```py
+        await player.connect(channel_id)
+        ```
+
         Parameters
         ----------
         channel
@@ -291,6 +297,12 @@ class Player:
 
         Disconnect the player from the lavalink server, and discord.
 
+        Example
+        -------
+        ```py
+        await player.disconnect()
+        ```
+
         Raises
         ------
         SessionStartException
@@ -350,6 +362,12 @@ class Player:
         """Play.
 
         Play a new track, or start the playing of the queue.
+
+        Example
+        -------
+        ```py
+        await player.play(track)
+        ```
 
         Parameters
         ----------
@@ -418,6 +436,12 @@ class Player:
         !!! note
             This will not automatically start playing the songs. please call `.play()` after, with no track, if the player is not already playing.
 
+        Example
+        -------
+        ```py
+        await player.add(tracks)
+        ```
+
         Parameters
         ----------
         tracks
@@ -449,6 +473,12 @@ class Player:
 
         !!! info
             `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it from its current state.
+
+        Example
+        -------
+        ```py
+        await player.pause()
+        ```
 
         Parameters
         ----------
@@ -498,6 +528,12 @@ class Player:
 
         !!! note
             This does not touch the current queue, just clears the player of its track.
+
+        Example
+        -------
+        ```py
+        await player.stop()
+        ```
 
         Raises
         ------
@@ -567,6 +603,12 @@ class Player:
         Skip songs.
 
         skip a selected amount of songs in the queue.
+
+        Example
+        -------
+        ```py
+        await player.skip()
+        ```
 
         Parameters
         ----------
@@ -649,6 +691,12 @@ class Player:
         !!! warning
             This does not stop the track if its in the first position.
 
+        Example
+        -------
+        ```py
+        await player.remove()
+        ```
+
         Parameters
         ----------
         value
@@ -685,6 +733,12 @@ class Player:
         Clear the queue.
 
         Clear the current queue, and also stop the audio from the player.
+
+        Example
+        -------
+        ```py
+        player.clear()
+        ```
 
         Raises
         ------
@@ -727,6 +781,12 @@ class Player:
 
         whether or not to enable or disable autoplay.
 
+        Example
+        -------
+        ```py
+        await player.set_autoplay()
+        ```
+
         Parameters
         ----------
         enable
@@ -744,6 +804,12 @@ class Player:
         Set the volume.
 
         The volume you wish to set for the player.
+
+        Example
+        -------
+        ```py
+        await player.set_volume(10)
+        ```
 
         Parameters
         ----------
@@ -795,6 +861,12 @@ class Player:
         Change the track position.
 
         Change the currently playing track's position.
+        
+        Example
+        -------
+        ```py
+        await player.set_position(10000)
+        ```
 
         Parameters
         ----------

@@ -18,6 +18,22 @@ async def check(query: str) -> Checked:
 
     Allows for the user to check a current string, and see what type it is.
 
+    !!! warning
+        Currently the checker only supports youtube url's.
+
+    Example
+    -------
+    ```py
+    from ongaku.ext import checker
+
+    response = checker.check(query)
+
+    if checked_query.type == checker.CheckedType.QUERY:
+        print(f"Query: {checked_query.value}")
+    else:
+        print(f"Link: {checked_query.value}")
+    ```
+
     Parameters
     ----------
     query : str

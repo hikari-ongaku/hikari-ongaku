@@ -27,7 +27,7 @@ class PlayerState(PayloadBase):
 
     All the information for the players current state.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/websocket.html#player-state)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-state)
     """
 
     time: int
@@ -46,7 +46,7 @@ class PlayerVoice(PayloadBase):
 
     All of the Player Voice information.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#voice-state)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#voice-state)
     """
 
     token: str
@@ -63,7 +63,7 @@ class Player(PayloadBase):
 
     All of the information about the player, for the specified guild.
 
-    ![Lavalink](../../assets/lavalink_logo.png){ height="18" width="18"} [Reference](https://lavalink.dev/api/rest.html#player)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
     guild_id: hikari.Snowflake = msgspec.field(name="guildId")
