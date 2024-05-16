@@ -86,7 +86,7 @@ class Client:
     )  -> Client:
         """From Arc.
 
-        Creating a client for arc that supports client injection and player injection.
+        This supports `client` and `player` [injection](../gs/injection.md) for [Arc](https://github.com/hypergonial/hikari-arc)
 
         Example
         -------
@@ -123,7 +123,15 @@ class Client:
     )  -> Client:
         """From Tanjun.
 
-        This supports [client injection](./getting_started/injection.md)
+        This supports `client` [injection](../gs/injection.md) for [Tanjun](https://github.com/FasterSpeeding/Tanjun)
+
+        Example
+        -------
+        ```py
+        bot = arc.GatewayBot(...)
+        client = tanjun.Client.from_gateway_bot(bot)
+        ongaku_client = ongaku.Client.from_tanjun(client)
+        ```
 
         Parameters
         ----------
