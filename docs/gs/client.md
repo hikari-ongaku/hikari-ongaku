@@ -64,7 +64,7 @@ Below is some examples of how to use the client within a bot setup.
     @lightbulb.command("name", "description", auto_defer=False)
     @lightbulb.implements(lightbulb.SlashCommand)
     async def some_command(ctx: lightbulb.SlashContext) -> None:
-        player = await ctx.client.model.ongaku.fetch_player(...)
+        player = await ctx.bot.d.ongaku.fetch_player(...)
 
         await player.play(...)
     ```
