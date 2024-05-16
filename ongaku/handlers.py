@@ -141,8 +141,6 @@ class BasicSessionHandler(SessionHandlerBase):
     """
     Basic Session Handler.
 
-    The basic session handler.
-
     This session handler simply fetches the first working session, and returns it. If it dies, it switches to the next available one.
     """
 
