@@ -87,7 +87,7 @@ class Session:
         return self._client
 
     @property
-    def app(self) -> hikari.GatewayBot:
+    def app(self) -> hikari.GatewayBotAware:
         """The application attached to this bot."""
         return self.client.app
 
@@ -248,12 +248,12 @@ class Session:
                     parser.by_remote,
                 )
 
-        self.app.dispatch(event)
+        self.app.event_manager.dispatch(event)
 
     async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
         if msg.type == aiohttp.WSMsgType.TEXT:
             event = events.PayloadEvent(self.app, self.client, self, msg.data)
-            self.app.dispatch(event)
+            self.app.event_manager.dispatch(event)
 
             await self._handle_op_code(msg.data)
 

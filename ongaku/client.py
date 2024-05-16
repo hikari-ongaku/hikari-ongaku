@@ -18,6 +18,8 @@ from ongaku.internal.logger import logger
 from ongaku.rest import RESTClient
 
 if typing.TYPE_CHECKING:
+    import arc
+    import tanjun
     from ongaku.handlers import SessionHandlerBase
     from ongaku.player import Player
     from ongaku.session import Session
@@ -54,7 +56,8 @@ class Client:
 
     def __init__(
         self,
-        app: hikari.GatewayBot,
+        app: hikari.GatewayBotAware,
+        *,
         session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
         attempts: int = 3,
     ) -> None:
@@ -70,11 +73,80 @@ class Client:
 
         self._session_handler = session_handler(self)
 
-        app.subscribe(hikari.StartedEvent, self._start_event)
-        app.subscribe(hikari.StoppingEvent, self._stop_event)
+        app.event_manager.subscribe(hikari.StartedEvent, self._start_event)
+        app.event_manager.subscribe(hikari.StoppingEvent, self._stop_event)
+
+    @classmethod
+    def from_arc(
+        cls,
+        client: arc.GatewayClient,
+        *,
+        session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
+        attempts: int = 3,
+    )  -> Client:
+        """From Arc.
+
+        Creating a client for arc that supports client injection and player injection.
+
+        Example
+        -------
+        ```py
+        bot = arc.GatewayBot(...)
+        client = arc.GatewayClient(bot)
+        ongaku_client = ongaku.Client.from_arc(client)
+        ```
+
+        Parameters
+        ----------
+        client
+            Your Gateway client for arc.
+        attempts
+            The amount of attempts a session will try to connect to the server.
+        session_handler
+            The session handler to use for the current client.
+        """
+        cls = cls(client.app, session_handler=session_handler, attempts=attempts)
+
+        client.set_type_dependency(Client, cls)
+        
+        client.add_injection_hook(cls._arc_player_injector)
+
+        return cls
+    
+    @classmethod
+    def from_tanjun(
+        cls,
+        client: tanjun.abc.Client,
+        *,
+        session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
+        attempts: int = 3,
+    )  -> Client:
+        """From Tanjun.
+
+        This supports [client injection](./getting_started/injection.md)
+
+        Parameters
+        ----------
+        client
+            Your Gateway client from tanjun.
+        attempts
+            The amount of attempts a session will try to connect to the server.
+        session_handler
+            The session handler to use for the current client.
+        """
+        try:
+            app = client.get_type_dependency(hikari.GatewayBotAware)
+        except KeyError:
+            raise Exception("The gateway bot requested was not found.")
+        
+        cls = cls(app, session_handler=session_handler, attempts=attempts)
+
+        client.set_type_dependency(Client, cls)
+
+        return cls
 
     @property
-    def app(self) -> hikari.GatewayBot:
+    def app(self) -> hikari.GatewayBotAware:
         """The application attached to this bot."""
         return self._app
 
@@ -129,6 +201,17 @@ class Client:
 
     async def _stop_event(self, event: hikari.StoppingEvent) -> None:
         await self._session_handler.stop()
+
+    async def _arc_player_injector(self, ctx: arc.GatewayContext, inj_ctx: arc.InjectorOverridingContext) -> None:
+        if ctx.guild_id is None:
+            return
+        
+        try:
+            player = await self.fetch_player(ctx.guild_id)
+        except errors.PlayerMissingException:
+            return
+
+        inj_ctx.set_type_dependency(Player, player)
 
     def add_session(
         self,
