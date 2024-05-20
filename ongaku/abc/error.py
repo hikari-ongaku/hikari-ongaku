@@ -6,9 +6,9 @@ The error abstract classes.
 
 from __future__ import annotations
 
-import msgspec
+import datetime
+import attrs
 
-from ongaku.abc.bases import PayloadBase
 from ongaku.enums import SeverityType
 
 __all__ = (
@@ -16,8 +16,8 @@ __all__ = (
     "ExceptionError",
 )
 
-
-class RestError(PayloadBase):
+@attrs.define
+class RestError:
     """
     Rest error information.
 
@@ -26,21 +26,48 @@ class RestError(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#error-responses)
     """
 
-    timestamp: int
-    """The timestamp of the error in milliseconds since the Unix epoch."""
-    status: int
-    """The HTTP status code."""
-    error: str
-    """The HTTP status code message."""
-    message: str
-    """The error message."""
-    path: str
-    """The request path."""
-    trace: str | None = msgspec.field(default=None)
-    """The stack trace of the error."""
+    _timestamp: datetime.datetime = attrs.field(alias="timestamp")
+    _status: int = attrs.field(alias="status")
+    _error: str = attrs.field(alias="error")
+    _message: str = attrs.field(alias="message")
+    _path: str = attrs.field(alias="path")
+    _trace: str | None = attrs.field(alias="trace")
 
+    @property
+    def timestamp(self) -> datetime.datetime:
+        """The timestamp of the error in milliseconds since the Unix epoch."""
+        return self._timestamp
+    
+    @property
+    def status(self) -> int:
+        """The HTTP status code."""
+        return self._status
 
-class ExceptionError(PayloadBase):
+    @property
+    def error(self) -> str:
+        """The HTTP status code message."""
+        return self._error
+    
+
+    @property
+    def message(self) -> str:
+        """The error message."""
+        return self._message
+    
+
+    @property
+    def path(self) -> str:
+        """The request path."""
+        return self._path
+
+    @property
+    def trace(self) -> str | None:
+        """The stack trace of the error."""
+        return self._trace
+    
+
+@attrs.define
+class ExceptionError:
     """
     Exception error.
 
@@ -49,12 +76,24 @@ class ExceptionError(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#exception-object)
     """
 
-    message: str
-    """The message of the exception."""
-    severity: SeverityType
-    """The severity of the exception."""
-    cause: str
-    """The cause of the exception."""
+    _message: str = attrs.field(alias="message")
+    _severity: SeverityType = attrs.field(alias="severity")
+    _cause: str = attrs.field(alias="cause")
+
+    @property
+    def message(self) -> str:
+        """The message of the exception."""
+        return self._message
+
+    @property
+    def severity(self) -> SeverityType:
+        """The severity of the exception."""
+        return self._severity
+    
+    @property
+    def cause(self) -> str:
+        """The cause of the exception."""
+        return self._cause
 
 
 # MIT License

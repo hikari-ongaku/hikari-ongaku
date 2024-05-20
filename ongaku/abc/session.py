@@ -6,12 +6,14 @@ The session abstract classes.
 
 from __future__ import annotations
 
-from ongaku.abc.bases import PayloadBase
+import attrs
 
 __all__ = ("Session",)
 
 
-class Session(PayloadBase):
+
+@attrs.define
+class Session:
     """
     Session information.
 
@@ -20,10 +22,19 @@ class Session(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
-    resuming: bool
-    """Whether resuming is enabled for this session or not."""
-    timeout: int
-    """The timeout in seconds."""
+    _resuming: bool = attrs.field(alias="resuming")
+    _timeout: int = attrs.field(alias="timeout")
+
+    @property
+    def resuming(self) -> bool:
+        """Whether resuming is enabled for this session or not."""
+        return self._resuming
+    
+    @property
+    def timeout(self) -> int:
+        """The timeout in seconds."""
+        return self._timeout
+    
 
 
 # MIT License

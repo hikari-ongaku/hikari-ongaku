@@ -7,35 +7,26 @@ All types for ongaku.
 from __future__ import annotations
 
 import typing
+import hikari
+    
 
-if typing.TYPE_CHECKING:
-    import hikari
-
-    from ongaku.abc.info import Info
-    from ongaku.abc.player import Player
-    from ongaku.abc.player import PlayerVoice
-    from ongaku.abc.playlist import Playlist
-    from ongaku.abc.route_planner import RoutePlannerStatus
-    from ongaku.abc.session import Session
-    from ongaku.abc.statistics import Statistics
-    from ongaku.abc.track import Track
-
-__all__ = ("RESTClientT",)
+__all__ = (
+    "RequestT",
+    "RequestorT",
+    "PayloadMappingT",
+    "PayloadSequenceT"
+)
 
 # Type Variables.
 
-RESTClientT = typing.TypeVar(
-    "RESTClientT",
-    Info,
-    Player,
-    PlayerVoice,
-    Session,
-    Playlist,
-    Track,
-    RoutePlannerStatus,
-    Statistics,
+RequestT = typing.TypeVar(
+    "RequestT",
+    typing.Mapping[str, typing.Any],
+    typing.Sequence[typing.Any],
     str,
-    dict[str, typing.Any],
+    int,
+    bool,
+    float
 )
 
 
@@ -44,6 +35,9 @@ RESTClientT = typing.TypeVar(
 RequestorT: typing.TypeAlias = (
     hikari.SnowflakeishOr[hikari.User] | hikari.SnowflakeishOr[hikari.Member]
 )
+
+PayloadMappingT: typing.TypeAlias = typing.Mapping[str, typing.Any] | str | bytes
+PayloadSequenceT: typing.TypeAlias = typing.Sequence[typing.Any] | str | bytes
 
 # MIT License
 

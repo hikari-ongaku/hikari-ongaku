@@ -7,11 +7,10 @@ The session abstract classes and hikari events.
 from __future__ import annotations
 
 import hikari
-import msgspec
+import attrs
 
-from ongaku.abc.bases import PayloadBase
 from ongaku.abc.error import ExceptionError
-from ongaku.abc.player import PlayerState
+from ongaku.abc.player import State
 from ongaku.abc.track import Track
 from ongaku.enums import TrackEndReasonType
 
@@ -25,8 +24,8 @@ __all__ = (
     "TrackStuck",
 )
 
-
-class Ready(PayloadBase):
+@attrs.define
+class Ready:
     """
     Ready Event Base.
 
@@ -35,13 +34,22 @@ class Ready(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#ready-op)
     """
 
-    resumed: bool
-    """Whether or not the session has been resumed, or is a new session."""
-    session_id: str = msgspec.field(name="sessionId")
-    """The lavalink session id, for the current session."""
+    _resumed: bool = attrs.field(alias="resumed")
+    _session_id: str = attrs.field(alias="session_id")
+    
+    @property
+    def resumed(self) -> bool:
+        """Whether or not the session has been resumed, or is a new session."""
+        return self._resumed
 
+    @property
+    def session_id(self) -> str:
+        """The lavalink session id, for the current session."""
+        return self._session_id
+    
 
-class PlayerUpdate(PayloadBase):
+@attrs.define
+class PlayerUpdate:
     """
     Player update event base.
 
@@ -50,14 +58,22 @@ class PlayerUpdate(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-update-op)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild related to this event."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _state: State = attrs.field(alias="state")
 
-    state: PlayerState
-    """The player state."""
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+    
+    @property
+    def state(self) -> State:
+        """The player state."""
+        ...
 
 
-class WebsocketClosed(PayloadBase):
+@attrs.define
+class WebsocketClosed:
     """
     Websocket closed event base.
 
@@ -66,17 +82,34 @@ class WebsocketClosed(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild related to this event."""
-    code: int
-    """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
-    reason: str
-    """The close reason."""
-    by_remote: bool = msgspec.field(name="byRemote")
-    """Whether the connection was closed by Discord."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _code: int = attrs.field(alias="code")
+    _reason: str = attrs.field(alias="reason")
+    _by_remote: bool = attrs.field(alias="by_remote")
 
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
 
-class TrackStart(PayloadBase):
+    @property
+    def code(self) -> int:
+        """The error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
+        return self._code
+
+    @property
+    def reason(self) -> str:
+        """The close reason."""
+        return self._reason
+    
+    @property
+    def by_remote(self) -> bool:
+        """Whether the connection was closed by Discord."""
+        return self._by_remote
+    
+
+@attrs.define
+class TrackStart:
     """
     Track start event base.
 
@@ -85,13 +118,22 @@ class TrackStart(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _track: Track = attrs.field(alias="track")
 
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+    
+    @property
+    def track(self) -> Track:
+        """The track related to this event."""
+        return self._track
+    
 
-class TrackEnd(PayloadBase):
+@attrs.define
+class TrackEnd:
     """
     Track end event base.
 
@@ -100,15 +142,27 @@ class TrackEnd(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-    reason: TrackEndReasonType
-    """The reason for the track ending."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _track: Track = attrs.field(alias="track")
+    _reason: TrackEndReasonType = attrs.field(alias="reason")
 
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+    
+    @property
+    def track(self) -> Track:
+        """The track related to this event."""
+        return self._track
+    
+    @property
+    def reason(self) -> TrackEndReasonType:
+        """The reason for the track ending."""
+        return self._reason
 
-class TrackException(PayloadBase):
+@attrs.define
+class TrackException:
     """
     Track exception event base.
 
@@ -117,15 +171,27 @@ class TrackException(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-    exception: ExceptionError
-    """The exception error that was returned."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _track: Track = attrs.field(alias="track")
+    _exception: ExceptionError = attrs.field(alias="exception")
 
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+    
+    @property
+    def track(self) -> Track:
+        """The track related to this event."""
+        return self._track
 
-class TrackStuck(PayloadBase):
+    @property
+    def exception(self) -> ExceptionError:
+        """The exception error that was returned."""
+        return self._exception
+
+@attrs.define
+class TrackStuck:
     """
     Track stuck event base.
 
@@ -134,12 +200,68 @@ class TrackStuck(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-    threshold_ms: int = msgspec.field(name="thresholdMs")
-    """The threshold in milliseconds that was exceeded."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _track: Track = attrs.field(alias="track")
+    _threshold_ms: int = attrs.field(alias="threshold_ms")
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+    
+    @property
+    def track(self) -> Track:
+        """The track related to this event."""
+        return self._track
+
+    @property
+    def threshold_ms(self) -> int:
+        """The threshold in milliseconds that was exceeded."""
+        return self._threshold_ms
+    
+@attrs.define
+class QueueEmpty:
+    """
+    Queue empty event.
+
+    The event that is dispatched, when a players queue is empty.
+    """
+
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+
+
+@attrs.define
+class QueueNext:
+    """
+    Queue next event.
+
+    The event that is dispatched when a queue is playing the next song.
+    """
+
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _track: Track = attrs.field(alias="track")
+    _old_track: Track = attrs.field(alias="old_track")
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        return self._guild_id
+    
+    @property
+    def track(self) -> Track:
+        """The track related to this event."""
+        return self._track
+    
+    @property
+    def old_track(self) -> Track:
+        """The track that was previously playing."""
+        return self._old_track
+
 
 
 # MIT License

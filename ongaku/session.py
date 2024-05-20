@@ -13,12 +13,10 @@ import aiohttp
 
 from ongaku import enums
 from ongaku import errors
-from ongaku import events
-from ongaku.abc import events as abc_events
-from ongaku.abc import statistics
 from ongaku.internal.about import __version__
 from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import logger
+from ongaku.internal import types
 
 _logger = logger.getChild("session")
 
@@ -80,6 +78,8 @@ class Session:
         self._status = enums.SessionStatus.NOT_CONNECTED
         self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
         self._base_headers: typing.MutableMapping[str, typing.Any]
+        self._websocket_headers: typing.MutableMapping[str, typing.Any]
+        self._authorization_headers: typing.Mapping[str, typing.Any] = {"Authorization": password}
 
     @property
     def client(self) -> Client:
@@ -122,6 +122,11 @@ class Session:
         return self._base_uri
 
     @property
+    def auth_headers(self) -> typing.Mapping[str, typing.Any]:
+        """The headers required for authorization. This is automatically added."""
+        return self._authorization_headers
+    
+    @property
     def status(self) -> enums.SessionStatus:
         """The current status of the server."""
         return self._status
@@ -136,6 +141,87 @@ class Session:
         """
         return self._session_id
 
+    async def request(
+        self,
+        method: str,
+        path: str,
+        type: typing.Type[types.RequestT] | None,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, typing.Any] = {},
+        ignore_default_headers: bool = False,
+    ) -> types.RequestT | None:
+        """Request.
+
+        Make a http(s) request to the current session
+
+        Parameters
+        ----------
+        method
+            The method to send the request as. `GET`, `POST`, `PATCH`, `DELETE`, `PUT`
+        path
+            The path to the url. e.g. `/v4/info`
+        type
+            The response type you expect.
+        headers
+            The headers you wish to send.
+        json
+            The json data you wish to send.
+        params
+            The parameters you wish to send.
+        ignore_default_headers
+            Whether to ignore the default headers or not.
+
+        Returns
+        -------
+        types.RequestT
+            Your requested type of data.
+
+        Raises
+        ------
+        errors.RestException
+           Raised when the requested type is not returned.
+        """
+        session = self.client._get_client_session()
+
+        new_headers: typing.MutableMapping[str, typing.Any] = typing.MutableMapping()
+
+        if ignore_default_headers:
+            new_headers.update(self.auth_headers)
+
+        new_headers.update(headers)
+
+        try:
+            async with session.request(
+                method, self.base_uri + path, 
+                headers=new_headers,
+                json=json, 
+                params=params
+            ) as response:
+                if response.status >= 400:
+                    raise errors.RestException()
+                
+                if type is None:
+                    return
+                
+                text = await response.text()
+
+                if isinstance(type, typing.Mapping | typing.Sequence):
+                    return type(json_loads(text))
+                
+                elif isinstance(type, str | int | bool | float):
+                    return type(text)
+                
+                
+        except asyncio.TimeoutError:
+            _logger.warning(f"timed out on {str(path)}")
+            raise errors.TimeoutException
+
+        except Exception as e:
+            _logger.warning(f"{e} occurred on {str(path)}")
+            raise errors.RestException
+
     async def _handle_op_code(self, data: str) -> None:
         mapped_data = json_loads(data)
 
@@ -147,112 +233,90 @@ class Session:
         op_code = enums.WebsocketOPCode(mapped_data["op"])
 
         if op_code == enums.WebsocketOPCode.READY:
-            parser = abc_events.Ready._from_payload(data)
-
-            event = events.ReadyEvent(
-                self.app,
-                self.client,
-                self,
-                parser.resumed,
-                parser.session_id,
-            )
+            parser = self.client.entity_builder.build_ready_event(mapped_data)
+            event = self.client.event_builder.build_ready_event(parser.resumed, parser.session_id, self)
 
             self._session_id = parser.session_id
 
         elif op_code == enums.WebsocketOPCode.PLAYER_UPDATE:
-            parser = abc_events.PlayerUpdate._from_payload(data)
-
-            event = events.PlayerUpdateEvent(
-                self.app,
-                self.client,
-                self,
+            parser = self.client.entity_builder.build_player_update_event(mapped_data)
+            event = self.client.event_builder.build_player_update_event(
                 parser.guild_id,
                 parser.state,
+                self,
             )
 
         elif op_code == enums.WebsocketOPCode.STATS:
-            parser = statistics.Statistics._from_payload(data)
+            parser = self.client.entity_builder.build_statistics(mapped_data)
 
-            event = events.StatisticsEvent(
-                self.app,
-                self.client,
-                self,
+            event = self.client.event_builder.build_statistics_event(
                 parser.players,
                 parser.playing_players,
                 parser.uptime,
                 parser.memory,
                 parser.cpu,
-                parser.frame_statistics,
+                parser.frame_stats,
+                self,
             )
 
         else:
             event_type = enums.WebsocketEvent(mapped_data["type"])
 
             if event_type == enums.WebsocketEvent.TRACK_START_EVENT:
-                parser = abc_events.TrackStart._from_payload(data)
+                parser = self.client.entity_builder.build_track_start_event(mapped_data)
 
-                event = events.TrackStartEvent(
-                    self.app,
-                    self.client,
-                    self,
+                event = self.client.event_builder.build_track_start_event(
                     parser.guild_id,
                     parser.track,
+                    self,
                 )
 
             elif event_type == enums.WebsocketEvent.TRACK_END_EVENT:
-                parser = abc_events.TrackEnd._from_payload(data)
+                parser = self.client.entity_builder.build_track_end_event(mapped_data)
 
-                event = events.TrackEndEvent(
-                    self.app,
-                    self.client,
-                    self,
+                event = self.client.event_builder.build_track_end_event(
                     parser.guild_id,
                     parser.track,
                     parser.reason,
+                    self,
                 )
 
             elif event_type == enums.WebsocketEvent.TRACK_EXCEPTION_EVENT:
-                parser = abc_events.TrackException._from_payload(data)
+                parser = self.client.entity_builder.build_track_exception_event(mapped_data)
 
-                event = events.TrackExceptionEvent(
-                    self.app,
-                    self.client,
-                    self,
+                event = self.client.event_builder.build_track_exception_event(
                     parser.guild_id,
                     parser.track,
                     parser.exception,
+                    self,
                 )
 
             elif event_type == enums.WebsocketEvent.TRACK_STUCK_EVENT:
-                parser = abc_events.TrackStuck._from_payload(data)
+                parser = self.client.entity_builder.build_track_stuck_event(mapped_data)
 
-                event = events.TrackStuckEvent(
-                    self.app,
-                    self.client,
-                    self,
+                event = self.client.event_builder.build_track_stuck_event(
                     parser.guild_id,
                     parser.track,
                     parser.threshold_ms,
+                    self,
                 )
 
             else:
-                parser = abc_events.WebsocketClosed._from_payload(data)
+                parser = self.client.entity_builder.build_websocket_closed_event(mapped_data)
 
-                event = events.WebsocketClosedEvent(
-                    self.app,
-                    self.client,
-                    self,
+                event = self.client.event_builder.build_websocket_closed_event(
                     parser.guild_id,
                     parser.code,
                     parser.reason,
                     parser.by_remote,
+                    self,
                 )
 
         self.app.dispatch(event)
 
     async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
         if msg.type == aiohttp.WSMsgType.TEXT:
-            event = events.PayloadEvent(self.app, self.client, self, msg.data)
+            event = self.client.event_builder.build_payload_event(msg.data, self)
             self.app.dispatch(event)
 
             await self._handle_op_code(msg.data)
@@ -288,13 +352,15 @@ class Session:
 
             raise errors.SessionStartException
 
-        headers: typing.MutableMapping[str, typing.Any] = {
-            "Authorization": self.password,
-            "User-Id": str(int(bot.id)),
-            "Client-Name": f"{bot.global_name if bot.global_name else 'invalid'}/{__version__}",
-        }
+        
 
-        self._base_headers = headers
+        self._websocket_headers = {"User-Id": str(int(bot.id)), "Client-Name": f"{bot.global_name if bot.global_name else 'unknown'}/{__version__}"}
+
+        new_headers: typing.MutableMapping[str, typing.Any] = {}
+
+        new_headers.update(self._websocket_headers)
+
+        new_headers.update(self.auth_headers)
 
         while self._remaining_attempts >= 1:
             if self._remaining_attempts != self._attempts:
@@ -304,7 +370,7 @@ class Session:
                 async with self.client._get_client_session() as session:
                     async with session.ws_connect(
                         self.base_uri + "/v4/websocket",
-                        headers=headers,
+                        headers=new_headers,
                         autoclose=False,
                     ) as ws:
                         self._status = enums.SessionStatus.CONNECTED

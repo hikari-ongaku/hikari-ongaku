@@ -9,19 +9,18 @@ from __future__ import annotations
 import typing
 
 import hikari
-import msgspec
-
-from ongaku.abc.bases import PayloadBase
+import datetime
+import attrs
 from ongaku.abc.track import Track
 
 __all__ = (
-    "PlayerState",
-    "PlayerVoice",
+    "State",
+    "Voice",
     "Player",
 )
 
-
-class PlayerState(PayloadBase):
+@attrs.define
+class State:
     """
     Players State.
 
@@ -30,17 +29,34 @@ class PlayerState(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-state)
     """
 
-    time: int
-    """Unix timestamp in milliseconds."""
-    position: int
-    """The position of the track in milliseconds."""
-    connected: bool
-    """Whether Lavalink is connected to the voice gateway."""
-    ping: int
-    """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
+    _time: datetime.datetime = attrs.field(alias="time")
+    _position: int = attrs.field(alias="position")
+    _connection: bool = attrs.field(alias="connection")
+    _ping: int = attrs.field(alias="ping")
+
+    @property
+    def time(self) -> datetime.datetime:
+        """Unix timestamp in milliseconds."""
+        return self._time
+    
+    @property
+    def position(self) -> int:
+        """The position of the track in milliseconds."""
+        return self._position
+    
+    @property
+    def connected(self) -> bool:
+        """Whether Lavalink is connected to the voice gateway."""
+        return self._connection
+
+    @property
+    def ping(self) -> int:
+        """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
+        return self._ping
 
 
-class PlayerVoice(PayloadBase):
+@attrs.define
+class Voice:
     """
     Players Voice state.
 
@@ -49,15 +65,28 @@ class PlayerVoice(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#voice-state)
     """
 
-    token: str
-    """The Discord voice token to authenticate with."""
-    endpoint: str
-    """The Discord voice endpoint to connect to."""
-    session_id: str = msgspec.field(name="sessionId")
-    """The Discord voice session id to authenticate with."""
+    _token: str = attrs.field(alias="token")
+    _endpoint: str = attrs.field(alias="endpoint")
+    _session_id: str = attrs.field(alias="session_id")
 
+    @property
+    def token(self) -> str:
+        """The Discord voice token to authenticate with."""
+        return self._token
 
-class Player(PayloadBase):
+    @property
+    def endpoint(self) -> str:
+        """The Discord voice endpoint to connect to."""
+        return self._endpoint
+
+    @property
+    def session_id(self) -> str:
+        """The Discord voice session id to authenticate with."""
+        return self._session_id
+    
+
+@attrs.define
+class Player:
     """
     Player information.
 
@@ -66,20 +95,53 @@ class Player(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
-    guild_id: hikari.Snowflake = msgspec.field(name="guildId")
-    """The guild id this player is currently in."""
-    track: Track | None
-    """The track the player is currently playing. None means its not currently playing any track."""
-    volume: int
-    """The volume of the player."""
-    is_paused: bool = msgspec.field(name="paused")
-    """Whether the player is paused or not."""
-    state: PlayerState
-    """The [PlayerState][ongaku.abc.player.PlayerState] object."""
-    voice: PlayerVoice
-    """the [PlayerVoice][ongaku.abc.player.PlayerVoice] object."""
-    filters: dict[typing.Any, typing.Any]
-    """The filter object."""
+    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
+    _track: Track | None = attrs.field(alias="track")
+    _volume: int = attrs.field(alias="volume")
+    _is_paused: bool = attrs.field(alias="is_paused")
+    _state: State = attrs.field(alias="state")
+    _voice: Voice = attrs.field(alias="voice")
+    _filters: typing.Mapping[str, typing.Any] = attrs.field(alias="filters")
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild id this player is attached too."""
+        return self._guild_id
+    
+    @property
+    def track(self) -> Track | None:
+        """The track the player is currently playing.
+        
+        !!! note
+            If the track is `None` then there is no current track playing.
+        """
+        return self._track
+    
+    @property
+    def volume(self) -> int:
+        """The volume of the player."""
+        return self._volume
+    
+    @property
+    def is_paused(self) -> bool:
+        """Whether the player is paused or not."""
+        return self._is_paused
+
+    @property
+    def state(self) -> State:
+        """The [PlayerState][ongaku.abc.player.PlayerState] object."""
+        return self._state
+
+    @property
+    def voice(self) -> Voice:
+        """The [PlayerVoice][ongaku.abc.player.Voice] object."""
+        return self._voice
+
+    @property
+    def filters(self) -> typing.Mapping[str, typing.Any]:
+        """The filter object."""
+        return self._filters
+        # FIXME: This should return a filter object. (or at least  try to parse one.)
 
 
 # MIT License

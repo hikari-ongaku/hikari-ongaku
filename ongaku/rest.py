@@ -6,25 +6,20 @@ All REST based actions, happen in here.
 
 from __future__ import annotations
 
-import asyncio
 import typing
 
 import hikari
 
 from ongaku import errors
-from ongaku.abc.error import ExceptionError
-from ongaku.abc.error import RestError
 from ongaku.abc.info import Info
 from ongaku.abc.player import Player
-from ongaku.abc.player import PlayerVoice
+from ongaku.abc.player import Voice
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.route_planner import RoutePlannerStatus
 from ongaku.abc.session import Session as ABCSession
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.internal import routes
-from ongaku.internal.converters import json_dumps
-from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
@@ -32,7 +27,6 @@ _logger = logger.getChild("rest")
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
-    from ongaku.internal.types import RESTClientT
 
 
 __all__ = ("RESTClient",)
@@ -94,13 +88,21 @@ class RESTClient:
         """
         route = routes.GET_LOAD_TRACKS
 
-        params = {"identifier": query}
-
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(route.build(), dict, params=params)
+        session = self._client._session_handler.fetch_session()
 
-        load_type: str = resp["loadType"]
+        response = await session.request(
+            route.method,
+            route.path,
+            typing.Mapping,
+            params={"identifier": query}
+        )
+
+        if response is None:
+            raise ValueError("Response is required for this request.")
+
+        load_type: str = response["loadType"]
 
         if load_type == "empty":
             _logger.log(TRACE_LEVEL, f"loadType is empty.")
@@ -108,30 +110,29 @@ class RESTClient:
 
         elif load_type == "error":
             _logger.log(TRACE_LEVEL, f"loadType caused an error.")
+            
             raise errors.RestTrackException(
-                ExceptionError._from_payload(json_dumps(resp["data"]))
+                self._client.entity_builder.build_exception_error(response)
             )
 
         elif load_type == "search":
             _logger.log(TRACE_LEVEL, f"loadType was a search result.")
             tracks: typing.Sequence[Track] = []
-            for trk in resp["data"]:
+            for track in response["data"]:
                 try:
-                    track = Track._from_payload(json_dumps(trk))
+                    tracks.append(self._client.entity_builder.build_track(track))
                 except Exception as e:
                     raise errors.BuildException(str(e))
-                else:
-                    tracks.append(track)
 
             build = tracks
 
         elif load_type == "track":
             _logger.log(TRACE_LEVEL, f"loadType was a track link.")
-            build = Track._from_payload(json_dumps(resp["data"]))
+            build = self._client.entity_builder.build_track(response["data"])
 
         elif load_type == "playlist":
             _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
-            build = Playlist._from_payload(json_dumps(resp["data"]))
+            build = self._client.entity_builder.build_playlist(response["data"])
 
         else:
             raise errors.BuildException(
@@ -177,13 +178,21 @@ class RESTClient:
         """
         route = routes.GET_DECODE_TRACK
 
-        params = {"encoded_track": track}
+        _logger.log(TRACE_LEVEL, str(route))
 
-        _logger.log(TRACE_LEVEL, f"running GET /decodetrack with params: {params}")
+        session = self._client._session_handler.fetch_session()
 
-        resp = await self._handle_request(route.build(), Track, params=params)
+        response = await session.request(
+            route.method,
+            route.path,
+            typing.Mapping,
+            params={"encoded_track": track}
+        )
 
-        return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
+
+        return self._client.entity_builder.build_track(response)
 
     async def decode_many_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
         """
@@ -224,17 +233,25 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            Track,
-            json=[*tracks],
-            sequence=True,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            typing.Sequence,
+            headers={"Content-Type": "application/json"},
+            json=tracks
         )
+        
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        if resp:
-            return resp
+        new_tracks: list[Track] = []
 
-        raise TypeError("decode_many requires an object to be returned.")
+        for track in response:
+            new_tracks.append(self._client.entity_builder.build_track(track))
+
+        return new_tracks
 
     async def fetch_players(self, session_id: str) -> typing.Sequence[Player]:
         """
@@ -276,20 +293,27 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build({"session_id": session_id}),
-            Player,
-            sequence=True,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path.format({"session_id":session_id}),
+            typing.Sequence,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("fetch_all requires an object to be returned.")
+        players: list[Player] = []
+
+        for player in response:
+            players.append(self._client.entity_builder.build_player(player))
+
+        return players
 
     async def fetch_player(
         self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
-    ) -> Player | None:
+    ) -> Player:
         """
         Fetch a player.
 
@@ -330,17 +354,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
-            Player,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path.format({"session_id":session_id, "guild_id":hikari.Snowflake(guild)}),
+            typing.Mapping,
         )
+        
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        if resp:
-            return resp
-
-        raise TypeError("fetch update requires an object to be returned.")
+        return self._client.entity_builder.build_player(response)
 
     async def update_player(
         self,
@@ -352,7 +377,7 @@ class RESTClient:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
+        voice: hikari.UndefinedOr[Voice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> Player:
         """
@@ -463,11 +488,6 @@ class RESTClient:
                 }
             )
 
-        params = {"noReplace": "false"}
-
-        if no_replace:
-            params.update({"noReplace": "true"})
-
         route = routes.PATCH_PLAYER_UPDATE
 
         _logger.log(
@@ -475,20 +495,21 @@ class RESTClient:
             str(route),
         )
 
-        resp = await self._handle_request(
-            route.build(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
-            Player,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path.format({"session_id":session_id, "guild_id":hikari.Snowflake(guild)}),
+            typing.Mapping,
             headers={"Content-Type": "application/json"},
             json=patch_data,
-            params=params,
+            params={"noReplace": "true" if no_replace else "false"},
         )
+        
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        if resp:
-            return resp
-
-        raise TypeError("fetch update requires an object to be returned.")
+        return self._client.entity_builder.build_player(response)
 
     async def delete_player(
         self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
@@ -522,14 +543,15 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        await self._handle_request(
-            route.build(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
+        session = self._client._session_handler.fetch_session()
+
+        await session.request(
+            route.method,
+            route.path.format({"session_id":session_id, "guild_id":hikari.Snowflake(guild)}),
             None,
         )
 
-    async def update_session(self, session_id: str) -> ABCSession:
+    async def update_session(self, session_id: str, resuming: hikari.UndefinedOr[bool], timeout: hikari.UndefinedOr[int]) -> ABCSession:
         """
         Update Lavalink session.
 
@@ -547,6 +569,10 @@ class RESTClient:
         ----------
         session_id
             The session you wish to update.
+        resuming
+            Whether resuming is enabled for this session or not.
+        timeout
+            The timeout in seconds (default is 60s).
 
         Raises
         ------
@@ -566,15 +592,28 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build({"session_id": session_id}),
-            ABCSession,
+        session = self._client._session_handler.fetch_session()
+
+        data: typing.MutableMapping[str, typing.Any] = {}
+
+        if resuming != hikari.UNDEFINED:
+            data.update({"resuming": resuming})
+
+        if timeout != hikari.UNDEFINED:
+            data.update({"timeout": timeout})
+
+        response = await session.request(
+            route.method,
+            route.path.format({"session_id":session_id}),
+            typing.Mapping,
+            headers={"Content-Type": "application/json"},
+            json=data,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("Session update requires an object to be returned.")
+        return self._client.entity_builder.build_session(response)
 
     async def fetch_info(self) -> Info:
         """
@@ -610,15 +649,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            Info,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            typing.Mapping,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("Session update requires an object to be returned.")
+        return self._client.entity_builder.build_info(response)
 
     async def fetch_version(self) -> str:
         """
@@ -654,15 +696,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
             str,
         )
 
-        if resp:
-            return resp
-
-        raise TypeError("Session update requires an object to be returned.")
+        if response is None:
+            raise ValueError("Response is required for this request.")
+        
+        return response
 
     async def fetch_stats(self) -> Statistics:
         """
@@ -703,15 +748,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            Statistics,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            typing.Mapping,
         )
 
-        if resp:
-            return resp
-
-        raise TypeError("Session update requires an object to be returned.")
+        if response is None:
+            raise ValueError("Response is required for this request.")
+        
+        return self._client.entity_builder.build_statistics(response)
 
     async def fetch_routeplanner_status(self) -> RoutePlannerStatus:
         """
@@ -749,12 +797,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            RoutePlannerStatus,
+        session = self._client._session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            typing.Mapping,
         )
 
-        return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
+        
+        return self._client.entity_builder.build_routeplanner_status(response)
 
     async def update_routeplanner_address(self, address: str) -> None:
         """
@@ -790,10 +844,12 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        await self._handle_request(
-            route.build(),
+        session = self._client._session_handler.fetch_session()
+
+        await session.request(
+            route.method,
+            route.path,
             None,
-            json={"address": address},
         )
 
     async def update_all_routeplanner_addresses(self) -> None:
@@ -819,155 +875,13 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        await self._handle_request(
-            route.build(),
+        session = self._client._session_handler.fetch_session()
+
+        await session.request(
+            route.method,
+            route.path,
             None,
         )
-
-    @typing.overload
-    async def _handle_request(
-        self,
-        route: routes.Route,
-        return_type: typing.Type[RESTClientT] | None,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
-        sequence: typing.Literal[False] = False,
-    ) -> RESTClientT: ...
-
-    @typing.overload
-    async def _handle_request(
-        self,
-        route: routes.Route,
-        return_type: typing.Type[RESTClientT] | None,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
-        sequence: typing.Literal[True] = True,
-    ) -> typing.Sequence[RESTClientT]: ...
-
-    async def _handle_request(
-        self,
-        route: routes.Route,
-        return_type: typing.Type[RESTClientT] | None,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
-        sequence: bool = False,
-    ) -> RESTClientT | typing.Sequence[RESTClientT] | None:
-        """Handle rest request.
-
-        Parameters
-        ----------
-        route
-            The route you wish to query.
-        return_type
-            The type that this function should return.
-        headers
-            The headers to attach to this request.
-        json
-            The json data to send to this request.
-        params
-            The parameters to add to this request.
-        sequence
-            Whether or not the return type is a list of return type, or just one.
-
-        Returns
-        -------
-        RESTClientT | typing.Sequence[RESTClientT] | None
-            the return type you requested.
-
-        Raises
-        ------
-        RestEmptyException
-            Raised when a return type was requested, yet nothing was received.
-        RestStatusException
-            Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
-            Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
-            Raised when a construction of a ABC class fails.
-        """
-        session = self._client._get_client_session()
-
-        current_session = self._client._session_handler.fetch_session()
-
-        new_headers: typing.MutableMapping[str, typing.Any] = dict(
-            current_session._base_headers
-        )
-
-        new_headers.update(headers)
-
-        try:
-            async with session.request(
-                route.route.method,
-                route.build_url(current_session.base_uri),
-                headers=new_headers,
-                json=json,
-                params=params,
-            ) as response:
-                _logger.log(
-                    TRACE_LEVEL,
-                    f"Received code: {response.status} with response {await response.text()} on url {response.url}",
-                )
-                if response.status == 204 and return_type:
-                    raise errors.RestEmptyException
-
-                if response.status >= 400:
-                    try:
-                        payload = await response.text()
-                    except Exception:
-                        raise errors.RestStatusException(
-                            response.status, response.reason
-                        )
-                    else:
-                        raise errors.RestErrorException(
-                            RestError._from_payload(payload)
-                        )
-
-                if not return_type:
-                    return
-
-                try:
-                    payload = await response.text()
-                except Exception:
-                    raise errors.RestEmptyException
-
-                if issubclass(return_type, str):
-                    return return_type(payload)
-
-                if issubclass(return_type, dict):
-                    return return_type(json_loads(payload))
-
-                if sequence:
-                    model_seq: list[typing.Any] = []
-                    for item in payload:
-                        try:
-                            model = return_type._from_payload(item)
-                        except Exception as e:
-                            raise errors.BuildException(str(e))
-                        else:
-                            model_seq.append(model)
-
-                    return model_seq
-                else:
-                    try:
-                        model = return_type._from_payload(payload)
-                    except Exception as e:
-                        raise errors.BuildException(str(e))
-                    else:
-                        return model
-        except asyncio.TimeoutError:
-            _logger.warning(f"timed out on {str(route)}")
-            raise errors.TimeoutException
-
-        except Exception as e:
-            _logger.warning(f"{e} occurred on {str(route)}")
-            raise errors.RestException
-
 
 # MIT License
 

@@ -6,6 +6,7 @@ The player function, for all player related things.
 
 from __future__ import annotations
 
+import datetime
 import random
 import typing as t
 from asyncio import TimeoutError
@@ -14,18 +15,16 @@ from asyncio import gather
 import hikari
 
 from ongaku import errors
-from ongaku.abc.player import PlayerVoice
+from ongaku.abc.player import Voice
 from ongaku.abc.track import Track
 from ongaku.enums import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
-from ongaku.events import QueueEmptyEvent
-from ongaku.events import QueueNextEvent
 from ongaku.events import TrackEndEvent
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
+from ongaku.abc import player as player_
 
 if t.TYPE_CHECKING:
-    from ongaku.abc.player import Player as ABCPlayer
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -34,7 +33,7 @@ _logger = logger.getChild("player")
 __all__ = ("Player",)
 
 
-class Player:
+class Player(player_.Player):
     """
     Base player.
 
@@ -53,20 +52,19 @@ class Player:
         session: Session,
         guild: hikari.SnowflakeishOr[hikari.Guild],
     ):
+        state = player_.State(datetime.datetime.fromtimestamp(0), 0, False, -1)
+        voice = player_.Voice("", "", "")
+        super().__init__(hikari.Snowflake(guild), None, -1, True, state, voice, {})
         self._session = session
         self._guild_id = hikari.Snowflake(guild)
         self._channel_id = None
-
         self._is_alive = False
         self._is_paused = True
 
         self._queue: list[Track] = []
-
-        self._voice: PlayerVoice | None = None
+        
 
         self._session_id: str | None = None
-
-        self._connected: bool = False
 
         self._volume: int = -1
 
@@ -109,18 +107,10 @@ class Player:
         return self._channel_id
 
     @property
-    def guild_id(self) -> hikari.Snowflake:
-        """Guild ID.
-
-        The guild id attached to this player.
-        """
-        return self._guild_id
-
-    @property
     def is_alive(self) -> bool:
         """Is alive.
 
-        Whether the bot is alive or not. True if alive.
+        Whether the player is alive and connected to discords websocket.
         """
         return self._is_alive
 
@@ -130,25 +120,7 @@ class Player:
 
         The position of the track in milliseconds.
         """
-        return self._position
-
-    @property
-    def volume(self) -> int:
-        """
-        The volume of the player.
-
-        !!! note
-            If volume is -1, it has either not been updated, or connected to lavalink.
-        """
-        return self._volume
-
-    @property
-    def is_paused(self) -> bool:
-        """Is paused.
-
-        Whether the player is paused or not. True if paused.
-        """
-        return self._is_paused
+        return self.state.position
 
     @property
     def autoplay(self) -> bool:
@@ -162,9 +134,9 @@ class Player:
     def connected(self) -> bool:
         """Connected.
 
-        Whether or not the bot is connected to a voice channel.
+        Whether or not the player is connected to lavalink
         """
-        return self._connected
+        return self.state.connected
 
     @property
     def queue(self) -> t.Sequence[Track]:
@@ -260,7 +232,7 @@ class Player:
             f"Successfully received events for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._voice = PlayerVoice(
+        self._voice = Voice(
             token=server_event.token,
             endpoint=server_event.endpoint,
             session_id=state_event.state.session_id,
@@ -270,7 +242,7 @@ class Player:
             player = await self.session.client.rest.update_player(
                 session,
                 self.guild_id,
-                voice=self._voice,
+                voice=self.voice,
                 no_replace=False,
             )
         except errors.RestEmptyException:
@@ -282,7 +254,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        self._connected = True
+        self._is_alive = True
 
         _logger.log(
             TRACE_LEVEL,
@@ -318,7 +290,6 @@ class Player:
         """
         session = self.session._get_session_id()
 
-        self._is_alive = False
         await self.clear()
 
         _logger.log(
@@ -342,7 +313,7 @@ class Player:
             f"Successfully deleted player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._connected = False
+        self._is_alive = False
 
         _logger.log(
             TRACE_LEVEL,
@@ -401,7 +372,7 @@ class Player:
 
         if track:
             if requestor:
-                track.requestor = hikari.Snowflake(requestor)
+                track._set_requestor = hikari.Snowflake(requestor)
 
             self._queue.insert(0, track)
 
@@ -455,14 +426,14 @@ class Player:
             new_requestor = hikari.Snowflake(requestor)
 
         if isinstance(tracks, Track):
-            if requestor:
-                tracks.requestor = new_requestor
+            if new_requestor:
+                tracks._set_requestor = new_requestor
             self._queue.append(tracks)
             return
 
         for track in tracks:
-            if requestor:
-                track.requestor = new_requestor
+            if new_requestor:
+                track._set_requestor = new_requestor
             self._queue.append(track)
 
     async def pause(self, value: bool | None = None) -> None:
@@ -584,8 +555,8 @@ class Player:
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
-            raise PlayerQueueException(
-                self.guild_id, "Queue must have more than 2 tracks to shuffle."
+            raise errors.PlayerQueueException(
+                "Queue must have more than 2 tracks to shuffle."
             )
 
         new_queue = list(self.queue)
@@ -949,15 +920,19 @@ class Player:
 
         return new_player
 
-    async def _update(self, player: ABCPlayer) -> None:
+    async def _update(self, player: player_.Player) -> None:
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
-
-        self._is_paused = player.is_paused
-        self._voice = player.voice
+        
+        self._track = player._track
         self._volume = player.volume
+        self._is_paused = player.is_paused
+        self._state = player.state
+        self._voice = player.voice
+        self._filters = player.filters
+        
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
@@ -981,13 +956,9 @@ class Player:
             try:
                 await self.remove(0)
             except ValueError:
+                
                 await self.app.dispatch(
-                    QueueEmptyEvent(
-                        self.app,
-                        event.client,
-                        event.session,
-                        self.guild_id,
-                    )
+                    self.session.client.event_builder.build_queue_empty_event(self.guild_id, self.session)
                 )
                 return
 
@@ -997,12 +968,7 @@ class Player:
                     f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
                 )
                 await self.app.dispatch(
-                    QueueEmptyEvent(
-                        self.app,
-                        event.client,
-                        event.session,
-                        self.guild_id,
-                    )
+                    self.session.client.event_builder.build_queue_empty_event(self.guild_id, self.session)
                 )
                 return
 
@@ -1014,13 +980,11 @@ class Player:
             await self.play()
 
             await self.app.dispatch(
-                QueueNextEvent(
-                    self.app,
-                    event.client,
-                    event.session,
+                self.session.client.event_builder.build_queue_next_event(
                     self.guild_id,
                     self._queue[0],
                     event.track,
+                    self.session
                 )
             )
 

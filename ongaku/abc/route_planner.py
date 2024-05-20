@@ -7,10 +7,9 @@ Route planner abstract classes.
 from __future__ import annotations
 
 import typing
+import attrs
+import datetime
 
-import msgspec
-
-from ongaku.abc.bases import PayloadBase
 from ongaku.enums import IPBlockType
 from ongaku.enums import RoutePlannerType
 
@@ -21,22 +20,36 @@ __all__ = (
 )
 
 
-class FailingAddress(PayloadBase):
+@attrs.define
+class FailingAddress:
     """
     Failing address.
 
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
-    failing_address: str = msgspec.field(name="failingAddress")
-    """The failing address."""
-    failing_timestamp: int = msgspec.field(name="failingTimestamp")
-    """The timestamp when the address failed."""
-    failing_time: str = msgspec.field(name="failingTime")
-    """The timestamp when the address failed as a pretty string."""
+    _address: str = attrs.field(alias="address")
+    _timestamp: datetime.datetime = attrs.field(alias="timestamp")
+    _time: str = attrs.field(alias="time")
+
+    @property
+    def address(self) -> str:
+        """The failing address."""
+        return self._address
+
+    @property
+    def timestamp(self) -> datetime.datetime:
+        """The timestamp when the address failed."""
+        return self._timestamp
+
+    @property
+    def time(self) -> str:
+        """The timestamp when the address failed as a pretty string."""
+        return self._time
 
 
-class IPBlock(PayloadBase):
+@attrs.define
+class IPBlock:
     """
     Route Planner IP Block.
 
@@ -45,13 +58,22 @@ class IPBlock(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
     """
 
-    type: IPBlockType
-    """The type of the ip block."""
-    size: str
-    """The size of the ip block."""
+    _type: IPBlockType = attrs.field(alias="type")
+    _size: str = attrs.field(alias="size") 
+
+    @property
+    def type(self) -> IPBlockType:
+        """The type of the ip block."""
+        return self._type
+
+    @property
+    def size(self) -> str:
+        """The size of the ip block."""
+        return self._size
 
 
-class RoutePlannerDetails(PayloadBase):
+@attrs.define
+class RoutePlannerDetails:
     """
     Route Planner details.
 
@@ -60,27 +82,52 @@ class RoutePlannerDetails(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
-    ip_block: IPBlock = msgspec.field(name="ipBlock")
-    """The ip block being used."""
-    failing_addresses: typing.Sequence[FailingAddress] = msgspec.field(
-        name="failingAddresses"
-    )
-    """The failing addresses."""
-    rotate_index: str | None = msgspec.field(default=None, name="rotateIndex")
-    """The number of rotations."""
-    ip_index: str | None = msgspec.field(default=None, name="ipIndex")
-    """The current offset in the block."""
-    current_address: str | None = msgspec.field(default=None, name="currentAddress")
-    """The current address being used."""
-    current_address_index: str | None = msgspec.field(
-        default=None, name="currentAddressIndex"
-    )
-    """The current offset in the ip block."""
-    block_index: str | None = msgspec.field(default=None, name="blockIndex")
-    """The current offset in the ip block."""
+    _ip_block: IPBlock = attrs.field(alias="ip_block")
+    _failing_address: typing.Sequence[FailingAddress] = attrs.field(alias="failing_addresses")
+    _rotate_index: str | None = attrs.field(alias="rotate_index")
+    _ip_index: str | None = attrs.field(alias="ip_index")
+    _current_address: str | None = attrs.field(alias="current_address")
+    _current_address_index: str | None = attrs.field(alias="current_address_index")
+    _block_index: str | None = attrs.field(alias="block_index")
 
 
-class RoutePlannerStatus(PayloadBase):
+    @property
+    def ip_block(self) -> IPBlock:
+        """The ip block being used."""
+        return self._ip_block
+
+    @property
+    def failing_addresses(self) -> typing.Sequence[FailingAddress]:
+        """The failing addresses."""
+        return self._failing_address
+    
+    @property
+    def rotate_index(self) -> str | None:
+        """The number of rotations."""
+        return self._rotate_index
+    
+    @property
+    def ip_index(self) -> str | None:
+        """The current offset in the block."""
+        return self._ip_index
+    
+    @property
+    def current_address(self) -> str | None:
+        """The current address being used."""
+        return self._current_address
+    
+    @property
+    def current_address_index(self) -> str | None:
+        """The current offset in the ip block."""
+        return self._current_address_index
+    
+    @property
+    def block_index(self) -> str | None:
+        """The current offset in the ip block."""
+        return self._block_index
+
+@attrs.define
+class RoutePlannerStatus:
     """
     Route Planner Status Object.
 
@@ -89,10 +136,19 @@ class RoutePlannerStatus(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
-    class_type: RoutePlannerType | None = msgspec.field(default=None, name="class")
-    """The name of the RoutePlanner implementation being used by this server."""
-    details: RoutePlannerDetails | None = msgspec.field(default=None)
-    """The status details of the RoutePlanner."""
+    _cls: RoutePlannerType = attrs.field(alias="cls")
+    _details: RoutePlannerDetails = attrs.field(alias="details")
+
+    @property
+    def cls(self) -> RoutePlannerType:
+        """The name of the RoutePlanner implementation being used by this server."""
+        return self._cls
+
+    @property
+    def details(self) -> RoutePlannerDetails:
+        """The status details of the RoutePlanner."""
+        return self._details
+    
 
 
 # MIT License

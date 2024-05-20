@@ -13,6 +13,7 @@ import hikari
 
 from ongaku import enums
 from ongaku import errors
+from ongaku.builders import EntityBuilder, EventBuilder
 from ongaku.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
 from ongaku.rest import RESTClient
@@ -70,6 +71,10 @@ class Client:
 
         self._session_handler = session_handler(self)
 
+        self._entity_builder = EntityBuilder()
+
+        self._event_builder = EventBuilder()
+
         app.subscribe(hikari.StartedEvent, self._start_event)
         app.subscribe(hikari.StoppingEvent, self._stop_event)
 
@@ -92,6 +97,16 @@ class Client:
             If the hikari.StartedEvent has already happened, and this is False, ongaku is no longer running and has crashed. Check your logs.
         """
         return self._session_handler.is_alive
+
+    @property
+    def entity_builder(self) -> EntityBuilder:
+        """The entity builder."""
+        return self._entity_builder
+    
+    @property
+    def event_builder(self) -> EventBuilder:
+        """The event builder."""
+        return self._event_builder
 
     def _get_client_session(self) -> aiohttp.ClientSession:
         if not self._client_session:

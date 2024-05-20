@@ -6,21 +6,20 @@ The info abstract classes.
 
 from __future__ import annotations
 
+import datetime
 import typing
-
-import msgspec
-
-from ongaku.abc.bases import PayloadBase
+import attrs
 
 __all__ = (
-    "InfoVersion",
-    "InfoGit",
-    "InfoPlugin",
+    "Version",
+    "Git",
+    "Plugin",
     "Info",
 )
 
 
-class InfoVersion(PayloadBase):
+@attrs.define
+class Version:
     """
     Version information.
 
@@ -29,21 +28,46 @@ class InfoVersion(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#version-object)
     """
 
-    semver: str
-    """The full version string of this Lavalink server."""
-    major: int
-    """The major version of this Lavalink server."""
-    minor: int
-    """The minor version of this Lavalink server."""
-    patch: int
-    """The patch version of this Lavalink server."""
-    pre_release: str = msgspec.field(name="preRelease")
-    """The pre-release version according to semver as a `.` separated list of identifiers."""
-    build: str | None = msgspec.field(default=None)
-    """The build metadata according to semver as a `.` separated list of identifiers."""
+    _semver: str = attrs.field(alias="semver")
+    _major: int = attrs.field(alias="major")
+    _minor: int = attrs.field(alias="minor")
+    _patch: int = attrs.field(alias="patch")
+    _pre_release: str = attrs.field(alias="pre_release")
+    _build: str | None = attrs.field(alias="build")
+
+    @property
+    def semver(self) -> str:
+        """The full version string of this Lavalink server."""
+        return self._semver
+
+    @property
+    def major(self) -> int:
+        """The major version of this Lavalink server."""
+        return self._major
+
+    @property
+    def minor(self) -> int:
+        """The minor version of this Lavalink server."""
+        return self._minor
+
+    @property
+    def patch(self) -> int:
+        """The patch version of this Lavalink server."""
+        return self._patch
+
+    @property
+    def pre_release(self) -> str:
+        """The pre-release version according to semver as a `.` separated list of identifiers."""
+        return self._pre_release
+
+    @property
+    def build(self) -> str | None:
+        """The build metadata according to semver as a `.` separated list of identifiers."""
+        return self._build
 
 
-class InfoGit(PayloadBase):
+@attrs.define
+class Git:
     """
     Git information.
 
@@ -52,15 +76,28 @@ class InfoGit(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#git-object)
     """
 
-    branch: str
-    """The branch this Lavalink server was built on."""
-    commit: str
-    """The commit this Lavalink server was built on."""
-    commit_time: int = msgspec.field(name="commitTime")
-    """The millisecond unix timestamp for when the commit was created."""
+    _branch: str = attrs.field(alias="branch")
+    _commit: str = attrs.field(alias="commit")
+    _commit_time: datetime.datetime = attrs.field(alias="commit_time")
+
+    @property
+    def branch(self) -> str:
+        """The branch this Lavalink server was built on."""
+        return self._branch
+
+    @property
+    def commit(self) -> str:
+        """The commit this Lavalink server was built on."""
+        return self._commit
+
+    @property
+    def commit_time(self) -> datetime.datetime:
+        """The millisecond unix timestamp for when the commit was created."""
+        return self._commit_time
 
 
-class InfoPlugin(PayloadBase):
+@attrs.define
+class Plugin:
     """
     Plugin information.
 
@@ -69,13 +106,22 @@ class InfoPlugin(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#plugin-object)
     """
 
-    name: str
-    """The name of the plugin."""
-    version: str
-    """The version of the plugin."""
+    _name: str = attrs.field(alias="name")
+    _version: str = attrs.field(alias="version")
+
+    @property
+    def name(self) -> str:
+        """The name of the plugin."""
+        return self._name
+
+    @property
+    def version(self) -> str:
+        """The version of the plugin."""
+        return self._version
 
 
-class Info(PayloadBase):
+@attrs.define
+class Info:
     """
     Information.
 
@@ -84,22 +130,55 @@ class Info(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#info-response)
     """
 
-    version: InfoVersion
-    """The version of this Lavalink server."""
-    build_time: int = msgspec.field(name="buildTime")
-    """The millisecond unix timestamp when this Lavalink jar was built."""
-    git: InfoGit
-    """The git information of this Lavalink server."""
-    jvm: str
-    """The JVM version this Lavalink server runs on."""
-    lavaplayer: str
-    """The Lavaplayer version being used by this server."""
-    source_managers: typing.Sequence[str] = msgspec.field(name="sourceManagers")
-    """The enabled source managers for this server."""
-    filters: typing.Sequence[str]
-    """The enabled filters for this server."""
-    plugins: typing.Sequence[InfoPlugin]
-    """The enabled plugins for this server."""
+    _version: Version = attrs.field(alias="version")
+    _build_time: datetime.datetime = attrs.field(alias="build_time")
+    _git: Git = attrs.field(alias="git")
+    _jvm: str = attrs.field(alias="jvm")
+    _lavaplayer: str = attrs.field(alias="lavaplayer")
+    _source_managers: typing.Sequence[str] = attrs.field(alias="source_managers")
+    _filters: typing.Sequence[str] = attrs.field(alias="filters")
+    _plugins: typing.Sequence[Plugin] = attrs.field(alias="plugins")
+
+    @property
+    def version(self) -> Version:
+        """The version of this Lavalink server."""
+        return self._version
+
+    @property
+    def build_time(self) -> datetime.datetime:
+        """The millisecond unix timestamp when this Lavalink jar was built."""
+        return self._build_time
+    
+    @property
+    def git(self) -> Git:
+        """The git information of this Lavalink server."""
+        return self._git
+
+    @property
+    def jvm(self) -> str:
+        """The JVM version this Lavalink server runs on."""
+        return self._jvm
+    
+    @property
+    def lavaplayer(self) -> str:
+        """The Lavaplayer version being used by this server."""
+        return self._lavaplayer
+
+    @property
+    def source_managers(self) -> typing.Sequence[str]:
+        """The enabled source managers for this server."""
+        return self._source_managers
+
+    @property
+    def filters(self) -> typing.Sequence[str]:
+        """The enabled filters for this server."""
+        return self._filters
+
+    @property
+    def plugins(self) -> typing.Sequence[Plugin]:
+        """The enabled plugins for this server."""
+        return self._plugins
+    
 
 
 # MIT License

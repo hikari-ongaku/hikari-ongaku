@@ -10,16 +10,11 @@ import typing
 
 import attrs
 import hikari
+from ongaku.abc import events as events_
+from ongaku.abc import statistics as stats_
 
 if typing.TYPE_CHECKING:
-    from ongaku.abc.error import ExceptionError
-    from ongaku.abc.player import PlayerState
-    from ongaku.abc.statistics import StatsCpu
-    from ongaku.abc.statistics import StatsFrameStatistics
-    from ongaku.abc.statistics import StatsMemory
-    from ongaku.abc.track import Track
     from ongaku.client import Client
-    from ongaku.enums import TrackEndReasonType
     from ongaku.session import Session
 
 __all__ = (
@@ -38,13 +33,12 @@ __all__ = (
 )
 
 
-@attrs.define
 class OngakuEvent(hikari.Event):
     """The base ongaku event, that all events subclass."""
 
-    _app: hikari.RESTAware
-    _client: Client
-    _session: Session
+    _app: hikari.RESTAware = attrs.field(alias="app")
+    _client: Client = attrs.field(alias="client")
+    _session: Session = attrs.field(alias="session")
 
     @property
     def app(self) -> hikari.RESTAware:
@@ -75,7 +69,7 @@ class PayloadEvent(OngakuEvent):
 
 
 @attrs.define
-class ReadyEvent(OngakuEvent):
+class ReadyEvent(OngakuEvent, events_.Ready):
     """
     Ready Event.
 
@@ -84,14 +78,9 @@ class ReadyEvent(OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#ready-op)
     """
 
-    resumed: bool
-    """Whether the session has been resumed, or is a new session."""
-    session_id: str
-    """The lavalink session id, for the current session."""
-
 
 @attrs.define
-class PlayerUpdateEvent(OngakuEvent):
+class PlayerUpdateEvent(OngakuEvent, events_.PlayerUpdate):
     """
     Player Update Event.
 
@@ -100,14 +89,9 @@ class PlayerUpdateEvent(OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-update-op)
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    state: PlayerState
-    """The player state."""
-
 
 @attrs.define
-class StatisticsEvent(OngakuEvent):
+class StatisticsEvent(OngakuEvent, stats_.Statistics):
     """
     Statistics Event.
 
@@ -116,22 +100,9 @@ class StatisticsEvent(OngakuEvent):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#stats-op)
     """
 
-    players: int
-    """The amount of players connected to the session."""
-    playing_players: int
-    """The amount of players playing a track."""
-    uptime: int
-    """The uptime of the session in milliseconds."""
-    memory: StatsMemory
-    """The memory stats of the session."""
-    cpu: StatsCpu
-    """The cpu stats of the session."""
-    frame_statistics: StatsFrameStatistics | None
-    """The frame stats of the session."""
-
 
 @attrs.define
-class WebsocketClosedEvent(OngakuEvent):
+class WebsocketClosedEvent(OngakuEvent, events_.WebsocketClosed):
     """
     Websocket Closed Event.
 
@@ -140,18 +111,9 @@ class WebsocketClosedEvent(OngakuEvent):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    code: int
-    """The discord error code that [discord](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes) responded with."""
-    reason: str
-    """The close reason."""
-    by_remote: bool
-    """Whether the connection was closed by Discord."""
-
 
 @attrs.define
-class TrackStartEvent(OngakuEvent):
+class TrackStartEvent(OngakuEvent, events_.TrackStart):
     """
     Track start event.
 
@@ -160,14 +122,9 @@ class TrackStartEvent(OngakuEvent):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-
 
 @attrs.define
-class TrackEndEvent(OngakuEvent):
+class TrackEndEvent(OngakuEvent, events_.TrackEnd):
     """
     Track end event.
 
@@ -176,16 +133,9 @@ class TrackEndEvent(OngakuEvent):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-    reason: TrackEndReasonType
-    """The reason for the track ending."""
-
 
 @attrs.define
-class TrackExceptionEvent(OngakuEvent):
+class TrackExceptionEvent(OngakuEvent, events_.TrackException):
     """
     Track exception event.
 
@@ -194,16 +144,9 @@ class TrackExceptionEvent(OngakuEvent):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-    exception: ExceptionError
-    """The exception error that was returned."""
-
 
 @attrs.define
-class TrackStuckEvent(OngakuEvent):
+class TrackStuckEvent(OngakuEvent, events_.TrackStuck):
     """
     Track stuck event.
 
@@ -212,40 +155,23 @@ class TrackStuckEvent(OngakuEvent):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    track: Track
-    """The track related to this event."""
-    threshold_ms: int
-    """The threshold in milliseconds that was exceeded."""
-
 
 @attrs.define
-class QueueEmptyEvent(OngakuEvent):
+class QueueEmptyEvent(OngakuEvent, events_.QueueEmpty):
     """
     Queue empty event.
 
     The event that is dispatched, when a players queue is empty.
     """
 
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-
 
 @attrs.define
-class QueueNextEvent(OngakuEvent):
+class QueueNextEvent(OngakuEvent, events_.QueueNext):
     """
     Queue next event.
 
     The event that is dispatched when a queue is playing the next song.
     """
-
-    guild_id: hikari.Snowflake
-    """The guild related to this event."""
-    track: Track
-    """The track that is now playing."""
-    old_track: Track
-    """The track that was playing."""
 
 
 # MIT License

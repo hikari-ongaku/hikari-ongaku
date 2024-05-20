@@ -16,12 +16,12 @@ from ongaku.abc.events import TrackStart
 from ongaku.abc.events import TrackStuck
 from ongaku.abc.events import WebsocketClosed
 from ongaku.abc.info import Info
-from ongaku.abc.info import InfoGit
-from ongaku.abc.info import InfoPlugin
-from ongaku.abc.info import InfoVersion
+from ongaku.abc.info import Git
+from ongaku.abc.info import Plugin
+from ongaku.abc.info import Version
 from ongaku.abc.player import Player
-from ongaku.abc.player import PlayerState
-from ongaku.abc.player import PlayerVoice
+from ongaku.abc.player import State
+from ongaku.abc.player import Voice
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.playlist import PlaylistInfo
 from ongaku.abc.route_planner import FailingAddress
@@ -30,9 +30,9 @@ from ongaku.abc.route_planner import RoutePlannerDetails
 from ongaku.abc.route_planner import RoutePlannerStatus
 from ongaku.abc.session import Session
 from ongaku.abc.statistics import Statistics
-from ongaku.abc.statistics import StatsCpu
-from ongaku.abc.statistics import StatsFrameStatistics
-from ongaku.abc.statistics import StatsMemory
+from ongaku.abc.statistics import Cpu
+from ongaku.abc.statistics import FrameStatistics
+from ongaku.abc.statistics import Memory
 from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 
@@ -46,15 +46,15 @@ __all__ = (
     "TrackException",
     "TrackStuck",
     # .lavalink
-    "InfoVersion",
-    "InfoGit",
-    "InfoPlugin",
+    "Version",
+    "Git",
+    "Plugin",
     "Info",
     "RestError",
     "ExceptionError",
     # .player
-    "PlayerState",
-    "PlayerVoice",
+    "State",
+    "Voice",
     "Player",
     # .route_planner
     "IPBlock",
@@ -71,9 +71,9 @@ __all__ = (
     "Playlist",
     # .statistics
     "Statistics",
-    "StatsMemory",
-    "StatsCpu",
-    "StatsFrameStatistics",
+    "Memory",
+    "Cpu",
+    "FrameStatistics",
 )
 
 
