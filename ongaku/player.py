@@ -72,8 +72,8 @@ class Player(player_.Player):
 
         self._position: int = 0
 
-        self.app.subscribe(TrackEndEvent, self._track_end_event)
-        self.app.subscribe(PlayerUpdateEvent, self._player_update)
+        self.app.event_manager.subscribe(TrackEndEvent, self._track_end_event)
+        self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update)
 
     @property
     def session(self) -> Session:
@@ -84,7 +84,7 @@ class Player(player_.Player):
         return self._session
 
     @property
-    def app(self) -> hikari.GatewayBot:
+    def app(self) -> hikari.GatewayBotAware:
         """Application.
 
         The application attached to this player.
@@ -208,11 +208,11 @@ class Player(player_.Player):
 
         try:
             state_event, server_event = await gather(
-                self.app.wait_for(
+                self.app.event_manager.wait_for(
                     hikari.VoiceStateUpdateEvent,
                     timeout=5,
                 ),
-                self.app.wait_for(
+                self.app.event_manager.wait_for(
                     hikari.VoiceServerUpdateEvent,
                     timeout=5,
                 ),
@@ -957,7 +957,7 @@ class Player(player_.Player):
                 await self.remove(0)
             except ValueError:
                 
-                await self.app.dispatch(
+                await self.app.event_manager.dispatch(
                     self.session.client.event_builder.build_queue_empty_event(self.guild_id, self.session)
                 )
                 return
@@ -967,7 +967,7 @@ class Player(player_.Player):
                     TRACE_LEVEL,
                     f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
                 )
-                await self.app.dispatch(
+                await self.app.event_manager.dispatch(
                     self.session.client.event_builder.build_queue_empty_event(self.guild_id, self.session)
                 )
                 return
@@ -979,7 +979,7 @@ class Player(player_.Player):
 
             await self.play()
 
-            await self.app.dispatch(
+            await self.app.event_manager.dispatch(
                 self.session.client.event_builder.build_queue_next_event(
                     self.guild_id,
                     self._queue[0],
