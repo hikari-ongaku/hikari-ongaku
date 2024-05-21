@@ -584,8 +584,8 @@ class Player:
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
-            raise PlayerQueueException(
-                self.guild_id, "Queue must have more than 2 tracks to shuffle."
+            raise errors.PlayerQueueException(
+                "Queue must have more than 2 tracks to shuffle."
             )
 
         new_queue = list(self.queue)
@@ -799,7 +799,7 @@ class Player:
         self._autoplay = not self._autoplay
         return self._autoplay
 
-    async def set_volume(self, volume: int) -> None:
+    async def set_volume(self, volume: int | None = None) -> None:
         """
         Set the volume.
 
@@ -810,6 +810,9 @@ class Player:
         ```py
         await player.set_volume(10)
         ```
+
+        !!! note
+            If you don't set a value to volume, it will simply become 100 (The default.)
 
         Parameters
         ----------
@@ -833,16 +836,18 @@ class Player:
         """
         session = self.session._get_session_id()
 
-        if volume < 0:
-            raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
-        if volume > 1000:
-            raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
+        if volume:
+            if volume < 0:
+                raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
+            if volume > 1000:
+                raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
+        
 
         try:
             player = await self.session.client.rest.update_player(
                 session,
                 self.guild_id,
-                volume=volume,
+                volume=100 if volume is None else volume,
                 no_replace=False,
             )
         except errors.RestEmptyException:
