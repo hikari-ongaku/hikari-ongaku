@@ -529,7 +529,7 @@ class RESTClient:
             None,
         )
 
-    async def update_session(self, session_id: str) -> ABCSession:
+    async def update_session(self, session_id: str, resuming: bool, timeout: int = 60) -> ABCSession:
         """
         Update Lavalink session.
 
@@ -540,13 +540,17 @@ class RESTClient:
         Example
         -------
         ```py
-        await client.rest.update_session(session_id)
+        await client.rest.update_session(session_id, False)
         ```
 
         Parameters
         ----------
         session_id
             The session you wish to update.
+        resuming
+            Whether resuming is enabled for this session or not
+        timeout
+            The timeout in seconds (default is 60s)
 
         Raises
         ------
@@ -569,6 +573,7 @@ class RESTClient:
         resp = await self._handle_request(
             route.build({"session_id": session_id}),
             ABCSession,
+            json={"resuming":resuming, "timeout":timeout}
         )
 
         if resp:
