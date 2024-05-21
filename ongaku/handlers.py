@@ -99,7 +99,7 @@ class SessionHandlerBase(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.
 
@@ -219,7 +219,7 @@ class BasicSessionHandler(SessionHandlerBase):
             The guild, or guild id you wish to delete the player from.
         """
         try:
-            return await self.fetch_player(hikari.Snowflake(guild))
+            return self.fetch_player(hikari.Snowflake(guild))
         except Exception:
             pass
 
@@ -231,7 +231,7 @@ class BasicSessionHandler(SessionHandlerBase):
 
         return new_player
 
-    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.
 

@@ -137,7 +137,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
     )
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         player = await ongaku_client.create_player(ctx.guild_id)
 
@@ -163,7 +163,7 @@ async def add_command(
         )
         return
     try:
-        current_player = await ongaku_client.fetch_player(ctx.guild_id)
+        current_player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "You must have a player currently running!",
@@ -185,15 +185,15 @@ async def add_command(
     track_count: int = 0
 
     if isinstance(result, ongaku.Playlist):
-        await current_player.add((result.tracks[0],))
+        current_player.add((result.tracks[0],))
         track_count = 1
 
     elif isinstance(result, ongaku.Track):
-        await current_player.add((result,))
+        current_player.add((result,))
         track_count = 1
 
     else:
-        await current_player.add(result)
+        current_player.add(result)
         track_count = len(result)
 
     await ctx.respond(f"Added {track_count} track(s) to the player.")
@@ -209,7 +209,7 @@ async def pause_command(ctx: lightbulb.Context) -> None:
         )
         return
     try:
-        current_player = await ongaku_client.fetch_player(ctx.guild_id)
+        current_player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "You must have a player currently running!",
@@ -237,7 +237,7 @@ async def queue_command(ctx: lightbulb.Context) -> None:
         return
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
@@ -282,7 +282,7 @@ async def volume_command(
         return
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",
@@ -316,7 +316,7 @@ async def skip_command(
         return
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.respond(
             "There is no player currently playing in this server.",

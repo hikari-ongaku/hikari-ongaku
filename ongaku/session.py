@@ -344,9 +344,9 @@ class Session:
             if player.channel_id:
                 await new_player.connect(player.channel_id)
 
-            await new_player.add(player.queue)
+            new_player.add(player.queue)
 
-            await new_player.set_autoplay(player.autoplay)
+            new_player.set_autoplay(player.autoplay)
 
         await self.stop()
 
