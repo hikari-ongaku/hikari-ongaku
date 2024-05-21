@@ -59,6 +59,7 @@ setup(
         "docs": parse_requirements_file("requirements/doc.txt"),
         "dev": parse_requirements_file("requirements/dev.txt"),
         "speedups": parse_requirements_file("requirements/speedups.txt"),
+        "arc": parse_requirements_file("requirements/arc.txt"),
     },
     python_requires=">=3.10.0, <3.13",
     classifiers=[

@@ -18,14 +18,12 @@ bot = hikari.GatewayBot("...")
 
 client = tanjun.Client.from_gateway_bot(bot)
 
-ongaku_client = ongaku.Client(bot)
+ongaku_client = ongaku.Client.from_tanjun(client)
 
 ongaku_client.add_session(
     host="127.0.0.1",
     password="youshallnotpass"
 )
-
-client.injector.set_type_dependency(ongaku.Client, ongaku_client)
 
 
 # ╔════════╗

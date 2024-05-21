@@ -3,9 +3,9 @@
 Below is an explanation of how ongaku supports injection.
 
 !!! warning "support"
-    Please note, that only the command handlers [tanjun]() and [arc]() are currently supported with ongaku's dependency injection.
+    Please note, that only the command handlers [tanjun](https://github.com/FasterSpeeding/Tanjun) and [arc](https://github.com/hypergonial/hikari-arc) are currently supported with ongaku's dependency injection.
 
-Ongaku relies on the framework [alluka]() for its dependency injection support.
+Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka) for its dependency injection support.
 
 
 === "Arc"
@@ -48,24 +48,49 @@ Ongaku relies on the framework [alluka]() for its dependency injection support.
         ...
     ```
 
-    Now, if you just wish to get a player directly without having to fetch it, the best method would be the following:
+    Now, if you just wish to get a player directly without having to fetch it you need to do a couple things.
 
-    ```py linenums="1"
-    @arc.slash_command("example", "This is an example command")
-    async def example_command(
-        ctx: arc.GatewayContext,
-        ongaku_client: ongaku.Player = arc.Inject()
-    ) -> None:
-        ...
+    Firstly, you need to import the arc version of ongaku:
+
     ```
+    pip install ongaku[arc]
+    ```    
+
+    Then, you can do the following:
+
+    === "Require player"
+
+        This method requires a player.
+
+        ```py linenums="1"
+        from ongaku.ext import injection
+
+        @arc.with_hook(injection.arc_ensure_player)
+        @arc.slash_command("example", "This is an example command")
+        async def example_command(
+            ctx: arc.GatewayContext,
+            player: ongaku.Player = arc.Inject()
+        ) -> None:
+            ...
+        ```
+    
+    === "Optional player"
+
+        This method allows for an optional player.
+
+        ```py linenums="1"
+        @arc.slash_command("example", "This is an example command")
+        async def example_command(
+            ctx: arc.GatewayContext,
+            player: ongaku.Player | None = arc.Inject()
+        ) -> None:
+            ...
+        ```
 
     You can still get the client from a player, simply by using `player.client`
 
-    !!! warning
-        When using this method, two things will result in an exception.
 
-        1. If the current command is not ran in a guild, it will error out.
-        2. If the current guild does not have a valid player.
+
 
 
 === "Tanjun"
