@@ -133,6 +133,7 @@ nav:
     - ext/index.md
     - Creation: ext/creation.md
     - Checker: ext/checker.md
+    - Injection: ext/injection.md
   - Changelog: changelog.md
 
 
