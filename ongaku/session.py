@@ -367,6 +367,11 @@ class Session:
         if self._session_task:
             self._session_task.cancel()
 
+        for guild_id, player in self._players.items():
+            await player.disconnect()
+
+            self._players.pop(guild_id)
+
 
 # MIT License
 
