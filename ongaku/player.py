@@ -289,7 +289,7 @@ class Player:
             f"Successfully connected, and sent data to lavalink for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        await self._update(player)
+        self._update(player)
 
     async def disconnect(self) -> None:
         """
@@ -423,9 +423,9 @@ class Player:
 
         self._is_paused = False
 
-        await self._update(player)
+        self._update(player)
 
-    async def add(
+    def add(
         self, tracks: t.Sequence[Track] | Track, requestor: RequestorT | None = None
     ) -> None:
         """
@@ -518,7 +518,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     async def stop(self) -> None:
         """
@@ -568,9 +568,9 @@ class Player:
 
         self._is_paused = True
 
-        await self._update(player)
+        self._update(player)
 
-    async def shuffle(self) -> None:
+    def shuffle(self) -> None:
         """Shuffle.
 
         Shuffle the current queue.
@@ -632,8 +632,6 @@ class Player:
         BuildException
             Raised when a construction of a ABC class fails.
         """
-        session = self.session._get_session_id()
-
         if amount <= 0:
             raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
@@ -645,42 +643,19 @@ class Player:
             else:
                 self._queue.pop(0)
 
-        if len(self.queue) <= 0:
-            try:
-                player = await self.session.client.rest.update_player(
-                    session,
-                    self.guild_id,
-                    track=None,
-                    no_replace=False,
-                )
-            except errors.RestEmptyException:
-                raise
-            except errors.RestStatusException:
-                raise
-            except errors.RestErrorException:
-                raise
-            except errors.BuildException:
-                raise
-
-            await self._update(player)
-        else:
-            try:
-                player = await self.session.client.rest.update_player(
-                    session,
-                    self.guild_id,
-                    track=self.queue[0],
-                    no_replace=False,
-                )
-            except errors.RestEmptyException:
-                raise
-            except errors.RestStatusException:
-                raise
-            except errors.RestErrorException:
-                raise
-            except errors.BuildException:
-                raise
-
-            await self._update(player)
+        try:
+            if len(self.queue) <= 0:
+                await self.stop()
+            else:
+                await self.play(self.queue[0])
+        except errors.RestEmptyException:
+            raise
+        except errors.RestStatusException:
+            raise
+        except errors.RestErrorException:
+            raise
+        except errors.BuildException:
+            raise
 
     async def remove(self, value: Track | int) -> None:
         """
@@ -773,9 +748,9 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
-    async def set_autoplay(self, enable: bool | None = None) -> bool:
+    def set_autoplay(self, enable: bool | None = None) -> bool:
         """
         Set autoplay.
 
@@ -859,7 +834,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     async def set_position(self, value: int) -> None:
         """
@@ -919,7 +894,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     async def transfer_player(self, session: Session) -> Player:
         """Transfer player.
@@ -941,7 +916,7 @@ class Player:
         """
         new_player = Player(session, self.guild_id)
 
-        await new_player.add(self.queue)
+        new_player.add(self.queue)
 
         if self.connected and self.channel_id:
             await self.disconnect()
@@ -954,7 +929,7 @@ class Player:
 
         return new_player
 
-    async def _update(self, player: ABCPlayer) -> None:
+    def _update(self, player: ABCPlayer) -> None:
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",

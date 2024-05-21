@@ -59,6 +59,6 @@ async def arc_ensure_player(ctx: arc.GatewayContext):
         raise errors.PlayerMissingException
     
     try:
-        await client.fetch_player(ctx.guild_id)
+        client.fetch_player(ctx.guild_id)
     except errors.PlayerMissingException:
         raise
