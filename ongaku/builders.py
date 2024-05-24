@@ -1,4 +1,4 @@
-
+# noqa: D100
 from __future__ import annotations
 
 import typing
@@ -70,7 +70,7 @@ class EntityBuilder: # noqa: D101
         data = self._ensure_mapping(payload)
 
         return events_.Ready(
-            data["ready"],
+            data["resumed"],
             data["sessionId"]
         )
     
