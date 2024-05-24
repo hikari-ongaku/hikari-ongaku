@@ -99,8 +99,7 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception):
     elif isinstance(exc, ongaku.PlayerMissingException):
         await ctx.respond("There is no player playing in this guild.", flags=hikari.MessageFlag.EPHEMERAL)
         return
-    
-    
+
 
 # ╔══════════╗
 # ║ Commands ║
