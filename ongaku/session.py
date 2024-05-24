@@ -145,7 +145,7 @@ class Session:
         self,
         method: str,
         path: str,
-        type: typing.Type[types.RequestT] | None,
+        return_type: typing.Type[types.RequestT] | None,
         *,
         headers: typing.Mapping[str, typing.Any] = {},
         json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
@@ -183,8 +183,18 @@ class Session:
 
         Raises
         ------
+        errors.TimeoutException
+            Raised when the request takes too long to respond.
+        errors.RestEmptyException
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        errors.RestStatusException
+            Raised when a 4XX or a 5XX status is received.
+        errors.BuildException
+            Raised when a mapping or sequence is requested, but could not be created from the response.
+        errors.RestErrorException
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
         errors.RestException
-           Raised when the requested type is not returned.
+            Raised when an unknown exception is caught.
         """
         session = self.client._get_client_session()
 
@@ -205,26 +215,54 @@ class Session:
                 json=json, 
                 params=params
             ) as response:
-                if response.status >= 400:
-                    raise errors.RestException()
+                if response.status == 204 and type:
+                    raise errors.RestEmptyException
                 
-                if type is None:
+                if response.status >= 400:
+                    try:
+                        payload = await response.text()
+                    except Exception:
+                        raise errors.RestStatusException(
+                            response.status, response.reason
+                        )
+                    else:
+                        raise errors.RestErrorException(
+                            self.client.entity_builder.build_rest_error(payload)
+                        )
+                    
+                if return_type is None:
                     return
                 
-                text = await response.text()
-
-                if isinstance(type, typing.Mapping | typing.Sequence):
-                    return type(json_loads(text))
+                payload = await response.text()
                 
-                elif isinstance(type, str | int | bool | float):
-                    return type(text)
+                if issubclass(return_type, str | int | bool | float):
+                    return return_type(payload)
+                
+                try:
+                    json_payload = json_loads(payload)
+                except Exception as e:
+                    raise errors.BuildException(str(e))
+
+                if isinstance(return_type, typing.Mapping | typing.Sequence):
+                    return return_type(json_payload)
 
         except asyncio.TimeoutError:
             _logger.warning(f"timed out on {str(path)}")
             raise errors.TimeoutException
-
+        except errors.RestEmptyException:
+            _logger.warning(f"Empty payload occurred on {path}")
+            raise
+        except errors.RestStatusException:
+            _logger.warning(f"4XX/5XX status occurred on {path}")
+            raise
+        except errors.BuildException:
+            _logger.warning(f"Build exception occurred on {path}")
+            raise
+        except errors.RestErrorException:
+            _logger.warning(f"Rest error occurred on {path}")
+            raise
         except Exception as e:
-            _logger.warning(f"{str(e)} occurred on {str(path)}")
+            _logger.warning(f"{type(e)}|{e} occurred on {path}")
             raise errors.RestException
 
     async def _handle_op_code(self, data: str) -> None:
