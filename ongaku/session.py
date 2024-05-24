@@ -151,6 +151,7 @@ class Session:
         json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
         params: typing.Mapping[str, typing.Any] = {},
         ignore_default_headers: bool = False,
+        version: bool = True,
     ) -> types.RequestT | None:
         """Request.
 
@@ -172,6 +173,8 @@ class Session:
             The parameters you wish to send.
         ignore_default_headers
             Whether to ignore the default headers or not.
+        version
+            Whether or not to include the version in the path.
 
         Returns
         -------
@@ -185,16 +188,19 @@ class Session:
         """
         session = self.client._get_client_session()
 
-        new_headers: typing.MutableMapping[str, typing.Any] = typing.MutableMapping()
+
+        new_headers: typing.MutableMapping[str, typing.Any] = {}
+
 
         if ignore_default_headers:
             new_headers.update(self.auth_headers)
-
+        
         new_headers.update(headers)
 
         try:
             async with session.request(
-                method, self.base_uri + path, 
+                method, 
+                f"{self.base_uri}{'/v4' if version else ''}{path}", 
                 headers=new_headers,
                 json=json, 
                 params=params
@@ -212,14 +218,13 @@ class Session:
                 
                 elif isinstance(type, str | int | bool | float):
                     return type(text)
-                
-                
+
         except asyncio.TimeoutError:
             _logger.warning(f"timed out on {str(path)}")
             raise errors.TimeoutException
 
         except Exception as e:
-            _logger.warning(f"{e} occurred on {str(path)}")
+            _logger.warning(f"{str(e)} occurred on {str(path)}")
             raise errors.RestException
 
     async def _handle_op_code(self, data: str) -> None:
