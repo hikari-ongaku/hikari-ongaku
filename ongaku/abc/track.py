@@ -6,9 +6,10 @@ The tracks abstract classes.
 
 from __future__ import annotations
 
+import abc
 import typing
+
 import hikari
-import attrs
 
 __all__ = (
     "TrackInfo",
@@ -16,8 +17,49 @@ __all__ = (
 )
 
 
-@attrs.define
-class TrackInfo:
+class Track(abc.ABC):
+    """Base track.
+
+    The base track data.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
+    """
+
+    @property
+    @abc.abstractmethod
+    def encoded(self) -> str:
+        """The base64 encoded track data."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def info(self) -> TrackInfo:
+        """Information about the track."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
+        """Additional track info provided by plugins."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def user_data(self) -> typing.Mapping[str, typing.Any]:
+        """Additional track data."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def requestor(self) -> hikari.Snowflake | None:
+        """The person who requested this track."""
+        ...
+
+    @requestor.setter
+    def _set_requestor(self, value: hikari.Snowflake): ...
+
+
+class TrackInfo(abc.ABC):
     """
     Track information.
 
@@ -26,116 +68,72 @@ class TrackInfo:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track-info)
     """
 
-    _identifier: str = attrs.field(alias="identifier")
-    _is_seekable: bool = attrs.field(alias="is_seekable")
-    _author: str = attrs.field(alias="author")
-    _length: int = attrs.field(alias="length")
-    _is_stream: bool = attrs.field(alias="is_stream")
-    _position: int = attrs.field(alias="position")
-    _title: str = attrs.field(alias="title")
-    _source_name: str = attrs.field(alias="source_name")
-    _uri: str | None = attrs.field(alias="uri")
-    _artwork_url: str | None = attrs.field(alias="artwork_url")
-    _isrc: str | None = attrs.field(alias="isrc")
-
     @property
+    @abc.abstractmethod
     def identifier(self) -> str:
         """The track identifier."""
-        return self._identifier
+        ...
 
     @property
+    @abc.abstractmethod
     def is_seekable(self) -> bool:
         """Whether the track is seekable."""
-        return self._is_seekable
+        ...
 
     @property
+    @abc.abstractmethod
     def author(self) -> str:
         """The track author."""
-        return self._author
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def length(self) -> int:
         """The track length in milliseconds."""
-        return self._length
+        ...
 
     @property
+    @abc.abstractmethod
     def is_stream(self) -> bool:
         """Whether the track is a stream."""
-        return self._is_stream
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def position(self) -> int:
         """The track position in milliseconds."""
-        return self._position
+        ...
 
     @property
+    @abc.abstractmethod
     def title(self) -> str:
         """The track title."""
-        return self._title
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def source_name(self) -> str:
         """The tracks source name."""
-        return self._source_name
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def uri(self) -> str | None:
         """The track URI."""
-        return self._uri
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def artwork_url(self) -> str | None:
         """The track artwork URL."""
-        return self._artwork_url
+        ...
 
     @property
+    @abc.abstractmethod
     def isrc(self) -> str | None:
         """The track ISRC."""
-        return self._isrc
+        ...
 
-@attrs.define
-class Track:
-    """Base track.
-
-    The base track data.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
-    """
-
-    _encoded: str = attrs.field(alias="encoded")
-    _info: TrackInfo = attrs.field(alias="info")
-    _plugin_info: typing.Mapping[str, typing.Any] = attrs.field(alias="plugin_info")
-    _user_data: typing.Mapping[str, typing.Any] = attrs.field(alias="user_data")
-    _requestor: hikari.Snowflake | None = attrs.field(default=None, alias="requestor")
-
-    @property
-    def encoded(self) -> str:
-        """The base64 encoded track data."""
-        return self._encoded
-
-    @property
-    def info(self) -> TrackInfo:
-        """Information about the track."""
-        return self._info
-    
-    @property
-    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
-        """Additional track info provided by plugins."""
-        return self._plugin_info
-    
-    @property
-    def user_data(self) -> typing.Mapping[str, typing.Any]:
-        """Additional track data."""
-        return self._user_data
-    
-    @property
-    def requestor(self) -> hikari.Snowflake | None:
-        """The person who requested this track."""
-        return self._requestor
-    
-    @requestor.setter
-    def _set_requestor(self, value: hikari.Snowflake) -> hikari.Snowflake | None:
-        self._requestor = value
 
 # MIT License
 

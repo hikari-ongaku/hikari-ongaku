@@ -6,14 +6,12 @@ The session abstract classes.
 
 from __future__ import annotations
 
-import attrs
+import abc
 
 __all__ = ("Session",)
 
 
-
-@attrs.define
-class Session:
+class Session(abc.ABC):
     """
     Session information.
 
@@ -22,19 +20,17 @@ class Session:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
-    _resuming: bool = attrs.field(alias="resuming")
-    _timeout: int = attrs.field(alias="timeout")
-
     @property
+    @abc.abstractmethod
     def resuming(self) -> bool:
         """Whether resuming is enabled for this session or not."""
-        return self._resuming
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def timeout(self) -> int:
         """The timeout in seconds."""
-        return self._timeout
-    
+        ...
 
 
 # MIT License

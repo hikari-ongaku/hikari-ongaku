@@ -6,8 +6,8 @@ All of the abstract classes for Ongaku.
 
 from __future__ import annotations
 
-from ongaku.abc.error import ExceptionError
-from ongaku.abc.error import RestError
+from ongaku.abc.errors import ExceptionError
+from ongaku.abc.errors import RestError
 from ongaku.abc.events import PlayerUpdate
 from ongaku.abc.events import Ready
 from ongaku.abc.events import TrackEnd
@@ -15,8 +15,8 @@ from ongaku.abc.events import TrackException
 from ongaku.abc.events import TrackStart
 from ongaku.abc.events import TrackStuck
 from ongaku.abc.events import WebsocketClosed
-from ongaku.abc.info import Info
 from ongaku.abc.info import Git
+from ongaku.abc.info import Info
 from ongaku.abc.info import Plugin
 from ongaku.abc.info import Version
 from ongaku.abc.player import Player
@@ -24,15 +24,15 @@ from ongaku.abc.player import State
 from ongaku.abc.player import Voice
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.playlist import PlaylistInfo
-from ongaku.abc.route_planner import FailingAddress
-from ongaku.abc.route_planner import IPBlock
-from ongaku.abc.route_planner import RoutePlannerDetails
-from ongaku.abc.route_planner import RoutePlannerStatus
+from ongaku.abc.routeplanner import FailingAddress
+from ongaku.abc.routeplanner import IPBlock
+from ongaku.abc.routeplanner import RoutePlannerDetails
+from ongaku.abc.routeplanner import RoutePlannerStatus
 from ongaku.abc.session import Session
-from ongaku.abc.statistics import Statistics
 from ongaku.abc.statistics import Cpu
 from ongaku.abc.statistics import FrameStatistics
 from ongaku.abc.statistics import Memory
+from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 

@@ -6,9 +6,9 @@ The info abstract classes.
 
 from __future__ import annotations
 
+import abc
 import datetime
 import typing
-import attrs
 
 __all__ = (
     "Version",
@@ -18,110 +18,7 @@ __all__ = (
 )
 
 
-@attrs.define
-class Version:
-    """
-    Version information.
-
-    All information, about the version of lavalink that is running.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#version-object)
-    """
-
-    _semver: str = attrs.field(alias="semver")
-    _major: int = attrs.field(alias="major")
-    _minor: int = attrs.field(alias="minor")
-    _patch: int = attrs.field(alias="patch")
-    _pre_release: str = attrs.field(alias="pre_release")
-    _build: str | None = attrs.field(alias="build")
-
-    @property
-    def semver(self) -> str:
-        """The full version string of this Lavalink server."""
-        return self._semver
-
-    @property
-    def major(self) -> int:
-        """The major version of this Lavalink server."""
-        return self._major
-
-    @property
-    def minor(self) -> int:
-        """The minor version of this Lavalink server."""
-        return self._minor
-
-    @property
-    def patch(self) -> int:
-        """The patch version of this Lavalink server."""
-        return self._patch
-
-    @property
-    def pre_release(self) -> str:
-        """The pre-release version according to semver as a `.` separated list of identifiers."""
-        return self._pre_release
-
-    @property
-    def build(self) -> str | None:
-        """The build metadata according to semver as a `.` separated list of identifiers."""
-        return self._build
-
-
-@attrs.define
-class Git:
-    """
-    Git information.
-
-    All of the information about the lavalink git information.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#git-object)
-    """
-
-    _branch: str = attrs.field(alias="branch")
-    _commit: str = attrs.field(alias="commit")
-    _commit_time: datetime.datetime = attrs.field(alias="commit_time")
-
-    @property
-    def branch(self) -> str:
-        """The branch this Lavalink server was built on."""
-        return self._branch
-
-    @property
-    def commit(self) -> str:
-        """The commit this Lavalink server was built on."""
-        return self._commit
-
-    @property
-    def commit_time(self) -> datetime.datetime:
-        """The millisecond unix timestamp for when the commit was created."""
-        return self._commit_time
-
-
-@attrs.define
-class Plugin:
-    """
-    Plugin information.
-
-    All of the Information about the currently loaded plugins.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#plugin-object)
-    """
-
-    _name: str = attrs.field(alias="name")
-    _version: str = attrs.field(alias="version")
-
-    @property
-    def name(self) -> str:
-        """The name of the plugin."""
-        return self._name
-
-    @property
-    def version(self) -> str:
-        """The version of the plugin."""
-        return self._version
-
-
-@attrs.define
-class Info:
+class Info(abc.ABC):
     """
     Information.
 
@@ -130,55 +27,149 @@ class Info:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#info-response)
     """
 
-    _version: Version = attrs.field(alias="version")
-    _build_time: datetime.datetime = attrs.field(alias="build_time")
-    _git: Git = attrs.field(alias="git")
-    _jvm: str = attrs.field(alias="jvm")
-    _lavaplayer: str = attrs.field(alias="lavaplayer")
-    _source_managers: typing.Sequence[str] = attrs.field(alias="source_managers")
-    _filters: typing.Sequence[str] = attrs.field(alias="filters")
-    _plugins: typing.Sequence[Plugin] = attrs.field(alias="plugins")
-
     @property
+    @abc.abstractmethod
     def version(self) -> Version:
         """The version of this Lavalink server."""
-        return self._version
+        ...
 
     @property
+    @abc.abstractmethod
     def build_time(self) -> datetime.datetime:
         """The millisecond unix timestamp when this Lavalink jar was built."""
-        return self._build_time
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def git(self) -> Git:
         """The git information of this Lavalink server."""
-        return self._git
+        ...
 
     @property
+    @abc.abstractmethod
     def jvm(self) -> str:
         """The JVM version this Lavalink server runs on."""
-        return self._jvm
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def lavaplayer(self) -> str:
         """The Lavaplayer version being used by this server."""
-        return self._lavaplayer
+        ...
 
     @property
+    @abc.abstractmethod
     def source_managers(self) -> typing.Sequence[str]:
         """The enabled source managers for this server."""
-        return self._source_managers
+        ...
 
     @property
+    @abc.abstractmethod
     def filters(self) -> typing.Sequence[str]:
         """The enabled filters for this server."""
-        return self._filters
+        ...
 
     @property
+    @abc.abstractmethod
     def plugins(self) -> typing.Sequence[Plugin]:
         """The enabled plugins for this server."""
-        return self._plugins
-    
+        ...
+
+
+class Version(abc.ABC):
+    """
+    Version information.
+
+    All information, about the version of lavalink that is running.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#version-object)
+    """
+
+    @property
+    @abc.abstractmethod
+    def semver(self) -> str:
+        """The full version string of this Lavalink server."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def major(self) -> int:
+        """The major version of this Lavalink server."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def minor(self) -> int:
+        """The minor version of this Lavalink server."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def patch(self) -> int:
+        """The patch version of this Lavalink server."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def pre_release(self) -> str:
+        """The pre-release version according to semver as a `.` separated list of identifiers."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def build(self) -> str | None:
+        """The build metadata according to semver as a `.` separated list of identifiers."""
+        ...
+
+
+class Git(abc.ABC):
+    """
+    Git information.
+
+    All of the information about the lavalink git information.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#git-object)
+    """
+
+    @property
+    @abc.abstractmethod
+    def branch(self) -> str:
+        """The branch this Lavalink server was built on."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def commit(self) -> str:
+        """The commit this Lavalink server was built on."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def commit_time(self) -> datetime.datetime:
+        """The millisecond unix timestamp for when the commit was created."""
+        ...
+
+
+class Plugin(abc.ABC):
+    """
+    Plugin information.
+
+    All of the Information about the currently loaded plugins.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#plugin-object)
+    """
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """The name of the plugin."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def version(self) -> str:
+        """The version of the plugin."""
+        ...
 
 
 # MIT License

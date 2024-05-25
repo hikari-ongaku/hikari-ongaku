@@ -6,11 +6,12 @@ The player Abstract classes.
 
 from __future__ import annotations
 
+import abc
+import datetime
 import typing
 
 import hikari
-import datetime
-import attrs
+
 from ongaku.abc.track import Track
 
 __all__ = (
@@ -19,74 +20,8 @@ __all__ = (
     "Player",
 )
 
-@attrs.define
-class State:
-    """
-    Players State.
 
-    All the information for the players current state.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-state)
-    """
-
-    _time: datetime.datetime = attrs.field(alias="time")
-    _position: int = attrs.field(alias="position")
-    _connection: bool = attrs.field(alias="connection")
-    _ping: int = attrs.field(alias="ping")
-
-    @property
-    def time(self) -> datetime.datetime:
-        """Unix timestamp in milliseconds."""
-        return self._time
-    
-    @property
-    def position(self) -> int:
-        """The position of the track in milliseconds."""
-        return self._position
-    
-    @property
-    def connected(self) -> bool:
-        """Whether Lavalink is connected to the voice gateway."""
-        return self._connection
-
-    @property
-    def ping(self) -> int:
-        """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
-        return self._ping
-
-
-@attrs.define
-class Voice:
-    """
-    Players Voice state.
-
-    All of the Player Voice information.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#voice-state)
-    """
-
-    _token: str = attrs.field(alias="token")
-    _endpoint: str = attrs.field(alias="endpoint")
-    _session_id: str = attrs.field(alias="session_id")
-
-    @property
-    def token(self) -> str:
-        """The Discord voice token to authenticate with."""
-        return self._token
-
-    @property
-    def endpoint(self) -> str:
-        """The Discord voice endpoint to connect to."""
-        return self._endpoint
-
-    @property
-    def session_id(self) -> str:
-        """The Discord voice session id to authenticate with."""
-        return self._session_id
-    
-
-@attrs.define
-class Player:
+class Player(abc.ABC):
     """
     Player information.
 
@@ -95,53 +30,114 @@ class Player:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
-    _guild_id: hikari.Snowflake = attrs.field(alias="guild_id")
-    _track: Track | None = attrs.field(alias="track")
-    _volume: int = attrs.field(alias="volume")
-    _is_paused: bool = attrs.field(alias="is_paused")
-    _state: State = attrs.field(alias="state")
-    _voice: Voice = attrs.field(alias="voice")
-    _filters: typing.Mapping[str, typing.Any] = attrs.field(alias="filters")
-
     @property
+    @abc.abstractmethod
     def guild_id(self) -> hikari.Snowflake:
         """The guild id this player is attached too."""
-        return self._guild_id
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def track(self) -> Track | None:
         """The track the player is currently playing.
-        
+
         !!! note
             If the track is `None` then there is no current track playing.
         """
-        return self._track
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def volume(self) -> int:
         """The volume of the player."""
-        return self._volume
-    
+        ...
+
     @property
+    @abc.abstractmethod
     def is_paused(self) -> bool:
         """Whether the player is paused or not."""
-        return self._is_paused
+        ...
 
     @property
+    @abc.abstractmethod
     def state(self) -> State:
-        """The [PlayerState][ongaku.abc.player.PlayerState] object."""
-        return self._state
+        """The [State][ongaku.abc.player.State] object."""
+        ...
 
     @property
+    @abc.abstractmethod
     def voice(self) -> Voice:
-        """The [PlayerVoice][ongaku.abc.player.Voice] object."""
-        return self._voice
+        """The [Voice][ongaku.abc.player.Voice] object."""
+        ...
 
     @property
+    @abc.abstractmethod
     def filters(self) -> typing.Mapping[str, typing.Any]:
         """The filter object."""
-        return self._filters
+        ...
         # FIXME: This should return a filter object. (or at least  try to parse one.)
+
+
+class State(abc.ABC):
+    """
+    Players State.
+
+    All the information for the players current state.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-state)
+    """
+
+    @property
+    @abc.abstractmethod
+    def time(self) -> datetime.datetime:
+        """Unix timestamp in milliseconds."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def position(self) -> int:
+        """The position of the track in milliseconds."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def connected(self) -> bool:
+        """Whether Lavalink is connected to the voice gateway."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def ping(self) -> int:
+        """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
+        ...
+
+
+class Voice(abc.ABC):
+    """
+    Players Voice state.
+
+    All of the Player Voice information.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#voice-state)
+    """
+
+    @property
+    @abc.abstractmethod
+    def token(self) -> str:
+        """The Discord voice token to authenticate with."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def endpoint(self) -> str:
+        """The Discord voice endpoint to connect to."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def session_id(self) -> str:
+        """The Discord voice session id to authenticate with."""
+        ...
 
 
 # MIT License

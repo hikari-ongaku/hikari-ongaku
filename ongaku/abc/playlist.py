@@ -4,16 +4,45 @@ Playlist ABC's.
 The playlist abstract classes.
 """
 
+from __future__ import annotations
+
+import abc
 import typing
-import attrs
 
 from ongaku.abc.track import Track
 
 __all__ = ("PlaylistInfo", "Playlist")
 
 
-@attrs.define
-class PlaylistInfo:
+class Playlist(abc.ABC):
+    """
+    Playlist.
+
+    The playlist object.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
+    """
+
+    @property
+    @abc.abstractmethod
+    def info(self) -> PlaylistInfo:
+        """Addition playlist info provided by plugins."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def tracks(self) -> typing.Sequence[Track]:
+        """The tracks in this playlist."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
+        """Addition playlist info provided by plugins."""
+        ...
+
+
+class PlaylistInfo(abc.ABC):
     """
     Playlist information.
 
@@ -22,48 +51,17 @@ class PlaylistInfo:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#playlist-info)
     """
 
-    _name: str = attrs.field(alias="name")
-    _selected_track: int = attrs.field(alias="selected_track")
-
     @property
+    @abc.abstractmethod
     def name(self) -> str:
         """The name of the playlist."""
-        return self._name
+        ...
 
     @property
+    @abc.abstractmethod
     def selected_track(self) -> int:
         """The selected track of the playlist (`-1` if no track is selected)."""
-        return self._selected_track
-
-
-@attrs.define
-class Playlist:
-    """
-    Playlist.
-
-    The playlist object.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
-    """
-    
-    _info: PlaylistInfo = attrs.field(alias="info")
-    _tracks: typing.Sequence[Track] = attrs.field(alias="tracks")
-    _plugin_info: typing.Mapping[str, typing.Any] = attrs.field(alias="plugin_info")
-
-    @property
-    def info(self) -> PlaylistInfo:
-        """Addition playlist info provided by plugins."""
-        return self._info
-    
-    @property
-    def tracks(self) -> typing.Sequence[Track]:
-        """The tracks in this playlist."""
-        return self._tracks
-
-    @property
-    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
-        """Addition playlist info provided by plugins."""
-        return self._plugin_info
+        ...
 
 
 # MIT License
