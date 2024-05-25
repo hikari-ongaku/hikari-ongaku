@@ -10,10 +10,10 @@ import typing
 
 import attrs
 
-from ongaku.abc.error import ExceptionError
+from ongaku.abc.errors import ExceptionError
 
 if typing.TYPE_CHECKING:
-    from ongaku.abc.error import RestError
+    from ongaku.abc.errors import RestError
 
 __all__ = (
     "OngakuException",

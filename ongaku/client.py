@@ -13,7 +13,7 @@ import hikari
 
 from ongaku import enums
 from ongaku import errors
-from ongaku.builders import EntityBuilder, EventBuilder
+from ongaku.builders import EntityBuilder
 from ongaku.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
 from ongaku.rest import RESTClient
@@ -21,6 +21,7 @@ from ongaku.rest import RESTClient
 if typing.TYPE_CHECKING:
     import arc
     import tanjun
+
     from ongaku.handlers import SessionHandlerBase
     from ongaku.player import Player
     from ongaku.session import Session
@@ -76,8 +77,6 @@ class Client:
 
         self._entity_builder = EntityBuilder()
 
-        self._event_builder = EventBuilder()
-
         app.event_manager.subscribe(hikari.StartedEvent, self._start_event)
         app.event_manager.subscribe(hikari.StoppingEvent, self._stop_event)
 
@@ -88,7 +87,7 @@ class Client:
         *,
         session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
         attempts: int = 3,
-    )  -> Client:
+    ) -> Client:
         """From Arc.
 
         This supports `client` and `player` [injection](../gs/injection.md) for [Arc](https://github.com/hypergonial/hikari-arc)
@@ -113,11 +112,11 @@ class Client:
         cls = cls(client.app, session_handler=session_handler, attempts=attempts)
 
         client.set_type_dependency(Client, cls)
-        
+
         client.add_injection_hook(cls._arc_player_injector)
 
         return cls
-    
+
     @classmethod
     def from_tanjun(
         cls,
@@ -125,7 +124,7 @@ class Client:
         *,
         session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
         attempts: int = 3,
-    )  -> Client:
+    ) -> Client:
         """From Tanjun.
 
         This supports `client` [injection](../gs/injection.md) for [Tanjun](https://github.com/FasterSpeeding/Tanjun)
@@ -151,7 +150,7 @@ class Client:
             app = client.get_type_dependency(hikari.GatewayBotAware)
         except KeyError:
             raise Exception("The gateway bot requested was not found.")
-        
+
         cls = cls(app, session_handler=session_handler, attempts=attempts)
 
         client.set_type_dependency(Client, cls)
@@ -182,11 +181,6 @@ class Client:
     def entity_builder(self) -> EntityBuilder:
         """The entity builder."""
         return self._entity_builder
-    
-    @property
-    def event_builder(self) -> EventBuilder:
-        """The event builder."""
-        return self._event_builder
 
     def _get_client_session(self) -> aiohttp.ClientSession:
         if not self._client_session:
@@ -225,10 +219,12 @@ class Client:
     async def _stop_event(self, event: hikari.StoppingEvent) -> None:
         await self._session_handler.stop()
 
-    async def _arc_player_injector(self, ctx: arc.GatewayContext, inj_ctx: arc.InjectorOverridingContext) -> None:
+    async def _arc_player_injector(
+        self, ctx: arc.GatewayContext, inj_ctx: arc.InjectorOverridingContext
+    ) -> None:
         if ctx.guild_id is None:
             return
-        
+
         try:
             player = await self.fetch_player(ctx.guild_id)
         except errors.PlayerMissingException:
