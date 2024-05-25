@@ -6,7 +6,6 @@ All the handlers for Lavalink.
 
 from __future__ import annotations
 
-import abc
 import asyncio
 import typing
 
@@ -16,128 +15,20 @@ from ongaku import enums
 from ongaku import errors
 from ongaku.player import Player
 from ongaku.session import Session
+from ongaku.abc import handler as handler_
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
 
 __all__ = (
-    "SessionHandlerBase",
     "BasicSessionHandler",
 )
 
 
-class SessionHandlerBase(abc.ABC):
-    """
-    Session handler base.
-
-    The base session handler object.
-
-    !!! note
-        All custom session handlers **must** subclass this.
-
-    Parameters
-    ----------
-    client
-        The base ongaku client.
-    """
-
-    @abc.abstractmethod
-    def __init__(self, client: Client): ...
-
-    @property
-    @abc.abstractmethod
-    def sessions(self) -> typing.Sequence[Session]:
-        """The sessions attached to this handler."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def players(self) -> typing.Sequence[Player]:
-        """The players attached to this handler."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def is_alive(self) -> bool:
-        """Whether the handler is alive or not."""
-        ...
-
-    @abc.abstractmethod
-    async def start(self) -> None:
-        """Start the session handler."""
-        ...
-
-    @abc.abstractmethod
-    async def stop(self) -> None:
-        """Stop the session handler."""
-        ...
-
-    @abc.abstractmethod
-    def add_session(
-        self, ssl: bool, host: str, port: int, password: str, attempts: int
-    ) -> None:
-        """Add a session."""
-        ...
-
-    @abc.abstractmethod
-    def fetch_session(self) -> Session:
-        """Return a valid session."""
-        ...
-
-    @abc.abstractmethod
-    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
-        """
-        Create a player.
-
-        Create a new player for this session.
-
-        Parameters
-        ----------
-        guild
-            The guild, or guild id you wish to delete the player from.
-        """
-        ...
-
-    @abc.abstractmethod
-    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
-        """
-        Fetch a player.
-
-        Fetches an existing player.
-
-        Parameters
-        ----------
-        guild
-            The guild, or guild id you wish to delete the player from.
-
-        Raises
-        ------
-        PlayerMissingException
-            Raised when the player for the guild, does not exist.
-        """
-        ...
-
-    @abc.abstractmethod
-    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
-        """
-        Delete a player.
-
-        Delete a pre-existing player.
-
-        Parameters
-        ----------
-        guild
-            The guild, or guild id you wish to delete the player from.
-
-        Raises
-        ------
-        PlayerMissingException
-            Raised when the player for the guild, does not exist.
-        """
-        ...
 
 
-class BasicSessionHandler(SessionHandlerBase):
+
+class BasicSessionHandler(handler_.SessionHandler):
     """
     Basic Session Handler.
 
