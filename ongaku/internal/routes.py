@@ -25,7 +25,6 @@ class Route:
         self._method = method
         self._path = path
         self._include_version = include_version
-        
 
     @property
     def method(self) -> str:
@@ -36,7 +35,7 @@ class Route:
     def path(self) -> str:
         """The path."""
         return self._path
-    
+
     @property
     def include_version(self) -> bool:
         """Whether to include the version."""
@@ -50,6 +49,7 @@ class Route:
         """."""
         return f"{self.method} {self.path}"
 
+
 # Info
 
 GET_INFO: typing.Final[Route] = Route(GET, "/info")
@@ -60,9 +60,7 @@ GET_STATISTICS: typing.Final[Route] = Route(GET, "/stats")
 
 # Session
 
-PATCH_SESSION_UPDATE: typing.Final[Route] = Route(
-    PATCH, "/sessions/{session_id}"
-)
+PATCH_SESSION_UPDATE: typing.Final[Route] = Route(PATCH, "/sessions/{session_id}")
 
 # Player
 
@@ -86,21 +84,17 @@ GET_LOAD_TRACKS: typing.Final[Route] = Route(GET, "/loadtracks")
 
 GET_DECODE_TRACK: typing.Final[Route] = Route(GET, "/decodetrack")
 
-GET_DECODE_TRACKS: typing.Final[Route] = Route(GET, "/decodetracks")
+POST_DECODE_TRACKS: typing.Final[Route] = Route(POST, "/decodetracks")
 
 # Route Planner
 
-GET_ROUTEPLANNER_STATUS: typing.Final[Route] = Route(
-    GET, "/routeplanner/status"
-)
+GET_ROUTEPLANNER_STATUS: typing.Final[Route] = Route(GET, "/routeplanner/status")
 
 POST_ROUTEPLANNER_FREE_ADDRESS: typing.Final[Route] = Route(
     POST, "/routeplanner/free/address"
 )
 
-POST_ROUTEPLANNER_FREE_ALL: typing.Final[Route] = Route(
-    POST, "/routeplanner/free/all"
-)
+POST_ROUTEPLANNER_FREE_ALL: typing.Final[Route] = Route(POST, "/routeplanner/free/all")
 
 # MIT License
 

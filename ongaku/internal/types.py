@@ -7,26 +7,22 @@ All types for ongaku.
 from __future__ import annotations
 
 import typing
-import hikari
-    
 
-__all__ = (
-    "RequestT",
-    "RequestorT",
-    "PayloadMappingT",
-    "PayloadSequenceT"
-)
+import hikari
+
+__all__ = ("RequestT", "RequestorT", "PayloadMappingT", "PayloadSequenceT")
 
 # Type Variables.
 
 RequestT = typing.TypeVar(
     "RequestT",
-    typing.Mapping[str, typing.Any],
-    typing.Sequence[typing.Any],
     str,
     int,
     bool,
-    float
+    float,
+    dict[str, typing.Any],
+    list[typing.Any],
+    tuple[typing.Any, ...],
 )
 
 
