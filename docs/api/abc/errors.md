@@ -5,4 +5,4 @@ description: Abstract Base Classes API Reference
 
 # Error
 
-::: ongaku.abc.error
+::: ongaku.abc.errors

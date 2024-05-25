@@ -5,4 +5,4 @@ description: Abstract Base Classes API Reference
 
 # Route Planner
 
-::: ongaku.abc.route_planner
+::: ongaku.abc.routeplanner

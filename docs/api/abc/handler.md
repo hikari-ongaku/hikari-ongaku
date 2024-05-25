@@ -1,8 +1,8 @@
 ---
-title: Bases ABC
+title: Handler ABC
 description: Abstract Base Classes API Reference
 ---
 
-# Payload base
+# Handler
 
-::: ongaku.abc.bases
+::: ongaku.abc.handler

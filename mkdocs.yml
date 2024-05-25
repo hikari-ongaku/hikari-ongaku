@@ -115,20 +115,30 @@ nav:
     - Player: api/player.md
     - Events: api/events.md
     - Rest: api/rest.md
-    - Enums: api/enums.md
     - Errors: api/errors.md
-    - Handlers: api/handlers.md
+    - Builders: api/builders.md
     - ABC:
-      - Bases: api/abc/bases.md
-      - Error: api/abc/error.md
+      - Errors: api/abc/errors.md
       - Events: api/abc/events.md
+      - Handler: api/abc/handler.md
       - Info: api/abc/info.md
       - Player: api/abc/player.md
       - Playlist: api/abc/playlist.md
-      - Route Planner: api/abc/route_planner.md
+      - Route Planner: api/abc/routeplanner.md
       - Session: api/abc/session.md
       - Statistics: api/abc/statistics.md
       - Track: api/abc/track.md
+    - Impl:
+      - Errors: api/impl/errors.md
+      - Events: api/impl/events.md
+      - Handler: api/impl/handlers.md
+      - Info: api/impl/info.md
+      - Player: api/impl/player.md
+      - Playlist: api/impl/playlist.md
+      - Route Planner: api/impl/routeplanner.md
+      - Session: api/impl/session.md
+      - Statistics: api/impl/statistics.md
+      - Track: api/impl/track.md
   - Extensions:
     - ext/index.md
     - Creation: ext/creation.md
