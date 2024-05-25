@@ -7,6 +7,7 @@ The session abstract classes and hikari events.
 from __future__ import annotations
 
 import abc
+import enum
 import typing
 
 import hikari
@@ -14,13 +15,13 @@ import hikari
 from ongaku.abc.errors import ExceptionError
 from ongaku.abc.player import State
 from ongaku.abc.track import Track
-from ongaku.enums import TrackEndReasonType
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
     from ongaku.session import Session
 
 __all__ = (
+    "OngakuEvent",
     "Ready",
     "PlayerUpdate",
     "WebsocketClosed",
@@ -28,11 +29,17 @@ __all__ = (
     "TrackEnd",
     "TrackException",
     "TrackStuck",
+    "QueueEmpty",
+    "QueueNext",
+    "TrackEndReasonType",
 )
 
 
 class OngakuEvent(hikari.Event, abc.ABC):
-    """The base ongaku event, that all events subclass."""
+    """Ongaku Event.
+
+    The base ongaku event, that adds the client and session to all events.
+    """
 
     @property
     @abc.abstractmethod
@@ -275,6 +282,27 @@ class QueueNext(abc.ABC):
     def old_track(self) -> Track:
         """The track that was previously playing."""
         ...
+
+
+class TrackEndReasonType(str, enum.Enum):
+    """
+    Track end reason type.
+
+    The track end reason type for the track that was just playing.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#track-end-reason)
+    """
+
+    FINISHED = "finished"
+    """The track finished playing."""
+    LOADFAILED = "loadFailed"
+    """The track failed to load."""
+    STOPPED = "stopped"
+    """The track was stopped."""
+    REPLACED = "replaced"
+    """The track was replaced."""
+    CLEANUP = "cleanup"
+    """The track was cleaned up."""
 
 
 # MIT License

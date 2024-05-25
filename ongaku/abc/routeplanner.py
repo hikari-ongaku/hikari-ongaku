@@ -8,16 +8,16 @@ from __future__ import annotations
 
 import abc
 import datetime
+import enum
 import typing
-
-from ongaku.enums import IPBlockType
-from ongaku.enums import RoutePlannerType
 
 __all__ = (
     "RoutePlannerStatus",
     "RoutePlannerDetails",
     "IPBlock",
     "FailingAddress",
+    "RoutePlannerType",
+    "IPBlockType",
 )
 
 
@@ -141,6 +141,40 @@ class FailingAddress(abc.ABC):
     def time(self) -> str:
         """The timestamp when the address failed as a pretty string."""
         ...
+
+
+class RoutePlannerType(str, enum.Enum):
+    """
+    Route Planner Type.
+
+    The type of routeplanner that the server is currently using.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#route-planner-types)
+    """
+
+    ROTATING_ROUTE_PLANNER = "RotatingIpRoutePlanner"
+    """IP address used is switched on ban. Recommended for IPv4 blocks or IPv6 blocks smaller than a /64."""
+    NANO_IP_ROUTE_PLANNER = "NanoIpRoutePlanner"
+    """IP address used is switched on clock update. Use with at least 1 /64 IPv6 block."""
+    ROTATING_NANO_IP_ROUTE_PLANNER = "RotatingNanoIpRoutePlanner"
+    """IP address used is switched on clock update, rotates to a different /64 block on ban. Use with at least 2x /64 IPv6 blocks."""
+    BALANCING_IP_ROUTE_PLANNER = "BalancingIpRoutePlanner"
+    """IP address used is selected at random per request. Recommended for larger IP blocks."""
+
+
+class IPBlockType(str, enum.Enum):
+    """
+    IP Block Type.
+
+    The IP Block type, 4, or 6.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#ip-block-type)
+    """
+
+    INET_4_ADDRESS = "Inet4Address"
+    """The ipv4 block type"""
+    INET_6_ADDRESS = "Inet6Address"
+    """The ipv6 block type"""
 
 
 # MIT License

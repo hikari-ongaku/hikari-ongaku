@@ -7,8 +7,12 @@ The session abstract classes.
 from __future__ import annotations
 
 import abc
+import enum
 
-__all__ = ("Session",)
+__all__ = (
+    "Session",
+    "SessionStatus",
+)
 
 
 class Session(abc.ABC):
@@ -31,6 +35,36 @@ class Session(abc.ABC):
     def timeout(self) -> int:
         """The timeout in seconds."""
         ...
+
+
+class SessionStatus(int, enum.Enum):
+    """
+    Session Status.
+
+    The status of the session.
+    """
+
+    NOT_CONNECTED = 0
+    """Is not currently connected to its server."""
+    CONNECTED = 1
+    """Has successfully connected to its server."""
+    FAILURE = 2
+    """Failure to connect to its server."""
+
+
+class WebsocketOPCode(str, enum.Enum):
+    READY = "ready"
+    PLAYER_UPDATE = "playerUpdate"
+    STATS = "stats"
+    EVENT = "event"
+
+
+class WebsocketEvent(str, enum.Enum):
+    TRACK_START_EVENT = "TrackStartEvent"
+    TRACK_END_EVENT = "TrackEndEvent"
+    TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
+    TRACK_STUCK_EVENT = "TrackStuckEvent"
+    WEBSOCKET_CLOSED_EVENT = "WebSocketClosedEvent"
 
 
 # MIT License
