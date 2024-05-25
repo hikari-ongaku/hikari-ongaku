@@ -6,17 +6,18 @@ Adds arc's ensure player, so you don't have to make sure its a player.
 
 from __future__ import annotations
 
-from ongaku import errors
-
 import typing
+
+from ongaku import errors
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
 
-try: 
+try:
     import arc
 except ImportError:
     raise ImportError("Arc is required for you to use arc_ensure_player.")
+
 
 async def arc_ensure_player(ctx: arc.GatewayContext):
     """
@@ -52,12 +53,12 @@ async def arc_ensure_player(ctx: arc.GatewayContext):
     """
     if ctx.guild_id is None:
         raise arc.GuildOnlyError
-    
+
     try:
         client = ctx.get_type_dependency(Client)
     except KeyError:
         raise errors.PlayerMissingException
-    
+
     try:
         await client.fetch_player(ctx.guild_id)
     except errors.PlayerMissingException:
