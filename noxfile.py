@@ -55,9 +55,9 @@ def pyright(session: nox.Session) -> None:
 
 @nox.session()
 def pytest(session: nox.Session) -> None:
-    session.install(".")
-    session.install("-U", "pytest")
-    session.install("-U", "pytest-asyncio")
+    session.install(".[injection, dev]")
+    session.install("-Ur", "requirements/tests.txt")
+    session.install
     session.run("pytest", "tests")
 
 
