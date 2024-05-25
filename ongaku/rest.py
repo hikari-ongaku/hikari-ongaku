@@ -15,7 +15,7 @@ from ongaku.abc.info import Info
 from ongaku.abc.player import Player
 from ongaku.abc.player import Voice
 from ongaku.abc.playlist import Playlist
-from ongaku.abc.route_planner import RoutePlannerStatus
+from ongaku.abc.routeplanner import RoutePlannerStatus
 from ongaku.abc.session import Session as ABCSession
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
@@ -93,10 +93,7 @@ class RESTClient:
         session = self._client._session_handler.fetch_session()
 
         response = await session.request(
-            route.method,
-            route.path,
-            typing.Mapping,
-            params={"identifier": query}
+            route.method, route.path, dict, params={"identifier": query}
         )
 
         if response is None:
@@ -110,7 +107,7 @@ class RESTClient:
 
         elif load_type == "error":
             _logger.log(TRACE_LEVEL, f"loadType caused an error.")
-            
+
             raise errors.RestTrackException(
                 self._client.entity_builder.build_exception_error(response)
             )
@@ -183,10 +180,7 @@ class RESTClient:
         session = self._client._session_handler.fetch_session()
 
         response = await session.request(
-            route.method,
-            route.path,
-            typing.Mapping,
-            params={"encoded_track": track}
+            route.method, route.path, dict, params={"encodedTrack": track}
         )
 
         if response is None:
@@ -194,7 +188,7 @@ class RESTClient:
 
         return self._client.entity_builder.build_track(response)
 
-    async def decode_many_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
+    async def decode_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
         """
         Decode multiple tracks.
 
@@ -229,7 +223,7 @@ class RESTClient:
         typing.Sequence[Track]
             The Track object.
         """
-        route = routes.GET_DECODE_TRACKS
+        route = routes.POST_DECODE_TRACKS
 
         _logger.log(TRACE_LEVEL, str(route))
 
@@ -238,11 +232,11 @@ class RESTClient:
         response = await session.request(
             route.method,
             route.path,
-            typing.Sequence,
+            list,
             headers={"Content-Type": "application/json"},
-            json=tracks
+            json=tracks,
         )
-        
+
         if response is None:
             raise ValueError("Response is required for this request.")
 
@@ -297,8 +291,8 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format({"session_id":session_id}),
-            typing.Sequence,
+            route.path.format({"session_id": session_id}),
+            list,
         )
 
         if response is None:
@@ -358,10 +352,12 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format({"session_id":session_id, "guild_id":hikari.Snowflake(guild)}),
-            typing.Mapping,
+            route.path.format(
+                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
+            ),
+            dict,
         )
-        
+
         if response is None:
             raise ValueError("Response is required for this request.")
 
@@ -499,13 +495,15 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format({"session_id":session_id, "guild_id":hikari.Snowflake(guild)}),
-            typing.Mapping,
+            route.path.format(
+                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
+            ),
+            dict,
             headers={"Content-Type": "application/json"},
             json=patch_data,
             params={"noReplace": "true" if no_replace else "false"},
         )
-        
+
         if response is None:
             raise ValueError("Response is required for this request.")
 
@@ -547,11 +545,18 @@ class RESTClient:
 
         await session.request(
             route.method,
-            route.path.format({"session_id":session_id, "guild_id":hikari.Snowflake(guild)}),
+            route.path.format(
+                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
+            ),
             None,
         )
 
-    async def update_session(self, session_id: str, resuming: hikari.UndefinedOr[bool], timeout: hikari.UndefinedOr[int]) -> ABCSession:
+    async def update_session(
+        self,
+        session_id: str,
+        resuming: hikari.UndefinedOr[bool],
+        timeout: hikari.UndefinedOr[int],
+    ) -> ABCSession:
         """
         Update Lavalink session.
 
@@ -604,8 +609,8 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format({"session_id":session_id}),
-            typing.Mapping,
+            route.path.format({"session_id": session_id}),
+            dict,
             headers={"Content-Type": "application/json"},
             json=data,
         )
@@ -654,7 +659,7 @@ class RESTClient:
         response = await session.request(
             route.method,
             route.path,
-            typing.Mapping,
+            dict,
         )
 
         if response is None:
@@ -698,15 +703,11 @@ class RESTClient:
 
         session = self._client._session_handler.fetch_session()
 
-        response = await session.request(
-            route.method,
-            route.path,
-            str,
-        )
+        response = await session.request(route.method, route.path, str, version=False)
 
         if response is None:
             raise ValueError("Response is required for this request.")
-        
+
         return response
 
     async def fetch_stats(self) -> Statistics:
@@ -753,15 +754,15 @@ class RESTClient:
         response = await session.request(
             route.method,
             route.path,
-            typing.Mapping,
+            dict,
         )
 
         if response is None:
             raise ValueError("Response is required for this request.")
-        
+
         return self._client.entity_builder.build_statistics(response)
 
-    async def fetch_routeplanner_status(self) -> RoutePlannerStatus:
+    async def fetch_routeplanner_status(self) -> RoutePlannerStatus | None:
         """
         Fetch routeplanner status.
 
@@ -799,15 +800,18 @@ class RESTClient:
 
         session = self._client._session_handler.fetch_session()
 
-        response = await session.request(
-            route.method,
-            route.path,
-            typing.Mapping,
-        )
+        try:
+            response = await session.request(
+                route.method,
+                route.path,
+                dict,
+            )
+        except errors.RestEmptyException:
+            response = None
 
         if response is None:
-            raise ValueError("Response is required for this request.")
-        
+            return
+
         return self._client.entity_builder.build_routeplanner_status(response)
 
     async def update_routeplanner_address(self, address: str) -> None:
@@ -882,6 +886,7 @@ class RESTClient:
             route.path,
             None,
         )
+
 
 # MIT License
 
