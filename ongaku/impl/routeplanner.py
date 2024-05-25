@@ -6,19 +6,21 @@ import datetime
 import typing
 
 from ongaku.abc import routeplanner as routeplanner_
-from ongaku.enums import IPBlockType
-from ongaku.enums import RoutePlannerType
+
+__all__ = ("RoutePlannerStatus", "RoutePlannerDetails", "IPBlock", "FailingAddress")
 
 
 class RoutePlannerStatus(routeplanner_.RoutePlannerStatus):
     def __init__(
-        self, cls: RoutePlannerType, details: routeplanner_.RoutePlannerDetails
+        self,
+        cls: routeplanner_.RoutePlannerType,
+        details: routeplanner_.RoutePlannerDetails,
     ) -> None:
         self._cls = cls
         self._details = details
 
     @property
-    def cls(self) -> RoutePlannerType:
+    def cls(self) -> routeplanner_.RoutePlannerType:
         return self._cls
 
     @property
@@ -75,12 +77,12 @@ class RoutePlannerDetails(routeplanner_.RoutePlannerDetails):
 
 
 class IPBlock(routeplanner_.IPBlock):
-    def __init__(self, type: IPBlockType, size: str) -> None:
+    def __init__(self, type: routeplanner_.IPBlockType, size: str) -> None:
         self._type = type
         self._size = size
 
     @property
-    def type(self) -> IPBlockType:
+    def type(self) -> routeplanner_.IPBlockType:
         return self._type
 
     @property
@@ -105,3 +107,26 @@ class FailingAddress(routeplanner_.FailingAddress):
     @property
     def time(self) -> str:
         return self._time
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.

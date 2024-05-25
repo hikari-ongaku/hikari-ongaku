@@ -8,7 +8,17 @@ from ongaku.abc import errors as errors_
 from ongaku.abc import events as events_
 from ongaku.abc import player as player_
 from ongaku.abc import track as track_
-from ongaku.enums import TrackEndReasonType
+
+__all__ = (
+    "Ready",
+    "PlayerUpdate",
+    "WebsocketClosed",
+    "TrackStart",
+    "TrackEnd",
+    "TrackException",
+    "QueueEmpty",
+    "QueueNext",
+)
 
 
 class Ready(events_.Ready):
@@ -84,7 +94,7 @@ class TrackEnd(events_.TrackEnd):
         self,
         guild_id: hikari.Snowflake,
         track: track_.Track,
-        reason: TrackEndReasonType,
+        reason: events_.TrackEndReasonType,
     ) -> None:
         self._guild_id = guild_id
         self._track = track
@@ -99,7 +109,7 @@ class TrackEnd(events_.TrackEnd):
         return self._track
 
     @property
-    def reason(self) -> TrackEndReasonType:
+    def reason(self) -> events_.TrackEndReasonType:
         return self._reason
 
 
@@ -181,3 +191,26 @@ class QueueNext(events_.QueueNext):
     @property
     def old_track(self) -> track_.Track:
         return self._old_track
+
+
+# MIT License
+
+# Copyright (c) 2023 MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
