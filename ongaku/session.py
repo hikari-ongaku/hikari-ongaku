@@ -11,20 +11,21 @@ import typing
 
 import aiohttp
 
-from ongaku import enums
 from ongaku import errors
+from ongaku import events
+from ongaku.abc import session as session_
+from ongaku.internal import types
 from ongaku.internal.about import __version__
 from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import logger
-from ongaku.internal import types
 
 _logger = logger.getChild("session")
 
 if typing.TYPE_CHECKING:
     import hikari
 
+    from ongaku.abc import handler as handler_
     from ongaku.client import Client
-    from ongaku.handlers import SessionHandlerBase
     from ongaku.player import Player
 
 __all__ = ("Session",)
@@ -73,13 +74,15 @@ class Session:
         self._attempts = attempts
         self._remaining_attempts = attempts
         self._base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
-        self._session_id = None
+        self._session_id: str | None = None
         self._session_task: asyncio.Task[None] | None = None
-        self._status = enums.SessionStatus.NOT_CONNECTED
+        self._status = session_.SessionStatus.NOT_CONNECTED
         self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
         self._base_headers: typing.MutableMapping[str, typing.Any]
         self._websocket_headers: typing.MutableMapping[str, typing.Any]
-        self._authorization_headers: typing.Mapping[str, typing.Any] = {"Authorization": password}
+        self._authorization_headers: typing.Mapping[str, typing.Any] = {
+            "Authorization": password
+        }
 
     @property
     def client(self) -> Client:
@@ -125,9 +128,9 @@ class Session:
     def auth_headers(self) -> typing.Mapping[str, typing.Any]:
         """The headers required for authorization. This is automatically added."""
         return self._authorization_headers
-    
+
     @property
-    def status(self) -> enums.SessionStatus:
+    def status(self) -> session_.SessionStatus:
         """The current status of the server."""
         return self._status
 
@@ -163,7 +166,7 @@ class Session:
             The method to send the request as. `GET`, `POST`, `PATCH`, `DELETE`, `PUT`
         path
             The path to the url. e.g. `/v4/info`
-        type
+        return_type
             The response type you expect.
         headers
             The headers you wish to send.
@@ -198,26 +201,24 @@ class Session:
         """
         session = self.client._get_client_session()
 
-
         new_headers: typing.MutableMapping[str, typing.Any] = {}
 
-
-        if ignore_default_headers:
+        if ignore_default_headers is False:
             new_headers.update(self.auth_headers)
-        
+
         new_headers.update(headers)
 
         try:
             async with session.request(
-                method, 
-                f"{self.base_uri}{'/v4' if version else ''}{path}", 
+                method,
+                f"{self.base_uri}{'/v4' if version else ''}{path}",
                 headers=new_headers,
-                json=json, 
-                params=params
+                json=json,
+                params=params,
             ) as response:
-                if response.status == 204 and type:
+                if response.status == 204 and return_type is not None:
                     raise errors.RestEmptyException
-                
+
                 if response.status >= 400:
                     try:
                         payload = await response.text()
@@ -226,25 +227,42 @@ class Session:
                             response.status, response.reason
                         )
                     else:
-                        raise errors.RestErrorException(
-                            self.client.entity_builder.build_rest_error(payload)
-                        )
-                    
+                        if len(payload) == 0:
+                            raise errors.RestStatusException(
+                                response.status, response.reason
+                            )
+                        _logger.warning(f"Rest Exception: {payload}")
+                        try:
+                            rest_error = self.client.entity_builder.build_rest_error(
+                                payload
+                            )
+                        except Exception as e:
+                            raise errors.RestStatusException(
+                                response.status, response.reason
+                            )
+                        raise errors.RestErrorException(rest_error)
+
                 if return_type is None:
                     return
-                
+
                 payload = await response.text()
-                
+
+                _logger.warning(payload)
+
                 if issubclass(return_type, str | int | bool | float):
                     return return_type(payload)
-                
+
                 try:
                     json_payload = json_loads(payload)
                 except Exception as e:
                     raise errors.BuildException(str(e))
 
-                if isinstance(return_type, typing.Mapping | typing.Sequence):
-                    return return_type(json_payload)
+                _logger.warning(
+                    f"{type(return_type)} | {return_type} | {return_type == typing.Mapping} | {return_type == typing.Sequence} | {return_type == dict}"
+                )
+                _logger.warning(f"{type(json_payload)} | {json_payload}")
+
+                return return_type(json_payload)
 
         except asyncio.TimeoutError:
             _logger.warning(f"timed out on {str(path)}")
@@ -265,7 +283,7 @@ class Session:
             _logger.warning(f"{type(e)}|{e} occurred on {path}")
             raise errors.RestException
 
-    async def _handle_op_code(self, data: str) -> None:
+    async def _handle_op_code(self, data: str) -> hikari.Event:
         mapped_data = json_loads(data)
 
         if isinstance(mapped_data, typing.Sequence):
@@ -273,104 +291,110 @@ class Session:
                 "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'"
             )
 
-        op_code = enums.WebsocketOPCode(mapped_data["op"])
+        op_code = session_.WebsocketOPCode(mapped_data["op"])
 
-        if op_code == enums.WebsocketOPCode.READY:
-            parser = self.client.entity_builder.build_ready_event(mapped_data)
-            event = self.client.event_builder.build_ready_event(parser.resumed, parser.session_id, self)
+        if op_code == session_.WebsocketOPCode.READY:
+            parser = self.client.entity_builder.build_ready(mapped_data)
+            event = events.ReadyEvent.from_session(
+                self, parser.resumed, parser.session_id
+            )
 
             self._session_id = parser.session_id
 
-        elif op_code == enums.WebsocketOPCode.PLAYER_UPDATE:
-            parser = self.client.entity_builder.build_player_update_event(mapped_data)
-            event = self.client.event_builder.build_player_update_event(
+        elif op_code == session_.WebsocketOPCode.PLAYER_UPDATE:
+            parser = self.client.entity_builder.build_player_update(mapped_data)
+            event = events.PlayerUpdateEvent.from_session(
+                self,
                 parser.guild_id,
                 parser.state,
-                self,
             )
 
-        elif op_code == enums.WebsocketOPCode.STATS:
+        elif op_code == session_.WebsocketOPCode.STATS:
             parser = self.client.entity_builder.build_statistics(mapped_data)
 
-            event = self.client.event_builder.build_statistics_event(
+            event = events.StatisticsEvent.from_session(
+                self,
                 parser.players,
                 parser.playing_players,
                 parser.uptime,
                 parser.memory,
                 parser.cpu,
                 parser.frame_stats,
-                self,
             )
 
         else:
-            event_type = enums.WebsocketEvent(mapped_data["type"])
+            event_type = session_.WebsocketEvent(mapped_data["type"])
 
-            if event_type == enums.WebsocketEvent.TRACK_START_EVENT:
-                parser = self.client.entity_builder.build_track_start_event(mapped_data)
+            if event_type == session_.WebsocketEvent.TRACK_START_EVENT:
+                parser = self.client.entity_builder.build_track_start(mapped_data)
 
-                event = self.client.event_builder.build_track_start_event(
+                event = events.TrackStartEvent.from_session(
+                    self,
                     parser.guild_id,
                     parser.track,
-                    self,
                 )
 
-            elif event_type == enums.WebsocketEvent.TRACK_END_EVENT:
-                parser = self.client.entity_builder.build_track_end_event(mapped_data)
+            elif event_type == session_.WebsocketEvent.TRACK_END_EVENT:
+                parser = self.client.entity_builder.build_track_end(mapped_data)
 
-                event = self.client.event_builder.build_track_end_event(
+                event = events.TrackEndEvent.from_session(
+                    self,
                     parser.guild_id,
                     parser.track,
                     parser.reason,
-                    self,
                 )
 
-            elif event_type == enums.WebsocketEvent.TRACK_EXCEPTION_EVENT:
-                parser = self.client.entity_builder.build_track_exception_event(mapped_data)
+            elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
+                parser = self.client.entity_builder.build_track_exception(
+                    mapped_data
+                )
 
-                event = self.client.event_builder.build_track_exception_event(
+                event = events.TrackExceptionEvent.from_session(
+                    self,
                     parser.guild_id,
                     parser.track,
                     parser.exception,
-                    self,
                 )
 
-            elif event_type == enums.WebsocketEvent.TRACK_STUCK_EVENT:
+            elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
                 parser = self.client.entity_builder.build_track_stuck_event(mapped_data)
 
-                event = self.client.event_builder.build_track_stuck_event(
+                event = events.TrackStuckEvent.from_session(
+                    self,
                     parser.guild_id,
                     parser.track,
                     parser.threshold_ms,
-                    self,
                 )
 
             else:
-                parser = self.client.entity_builder.build_websocket_closed_event(mapped_data)
+                parser = self.client.entity_builder.build_websocket_closed(
+                    mapped_data
+                )
 
-                event = self.client.event_builder.build_websocket_closed_event(
+                event = events.WebsocketClosedEvent.from_session(
+                    self,
                     parser.guild_id,
                     parser.code,
                     parser.reason,
                     parser.by_remote,
-                    self,
                 )
-
-        self.app.event_manager.dispatch(event)
+        return event
 
     async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
         if msg.type == aiohttp.WSMsgType.TEXT:
-            event = self.client.event_builder.build_payload_event(msg.data, self)
+            payload_event = events.PayloadEvent.from_session(self, msg.data)
+            event = await self._handle_op_code(msg.data)
+
+            self.app.event_manager.dispatch(payload_event)
             self.app.event_manager.dispatch(event)
 
-            await self._handle_op_code(msg.data)
-
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            self._status = enums.SessionStatus.FAILURE
+            self._status = session_.SessionStatus.FAILURE
             _logger.warning("An error occurred.")
             await self.transfer(self.client._session_handler)
 
         elif msg.type == aiohttp.WSMsgType.CLOSED:
-            self._status = enums.SessionStatus.FAILURE
+            self._status = session_.SessionStatus.FAILURE
             _logger.warning(
                 f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
             )
@@ -381,13 +405,13 @@ class Session:
 
         if not bot:
             if self._remaining_attempts > 0:
-                self._status = enums.SessionStatus.NOT_CONNECTED
+                self._status = session_.SessionStatus.NOT_CONNECTED
 
                 _logger.warning(
                     "Attempted fetching the bot, but failed as it does not exist."
                 )
             else:
-                self._status = enums.SessionStatus.FAILURE
+                self._status = session_.SessionStatus.FAILURE
 
             _logger.warning(
                 "Attempted fetching the bot, but failed as it does not exist."
@@ -395,9 +419,10 @@ class Session:
 
             raise errors.SessionStartException
 
-        
-
-        self._websocket_headers = {"User-Id": str(int(bot.id)), "Client-Name": f"{bot.global_name if bot.global_name else 'unknown'}/{__version__}"}
+        self._websocket_headers = {
+            "User-Id": str(int(bot.id)),
+            "Client-Name": f"{bot.global_name if bot.global_name else 'unknown'}/{__version__}",
+        }
 
         new_headers: typing.MutableMapping[str, typing.Any] = {}
 
@@ -416,17 +441,17 @@ class Session:
                         headers=new_headers,
                         autoclose=False,
                     ) as ws:
-                        self._status = enums.SessionStatus.CONNECTED
+                        self._status = session_.SessionStatus.CONNECTED
                         async for msg in ws:
                             await self._handle_ws_message(msg)
 
             except Exception as e:
                 _logger.warning(f"Websocket connection failure: {e}")
-                self._status = enums.SessionStatus.NOT_CONNECTED
+                self._status = session_.SessionStatus.NOT_CONNECTED
 
         else:
             _logger.critical(f"Server has no more attempts.")
-            self._status = enums.SessionStatus.NOT_CONNECTED
+            self._status = session_.SessionStatus.NOT_CONNECTED
 
     def _get_session_id(self) -> str:
         if self._session_id:
@@ -434,7 +459,7 @@ class Session:
 
         raise errors.SessionStartException
 
-    async def transfer(self, session_handler: SessionHandlerBase) -> None:
+    async def transfer(self, session_handler: handler_.SessionHandler) -> None:
         """
         Transfer.
 
