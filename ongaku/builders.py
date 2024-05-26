@@ -8,6 +8,8 @@ from __future__ import annotations
 import datetime
 import typing
 
+import hikari
+
 from ongaku.abc import errors as errors_
 from ongaku.abc import events as events_
 from ongaku.abc import info as info_
@@ -178,7 +180,8 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return events.PlayerUpdate(
-            data["guildId"], self.build_player_state(data["state"])
+            hikari.Snowflake(int(data["guildId"])),
+            self.build_player_state(data["state"]),
         )
 
     def build_websocket_closed(
@@ -201,7 +204,10 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return events.WebsocketClosed(
-            data["guildId"], data["code"], data["reason"], data["byRemote"]
+            hikari.Snowflake(int(data["guildId"])),
+            data["code"],
+            data["reason"],
+            data["byRemote"],
         )
 
     def build_track_start(self, payload: types.PayloadMappingT) -> events_.TrackStart:
@@ -221,7 +227,9 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
-        return events.TrackStart(data["guildId"], self.build_track(data["track"]))
+        return events.TrackStart(
+            hikari.Snowflake(int(data["guildId"])), self.build_track(data["track"])
+        )
 
     def build_track_end(self, payload: types.PayloadMappingT) -> events_.TrackEnd:
         """Build Track End.
@@ -241,7 +249,7 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return events.TrackEnd(
-            data["guildId"],
+            hikari.Snowflake(int(data["guildId"])),
             self.build_track(data["track"]),
             events_.TrackEndReasonType(data["reason"]),
         )
@@ -266,14 +274,12 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return events.TrackException(
-            data["guildId"],
+            hikari.Snowflake(int(data["guildId"])),
             self.build_track(data["track"]),
             self.build_exception_error(data["exception"]),
         )
 
-    def build_track_stuck_event(
-        self, payload: types.PayloadMappingT
-    ) -> events_.TrackStuck:
+    def build_track_stuck(self, payload: types.PayloadMappingT) -> events_.TrackStuck:
         """Build Track Stuck.
 
         Builds a [`TrackStuck`][ongaku.abc.events.TrackStuck] object, from a payload.
@@ -291,7 +297,9 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return events.TrackStuck(
-            data["guildId"], self.build_track(data["track"]), data["thresholdMs"]
+            hikari.Snowflake(int(data["guildId"])),
+            self.build_track(data["track"]),
+            data["thresholdMs"],
         )
 
     # info
@@ -443,8 +451,8 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return player.Player(
-            data["guildId"],
-            self.build_track(data["track"]),
+            hikari.Snowflake(int(data["guildId"])),
+            self.build_track(data["track"]) if data.get("track", None) else None,
             data["volume"],
             data["paused"],
             self.build_player_state(data["state"]),
@@ -470,9 +478,9 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return player.State(
-            datetime.datetime.fromtimestamp(data["time"]),
+            datetime.datetime.fromtimestamp(int(data["time"]) / 1000, self._tzinfo),
             data["position"],
-            data["connection"],
+            data["connected"],
             data["ping"],
         )
 
