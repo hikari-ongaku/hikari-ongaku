@@ -345,9 +345,7 @@ class Session:
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
-                parser = self.client.entity_builder.build_track_exception(
-                    mapped_data
-                )
+                parser = self.client.entity_builder.build_track_exception(mapped_data)
 
                 event = events.TrackExceptionEvent.from_session(
                     self,
@@ -367,9 +365,7 @@ class Session:
                 )
 
             else:
-                parser = self.client.entity_builder.build_websocket_closed(
-                    mapped_data
-                )
+                parser = self.client.entity_builder.build_websocket_closed(mapped_data)
 
                 event = events.WebsocketClosedEvent.from_session(
                     self,

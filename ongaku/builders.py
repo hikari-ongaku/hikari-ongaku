@@ -2,6 +2,7 @@
 
 The builder, to convert most abstract classes from a payload.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -87,7 +88,7 @@ class EntityBuilder:
 
     def build_rest_error(self, payload: types.PayloadMappingT) -> errors_.RestError:
         """Build Rest Error.
-        
+
         Builds a [`RestError`][ongaku.abc.errors.RestError] object, from a payload.
 
         Parameters
@@ -117,7 +118,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> errors_.ExceptionError:
         """Build Exception Error.
-        
+
         Builds a [`ExceptionError`][ongaku.abc.errors.ExceptionError] object, from a payload.
 
         Parameters
@@ -140,7 +141,7 @@ class EntityBuilder:
 
     def build_ready(self, payload: types.PayloadMappingT) -> events_.Ready:
         """Build Ready.
-        
+
         Builds a [`Ready`][ongaku.abc.events.Ready] object, from a payload.
 
         Parameters
@@ -161,7 +162,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> events_.PlayerUpdate:
         """Build Player Update.
-        
+
         Builds a [`PlayerUpdate`][ongaku.abc.events.PlayerUpdate] object, from a payload.
 
         Parameters
@@ -184,7 +185,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> events_.WebsocketClosed:
         """Build Websocket Closed.
-        
+
         Builds a [`WebsocketClosed`][ongaku.abc.events.WebsocketClosed] object, from a payload.
 
         Parameters
@@ -203,11 +204,9 @@ class EntityBuilder:
             data["guildId"], data["code"], data["reason"], data["byRemote"]
         )
 
-    def build_track_start(
-        self, payload: types.PayloadMappingT
-    ) -> events_.TrackStart:
+    def build_track_start(self, payload: types.PayloadMappingT) -> events_.TrackStart:
         """Build Track Start.
-        
+
         Builds a [`TrackStart`][ongaku.abc.events.TrackStart] object, from a payload.
 
         Parameters
@@ -226,7 +225,7 @@ class EntityBuilder:
 
     def build_track_end(self, payload: types.PayloadMappingT) -> events_.TrackEnd:
         """Build Track End.
-        
+
         Builds a [`TrackEnd`][ongaku.abc.events.TrackEnd] object, from a payload.
 
         Parameters
@@ -251,7 +250,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> events_.TrackException:
         """Build Track Exception.
-        
+
         Builds a [`WebsocketClosed`][ongaku.abc.events.TrackException] object, from a payload.
 
         Parameters
@@ -276,7 +275,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> events_.TrackStuck:
         """Build Track Stuck.
-        
+
         Builds a [`TrackStuck`][ongaku.abc.events.TrackStuck] object, from a payload.
 
         Parameters
@@ -299,7 +298,7 @@ class EntityBuilder:
 
     def build_info(self, payload: types.PayloadMappingT) -> info_.Info:
         """Build Information.
-        
+
         Builds a [`Information`][ongaku.abc.info.Info] object, from a payload.
 
         Parameters
@@ -356,7 +355,7 @@ class EntityBuilder:
 
     def build_info_version(self, payload: types.PayloadMappingT) -> info_.Version:
         """Build Version Information.
-        
+
         Builds a [`Version`][ongaku.abc.info.Version] object, from a payload.
 
         Parameters
@@ -382,7 +381,7 @@ class EntityBuilder:
 
     def build_info_git(self, payload: types.PayloadMappingT) -> info_.Git:
         """Build Git Information.
-        
+
         Builds a [`Git`][ongaku.abc.info.Git] object, from a payload.
 
         Parameters
@@ -407,7 +406,7 @@ class EntityBuilder:
 
     def build_info_plugin(self, payload: types.PayloadMappingT) -> info_.Plugin:
         """Build Plugin Information.
-        
+
         Builds a [`Plugin`][ongaku.abc.info.Plugin] object, from a payload.
 
         Parameters
@@ -428,7 +427,7 @@ class EntityBuilder:
 
     def build_player(self, payload: types.PayloadMappingT) -> player_.Player:
         """Build Player.
-        
+
         Builds a [`Player`][ongaku.abc.player.Player] object, from a payload.
 
         Parameters
@@ -455,7 +454,7 @@ class EntityBuilder:
 
     def build_player_state(self, payload: types.PayloadMappingT) -> player_.State:
         """Build Player State.
-        
+
         Builds a [`State`][ongaku.abc.player.State] object, from a payload.
 
         Parameters
@@ -479,7 +478,7 @@ class EntityBuilder:
 
     def build_player_voice(self, payload: types.PayloadMappingT) -> player_.Voice:
         """Build Player Voice.
-        
+
         Builds a [`Voice`][ongaku.abc.player.Voice] object, from a payload.
 
         Parameters
@@ -500,7 +499,7 @@ class EntityBuilder:
 
     def build_playlist(self, payload: types.PayloadMappingT) -> playlist_.Playlist:
         """Build Playlist.
-        
+
         Builds a [`Playlist`][ongaku.abc.playlist.Playlist] object, from a payload.
 
         Parameters
@@ -528,7 +527,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> playlist_.PlaylistInfo:
         """Build Playlist Info.
-        
+
         Builds a [`PlaylistInfo`][ongaku.abc.playlist.PlaylistInfo] object, from a payload.
 
         Parameters
@@ -551,7 +550,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> routeplanner_.RoutePlannerStatus:
         """Build Route Planner Status.
-        
+
         Builds a [`RoutePlannerStatus`][ongaku.abc.routeplanner.RoutePlannerStatus] object, from a payload.
 
         Parameters
@@ -575,7 +574,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> routeplanner_.RoutePlannerDetails:
         """Build Route Planner Details.
-        
+
         Builds a [`RoutePlannerDetails`][ongaku.abc.routeplanner.RoutePlannerDetails] object, from a payload.
 
         Parameters
@@ -611,7 +610,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> routeplanner_.IPBlock:
         """Build Route Planner IP Block.
-        
+
         Builds a [`IPBlock`][ongaku.abc.routeplanner.IPBlock] object, from a payload.
 
         Parameters
@@ -634,7 +633,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> routeplanner_.FailingAddress:
         """Build Route Planner Details.
-        
+
         Builds a [`RoutePlannerDetails`][ongaku.abc.routeplanner.RoutePlannerDetails] object, from a payload.
 
         Parameters
@@ -661,7 +660,7 @@ class EntityBuilder:
 
     def build_session(self, payload: types.PayloadMappingT) -> session_.Session:
         """Build Session.
-        
+
         Builds a [`Session`][ongaku.abc.session.Session] object, from a payload.
 
         Parameters
@@ -684,7 +683,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> statistics_.Statistics:
         """Build Statistics.
-        
+
         Builds a [`Statistics`][ongaku.abc.statistics.Statistics] object, from a payload.
 
         Parameters
@@ -714,7 +713,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> statistics_.Memory:
         """Build Memory Statistics.
-        
+
         Builds a [`Memory`][ongaku.abc.statistics.Memory] object, from a payload.
 
         Parameters
@@ -735,7 +734,7 @@ class EntityBuilder:
 
     def build_statistics_cpu(self, payload: types.PayloadMappingT) -> statistics_.Cpu:
         """Build Cpu Statistics.
-        
+
         Builds a [`Cpu`][ongaku.abc.statistics.Cpu] object, from a payload.
 
         Parameters
@@ -756,7 +755,7 @@ class EntityBuilder:
         self, payload: types.PayloadMappingT
     ) -> statistics_.FrameStatistics:
         """Build Frame Statistics.
-        
+
         Builds a [`Statistics`][ongaku.abc.statistics.Statistics] object, from a payload.
 
         Parameters
@@ -777,7 +776,7 @@ class EntityBuilder:
 
     def build_track(self, payload: types.PayloadMappingT) -> track_.Track:
         """Build Track.
-        
+
         Builds a [`Track`][ongaku.abc.track.Track] object, from a payload.
 
         Parameters
@@ -802,7 +801,7 @@ class EntityBuilder:
 
     def build_track_info(self, payload: types.PayloadMappingT) -> track_.TrackInfo:
         """Build Track Information.
-        
+
         Builds a [`TrackInformation`][ongaku.abc.track.TrackInfo] object, from a payload.
 
         Parameters

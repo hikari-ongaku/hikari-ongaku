@@ -617,7 +617,7 @@ class QueueEmptyEvent(events_.OngakuEvent, events_.QueueEmpty):
         return self._guild_id
 
     @property
-    def old_track(self) -> track_.Track:
+    def old_track(self) -> track_.Track:  # noqa: D102
         return self._old_track
 
 
