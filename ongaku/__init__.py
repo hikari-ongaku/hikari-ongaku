@@ -21,6 +21,11 @@ from ongaku.abc.playlist import Playlist
 from ongaku.abc.track import Track
 from ongaku.client import Client
 from ongaku.enums import BandType
+from ongaku.enums import IPBlockType
+from ongaku.enums import RoutePlannerType
+from ongaku.enums import SessionStatus
+from ongaku.enums import SeverityType
+from ongaku.enums import TrackEndReasonType
 from ongaku.errors import BuildException
 from ongaku.errors import ClientAliveException
 from ongaku.errors import ClientException
@@ -39,7 +44,6 @@ from ongaku.errors import SessionException
 from ongaku.errors import SessionHandlerException
 from ongaku.errors import SessionStartException
 from ongaku.errors import TimeoutException
-from ongaku.events import OngakuEvent
 from ongaku.events import PayloadEvent
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import QueueEmptyEvent
@@ -75,7 +79,12 @@ __all__ = (
     # .session
     "Session",
     # .enums
+    "SeverityType",
+    "TrackEndReasonType",
     "BandType",
+    "RoutePlannerType",
+    "IPBlockType",
+    "SessionStatus",
     # .exceptions
     "OngakuException",
     "RestException",
@@ -95,8 +104,7 @@ __all__ = (
     "PlayerMissingException",
     "BuildException",
     "TimeoutException",
-    # .abc.events
-    "OngakuEvent",
+    # .events
     "PayloadEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
@@ -108,9 +116,9 @@ __all__ = (
     "TrackStuckEvent",
     "QueueEmptyEvent",
     "QueueNextEvent",
-    # .abc.track
+    # .track
     "Track",
-    # .abc.playlist
+    # .playlist
     "Playlist",
 )
 
