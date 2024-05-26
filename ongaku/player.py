@@ -16,6 +16,7 @@ import hikari
 
 from ongaku import errors
 from ongaku import events
+from ongaku.abc import player as player_
 from ongaku.enums import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
@@ -24,7 +25,6 @@ from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
-    from ongaku.abc import player as player_
     from ongaku.abc import track as track_
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
@@ -127,11 +127,11 @@ class Player(player_.Player):
         return self.position
 
     @property
-    def volume(self) -> int:
+    def volume(self) -> int:  # noqa: D102
         return self._volume
 
     @property
-    def is_paused(self) -> bool:
+    def is_paused(self) -> bool:  # noqa: D102
         return self._is_paused
 
     @property
@@ -151,7 +151,7 @@ class Player(player_.Player):
         return self.connected
 
     @property
-    def track(self) -> track_.Track | None:
+    def track(self) -> track_.Track | None:  # noqa: D102
         return self._track
 
     @property
@@ -163,15 +163,15 @@ class Player(player_.Player):
         return self._queue
 
     @property
-    def voice(self) -> player_.Voice:
+    def voice(self) -> player_.Voice:  # noqa: D102
         return self._voice
 
     @property
-    def state(self) -> player_.State:
+    def state(self) -> player_.State:  # noqa: D102
         return self._state
 
     @property
-    def filters(self) -> typing.Mapping[str, typing.Any]:
+    def filters(self) -> typing.Mapping[str, typing.Any]:  # noqa: D102
         return self._filters
 
     async def connect(
