@@ -1,3 +1,9 @@
+"""
+Playlist Impl's.
+
+The playlist implemented classes.
+"""
+
 # ruff: noqa: D101, D102
 
 from __future__ import annotations

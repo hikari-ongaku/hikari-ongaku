@@ -1,8 +1,10 @@
 """
-Handlers.
+Handler Impl's.
 
-All the handlers for Lavalink.
+The handler implemented classes.
 """
+
+# ruff: noqa: D101, D102
 
 from __future__ import annotations
 
