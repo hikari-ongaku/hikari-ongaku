@@ -1,16 +1,16 @@
 # ruff: noqa: D100, D101, D102, D103
 
+import asyncio
 import typing
 
 import mock
 import pytest
-import asyncio
-from hikari.snowflakes import Snowflake
 from hikari import OwnUser
 from hikari.impl import gateway_bot as gateway_bot_
-from ongaku.abc.player import Player
+from hikari.snowflakes import Snowflake
 
 from ongaku.abc.info import Info
+from ongaku.abc.player import Player
 from ongaku.abc.routeplanner import RoutePlannerStatus
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
@@ -42,9 +42,12 @@ def ongaku_session(ongaku_client: Client) -> Session:
     session._authorization_headers = {"Authorization": session.password}
     return session
 
+
 @pytest.fixture
 def bot_user() -> OwnUser:
-    return mock.Mock(global_name="test_username", username="test_username", id=Snowflake(1234567890))
+    return mock.Mock(
+        global_name="test_username", username="test_username", id=Snowflake(1234567890)
+    )
 
 
 class TestRest:
@@ -95,20 +98,32 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_fetch_players(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client, bot_user: OwnUser):
+    async def test_fetch_players(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        bot_user: OwnUser,
+    ):
         rest = RESTClient(ongaku_client)
-        
+
         with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(Client(gateway_bot), "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3)
+            session = Session(
+                Client(gateway_bot),
+                "test_name",
+                False,
+                "127.0.0.1",
+                2333,
+                "youshallnotpass",
+                3,
+            )
             session._base_headers = {"Authorization": session.password}
-            
+
             await session.start()
             await asyncio.sleep(2)
 
         with mock.patch.object(
             rest._client._session_handler, "fetch_session", return_value=session
         ):
-            
             session_id = session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
@@ -126,20 +141,32 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_fetch_player(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client, bot_user: OwnUser):
+    async def test_fetch_player(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        bot_user: OwnUser,
+    ):
         rest = RESTClient(ongaku_client)
-        
+
         with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(Client(gateway_bot), "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3)
+            session = Session(
+                Client(gateway_bot),
+                "test_name",
+                False,
+                "127.0.0.1",
+                2333,
+                "youshallnotpass",
+                3,
+            )
             session._base_headers = {"Authorization": session.password}
-            
+
             await session.start()
             await asyncio.sleep(2)
 
         with mock.patch.object(
             rest._client._session_handler, "fetch_session", return_value=session
         ):
-            
             session_id = session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
@@ -155,20 +182,32 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_update_player(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client, bot_user: OwnUser):
+    async def test_update_player(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        bot_user: OwnUser,
+    ):
         rest = RESTClient(ongaku_client)
-        
+
         with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(Client(gateway_bot), "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3)
+            session = Session(
+                Client(gateway_bot),
+                "test_name",
+                False,
+                "127.0.0.1",
+                2333,
+                "youshallnotpass",
+                3,
+            )
             session._base_headers = {"Authorization": session.password}
-            
+
             await session.start()
             await asyncio.sleep(2)
 
         with mock.patch.object(
             rest._client._session_handler, "fetch_session", return_value=session
         ):
-            
             session_id = session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
@@ -192,20 +231,32 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_delete_player(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client, bot_user: OwnUser):
+    async def test_delete_player(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        bot_user: OwnUser,
+    ):
         rest = RESTClient(ongaku_client)
-        
+
         with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(Client(gateway_bot), "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3)
+            session = Session(
+                Client(gateway_bot),
+                "test_name",
+                False,
+                "127.0.0.1",
+                2333,
+                "youshallnotpass",
+                3,
+            )
             session._base_headers = {"Authorization": session.password}
-            
+
             await session.start()
             await asyncio.sleep(2)
 
         with mock.patch.object(
             rest._client._session_handler, "fetch_session", return_value=session
         ):
-            
             session_id = session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
@@ -226,20 +277,32 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_update_session(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client, bot_user: OwnUser):
+    async def test_update_session(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        bot_user: OwnUser,
+    ):
         rest = RESTClient(ongaku_client)
-        
+
         with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(Client(gateway_bot), "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3)
+            session = Session(
+                Client(gateway_bot),
+                "test_name",
+                False,
+                "127.0.0.1",
+                2333,
+                "youshallnotpass",
+                3,
+            )
             session._base_headers = {"Authorization": session.password}
-            
+
             await session.start()
             await asyncio.sleep(2)
 
         with mock.patch.object(
             rest._client._session_handler, "fetch_session", return_value=session
         ):
-            
             session_id = session._get_session_id()
 
             await rest.update_session(session_id, resuming=False, timeout=300)
