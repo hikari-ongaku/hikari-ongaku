@@ -36,6 +36,18 @@ class Session(abc.ABC):
         """The timeout in seconds."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Session):
+            return False
+
+        if self.resuming != other.resuming:
+            return False
+
+        if self.timeout != other.timeout:
+            return False
+
+        return True
+
 
 class SessionStatus(int, enum.Enum):
     """

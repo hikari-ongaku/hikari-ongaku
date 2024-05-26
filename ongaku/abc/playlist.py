@@ -41,6 +41,21 @@ class Playlist(abc.ABC):
         """Addition playlist info provided by plugins."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Playlist):
+            return False
+
+        if self.info != other.info:
+            return False
+
+        if self.tracks != other.tracks:
+            return False
+
+        if self.plugin_info != other.plugin_info:
+            return False
+
+        return True
+
 
 class PlaylistInfo(abc.ABC):
     """
@@ -62,6 +77,18 @@ class PlaylistInfo(abc.ABC):
     def selected_track(self) -> int:
         """The selected track of the playlist (`-1` if no track is selected)."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, PlaylistInfo):
+            return False
+
+        if self.name != other.name:
+            return False
+
+        if self.selected_track != other.selected_track:
+            return False
+
+        return True
 
 
 # MIT License

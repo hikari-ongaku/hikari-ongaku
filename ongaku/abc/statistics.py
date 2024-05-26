@@ -56,6 +56,30 @@ class Statistics(abc.ABC):
         """The frame stats of the session."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Statistics):
+            return False
+
+        if self.players != other.players:
+            return False
+
+        if self.playing_players != other.playing_players:
+            return False
+
+        if self.uptime != other.uptime:
+            return False
+
+        if self.memory != other.memory:
+            return False
+
+        if self.cpu != other.cpu:
+            return False
+
+        if self.frame_stats != other.frame_stats:
+            return False
+
+        return True
+
 
 class Memory(abc.ABC):
     """
@@ -90,6 +114,24 @@ class Memory(abc.ABC):
         """The amount of reservable memory in bytes."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Memory):
+            return False
+
+        if self.free != other.free:
+            return False
+
+        if self.used != other.used:
+            return False
+
+        if self.allocated != other.allocated:
+            return False
+
+        if self.reservable != other.reservable:
+            return False
+
+        return True
+
 
 class Cpu(abc.ABC):
     """
@@ -118,6 +160,21 @@ class Cpu(abc.ABC):
         """The load of Lavalink on the server."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Cpu):
+            return False
+
+        if self.cores != other.cores:
+            return False
+
+        if self.system_load != other.system_load:
+            return False
+
+        if self.lavalink_load != other.lavalink_load:
+            return False
+
+        return True
+
 
 class FrameStatistics(abc.ABC):
     """
@@ -145,6 +202,21 @@ class FrameStatistics(abc.ABC):
     def deficit(self) -> int:
         """The difference between sent frames and the expected amount of frames."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, FrameStatistics):
+            return False
+
+        if self.sent != other.sent:
+            return False
+
+        if self.nulled != other.nulled:
+            return False
+
+        if self.deficit != other.deficit:
+            return False
+
+        return True
 
 
 # MIT License

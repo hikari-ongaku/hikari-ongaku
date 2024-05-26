@@ -53,6 +53,18 @@ class OngakuEvent(hikari.Event, abc.ABC):
         """The session attached to the event."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, OngakuEvent):
+            return False
+
+        if self.client != other.client:
+            return False
+
+        if self.session != other.session:
+            return False
+
+        return True
+
 
 class Ready(abc.ABC):
     """
@@ -75,6 +87,18 @@ class Ready(abc.ABC):
         """The lavalink session id, for the current session."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Ready):
+            return False
+
+        if self.resumed != other.resumed:
+            return False
+
+        if self.session_id != other.session_id:
+            return False
+
+        return True
+
 
 class PlayerUpdate(abc.ABC):
     """
@@ -96,6 +120,18 @@ class PlayerUpdate(abc.ABC):
     def state(self) -> State:
         """The player state."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, PlayerUpdate):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.state != other.state:
+            return False
+
+        return True
 
 
 class WebsocketClosed(abc.ABC):
@@ -131,6 +167,24 @@ class WebsocketClosed(abc.ABC):
         """Whether the connection was closed by Discord."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, WebsocketClosed):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.code != other.code:
+            return False
+
+        if self.reason != other.reason:
+            return False
+
+        if self.by_remote != other.by_remote:
+            return False
+
+        return True
+
 
 class TrackStart(abc.ABC):
     """
@@ -152,6 +206,18 @@ class TrackStart(abc.ABC):
     def track(self) -> Track:
         """The track related to this event."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, TrackStart):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        return True
 
 
 class TrackEnd(abc.ABC):
@@ -181,6 +247,21 @@ class TrackEnd(abc.ABC):
         """The reason for the track ending."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, TrackEnd):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.reason != other.reason:
+            return False
+
+        return True
+
 
 class TrackException(abc.ABC):
     """
@@ -208,6 +289,21 @@ class TrackException(abc.ABC):
     def exception(self) -> ExceptionError:
         """The exception error that was returned."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, TrackException):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.exception != other.exception:
+            return False
+
+        return True
 
 
 class TrackStuck(abc.ABC):
@@ -237,6 +333,21 @@ class TrackStuck(abc.ABC):
         """The threshold in milliseconds that was exceeded."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, TrackStuck):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.threshold_ms != other.threshold_ms:
+            return False
+
+        return True
+
 
 class QueueEmpty(abc.ABC):
     """
@@ -256,6 +367,18 @@ class QueueEmpty(abc.ABC):
     def old_track(self) -> Track:
         """The track that was previously playing."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, QueueEmpty):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.old_track != other.old_track:
+            return False
+
+        return True
 
 
 class QueueNext(abc.ABC):
@@ -282,6 +405,21 @@ class QueueNext(abc.ABC):
     def old_track(self) -> Track:
         """The track that was previously playing."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, QueueNext):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.old_track != other.old_track:
+            return False
+
+        return True
 
 
 class TrackEndReasonType(str, enum.Enum):

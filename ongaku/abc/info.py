@@ -75,6 +75,36 @@ class Info(abc.ABC):
         """The enabled plugins for this server."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Info):
+            return False
+
+        if self.version != other.version:
+            return False
+
+        if self.build_time != other.build_time:
+            return False
+
+        if self.git != other.git:
+            return False
+
+        if self.jvm != other.jvm:
+            return False
+
+        if self.lavaplayer != other.lavaplayer:
+            return False
+
+        if self.source_managers != other.source_managers:
+            return False
+
+        if self.filters != other.filters:
+            return False
+
+        if self.plugins != other.plugins:
+            return False
+
+        return True
+
 
 class Version(abc.ABC):
     """
@@ -121,6 +151,30 @@ class Version(abc.ABC):
         """The build metadata according to semver as a `.` separated list of identifiers."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Version):
+            return False
+
+        if self.semver != other.semver:
+            return False
+
+        if self.major != other.major:
+            return False
+
+        if self.minor != other.minor:
+            return False
+
+        if self.patch != other.patch:
+            return False
+
+        if self.pre_release != other.pre_release:
+            return False
+
+        if self.build != other.build:
+            return False
+
+        return True
+
 
 class Git(abc.ABC):
     """
@@ -149,6 +203,21 @@ class Git(abc.ABC):
         """The millisecond unix timestamp for when the commit was created."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Git):
+            return False
+
+        if self.branch != other.branch:
+            return False
+
+        if self.commit != other.commit:
+            return False
+
+        if self.commit_time != other.commit_time:
+            return False
+
+        return True
+
 
 class Plugin(abc.ABC):
     """
@@ -170,6 +239,18 @@ class Plugin(abc.ABC):
     def version(self) -> str:
         """The version of the plugin."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Plugin):
+            return False
+
+        if self.name != other.name:
+            return False
+
+        if self.version != other.version:
+            return False
+
+        return True
 
 
 # MIT License

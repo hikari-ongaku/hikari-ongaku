@@ -58,6 +58,27 @@ class Track(abc.ABC):
     @requestor.setter
     def _set_requestor(self, value: hikari.Snowflake): ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, Track):
+            return False
+
+        if self.encoded != other.encoded:
+            return False
+
+        if self.info != other.info:
+            return False
+
+        if self.plugin_info != other.plugin_info:
+            return False
+
+        if self.user_data != other.user_data:
+            return False
+
+        if self.requestor != other.requestor:
+            return False
+
+        return True
+
 
 class TrackInfo(abc.ABC):
     """
@@ -133,6 +154,45 @@ class TrackInfo(abc.ABC):
     def isrc(self) -> str | None:
         """The track ISRC."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, TrackInfo):
+            return False
+
+        if self.identifier != other.identifier:
+            return False
+
+        if self.is_seekable != other.is_seekable:
+            return False
+
+        if self.author != other.author:
+            return False
+
+        if self.length != other.length:
+            return False
+
+        if self.is_stream != other.is_stream:
+            return False
+
+        if self.position != other.position:
+            return False
+
+        if self.title != other.title:
+            return False
+
+        if self.source_name != other.source_name:
+            return False
+
+        if self.uri != other.uri:
+            return False
+
+        if self.artwork_url != other.artwork_url:
+            return False
+
+        if self.isrc != other.isrc:
+            return False
+
+        return True
 
 
 # MIT License

@@ -92,7 +92,7 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.
 

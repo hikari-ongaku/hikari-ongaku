@@ -62,6 +62,30 @@ class RestError(abc.ABC):
         """The stack trace of the error."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, RestError):
+            return False
+
+        if self.timestamp != other.timestamp:
+            return False
+
+        if self.status != other.status:
+            return False
+
+        if self.error != other.error:
+            return False
+
+        if self.message != other.message:
+            return False
+
+        if self.path != other.path:
+            return False
+
+        if self.trace != other.trace:
+            return False
+
+        return True
+
 
 class ExceptionError(abc.ABC):
     """
@@ -89,6 +113,21 @@ class ExceptionError(abc.ABC):
     def cause(self) -> str:
         """The cause of the exception."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, ExceptionError):
+            return False
+
+        if self.message != other.message:
+            return False
+
+        if self.severity != other.severity:
+            return False
+
+        if self.cause != other.cause:
+            return False
+
+        return True
 
 
 class SeverityType(str, enum.Enum):

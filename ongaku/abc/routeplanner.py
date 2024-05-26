@@ -42,6 +42,18 @@ class RoutePlannerStatus(abc.ABC):
         """The status details of the RoutePlanner."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, RoutePlannerStatus):
+            return False
+
+        if self.cls != other.cls:
+            return False
+
+        if self.details != other.details:
+            return False
+
+        return True
+
 
 class RoutePlannerDetails(abc.ABC):
     """
@@ -94,6 +106,33 @@ class RoutePlannerDetails(abc.ABC):
         """The current offset in the ip block."""
         ...
 
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, RoutePlannerDetails):
+            return False
+
+        if self.ip_block != other.ip_block:
+            return False
+
+        if self.failing_addresses != other.failing_addresses:
+            return False
+
+        if self.rotate_index != other.rotate_index:
+            return False
+
+        if self.ip_index != other.ip_index:
+            return False
+
+        if self.current_address != other.current_address:
+            return False
+
+        if self.current_address_index != other.current_address_index:
+            return False
+
+        if self.block_index != other.block_index:
+            return False
+
+        return True
+
 
 class IPBlock(abc.ABC):
     """
@@ -115,6 +154,18 @@ class IPBlock(abc.ABC):
     def size(self) -> str:
         """The size of the ip block."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, IPBlock):
+            return False
+
+        if self.type != other.type:
+            return False
+
+        if self.size != other.size:
+            return False
+
+        return True
 
 
 class FailingAddress(abc.ABC):
@@ -141,6 +192,21 @@ class FailingAddress(abc.ABC):
     def time(self) -> str:
         """The timestamp when the address failed as a pretty string."""
         ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: D105
+        if not isinstance(other, FailingAddress):
+            return False
+
+        if self.address != other.address:
+            return False
+
+        if self.timestamp != other.timestamp:
+            return False
+
+        if self.time != other.time:
+            return False
+
+        return True
 
 
 class RoutePlannerType(str, enum.Enum):
