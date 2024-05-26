@@ -23,7 +23,7 @@ class Player(player_.Player):
     def __init__(
         self,
         guild_id: hikari.Snowflake,
-        track: track_.Track,
+        track: track_.Track | None,
         volume: int,
         is_paused: bool,
         state: player_.State,
