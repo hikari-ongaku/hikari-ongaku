@@ -6,8 +6,8 @@ The player function, for all player related things.
 
 from __future__ import annotations
 
-import datetime
 import random
+import typing
 import typing as t
 from asyncio import TimeoutError
 from asyncio import gather
@@ -15,16 +15,17 @@ from asyncio import gather
 import hikari
 
 from ongaku import errors
-from ongaku.abc.player import Voice
-from ongaku.abc.track import Track
+from ongaku import events
 from ongaku.enums import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
+from ongaku.impl.player import Voice
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
-from ongaku.abc import player as player_
 
 if t.TYPE_CHECKING:
+    from ongaku.abc import player as player_
+    from ongaku.abc import track as track_
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -52,23 +53,21 @@ class Player(player_.Player):
         session: Session,
         guild: hikari.SnowflakeishOr[hikari.Guild],
     ):
-        state = player_.State(datetime.datetime.fromtimestamp(0), 0, False, -1)
-        voice = player_.Voice("", "", "")
-        super().__init__(hikari.Snowflake(guild), None, -1, True, state, voice, {})
         self._session = session
         self._guild_id = hikari.Snowflake(guild)
         self._channel_id = None
         self._is_alive = False
         self._is_paused = True
+        self._voice: player_.Voice = Voice("", "", "")
 
-        self._queue: list[Track] = []
-        
+        self._track: track_.Track | None = None
+        self._queue: list[track_.Track] = []
 
         self._session_id: str | None = None
 
         self._volume: int = -1
 
-        self._autoplay = True
+        self._autoplay: bool = True
 
         self._position: int = 0
 
@@ -90,6 +89,11 @@ class Player(player_.Player):
         The application attached to this player.
         """
         return self.session.client.app
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild id this player is attached too."""
+        return self._guild_id
 
     @property
     def channel_id(self) -> hikari.Snowflake | None:
@@ -120,7 +124,15 @@ class Player(player_.Player):
 
         The position of the track in milliseconds.
         """
-        return self.state.position
+        return self.position
+
+    @property
+    def volume(self) -> int:
+        return self._volume
+
+    @property
+    def is_paused(self) -> bool:
+        return self._is_paused
 
     @property
     def autoplay(self) -> bool:
@@ -136,15 +148,31 @@ class Player(player_.Player):
 
         Whether or not the player is connected to lavalink
         """
-        return self.state.connected
+        return self.connected
 
     @property
-    def queue(self) -> t.Sequence[Track]:
+    def track(self) -> track_.Track | None:
+        return self._track
+
+    @property
+    def queue(self) -> t.Sequence[track_.Track]:
         """Queue.
 
         Returns the current queue of tracks.
         """
         return self._queue
+
+    @property
+    def voice(self) -> player_.Voice:
+        return self._voice
+
+    @property
+    def state(self) -> player_.State:
+        return self._state
+
+    @property
+    def filters(self) -> typing.Mapping[str, typing.Any]:
+        return self._filters
 
     async def connect(
         self,
@@ -328,7 +356,7 @@ class Player(player_.Player):
         )
 
     async def play(
-        self, track: Track | None = None, requestor: RequestorT | None = None
+        self, track: track_.Track | None = None, requestor: RequestorT | None = None
     ) -> None:
         """Play.
 
@@ -397,7 +425,9 @@ class Player(player_.Player):
         await self._update(player)
 
     async def add(
-        self, tracks: t.Sequence[Track] | Track, requestor: RequestorT | None = None
+        self,
+        tracks: t.Sequence[track_.Track] | track_.Track,
+        requestor: RequestorT | None = None,
     ) -> None:
         """
         Add tracks.
@@ -425,7 +455,7 @@ class Player(player_.Player):
         if requestor:
             new_requestor = hikari.Snowflake(requestor)
 
-        if isinstance(tracks, Track):
+        if isinstance(tracks, track_.Track):
             if new_requestor:
                 tracks._set_requestor = new_requestor
             self._queue.append(tracks)
@@ -653,7 +683,7 @@ class Player(player_.Player):
 
             await self._update(player)
 
-    async def remove(self, value: Track | int) -> None:
+    async def remove(self, value: track_.Track | int) -> None:
         """
         Remove track.
 
@@ -681,7 +711,7 @@ class Player(player_.Player):
         if len(self.queue) == 0:
             raise errors.PlayerQueueException("Queue is empty.")
 
-        if isinstance(value, Track):
+        if isinstance(value, track_.Track):
             index = self._queue.index(value)
 
         else:
@@ -690,7 +720,7 @@ class Player(player_.Player):
         try:
             self._queue.pop(index)
         except KeyError:
-            if isinstance(value, Track):
+            if isinstance(value, track_.Track):
                 raise errors.PlayerQueueException(
                     f"Failed to remove song: {value.info.title}"
                 )
@@ -832,7 +862,7 @@ class Player(player_.Player):
         Change the track position.
 
         Change the currently playing track's position.
-        
+
         Example
         -------
         ```py
@@ -925,14 +955,13 @@ class Player(player_.Player):
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
-        
-        self._track = player._track
+
+        self._track = player.track
         self._volume = player.volume
         self._is_paused = player.is_paused
         self._state = player.state
         self._voice = player.voice
         self._filters = player.filters
-        
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
@@ -948,50 +977,44 @@ class Player(player_.Player):
             f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        if int(event.guild_id) == int(self.guild_id):
-            _logger.log(
-                TRACE_LEVEL,
-                f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
-            )
-            try:
-                await self.remove(0)
-            except ValueError:
-                
-                await self.app.event_manager.dispatch(
-                    self.session.client.event_builder.build_queue_empty_event(self.guild_id, self.session)
-                )
-                return
+        if event.guild_id != self.guild_id:
+            return
+        _logger.log(
+            TRACE_LEVEL,
+            f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
-            if len(self.queue) <= 0:
-                _logger.log(
-                    TRACE_LEVEL,
-                    f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
-                )
-                await self.app.event_manager.dispatch(
-                    self.session.client.event_builder.build_queue_empty_event(self.guild_id, self.session)
-                )
-                return
-
-            _logger.log(
-                TRACE_LEVEL,
-                f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
+        if len(self.queue) == 1:
+            new_event = events.QueueEmptyEvent.from_session(
+                self.session, self.guild_id, self.queue[0]
             )
 
-            await self.play()
+            await self.remove(0)
 
-            await self.app.event_manager.dispatch(
-                self.session.client.event_builder.build_queue_next_event(
-                    self.guild_id,
-                    self._queue[0],
-                    event.track,
-                    self.session
-                )
-            )
+            self.app.event_manager.dispatch(new_event)
 
-            _logger.log(
-                TRACE_LEVEL,
-                f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
+        if len(self.queue) == 0:
+            return
+
+        await self.remove(0)
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
+        )
+
+        await self.play()
+
+        await self.app.event_manager.dispatch(
+            events.QueueNextEvent.from_session(
+                self.session, self.guild_id, self._queue[0], event.track
             )
+        )
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
     async def _player_update(self, event: PlayerUpdateEvent) -> None:
         if event.guild_id != self.guild_id:
