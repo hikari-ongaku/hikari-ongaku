@@ -117,6 +117,7 @@ nav:
     - Rest: api/rest.md
     - Errors: api/errors.md
     - Builders: api/builders.md
+    - Types: api/types.md
     - ABC:
       - Errors: api/abc/errors.md
       - Events: api/abc/events.md
