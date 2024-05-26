@@ -11,10 +11,10 @@ import typing
 import aiohttp
 import hikari
 
-from ongaku import enums
 from ongaku import errors
+from ongaku.abc import session as session_
 from ongaku.builders import EntityBuilder
-from ongaku.handlers import BasicSessionHandler
+from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
 from ongaku.rest import RESTClient
 
@@ -22,7 +22,7 @@ if typing.TYPE_CHECKING:
     import arc
     import tanjun
 
-    from ongaku.handlers import SessionHandlerBase
+    from ongaku.abc.handler import SessionHandler
     from ongaku.player import Player
     from ongaku.session import Session
 
@@ -60,7 +60,7 @@ class Client:
         self,
         app: hikari.GatewayBotAware,
         *,
-        session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
+        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         attempts: int = 3,
     ) -> None:
         self._attempts = attempts
@@ -85,7 +85,7 @@ class Client:
         cls,
         client: arc.GatewayClient,
         *,
-        session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
+        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         attempts: int = 3,
     ) -> Client:
         """From Arc.
@@ -122,7 +122,7 @@ class Client:
         cls,
         client: tanjun.abc.Client,
         *,
-        session_handler: typing.Type[SessionHandlerBase] = BasicSessionHandler,
+        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         attempts: int = 3,
     ) -> Client:
         """From Tanjun.
@@ -202,7 +202,7 @@ class Client:
             return self._selected_session
 
         for session in self._sessions:
-            if session.status == enums.SessionStatus.CONNECTED:
+            if session.status == session_.SessionStatus.CONNECTED:
                 self._selected_session = session
 
         if self._selected_session == None:
