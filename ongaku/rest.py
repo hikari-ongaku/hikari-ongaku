@@ -291,7 +291,7 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format({"session_id": session_id}),
+            route.path.format(session_id=session_id),
             list,
         )
 
@@ -352,9 +352,7 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
+            route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
             dict,
         )
 
@@ -495,9 +493,7 @@ class RESTClient:
 
         response = await session.request(
             route.method,
-            route.path.format(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
+            route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
             dict,
             headers={"Content-Type": "application/json"},
             json=patch_data,
@@ -545,17 +541,16 @@ class RESTClient:
 
         await session.request(
             route.method,
-            route.path.format(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
+            route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
             None,
         )
 
     async def update_session(
         self,
         session_id: str,
-        resuming: hikari.UndefinedOr[bool],
-        timeout: hikari.UndefinedOr[int],
+        *,
+        resuming: bool | None = None,
+        timeout: int | None = None,
     ) -> ABCSession:
         """
         Update Lavalink session.
@@ -601,15 +596,15 @@ class RESTClient:
 
         data: typing.MutableMapping[str, typing.Any] = {}
 
-        if resuming != hikari.UNDEFINED:
+        if resuming:
             data.update({"resuming": resuming})
 
-        if timeout != hikari.UNDEFINED:
+        if timeout:
             data.update({"timeout": timeout})
 
         response = await session.request(
             route.method,
-            route.path.format({"session_id": session_id}),
+            route.path.format(session_id=session_id),
             dict,
             headers={"Content-Type": "application/json"},
             json=data,
