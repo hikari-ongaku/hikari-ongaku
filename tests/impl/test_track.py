@@ -4,6 +4,29 @@ from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 
 
+def test_track():
+    track_info = TrackInfo(
+        "identifier",
+        False,
+        "author",
+        1,
+        True,
+        2,
+        "title",
+        "source_name",
+        "uri",
+        "artwork_url",
+        "isrc",
+    )
+    track = Track("encoded", track_info, {}, {}, None)
+
+    assert track.encoded == "encoded"
+    assert track.info == track_info
+    assert track.plugin_info == {}
+    assert track.user_data == {}
+    assert track.requestor == None
+
+
 def test_track_info():
     track_info = TrackInfo(
         "identifier",
@@ -30,26 +53,3 @@ def test_track_info():
     assert track_info.uri == "uri"
     assert track_info.artwork_url == "artwork_url"
     assert track_info.isrc == "isrc"
-
-
-def test_default():
-    track_info = TrackInfo(
-        "identifier",
-        False,
-        "author",
-        1,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
-    )
-    track = Track("encoded", track_info, {}, {}, None)
-
-    assert track.encoded == "encoded"
-    assert track.info == track_info
-    assert track.plugin_info == {}
-    assert track.user_data == {}
-    assert track.requestor == None
