@@ -219,6 +219,9 @@ class Client:
     async def _stop_event(self, event: hikari.StoppingEvent) -> None:
         await self._session_handler.stop()
 
+        if self._client_session:
+            await self._client_session.close()
+
     async def _arc_player_injector(
         self, ctx: arc.GatewayContext, inj_ctx: arc.InjectorOverridingContext
     ) -> None:
@@ -226,7 +229,7 @@ class Client:
             return
 
         try:
-            player = await self.fetch_player(ctx.guild_id)
+            player = self.fetch_player(ctx.guild_id)
         except errors.PlayerMissingException:
             return
 
@@ -292,7 +295,7 @@ class Client:
         """
         return await self._session_handler.create_player(guild)
 
-    async def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.
 
@@ -317,7 +320,7 @@ class Client:
         PlayerMissingException
             Raised when the player for the guild, does not exist.
         """
-        return await self._session_handler.fetch_player(guild)
+        return self._session_handler.fetch_player(guild)
 
     async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
         """
@@ -342,7 +345,7 @@ class Client:
         PlayerMissingException
             Raised when the player for the guild, does not exist.
         """
-        player = await self.fetch_player(guild)
+        player = self.fetch_player(guild)
 
         if player.connected:
             await player.disconnect()
