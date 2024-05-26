@@ -355,7 +355,7 @@ class Session:
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
-                parser = self.client.entity_builder.build_track_stuck_event(mapped_data)
+                parser = self.client.entity_builder.build_track_stuck(mapped_data)
 
                 event = events.TrackStuckEvent.from_session(
                     self,
@@ -474,9 +474,9 @@ class Session:
             if player.channel_id:
                 await new_player.connect(player.channel_id)
 
-            await new_player.add(player.queue)
+            new_player.add(player.queue)
 
-            await new_player.set_autoplay(player.autoplay)
+            new_player.set_autoplay(player.autoplay)
 
         await self.stop()
 
@@ -496,6 +496,11 @@ class Session:
         """
         if self._session_task:
             self._session_task.cancel()
+
+            try:
+                await self._session_task
+            except asyncio.CancelledError:
+                self._session_task = None
 
 
 # MIT License

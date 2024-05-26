@@ -16,7 +16,6 @@ import hikari
 
 from ongaku import errors
 from ongaku import events
-from ongaku.abc import player as player_
 from ongaku.enums import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
@@ -25,6 +24,7 @@ from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
+    from ongaku.abc import player as player_
     from ongaku.abc import track as track_
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
@@ -34,7 +34,7 @@ _logger = logger.getChild("player")
 __all__ = ("Player",)
 
 
-class Player(player_.Player):
+class Player:
     """
     Base player.
 
@@ -58,10 +58,11 @@ class Player(player_.Player):
         self._channel_id = None
         self._is_alive = False
         self._is_paused = True
-        self._voice: player_.Voice = Voice("", "", "")
-
-        self._track: track_.Track | None = None
+        self._voice: player_.Voice | None = None
+        self._state: player_.State | None = None
         self._queue: list[track_.Track] = []
+        self._filters: typing.Mapping[str, typing.Any] = {}
+        self._connected: bool = False
 
         self._session_id: str | None = None
 
@@ -127,11 +128,16 @@ class Player(player_.Player):
         return self.position
 
     @property
-    def volume(self) -> int:  # noqa: D102
+    def volume(self) -> int:
+        """The volume of the player.
+
+        If `-1` the player has not been connected to lavalink and updated.
+        """
         return self._volume
 
     @property
-    def is_paused(self) -> bool:  # noqa: D102
+    def is_paused(self) -> bool:
+        """Whether the player is currently paused."""
         return self._is_paused
 
     @property
@@ -148,11 +154,7 @@ class Player(player_.Player):
 
         Whether or not the player is connected to lavalink
         """
-        return self.connected
-
-    @property
-    def track(self) -> track_.Track | None:  # noqa: D102
-        return self._track
+        return self._connected
 
     @property
     def queue(self) -> t.Sequence[track_.Track]:
@@ -163,15 +165,18 @@ class Player(player_.Player):
         return self._queue
 
     @property
-    def voice(self) -> player_.Voice:  # noqa: D102
+    def voice(self) -> player_.Voice | None:
+        """The voice state of the player."""
         return self._voice
 
     @property
-    def state(self) -> player_.State:  # noqa: D102
+    def state(self) -> player_.State | None:
+        """The players state."""
         return self._state
 
     @property
-    def filters(self) -> typing.Mapping[str, typing.Any]:  # noqa: D102
+    def filters(self) -> typing.Mapping[str, typing.Any]:
+        """Filters object."""
         return self._filters
 
     async def connect(
@@ -260,17 +265,19 @@ class Player(player_.Player):
             f"Successfully received events for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._voice = Voice(
+        new_voice = Voice(
             token=server_event.token,
             endpoint=server_event.endpoint,
             session_id=state_event.state.session_id,
         )
 
+        self._voice = new_voice
+
         try:
             player = await self.session.client.rest.update_player(
                 session,
                 self.guild_id,
-                voice=self.voice,
+                voice=new_voice,
                 no_replace=False,
             )
         except errors.RestEmptyException:
@@ -424,7 +431,7 @@ class Player(player_.Player):
 
         await self._update(player)
 
-    async def add(
+    def add(
         self,
         tracks: t.Sequence[track_.Track] | track_.Track,
         requestor: RequestorT | None = None,
@@ -571,7 +578,7 @@ class Player(player_.Player):
 
         await self._update(player)
 
-    async def shuffle(self) -> None:
+    def shuffle(self) -> None:
         """Shuffle.
 
         Shuffle the current queue.
@@ -683,7 +690,7 @@ class Player(player_.Player):
 
             await self._update(player)
 
-    async def remove(self, value: track_.Track | int) -> None:
+    def remove(self, value: track_.Track | int) -> None:
         """
         Remove track.
 
@@ -776,7 +783,7 @@ class Player(player_.Player):
 
         await self._update(player)
 
-    async def set_autoplay(self, enable: bool | None = None) -> bool:
+    def set_autoplay(self, enable: bool | None = None) -> bool:
         """
         Set autoplay.
 
@@ -937,7 +944,7 @@ class Player(player_.Player):
         """
         new_player = Player(session, self.guild_id)
 
-        await new_player.add(self.queue)
+        new_player.add(self.queue)
 
         if self.connected and self.channel_id:
             await self.disconnect()
@@ -956,7 +963,6 @@ class Player(player_.Player):
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._track = player.track
         self._volume = player.volume
         self._is_paused = player.is_paused
         self._state = player.state
@@ -989,14 +995,14 @@ class Player(player_.Player):
                 self.session, self.guild_id, self.queue[0]
             )
 
-            await self.remove(0)
+            self.remove(0)
 
             self.app.event_manager.dispatch(new_event)
 
         if len(self.queue) == 0:
             return
 
-        await self.remove(0)
+        self.remove(0)
 
         _logger.log(
             TRACE_LEVEL,
