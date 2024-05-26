@@ -97,7 +97,7 @@ class SeverityType(str, enum.Enum):
 
     The severity type of the lavalink track error.
 
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#severity)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#severity)
     """
 
     COMMON = "common"

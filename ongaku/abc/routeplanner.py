@@ -149,7 +149,7 @@ class RoutePlannerType(str, enum.Enum):
 
     The type of routeplanner that the server is currently using.
 
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#route-planner-types)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#route-planner-types)
     """
 
     ROTATING_ROUTE_PLANNER = "RotatingIpRoutePlanner"
@@ -168,7 +168,7 @@ class IPBlockType(str, enum.Enum):
 
     The IP Block type, 4, or 6.
 
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#ip-block-type)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#ip-block-type)
     """
 
     INET_4_ADDRESS = "Inet4Address"

@@ -290,7 +290,7 @@ class TrackEndReasonType(str, enum.Enum):
 
     The track end reason type for the track that was just playing.
 
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#track-end-reason)
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#track-end-reason)
     """
 
     FINISHED = "finished"
