@@ -2,9 +2,9 @@
 
 import datetime
 
+from ongaku.abc.errors import SeverityType
 from ongaku.impl.errors import ExceptionError
 from ongaku.impl.errors import RestError
-from ongaku.abc.errors import SeverityType
 
 
 def test_rest_error():
@@ -17,7 +17,6 @@ def test_rest_error():
     assert rest_error.message == "message"
     assert rest_error.path == "path"
     assert rest_error.trace == "trace"
-
 
 
 def test_exception_error():

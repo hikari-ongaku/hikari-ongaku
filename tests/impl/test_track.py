@@ -1,11 +1,23 @@
 # ruff: noqa: D100, D101, D102, D103
 
-from ongaku.impl.track import Track, TrackInfo
-
+from ongaku.impl.track import Track
+from ongaku.impl.track import TrackInfo
 
 
 def test_track_info():
-    track_info = TrackInfo("identifier", False, "author", 1, True, 2, "title", "source_name", "uri", "artwork_url", "isrc")
+    track_info = TrackInfo(
+        "identifier",
+        False,
+        "author",
+        1,
+        True,
+        2,
+        "title",
+        "source_name",
+        "uri",
+        "artwork_url",
+        "isrc",
+    )
 
     assert track_info.identifier == "identifier"
     assert track_info.is_seekable is False
@@ -21,7 +33,19 @@ def test_track_info():
 
 
 def test_default():
-    track_info = TrackInfo("identifier", False, "author", 1, True, 2, "title", "source_name", "uri", "artwork_url", "isrc")
+    track_info = TrackInfo(
+        "identifier",
+        False,
+        "author",
+        1,
+        True,
+        2,
+        "title",
+        "source_name",
+        "uri",
+        "artwork_url",
+        "isrc",
+    )
     track = Track("encoded", track_info, {}, {}, None)
 
     assert track.encoded == "encoded"

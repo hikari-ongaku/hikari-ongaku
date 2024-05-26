@@ -1,7 +1,11 @@
 # ruff: noqa: D100, D101, D102, D103
 
 import datetime
-from ongaku.impl.info import Info, Git, Plugin, Version
+
+from ongaku.impl.info import Git
+from ongaku.impl.info import Info
+from ongaku.impl.info import Plugin
+from ongaku.impl.info import Version
 
 
 def test_info_version():
@@ -38,7 +42,9 @@ def test_info():
     source_managers = ["source_manager_1", "source_manager_2"]
     filters = ["filter_1", "filter_2"]
     plugins = [Plugin("name_1", "version_1"), Plugin("name_2", "version_2")]
-    info = Info(version, time, git, "jvm", "lavaplayer", source_managers, filters, plugins)
+    info = Info(
+        version, time, git, "jvm", "lavaplayer", source_managers, filters, plugins
+    )
 
     assert info.version == version
     assert info.build_time == time

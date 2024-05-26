@@ -1,21 +1,42 @@
 # ruff: noqa: D100, D101, D102, D103
 
-from ongaku.impl.errors import ExceptionError
-from ongaku.abc.errors import SeverityType
-from ongaku.impl.events import Ready, PlayerUpdate, TrackException, TrackStuck, WebsocketClosed, TrackStart, TrackEnd
-from ongaku.impl.player import State
-from ongaku.abc.events import TrackEndReasonType
-
-from hikari.snowflakes import Snowflake
-import pytest
 import datetime
 
-from ongaku.impl.track import Track, TrackInfo
+import pytest
+from hikari.snowflakes import Snowflake
+
+from ongaku.abc.errors import SeverityType
+from ongaku.abc.events import TrackEndReasonType
+from ongaku.impl.errors import ExceptionError
+from ongaku.impl.events import PlayerUpdate
+from ongaku.impl.events import Ready
+from ongaku.impl.events import TrackEnd
+from ongaku.impl.events import TrackException
+from ongaku.impl.events import TrackStart
+from ongaku.impl.events import TrackStuck
+from ongaku.impl.events import WebsocketClosed
+from ongaku.impl.player import State
+from ongaku.impl.track import Track
+from ongaku.impl.track import TrackInfo
+
 
 @pytest.fixture
 def track() -> Track:
-    track_info = TrackInfo("identifier", False, "author", 1, True, 2, "title", "source_name", "uri", "artwork_url", "isrc")
+    track_info = TrackInfo(
+        "identifier",
+        False,
+        "author",
+        1,
+        True,
+        2,
+        "title",
+        "source_name",
+        "uri",
+        "artwork_url",
+        "isrc",
+    )
     return Track("encoded", track_info, {}, {}, None)
+
 
 def test_ready():
     ready = Ready(False, "session_id")
@@ -44,7 +65,6 @@ def test_websocket_closed():
     assert websocket_closed.by_remote is False
 
 
-
 def test_track_start(track: Track):
     track_start = TrackStart(Snowflake(1234567890), track)
 
@@ -70,7 +90,6 @@ def test_track_exception(track: Track):
     assert track_exception.guild_id == Snowflake(1234567890)
     assert track_exception.track == track
     assert track_exception.exception == exception
-
 
 
 def test_track_stuck(track: Track):

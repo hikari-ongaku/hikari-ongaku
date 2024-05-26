@@ -3,8 +3,12 @@
 import datetime
 import typing
 
-from ongaku.abc.routeplanner import IPBlockType, RoutePlannerType
-from ongaku.impl.routeplanner import FailingAddress, IPBlock, RoutePlannerDetails, RoutePlannerStatus
+from ongaku.abc.routeplanner import IPBlockType
+from ongaku.abc.routeplanner import RoutePlannerType
+from ongaku.impl.routeplanner import FailingAddress
+from ongaku.impl.routeplanner import IPBlock
+from ongaku.impl.routeplanner import RoutePlannerDetails
+from ongaku.impl.routeplanner import RoutePlannerStatus
 
 
 def test_failing_address():
@@ -25,7 +29,9 @@ def test_ip_block():
 
 def test_routeplanner_details():
     ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
-    failing_address = FailingAddress("failing_address", datetime.datetime.now(), "failing_time")
+    failing_address = FailingAddress(
+        "failing_address", datetime.datetime.now(), "failing_time"
+    )
     routeplanner_details = RoutePlannerDetails(
         ip_block,
         [failing_address],
@@ -33,7 +39,7 @@ def test_routeplanner_details():
         "ip_index",
         "current_address",
         "current_address_index",
-        "block_index"
+        "block_index",
     )
 
     assert routeplanner_details.ip_block == ip_block
@@ -47,11 +53,11 @@ def test_routeplanner_details():
     assert routeplanner_details.block_index == "block_index"
 
 
-
-
 def test_routeplanner_status():
     ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
-    failing_address = FailingAddress("failing_address", datetime.datetime.now(), "failing_time")
+    failing_address = FailingAddress(
+        "failing_address", datetime.datetime.now(), "failing_time"
+    )
     routeplanner_details = RoutePlannerDetails(
         ip_block,
         [failing_address],
@@ -59,11 +65,10 @@ def test_routeplanner_status():
         "ip_index",
         "current_address",
         "current_address_index",
-        "block_index"
+        "block_index",
     )
     routeplanner_status = RoutePlannerStatus(
-        RoutePlannerType.ROTATING_ROUTE_PLANNER,
-        routeplanner_details
+        RoutePlannerType.ROTATING_ROUTE_PLANNER, routeplanner_details
     )
 
     assert routeplanner_status.cls == RoutePlannerType.ROTATING_ROUTE_PLANNER

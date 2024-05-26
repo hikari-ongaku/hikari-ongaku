@@ -1,7 +1,9 @@
 # ruff: noqa: D100, D101, D102, D103
 
-from ongaku.impl.statistics import Statistics, Cpu, FrameStatistics, Memory
-
+from ongaku.impl.statistics import Cpu
+from ongaku.impl.statistics import FrameStatistics
+from ongaku.impl.statistics import Memory
+from ongaku.impl.statistics import Statistics
 
 
 def test_statistics_memory():
@@ -27,6 +29,7 @@ def test_statistics_frame_stats():
     assert stats_frame_statistics.sent == 1
     assert stats_frame_statistics.nulled == 2
     assert stats_frame_statistics.deficit == 3
+
 
 def test_statistics():
     memory = Memory(1, 2, 3, 4)

@@ -1,15 +1,30 @@
 # ruff: noqa: D100, D101, D102, D103
 
 import typing
+
 import pytest
 
-from ongaku.impl.playlist import Playlist, PlaylistInfo
-from ongaku.impl.track import Track, TrackInfo
+from ongaku.impl.playlist import Playlist
+from ongaku.impl.playlist import PlaylistInfo
+from ongaku.impl.track import Track
+from ongaku.impl.track import TrackInfo
 
 
 @pytest.fixture
 def track() -> Track:
-    track_info = TrackInfo("identifier", False, "author", 1, True, 2, "title", "source_name", "uri", "artwork_url", "isrc")
+    track_info = TrackInfo(
+        "identifier",
+        False,
+        "author",
+        1,
+        True,
+        2,
+        "title",
+        "source_name",
+        "uri",
+        "artwork_url",
+        "isrc",
+    )
     return Track("encoded", track_info, {}, {}, None)
 
 
