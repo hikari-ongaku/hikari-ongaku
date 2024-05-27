@@ -205,7 +205,7 @@ class Client:
             if session.status == session_.SessionStatus.CONNECTED:
                 self._selected_session = session
 
-        if self._selected_session == None:
+        if self._selected_session is None:
             _logger.warning(
                 "Ongaku is shutting down, due to no sessions currently working."
             )
