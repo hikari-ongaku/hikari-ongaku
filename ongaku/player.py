@@ -73,7 +73,7 @@ class Player:
         self._position: int = 0
 
         self.app.event_manager.subscribe(TrackEndEvent, self._track_end_event)
-        self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update)
+        self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update_event)
 
     @property
     def session(self) -> Session:
@@ -402,7 +402,7 @@ class Player:
         if self.channel_id is None:
             raise errors.PlayerConnectException("Not connected to a channel.")
 
-        if len(self.queue) <= 0 and track == None:
+        if len(self.queue) <= 0 and track is None:
             raise errors.PlayerQueueException("Queue is empty.")
 
         if track:
@@ -1022,14 +1022,14 @@ class Player:
             f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-    async def _player_update(self, event: PlayerUpdateEvent) -> None:
+    async def _player_update_event(self, event: PlayerUpdateEvent) -> None:
         if event.guild_id != self.guild_id:
             return
 
-        if not event.state.connected:
+        if not event.state.connected and self.connected:
             await self.stop()
 
-        self._position = event.state.position
+        self._state = event.state
 
 
 # MIT License
