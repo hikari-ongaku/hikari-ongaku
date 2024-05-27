@@ -283,7 +283,7 @@ class Session:
             _logger.warning(f"{type(e)}|{e} occurred on {path}")
             raise errors.RestException
 
-    async def _handle_op_code(self, data: str) -> hikari.Event:
+    def _handle_op_code(self, data: str) -> hikari.Event:
         mapped_data = json_loads(data)
 
         if isinstance(mapped_data, typing.Sequence):
@@ -379,7 +379,7 @@ class Session:
     async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
         if msg.type == aiohttp.WSMsgType.TEXT:
             payload_event = events.PayloadEvent.from_session(self, msg.data)
-            event = await self._handle_op_code(msg.data)
+            event = self._handle_op_code(msg.data)
 
             self.app.event_manager.dispatch(payload_event)
             self.app.event_manager.dispatch(event)
