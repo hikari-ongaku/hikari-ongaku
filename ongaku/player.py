@@ -16,6 +16,7 @@ import hikari
 
 from ongaku import errors
 from ongaku import events
+from ongaku.abc import track as track_
 from ongaku.enums import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
@@ -25,7 +26,6 @@ from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
     from ongaku.abc import player as player_
-    from ongaku.abc import track as track_
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -125,7 +125,7 @@ class Player:
 
         The position of the track in milliseconds.
         """
-        return self.position
+        return self._position
 
     @property
     def volume(self) -> int:
