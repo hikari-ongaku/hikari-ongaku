@@ -24,7 +24,7 @@ def test_track():
     assert track.info == track_info
     assert track.plugin_info == {}
     assert track.user_data == {}
-    assert track.requestor == None
+    assert track.requestor is None
 
 
 def test_track_info():
