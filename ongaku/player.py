@@ -296,7 +296,7 @@ class Player:
             f"Successfully connected, and sent data to lavalink for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        await self._update(player)
+        self._update(player)
 
     async def disconnect(self) -> None:
         """
@@ -429,7 +429,7 @@ class Player:
 
         self._is_paused = False
 
-        await self._update(player)
+        self._update(player)
 
     def add(
         self,
@@ -526,7 +526,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     async def stop(self) -> None:
         """
@@ -576,7 +576,7 @@ class Player:
 
         self._is_paused = True
 
-        await self._update(player)
+        self._update(player)
 
     def shuffle(self) -> None:
         """Shuffle.
@@ -670,7 +670,7 @@ class Player:
             except errors.BuildException:
                 raise
 
-            await self._update(player)
+            self._update(player)
         else:
             try:
                 player = await self.session.client.rest.update_player(
@@ -688,7 +688,7 @@ class Player:
             except errors.BuildException:
                 raise
 
-            await self._update(player)
+            self._update(player)
 
     def remove(self, value: track_.Track | int) -> None:
         """
@@ -781,7 +781,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     def set_autoplay(self, enable: bool | None = None) -> bool:
         """
@@ -862,7 +862,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     async def set_position(self, value: int) -> None:
         """
@@ -922,7 +922,7 @@ class Player:
         except errors.BuildException:
             raise
 
-        await self._update(player)
+        self._update(player)
 
     async def transfer_player(self, session: Session) -> Player:
         """Transfer player.
@@ -957,7 +957,7 @@ class Player:
 
         return new_player
 
-    async def _update(self, player: player_.Player) -> None:
+    def _update(self, player: player_.Player) -> None:
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
