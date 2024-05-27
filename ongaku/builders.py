@@ -336,18 +336,6 @@ class EntityBuilder:
         for plugin in data["plugins"]:
             plugins.append(self.build_info_plugin(plugin))
 
-        _logger.warning(data["buildTime"])
-        _logger.warning(type(data["buildTime"]))
-
-        try:
-            time_obj = datetime.datetime.fromtimestamp(
-                int(data["buildTime"]) / 1000, self._tzinfo
-            )
-        except Exception as e:
-            _logger.error("", exc_info=e)
-        else:
-            _logger.warning(time_obj.hour)
-
         return info.Info(
             self.build_info_version(data["version"]),
             datetime.datetime.fromtimestamp(
