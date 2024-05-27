@@ -791,7 +791,7 @@ class EntityBuilder:
             data["encoded"],
             self.build_track_info(data["info"]),
             data["pluginInfo"],
-            data["userData"],
+            data["userData"] if data.get("userData", None) else {},
             None,
         )
 
