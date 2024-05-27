@@ -136,7 +136,7 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return errors.ExceptionError(
-            data["message"], errors_.SeverityType(data["severity"]), data["cause"]
+            data.get("message", None), errors_.SeverityType(data["severity"]), data["cause"]
         )
 
     # Events
