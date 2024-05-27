@@ -62,14 +62,14 @@ class RestError(errors_.RestError):
 
 class ExceptionError(errors_.ExceptionError):
     def __init__(
-        self, message: str, severity: errors_.SeverityType, cause: str
+        self, message: str | None, severity: errors_.SeverityType, cause: str
     ) -> None:
         self._message = message
         self._severity = severity
         self._cause = cause
 
     @property
-    def message(self) -> str:
+    def message(self) -> str | None:
         return self._message
 
     @property

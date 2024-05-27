@@ -98,7 +98,7 @@ class ExceptionError(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def message(self) -> str:
+    def message(self) -> str | None:
         """The message of the exception."""
         ...
 
