@@ -655,11 +655,7 @@ class Player:
         if len(self.queue) == 0:
             raise errors.PlayerQueueError("Queue is empty.")
 
-        if isinstance(value, track_.Track):
-            index = self._queue.index(value)
-
-        else:
-            index = value
+        index = self._queue.index(value) if isinstance(value, track_.Track) else value
 
         try:
             self._queue.pop(index)
