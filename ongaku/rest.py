@@ -11,17 +11,19 @@ import typing
 import hikari
 
 from ongaku import errors
-from ongaku.abc.info import Info
-from ongaku.abc.player import Player
-from ongaku.abc.player import Voice
-from ongaku.abc.playlist import Playlist
-from ongaku.abc.routeplanner import RoutePlannerStatus
-from ongaku.abc.session import Session as ABCSession
-from ongaku.abc.statistics import Statistics
-from ongaku.abc.track import Track
 from ongaku.internal import routes
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
+
+if typing.TYPE_CHECKING:
+    from ongaku.abc.info import Info
+    from ongaku.abc.player import Player
+    from ongaku.abc.player import Voice
+    from ongaku.abc.playlist import Playlist
+    from ongaku.abc.routeplanner import RoutePlannerStatus
+    from ongaku.abc.session import Session as ABCSession
+    from ongaku.abc.statistics import Statistics
+    from ongaku.abc.track import Track
 
 _logger = logger.getChild("rest")
 
@@ -102,39 +104,37 @@ class RESTClient:
         load_type: str = response["loadType"]
 
         if load_type == "empty":
-            _logger.log(TRACE_LEVEL, f"loadType is empty.")
+            _logger.log(TRACE_LEVEL, "loadType is empty.")
             return
 
         elif load_type == "error":
-            _logger.log(TRACE_LEVEL, f"loadType caused an error.")
+            _logger.log(TRACE_LEVEL, "loadType caused an error.")
 
-            raise errors.RestTrackException(
+            raise errors.RestExceptionError.from_error(
                 self._client.entity_builder.build_exception_error(response)
             )
 
         elif load_type == "search":
-            _logger.log(TRACE_LEVEL, f"loadType was a search result.")
+            _logger.log(TRACE_LEVEL, "loadType was a search result.")
             tracks: typing.Sequence[Track] = []
             for track in response["data"]:
                 try:
                     tracks.append(self._client.entity_builder.build_track(track))
                 except Exception as e:
-                    raise errors.BuildException(str(e))
+                    raise errors.BuildError(str(e))
 
             build = tracks
 
         elif load_type == "track":
-            _logger.log(TRACE_LEVEL, f"loadType was a track link.")
+            _logger.log(TRACE_LEVEL, "loadType was a track link.")
             build = self._client.entity_builder.build_track(response["data"])
 
         elif load_type == "playlist":
-            _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
+            _logger.log(TRACE_LEVEL, "loadType was a playlist link.")
             build = self._client.entity_builder.build_playlist(response["data"])
 
         else:
-            raise errors.BuildException(
-                f"An unknown loadType was received: {load_type}"
-            )
+            raise errors.BuildError(f"An unknown loadType was received: {load_type}")
 
         return build
 
@@ -433,7 +433,6 @@ class RESTClient:
             and end_time is hikari.UNDEFINED
             and volume is hikari.UNDEFINED
             and paused is hikari.UNDEFINED
-            and filter is hikari.UNDEFINED
             and voice is hikari.UNDEFINED
             and position is hikari.UNDEFINED
         ):
@@ -801,7 +800,7 @@ class RESTClient:
                 route.path,
                 dict,
             )
-        except errors.RestEmptyException:
+        except errors.RestEmptyError:
             response = None
 
         if response is None:
