@@ -10,87 +10,166 @@ import typing
 
 import attrs
 
-from ongaku.abc.errors import ExceptionError
+from ongaku.abc import errors as errors_
 
 if typing.TYPE_CHECKING:
-    from ongaku.abc.errors import RestError
+    import datetime
+
+    from ongaku.abc.errors import SeverityType
 
 __all__ = (
-    "OngakuException",
-    "RestException",
-    "RestStatusException",
-    "RestErrorException",
-    "RestEmptyException",
-    "RestTrackException",
-    "ClientException",
-    "ClientAliveException",
-    "SessionException",
-    "SessionStartException",
-    "SessionHandlerException",
-    "NoSessionsException",
-    "PlayerException",
-    "PlayerConnectException",
-    "PlayerQueueException",
-    "PlayerMissingException",
-    "BuildException",
-    "TimeoutException",
+    "OngakuError",
+    "RestError",
+    "RestStatusError",
+    "RestErrorError",
+    "RestEmptyError",
+    "RestExceptionError",
+    "ClientError",
+    "ClientAliveError",
+    "SessionError",
+    "SessionStartError",
+    "SessionHandlerError",
+    "NoSessionsError",
+    "PlayerError",
+    "PlayerConnectError",
+    "PlayerQueueError",
+    "PlayerMissingError",
+    "BuildError",
+    "TimeoutError",
 )
 
 
 @attrs.define
-class OngakuException(Exception):
-    """The base ongaku exception."""
+class OngakuError(Exception):
+    """The base ongaku error."""
 
 
 # Rest:
 
 
 @attrs.define
-class RestException(OngakuException):
-    """The base rest exception for all rest action errors."""
+class RestError(OngakuError):
+    """The base rest error for all rest action errors."""
 
 
 @attrs.define
-class RestStatusException(RestException):
+class RestStatusError(RestError):
     """Raised when the status is 4XX or 5XX."""
 
     status: int
     """The status of the response."""
     response: str | None
-    """The response of the exception."""
+    """The response of the Error."""
 
 
 @attrs.define
-class RestErrorException(RestException):
+class RestErrorError(RestError, errors_.RestError):
     """Raised when a rest error is received from the response."""
 
-    rest_error: RestError
-    """The rest error object."""
+    def __init__(
+        self,
+        timestamp: datetime.datetime,
+        status: int,
+        error: str,
+        message: str,
+        path: str,
+        trace: str | None
+    ) -> None:
+        self._timestamp = timestamp
+        self._status = status
+        self._error = error
+        self._message = message
+        self._path = path
+        self._trace = trace
 
+    @classmethod
+    def from_error(cls, error: errors_.RestError):
+        return cls(
+            error.timestamp,
+            error.status,
+            error.error,
+            error.message,
+            error.path,
+            error.trace
+        )
+
+    @property
+    def timestamp(self) -> datetime.datetime:
+        return self._timestamp
+
+    @property
+    def status(self) -> int:
+        return self._status
+
+    @property
+    def error(self) -> str:
+        return self._error
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+    @property
+    def path(self) -> str:
+        return self._path
+
+    @property
+    def trace(self) -> str | None:
+        return self._trace
 
 @attrs.define
-class RestEmptyException(RestException):
+class RestEmptyError(RestError):
     """Raised when the request was 204, but required data."""
 
 
 @attrs.define
-class RestTrackException(RestException):
+class RestExceptionError(RestError, errors_.ExceptionError):
     """Raised when a track search results in a error result."""
+    
+    def __init__(
+        self,
+        message: str | None,
+        severity: SeverityType,
+        cause: str,
+    ):
+        self._message = message
+        self._severity = severity
+        self._cause = cause
 
-    exception_error: ExceptionError
-    """The exception error."""
+    @classmethod
+    def from_error(
+        cls, 
+        error: errors_.ExceptionError
+    ):
+        return cls(
+            error.message,
+            error.severity,
+            error.cause
+        )
+
+    @property
+    def message(self) -> str | None:
+        return self._message
+
+    @property
+    def severity(self) -> SeverityType:
+        return self._severity
+
+    @property
+    def cause(self) -> str:
+        return self._cause
 
 
 # Client
 
 
 @attrs.define
-class ClientException(OngakuException):
-    """The base for all client exceptions."""
+class ClientError(OngakuError):
+    """The base for all client exception."""
 
 
 @attrs.define
-class ClientAliveException(ClientException):
+class ClientAliveError(ClientError):
     """Raised when the client is not currently alive, or has crashed."""
 
     reason: str
@@ -101,12 +180,12 @@ class ClientAliveException(ClientException):
 
 
 @attrs.define
-class SessionException(OngakuException):
-    """The base session exception for all session related exceptions."""
+class SessionError(OngakuError):
+    """The base session error for all session related errors."""
 
 
 @attrs.define
-class SessionStartException(SessionException):
+class SessionStartError(SessionError):
     """Raised when the session has not started. (has not received the ready payload)."""
 
 
@@ -114,12 +193,12 @@ class SessionStartException(SessionException):
 
 
 @attrs.define
-class SessionHandlerException(OngakuException):
-    """The base for all session handler related exceptions."""
+class SessionHandlerError(OngakuError):
+    """The base for all session handler related Errors."""
 
 
 @attrs.define
-class NoSessionsException(SessionHandlerException):
+class NoSessionsError(SessionHandlerError):
     """Raised when there is no available sessions for the handler to return."""
 
 
@@ -127,12 +206,12 @@ class NoSessionsException(SessionHandlerException):
 
 
 @attrs.define
-class PlayerException(OngakuException):
-    """The base for all player related exceptions."""
+class PlayerError(OngakuError):
+    """The base for all player related errors."""
 
 
 @attrs.define
-class PlayerConnectException(PlayerException):
+class PlayerConnectError(PlayerError):
     """Raised when the player cannot connect to lavalink, or discord."""
 
     reason: str
@@ -140,15 +219,15 @@ class PlayerConnectException(PlayerException):
 
 
 @attrs.define
-class PlayerQueueException(PlayerException):
+class PlayerQueueError(PlayerError):
     """Raised when the players queue is empty."""
 
     reason: str
-    """Reason for the queue exception."""
+    """Reason for the queue error."""
 
 
 @attrs.define
-class PlayerMissingException(PlayerException):
+class PlayerMissingError(PlayerError):
     """Raised when the player is missing."""
 
 
@@ -156,7 +235,7 @@ class PlayerMissingException(PlayerException):
 
 
 @attrs.define
-class BuildException(OngakuException):
+class BuildError(OngakuError):
     """Raised when a abstract class fails to build."""
 
     reason: str | None
@@ -164,7 +243,7 @@ class BuildException(OngakuException):
 
 
 @attrs.define
-class TimeoutException(OngakuException):
+class TimeoutError(OngakuError):
     """Raised when an event times out."""
 
 
