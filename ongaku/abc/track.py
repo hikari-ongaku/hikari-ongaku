@@ -59,7 +59,7 @@ class Track(abc.ABC):
     @requestor.setter
     def _set_requestor(self, value: hikari.Snowflake): ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Track):
             return False
 
@@ -156,7 +156,7 @@ class TrackInfo(abc.ABC):
         """The track ISRC."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TrackInfo):
             return False
 

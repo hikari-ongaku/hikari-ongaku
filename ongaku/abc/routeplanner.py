@@ -44,7 +44,7 @@ class RoutePlannerStatus(abc.ABC):
         """The status details of the RoutePlanner."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, RoutePlannerStatus):
             return False
 
@@ -108,7 +108,7 @@ class RoutePlannerDetails(abc.ABC):
         """The current offset in the ip block."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, RoutePlannerDetails):
             return False
 
@@ -157,7 +157,7 @@ class IPBlock(abc.ABC):
         """The size of the ip block."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, IPBlock):
             return False
 
@@ -195,7 +195,7 @@ class FailingAddress(abc.ABC):
         """The timestamp when the address failed as a pretty string."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, FailingAddress):
             return False
 

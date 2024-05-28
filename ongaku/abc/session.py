@@ -36,7 +36,7 @@ class Session(abc.ABC):
         """The timeout in seconds."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Session):
             return False
 
