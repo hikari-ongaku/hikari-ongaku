@@ -11,12 +11,6 @@ from __future__ import annotations
 
 import logging
 
-from ongaku.internal.logger import TRACE_LEVEL
-from ongaku.internal.logger import TRACE_NAME
-
-logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
-
-
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.track import Track
 from ongaku.client import Client
@@ -26,24 +20,24 @@ from ongaku.enums import RoutePlannerType
 from ongaku.enums import SessionStatus
 from ongaku.enums import SeverityType
 from ongaku.enums import TrackEndReasonType
-from ongaku.errors import BuildException
-from ongaku.errors import ClientAliveException
-from ongaku.errors import ClientException
-from ongaku.errors import NoSessionsException
-from ongaku.errors import OngakuException
-from ongaku.errors import PlayerConnectException
-from ongaku.errors import PlayerException
-from ongaku.errors import PlayerMissingException
-from ongaku.errors import PlayerQueueException
-from ongaku.errors import RestEmptyException
-from ongaku.errors import RestErrorException
-from ongaku.errors import RestException
-from ongaku.errors import RestStatusException
-from ongaku.errors import RestTrackException
-from ongaku.errors import SessionException
-from ongaku.errors import SessionHandlerException
-from ongaku.errors import SessionStartException
-from ongaku.errors import TimeoutException
+from ongaku.errors import BuildError
+from ongaku.errors import ClientAliveError
+from ongaku.errors import ClientError
+from ongaku.errors import NoSessionsError
+from ongaku.errors import OngakuError
+from ongaku.errors import PlayerConnectError
+from ongaku.errors import PlayerError
+from ongaku.errors import PlayerMissingError
+from ongaku.errors import PlayerQueueError
+from ongaku.errors import RestEmptyError
+from ongaku.errors import RestError
+from ongaku.errors import RestErrorError
+from ongaku.errors import RestExceptionError
+from ongaku.errors import RestStatusError
+from ongaku.errors import SessionError
+from ongaku.errors import SessionHandlerError
+from ongaku.errors import SessionStartError
+from ongaku.errors import TimeoutError
 from ongaku.events import PayloadEvent
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import QueueEmptyEvent
@@ -61,8 +55,12 @@ from ongaku.internal.about import __license__
 from ongaku.internal.about import __maintainer__
 from ongaku.internal.about import __url__
 from ongaku.internal.about import __version__
+from ongaku.internal.logger import TRACE_LEVEL
+from ongaku.internal.logger import TRACE_NAME
 from ongaku.player import Player
 from ongaku.session import Session
+
+logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
 
 __all__ = (
     # .about
@@ -85,25 +83,25 @@ __all__ = (
     "RoutePlannerType",
     "IPBlockType",
     "SessionStatus",
-    # .exceptions
-    "OngakuException",
-    "RestException",
-    "RestStatusException",
-    "RestErrorException",
-    "RestEmptyException",
-    "RestTrackException",
-    "ClientException",
-    "ClientAliveException",
-    "SessionException",
-    "SessionStartException",
-    "SessionHandlerException",
-    "NoSessionsException",
-    "PlayerException",
-    "PlayerConnectException",
-    "PlayerQueueException",
-    "PlayerMissingException",
-    "BuildException",
-    "TimeoutException",
+    # .errors
+    "OngakuError",
+    "RestError",
+    "RestStatusError",
+    "RestErrorError",
+    "RestEmptyError",
+    "RestExceptionError",
+    "ClientError",
+    "ClientAliveError",
+    "SessionError",
+    "SessionStartError",
+    "SessionHandlerError",
+    "NoSessionsError",
+    "PlayerError",
+    "PlayerConnectError",
+    "PlayerQueueError",
+    "PlayerMissingError",
+    "BuildError",
+    "TimeoutError",
     # .events
     "PayloadEvent",
     "ReadyEvent",

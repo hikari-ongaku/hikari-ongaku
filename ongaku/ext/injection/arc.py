@@ -6,12 +6,8 @@ Adds arc's ensure player, so you don't have to make sure its a player.
 
 from __future__ import annotations
 
-import typing
-
 from ongaku import errors
-
-if typing.TYPE_CHECKING:
-    from ongaku.client import Client
+from ongaku.client import Client
 
 try:
     import arc
@@ -57,9 +53,9 @@ async def arc_ensure_player(ctx: arc.GatewayContext):
     try:
         client = ctx.get_type_dependency(Client)
     except KeyError:
-        raise errors.PlayerMissingException
+        raise errors.PlayerMissingError
 
     try:
         client.fetch_player(ctx.guild_id)
-    except errors.PlayerMissingException:
+    except errors.PlayerMissingError:
         raise

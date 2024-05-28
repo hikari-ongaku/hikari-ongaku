@@ -232,7 +232,7 @@ class Player:
                 self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
             )
         except Exception as e:
-            raise errors.PlayerConnectException(str(e))
+            raise errors.PlayerConnectError(str(e))
 
         _logger.log(
             TRACE_LEVEL,
@@ -250,13 +250,13 @@ class Player:
                     timeout=5,
                 ),
             )
-        except TimeoutError as e:
-            raise errors.PlayerConnectException(
+        except TimeoutError:
+            raise errors.PlayerConnectError(
                 f"Could not connect to voice channel {self.channel_id} in {self.guild_id} due to events not being received.",
             )
 
         if server_event.endpoint is None:
-            raise errors.PlayerConnectException(
+            raise errors.PlayerConnectError(
                 f"Endpoint missing for attempted server connection for voice channel {self.channel_id} in {self.guild_id}",
             )
 
@@ -273,21 +273,12 @@ class Player:
 
         self._voice = new_voice
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                voice=new_voice,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            voice=new_voice,
+            no_replace=False,
+        )
 
         self._is_alive = True
 
@@ -332,16 +323,7 @@ class Player:
             f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        try:
-            await self.session.client.rest.delete_player(session, self._guild_id)
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        await self.session.client.rest.delete_player(session, self._guild_id)
 
         _logger.log(
             TRACE_LEVEL,
@@ -400,10 +382,10 @@ class Player:
         session = self.session._get_session_id()
 
         if self.channel_id is None:
-            raise errors.PlayerConnectException("Not connected to a channel.")
+            raise errors.PlayerConnectError("Not connected to a channel.")
 
         if len(self.queue) <= 0 and track is None:
-            raise errors.PlayerQueueException("Queue is empty.")
+            raise errors.PlayerQueueError("Queue is empty.")
 
         if track:
             if requestor:
@@ -411,21 +393,12 @@ class Player:
 
             self._queue.insert(0, track)
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                track=self.queue[0],
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            track=self.queue[0],
+            no_replace=False,
+        )
 
         self._is_paused = False
 
@@ -513,18 +486,9 @@ class Player:
         else:
             self._is_paused = not self.is_paused
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session, self.guild_id, paused=self.is_paused
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session, self.guild_id, paused=self.is_paused
+        )
 
         self._update(player)
 
@@ -558,21 +522,12 @@ class Player:
         """
         session = self.session._get_session_id()
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                track=None,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            track=None,
+            no_replace=False,
+        )
 
         self._is_paused = True
 
@@ -592,7 +547,7 @@ class Player:
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
-            raise errors.PlayerQueueException(
+            raise errors.PlayerQueueError(
                 "Queue must have more than 2 tracks to shuffle."
             )
 
@@ -645,7 +600,7 @@ class Player:
         if amount <= 0:
             raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
-            raise errors.PlayerQueueException("Queue is empty.")
+            raise errors.PlayerQueueError("Queue is empty.")
 
         for _ in range(amount):
             if len(self._queue) == 0:
@@ -654,39 +609,21 @@ class Player:
                 self._queue.pop(0)
 
         if len(self.queue) <= 0:
-            try:
-                player = await self.session.client.rest.update_player(
-                    session,
-                    self.guild_id,
-                    track=None,
-                    no_replace=False,
-                )
-            except errors.RestEmptyException:
-                raise
-            except errors.RestStatusException:
-                raise
-            except errors.RestErrorException:
-                raise
-            except errors.BuildException:
-                raise
+            player = await self.session.client.rest.update_player(
+                session,
+                self.guild_id,
+                track=None,
+                no_replace=False,
+            )
 
             self._update(player)
         else:
-            try:
-                player = await self.session.client.rest.update_player(
-                    session,
-                    self.guild_id,
-                    track=self.queue[0],
-                    no_replace=False,
-                )
-            except errors.RestEmptyException:
-                raise
-            except errors.RestStatusException:
-                raise
-            except errors.RestErrorException:
-                raise
-            except errors.BuildException:
-                raise
+            player = await self.session.client.rest.update_player(
+                session,
+                self.guild_id,
+                track=self.queue[0],
+                no_replace=False,
+            )
 
             self._update(player)
 
@@ -716,7 +653,7 @@ class Player:
             Raised when the removal of a track fails.
         """
         if len(self.queue) == 0:
-            raise errors.PlayerQueueException("Queue is empty.")
+            raise errors.PlayerQueueError("Queue is empty.")
 
         if isinstance(value, track_.Track):
             index = self._queue.index(value)
@@ -728,11 +665,11 @@ class Player:
             self._queue.pop(index)
         except KeyError:
             if isinstance(value, track_.Track):
-                raise errors.PlayerQueueException(
+                raise errors.PlayerQueueError(
                     f"Failed to remove song: {value.info.title}"
                 )
             else:
-                raise errors.PlayerQueueException(
+                raise errors.PlayerQueueError(
                     f"Failed to remove song in position {value}"
                 )
 
@@ -765,21 +702,12 @@ class Player:
 
         session = self.session._get_session_id()
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                track=None,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            track=None,
+            no_replace=False,
+        )
 
         self._update(player)
 
@@ -846,21 +774,12 @@ class Player:
         if volume > 1000:
             raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                volume=volume,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            volume=volume,
+            no_replace=False,
+        )
 
         self._update(player)
 
@@ -904,23 +823,14 @@ class Player:
             raise ValueError("Sorry, but a negative value is not allowed.")
 
         if len(self.queue) <= 0:
-            raise errors.PlayerQueueException("Queue is empty.")
+            raise errors.PlayerQueueError("Queue is empty.")
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                position=value,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            position=value,
+            no_replace=False,
+        )
 
         self._update(player)
 

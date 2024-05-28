@@ -80,7 +80,7 @@ class BasicSessionHandler(handler_.SessionHandler):
                 self._current_session = session
                 return session
 
-        raise errors.NoSessionsException
+        raise errors.NoSessionsError
 
     def add_session(
         self, ssl: bool, host: str, port: int, password: str, attempts: int
@@ -140,7 +140,7 @@ class BasicSessionHandler(handler_.SessionHandler):
         if player:
             return player
 
-        raise errors.PlayerMissingException
+        raise errors.PlayerMissingError
 
     async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
         """
