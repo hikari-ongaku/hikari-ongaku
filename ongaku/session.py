@@ -14,7 +14,6 @@ import aiohttp
 from ongaku import errors
 from ongaku import events
 from ongaku.abc import session as session_
-from ongaku.internal import types
 from ongaku.internal.about import __version__
 from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import logger
@@ -26,6 +25,7 @@ if typing.TYPE_CHECKING:
 
     from ongaku.abc import handler as handler_
     from ongaku.client import Client
+    from ongaku.internal import types
     from ongaku.player import Player
 
 __all__ = ("Session",)
@@ -201,93 +201,65 @@ class Session:
         """
         session = self.client._get_client_session()
 
-        new_headers: typing.MutableMapping[str, typing.Any] = {}
+        new_headers: typing.MutableMapping[str, typing.Any] = dict(headers)
 
         if ignore_default_headers is False:
             new_headers.update(self.auth_headers)
 
-        new_headers.update(headers)
+        new_params: typing.MutableMapping[str, typing.Any] = dict(params)
 
-        try:
-            async with session.request(
-                method,
-                f"{self.base_uri}{'/v4' if version else ''}{path}",
-                headers=new_headers,
-                json=json,
-                params=params,
-            ) as response:
-                if response.status == 204 and return_type is not None:
-                    raise errors.RestEmptyException
+        trace = True
 
-                if response.status >= 400:
-                    try:
-                        payload = await response.text()
-                    except Exception:
-                        raise errors.RestStatusException(
-                            response.status, response.reason
-                        )
-                    else:
-                        if len(payload) == 0:
-                            raise errors.RestStatusException(
-                                response.status, response.reason
-                            )
-                        _logger.warning(f"Rest Exception: {payload}")
-                        try:
-                            rest_error = self.client.entity_builder.build_rest_error(
-                                payload
-                            )
-                        except Exception as e:
-                            raise errors.RestStatusException(
-                                response.status, response.reason
-                            )
-                        raise errors.RestErrorException(rest_error)
+        if trace is True:
+            new_params.update({"trace": "true"})
 
-                if return_type is None:
-                    return
+        async with session.request(
+            method,
+            f"{self.base_uri}{'/v4' if version else ''}{path}",
+            headers=new_headers,
+            json=json,
+            params=new_params,
+        ) as response:
+            if response.status == 204 and return_type is not None:
+                raise errors.RestEmptyError
 
-                payload = await response.text()
-
-                _logger.warning(payload)
-
-                if issubclass(return_type, str | int | bool | float):
-                    return return_type(payload)
-
+            if response.status >= 400:
                 try:
-                    json_payload = json_loads(payload)
-                except Exception as e:
-                    raise errors.BuildException(str(e))
+                    payload = await response.text()
+                except Exception:
+                    raise errors.RestStatusError(response.status, response.reason)
+                else:
+                    if len(payload) == 0:
+                        raise errors.RestStatusError(response.status, response.reason)
+                    _logger.warning(f"Rest Exception: {payload}")
+                    try:
+                        rest_error = self.client.entity_builder.build_rest_error(
+                            payload
+                        )
+                    except Exception:
+                        raise errors.RestStatusError(response.status, response.reason)
+                    raise errors.RestErrorError.from_error(rest_error)
 
-                _logger.warning(
-                    f"{type(return_type)} | {return_type} | {return_type == typing.Mapping} | {return_type == typing.Sequence} | {return_type == dict}"
-                )
-                _logger.warning(f"{type(json_payload)} | {json_payload}")
+            if return_type is None:
+                return
 
-                return return_type(json_payload)
+            payload = await response.text()
 
-        except asyncio.TimeoutError:
-            _logger.warning(f"timed out on {str(path)}")
-            raise errors.TimeoutException
-        except errors.RestEmptyException:
-            _logger.warning(f"Empty payload occurred on {path}")
-            raise
-        except errors.RestStatusException:
-            _logger.warning(f"4XX/5XX status occurred on {path}")
-            raise
-        except errors.BuildException:
-            _logger.warning(f"Build exception occurred on {path}")
-            raise
-        except errors.RestErrorException:
-            _logger.warning(f"Rest error occurred on {path}")
-            raise
-        except Exception as e:
-            _logger.warning(f"{type(e)}|{e} occurred on {path}")
-            raise errors.RestException
+            if issubclass(return_type, str | int | bool | float):
+                return return_type(payload)
+
+            try:
+                json_payload = json_loads(payload)
+            except Exception as e:
+                raise errors.BuildError(str(e))
+
+            return return_type(json_payload)
 
     def _handle_op_code(self, data: str) -> hikari.Event:
         mapped_data = json_loads(data)
 
         if isinstance(mapped_data, typing.Sequence):
-            raise errors.BuildException(
+            raise errors.BuildError(
                 "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'"
             )
 
@@ -413,7 +385,7 @@ class Session:
                 "Attempted fetching the bot, but failed as it does not exist."
             )
 
-            raise errors.SessionStartException
+            raise errors.SessionStartError
 
         self._websocket_headers = {
             "User-Id": str(int(bot.id)),
@@ -446,14 +418,14 @@ class Session:
                 self._status = session_.SessionStatus.NOT_CONNECTED
 
         else:
-            _logger.critical(f"Server has no more attempts.")
+            _logger.critical("Server has no more attempts.")
             self._status = session_.SessionStatus.NOT_CONNECTED
 
     def _get_session_id(self) -> str:
         if self._session_id:
             return self._session_id
 
-        raise errors.SessionStartException
+        raise errors.SessionStartError
 
     async def transfer(self, session_handler: handler_.SessionHandler) -> None:
         """
