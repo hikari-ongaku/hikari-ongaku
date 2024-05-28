@@ -8,9 +8,12 @@ The error implemented classes.
 
 from __future__ import annotations
 
-import datetime
+import typing
 
 from ongaku.abc import errors as errors_
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 __all__ = (
     "RestError",
