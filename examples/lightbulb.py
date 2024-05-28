@@ -328,7 +328,7 @@ async def skip_command(
 
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.respond(
             "It looks like the queue is empty, so no new songs will be played."
         )

@@ -96,7 +96,7 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception):
         await ctx.respond("This command needs to be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL)
         return
     
-    elif isinstance(exc, ongaku.PlayerMissingException):
+    elif isinstance(exc, ongaku.PlayerMissingError):
         await ctx.respond("There is no player playing in this guild.", flags=hikari.MessageFlag.EPHEMERAL)
         return
 
@@ -158,7 +158,7 @@ async def play_command(
 
     try:
         player = ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
+    except ongaku.PlayerMissingError:
         player = await ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
@@ -299,7 +299,7 @@ async def skip_command(
 ) -> None:
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.respond(
             "It looks like the queue is empty, so no new songs will be played."
         )

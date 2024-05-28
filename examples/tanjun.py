@@ -146,7 +146,7 @@ async def play_command(
 
     try:
         player = ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
+    except ongaku.PlayerMissingError:
         player = await ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
@@ -371,7 +371,7 @@ async def skip_command(
 
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.create_initial_response(
             "It looks like the queue is empty, so no new songs will be played."
         )
