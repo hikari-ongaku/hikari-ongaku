@@ -8,13 +8,15 @@ The info implemented classes.
 
 from __future__ import annotations
 
-import datetime
 import typing
-
-import hikari
 
 from ongaku.abc import player as player_
 from ongaku.abc import track as track_
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    import hikari
 
 __all__ = ("Player", "State", "Voice")
 

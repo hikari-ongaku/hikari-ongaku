@@ -8,10 +8,12 @@ The routeplanner implemented classes.
 
 from __future__ import annotations
 
-import datetime
 import typing
 
 from ongaku.abc import routeplanner as routeplanner_
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 __all__ = ("RoutePlannerStatus", "RoutePlannerDetails", "IPBlock", "FailingAddress")
 

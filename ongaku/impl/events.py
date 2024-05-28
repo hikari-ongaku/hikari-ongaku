@@ -8,12 +8,15 @@ The error implemented classes.
 
 from __future__ import annotations
 
-import hikari
+import typing
 
 from ongaku.abc import errors as errors_
 from ongaku.abc import events as events_
 from ongaku.abc import player as player_
 from ongaku.abc import track as track_
+
+if typing.TYPE_CHECKING:
+    import hikari
 
 __all__ = (
     "Ready",

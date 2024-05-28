@@ -8,10 +8,12 @@ The info implemented classes.
 
 from __future__ import annotations
 
-import datetime
 import typing
 
 from ongaku.abc import info as info_
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 __all__ = ("Info", "Version", "Git", "Plugin")
 

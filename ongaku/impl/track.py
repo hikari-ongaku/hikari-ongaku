@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import typing
 
-import hikari
+if typing.TYPE_CHECKING:
+    import hikari
 
 from ongaku.abc import track as track_
 
