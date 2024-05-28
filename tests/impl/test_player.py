@@ -12,7 +12,7 @@ from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 
 
-@pytest.fixture
+@pytest.fixture()
 def track() -> Track:
     track_info = TrackInfo(
         "identifier",
