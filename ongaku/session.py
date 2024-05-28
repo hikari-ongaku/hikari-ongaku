@@ -213,47 +213,49 @@ class Session:
         if trace is True:
             new_params.update({"trace": "true"})
 
-        async with session.request(
+        response = await session.request(
             method,
             f"{self.base_uri}{'/v4' if version else ''}{path}",
             headers=new_headers,
             json=json,
             params=new_params,
-        ) as response:
-            if response.status == 204 and return_type is not None:
-                raise errors.RestEmptyError
+        )
+        
+        if response.status == 204 and return_type is not None:
+            raise errors.RestEmptyError
 
-            if response.status >= 400:
-                try:
-                    payload = await response.text()
-                except Exception:
-                    raise errors.RestStatusError(response.status, response.reason)
-                else:
-                    if len(payload) == 0:
-                        raise errors.RestStatusError(response.status, response.reason)
-                    _logger.warning(f"Rest Exception: {payload}")
-                    try:
-                        rest_error = self.client.entity_builder.build_rest_error(
-                            payload
-                        )
-                    except Exception:
-                        raise errors.RestStatusError(response.status, response.reason)
-                    raise errors.RestErrorError.from_error(rest_error)
-
-            if return_type is None:
-                return
-
-            payload = await response.text()
-
-            if issubclass(return_type, str | int | bool | float):
-                return return_type(payload)
-
+        if response.status >= 400:
             try:
-                json_payload = json_loads(payload)
-            except Exception as e:
-                raise errors.BuildError(str(e))
+                payload = await response.text()
+            except Exception:
+                raise errors.RestStatusError(response.status, response.reason)
+            
+            if len(payload) == 0:
+                raise errors.RestStatusError(response.status, response.reason)
+            
+            _logger.warning(f"Rest Exception: {payload}")
+            try:
+                rest_error = self.client.entity_builder.build_rest_error(
+                    payload
+                )
+            except Exception:
+                raise errors.RestStatusError(response.status, response.reason)
+            raise errors.RestErrorError.from_error(rest_error)
 
-            return return_type(json_payload)
+        if return_type is None:
+            return
+
+        payload = await response.text()
+
+        if issubclass(return_type, str | int | bool | float):
+            return return_type(payload)
+
+        try:
+            json_payload = json_loads(payload)
+        except Exception as e:
+            raise errors.BuildError(str(e))
+
+        return return_type(json_payload)
 
     def _handle_op_code(self, data: str) -> hikari.Event:
         mapped_data = json_loads(data)
@@ -403,15 +405,17 @@ class Session:
                 await asyncio.sleep(2.5)
             self._remaining_attempts -= 1
             try:
-                async with self.client._get_client_session() as session:
-                    async with session.ws_connect(
+                async with (
+                    self.client._get_client_session() as session,
+                    session.ws_connect(
                         self.base_uri + "/v4/websocket",
                         headers=new_headers,
                         autoclose=False,
-                    ) as ws:
-                        self._status = session_.SessionStatus.CONNECTED
-                        async for msg in ws:
-                            await self._handle_ws_message(msg)
+                    ) as ws
+                ):
+                    self._status = session_.SessionStatus.CONNECTED
+                    async for msg in ws:
+                        await self._handle_ws_message(msg)
 
             except Exception as e:
                 _logger.warning(f"Websocket connection failure: {e}")
