@@ -12,11 +12,10 @@ import typing
 
 import hikari
 
-from ongaku.abc.errors import ExceptionError
-from ongaku.abc.player import State
-from ongaku.abc.track import Track
-
 if typing.TYPE_CHECKING:
+    from ongaku.abc.errors import ExceptionError
+    from ongaku.abc.player import State
+    from ongaku.abc.track import Track
     from ongaku.client import Client
     from ongaku.session import Session
 
@@ -53,7 +52,7 @@ class OngakuEvent(hikari.Event, abc.ABC):
         """The session attached to the event."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, OngakuEvent):
             return False
 
@@ -87,7 +86,7 @@ class Ready(abc.ABC):
         """The lavalink session id, for the current session."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Ready):
             return False
 
@@ -121,7 +120,7 @@ class PlayerUpdate(abc.ABC):
         """The player state."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PlayerUpdate):
             return False
 
@@ -167,7 +166,7 @@ class WebsocketClosed(abc.ABC):
         """Whether the connection was closed by Discord."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, WebsocketClosed):
             return False
 
@@ -207,7 +206,7 @@ class TrackStart(abc.ABC):
         """The track related to this event."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TrackStart):
             return False
 
@@ -247,7 +246,7 @@ class TrackEnd(abc.ABC):
         """The reason for the track ending."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TrackEnd):
             return False
 
@@ -290,7 +289,7 @@ class TrackException(abc.ABC):
         """The exception error that was returned."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TrackException):
             return False
 
@@ -333,7 +332,7 @@ class TrackStuck(abc.ABC):
         """The threshold in milliseconds that was exceeded."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TrackStuck):
             return False
 
@@ -368,7 +367,7 @@ class QueueEmpty(abc.ABC):
         """The track that was previously playing."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, QueueEmpty):
             return False
 
@@ -406,7 +405,7 @@ class QueueNext(abc.ABC):
         """The track that was previously playing."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, QueueNext):
             return False
 

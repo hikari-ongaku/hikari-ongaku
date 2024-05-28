@@ -28,12 +28,14 @@ from ongaku.impl import routeplanner
 from ongaku.impl import session
 from ongaku.impl import statistics
 from ongaku.impl import track
-from ongaku.internal import types
 from ongaku.internal.converters import DumpType
 from ongaku.internal.converters import LoadType
 from ongaku.internal.converters import json_dumps
 from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import logger
+
+if typing.TYPE_CHECKING:
+    from ongaku.internal import types
 
 _logger = logger.getChild("builders")
 
@@ -136,7 +138,9 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         return errors.ExceptionError(
-            data.get("message", None), errors_.SeverityType(data["severity"]), data["cause"]
+            data.get("message", None),
+            errors_.SeverityType(data["severity"]),
+            data["cause"],
         )
 
     # Events
@@ -512,8 +516,8 @@ class EntityBuilder:
 
         tracks: list[track_.Track] = []
 
-        for track in data["tracks"]:
-            tracks.append(self.build_track(track))
+        for track_payload in data["tracks"]:
+            tracks.append(self.build_track(track_payload))
 
         return playlist.Playlist(
             self.build_playlist_info(data["info"]), tracks, data["pluginInfo"]

@@ -7,12 +7,14 @@ The player Abstract classes.
 from __future__ import annotations
 
 import abc
-import datetime
 import typing
 
-import hikari
+if typing.TYPE_CHECKING:
+    import datetime
 
-from ongaku.abc.track import Track
+    import hikari
+
+    from ongaku.abc.track import Track
 
 __all__ = (
     "State",
@@ -77,7 +79,7 @@ class Player(abc.ABC):
         ...
         # FIXME: This should return a filter object. (or at least  try to parse one.)
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Player):
             return False
 
@@ -138,7 +140,7 @@ class State(abc.ABC):
         """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, State):
             return False
 
@@ -184,7 +186,7 @@ class Voice(abc.ABC):
         """The Discord voice session id to authenticate with."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Voice):
             return False
 

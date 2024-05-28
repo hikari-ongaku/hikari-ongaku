@@ -16,6 +16,7 @@ from ongaku.abc import session as session_
 from ongaku.builders import EntityBuilder
 from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
+from ongaku.player import Player
 from ongaku.rest import RESTClient
 
 if typing.TYPE_CHECKING:
@@ -23,7 +24,6 @@ if typing.TYPE_CHECKING:
     import tanjun
 
     from ongaku.abc.handler import SessionHandler
-    from ongaku.player import Player
     from ongaku.session import Session
 
 
@@ -193,10 +193,10 @@ class Client:
 
     def _fetch_live_server(self) -> Session:
         if not self.app.is_alive:
-            raise errors.ClientAliveException("Hikari has not started.")
+            raise errors.ClientAliveError("Hikari has not started.")
 
         if not self.is_alive:
-            raise errors.ClientAliveException("Ongaku has crashed.")
+            raise errors.ClientAliveError("Ongaku has crashed.")
 
         if self._selected_session:
             return self._selected_session
@@ -209,7 +209,7 @@ class Client:
             _logger.warning(
                 "Ongaku is shutting down, due to no sessions currently working."
             )
-            raise errors.NoSessionsException
+            raise errors.NoSessionsError
 
         return self._selected_session
 
@@ -230,7 +230,7 @@ class Client:
 
         try:
             player = self.fetch_player(ctx.guild_id)
-        except errors.PlayerMissingException:
+        except errors.PlayerMissingError:
             return
 
         inj_ctx.set_type_dependency(Player, player)

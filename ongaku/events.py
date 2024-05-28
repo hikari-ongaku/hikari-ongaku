@@ -8,12 +8,11 @@ from __future__ import annotations
 
 import typing
 
-import hikari
-
 from ongaku.abc import events as events_
 from ongaku.abc import statistics as stats_
 
 if typing.TYPE_CHECKING:
+    import hikari
     import typing_extensions as te
 
     from ongaku.abc import errors as errors_
@@ -42,11 +41,15 @@ class PayloadEvent(events_.OngakuEvent):
     """
     Payload Event.
 
-    The event that is dispatched each time a message is received from the lavalink websocket.
+    The event that is dispatched each time a message is received from the websocket.
     """
 
     def __init__(
-        self, app: hikari.RESTAware, client: Client, session: Session, payload: str
+        self,
+        app: hikari.RESTAware,
+        client: Client,
+        session: Session,
+        payload: str,
     ) -> None:
         self._app = app
         self._client = client
@@ -59,15 +62,15 @@ class PayloadEvent(events_.OngakuEvent):
         return cls(session.app, session.client, session, payload)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
@@ -105,23 +108,23 @@ class ReadyEvent(events_.OngakuEvent, events_.Ready):
         return cls(session.app, session.client, session, resumed, session_id)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def resumed(self) -> bool:  # noqa: D102
+    def resumed(self) -> bool:
         return self._resumed
 
     @property
-    def session_id(self) -> str:  # noqa: D102
+    def session_id(self) -> str:
         return self._session_id
 
 
@@ -156,23 +159,23 @@ class PlayerUpdateEvent(events_.OngakuEvent, events_.PlayerUpdate):
         return cls(session.app, session.client, session, guild_id, state)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def state(self) -> player_.State:  # noqa: D102
+    def state(self) -> player_.State:
         return self._state
 
 
@@ -232,39 +235,39 @@ class StatisticsEvent(events_.OngakuEvent, stats_.Statistics):
         )
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def players(self) -> int:  # noqa: D102
+    def players(self) -> int:
         return self._players
 
     @property
-    def playing_players(self) -> int:  # noqa: D102
+    def playing_players(self) -> int:
         return self._playing_players
 
     @property
-    def uptime(self) -> int:  # noqa: D102
+    def uptime(self) -> int:
         return self._uptime
 
     @property
-    def memory(self) -> statistics_.Memory:  # noqa: D102
+    def memory(self) -> statistics_.Memory:
         return self._memory
 
     @property
-    def cpu(self) -> statistics_.Cpu:  # noqa: D102
+    def cpu(self) -> statistics_.Cpu:
         return self._cpu
 
     @property
-    def frame_stats(self) -> statistics_.FrameStatistics | None:  # noqa: D102
+    def frame_stats(self) -> statistics_.FrameStatistics | None:
         return self._frame_statistics
 
 
@@ -310,31 +313,31 @@ class WebsocketClosedEvent(events_.OngakuEvent, events_.WebsocketClosed):
         )
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def code(self) -> int:  # noqa: D102
+    def code(self) -> int:
         return self._code
 
     @property
-    def reason(self) -> str:  # noqa: D102
+    def reason(self) -> str:
         return self._reason
 
     @property
-    def by_remote(self) -> bool:  # noqa: D102
+    def by_remote(self) -> bool:
         return self._by_remote
 
 
@@ -369,23 +372,23 @@ class TrackStartEvent(events_.OngakuEvent, events_.TrackStart):
         return cls(session.app, session.client, session, guild_id, track)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def track(self) -> track_.Track:  # noqa: D102
+    def track(self) -> track_.Track:
         return self._track
 
 
@@ -426,27 +429,27 @@ class TrackEndEvent(events_.OngakuEvent, events_.TrackEnd):
         return cls(session.app, session.client, session, guild_id, track, reason)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def track(self) -> track_.Track:  # noqa: D102
+    def track(self) -> track_.Track:
         return self._track
 
     @property
-    def reason(self) -> events_.TrackEndReasonType:  # noqa: D102
+    def reason(self) -> events_.TrackEndReasonType:
         return self._reason
 
 
@@ -487,27 +490,27 @@ class TrackExceptionEvent(events_.OngakuEvent, events_.TrackException):
         return cls(session.app, session.client, session, guild_id, track, exception)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def track(self) -> track_.Track:  # noqa: D102
+    def track(self) -> track_.Track:
         return self._track
 
     @property
-    def exception(self) -> errors_.ExceptionError:  # noqa: D102
+    def exception(self) -> errors_.ExceptionError:
         return self._exception
 
 
@@ -548,27 +551,27 @@ class TrackStuckEvent(events_.OngakuEvent, events_.TrackStuck):
         return cls(session.app, session.client, session, guild_id, track, threshold_ms)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def track(self) -> track_.Track:  # noqa: D102
+    def track(self) -> track_.Track:
         return self._track
 
     @property
-    def threshold_ms(self) -> int:  # noqa: D102
+    def threshold_ms(self) -> int:
         return self._threshold_ms
 
 
@@ -601,23 +604,23 @@ class QueueEmptyEvent(events_.OngakuEvent, events_.QueueEmpty):
         return cls(session.app, session.client, session, guild_id, old_track)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def old_track(self) -> track_.Track:  # noqa: D102
+    def old_track(self) -> track_.Track:
         return self._old_track
 
 
@@ -656,27 +659,27 @@ class QueueNextEvent(events_.OngakuEvent, events_.QueueNext):
         return cls(session.app, session.client, session, guild_id, track, old_track)
 
     @property
-    def app(self) -> hikari.RESTAware:  # noqa: D102
+    def app(self) -> hikari.RESTAware:
         return self._app
 
     @property
-    def client(self) -> Client:  # noqa: D102
+    def client(self) -> Client:
         return self._client
 
     @property
-    def session(self) -> Session:  # noqa: D102
+    def session(self) -> Session:
         return self._session
 
     @property
-    def guild_id(self) -> hikari.Snowflake:  # noqa: D102
+    def guild_id(self) -> hikari.Snowflake:
         return self._guild_id
 
     @property
-    def track(self) -> track_.Track:  # noqa: D102
+    def track(self) -> track_.Track:
         return self._track
 
     @property
-    def old_track(self) -> track_.Track:  # noqa: D102
+    def old_track(self) -> track_.Track:
         return self._old_track
 
 

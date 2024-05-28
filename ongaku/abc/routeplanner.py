@@ -7,9 +7,11 @@ Route planner abstract classes.
 from __future__ import annotations
 
 import abc
-import datetime
 import enum
 import typing
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 __all__ = (
     "RoutePlannerStatus",

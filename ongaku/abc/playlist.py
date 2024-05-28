@@ -9,7 +9,8 @@ from __future__ import annotations
 import abc
 import typing
 
-from ongaku.abc.track import Track
+if typing.TYPE_CHECKING:
+    from ongaku.abc.track import Track
 
 __all__ = ("PlaylistInfo", "Playlist")
 
@@ -41,7 +42,7 @@ class Playlist(abc.ABC):
         """Addition playlist info provided by plugins."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Playlist):
             return False
 
@@ -78,7 +79,7 @@ class PlaylistInfo(abc.ABC):
         """The selected track of the playlist (`-1` if no track is selected)."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PlaylistInfo):
             return False
 

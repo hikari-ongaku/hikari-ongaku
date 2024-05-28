@@ -7,8 +7,10 @@ The info abstract classes.
 from __future__ import annotations
 
 import abc
-import datetime
 import typing
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 __all__ = (
     "Version",
@@ -75,7 +77,7 @@ class Info(abc.ABC):
         """The enabled plugins for this server."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Info):
             return False
 
@@ -151,7 +153,7 @@ class Version(abc.ABC):
         """The build metadata according to semver as a `.` separated list of identifiers."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return False
 
@@ -203,7 +205,7 @@ class Git(abc.ABC):
         """The millisecond unix timestamp for when the commit was created."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Git):
             return False
 
@@ -240,7 +242,7 @@ class Plugin(abc.ABC):
         """The version of the plugin."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Plugin):
             return False
 

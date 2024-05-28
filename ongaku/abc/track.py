@@ -9,7 +9,8 @@ from __future__ import annotations
 import abc
 import typing
 
-import hikari
+if typing.TYPE_CHECKING:
+    import hikari
 
 __all__ = (
     "TrackInfo",

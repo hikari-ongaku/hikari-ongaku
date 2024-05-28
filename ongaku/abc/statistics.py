@@ -56,7 +56,7 @@ class Statistics(abc.ABC):
         """The frame stats of the session."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Statistics):
             return False
 
@@ -114,7 +114,7 @@ class Memory(abc.ABC):
         """The amount of reservable memory in bytes."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Memory):
             return False
 
@@ -160,7 +160,7 @@ class Cpu(abc.ABC):
         """The load of Lavalink on the server."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Cpu):
             return False
 
@@ -203,7 +203,7 @@ class FrameStatistics(abc.ABC):
         """The difference between sent frames and the expected amount of frames."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, FrameStatistics):
             return False
 

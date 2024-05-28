@@ -7,8 +7,11 @@ The error abstract classes.
 from __future__ import annotations
 
 import abc
-import datetime
 import enum
+import typing
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 __all__ = (
     "RestError",
@@ -62,7 +65,7 @@ class RestError(abc.ABC):
         """The stack trace of the error."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, RestError):
             return False
 
@@ -114,7 +117,7 @@ class ExceptionError(abc.ABC):
         """The cause of the exception."""
         ...
 
-    def __eq__(self, other: object) -> bool:  # noqa: D105
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, ExceptionError):
             return False
 
