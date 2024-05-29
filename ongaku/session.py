@@ -220,7 +220,7 @@ class Session:
             json=json,
             params=new_params,
         )
-        
+
         if response.status == 204 and return_type is not None:
             raise errors.RestEmptyError
 
@@ -229,15 +229,13 @@ class Session:
                 payload = await response.text()
             except Exception:
                 raise errors.RestStatusError(response.status, response.reason)
-            
+
             if len(payload) == 0:
                 raise errors.RestStatusError(response.status, response.reason)
-            
+
             _logger.warning(f"Rest Exception: {payload}")
             try:
-                rest_error = self.client.entity_builder.build_rest_error(
-                    payload
-                )
+                rest_error = self.client.entity_builder.build_rest_error(payload)
             except Exception:
                 raise errors.RestStatusError(response.status, response.reason)
             raise errors.RestErrorError.from_error(rest_error)
@@ -411,7 +409,7 @@ class Session:
                         self.base_uri + "/v4/websocket",
                         headers=new_headers,
                         autoclose=False,
-                    ) as ws
+                    ) as ws,
                 ):
                     self._status = session_.SessionStatus.CONNECTED
                     async for msg in ws:

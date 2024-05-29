@@ -1,8 +1,6 @@
 import typing
 
-PayloadT: typing.TypeAlias = typing.Final[
-    typing.Mapping[str, typing.Any]
-]
+PayloadT: typing.TypeAlias = typing.Final[typing.Mapping[str, typing.Any]]
 
 __all__ = (
     # guild id
@@ -125,7 +123,12 @@ WEBSOCKET_CLOSED_PAYLOAD: PayloadT = {
     "byRemote": False,
 }
 
-TRACK_START_PAYLOAD: PayloadT = {"op": "event", "type": "TrackStartEvent", "guildId": GUILD_ID, "track": TRACK_PAYLOAD}
+TRACK_START_PAYLOAD: PayloadT = {
+    "op": "event",
+    "type": "TrackStartEvent",
+    "guildId": GUILD_ID,
+    "track": TRACK_PAYLOAD,
+}
 
 TRACK_END_PAYLOAD: PayloadT = {
     "op": "event",

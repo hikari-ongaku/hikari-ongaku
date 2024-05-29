@@ -73,7 +73,7 @@ class RestErrorError(RestError, errors_.RestError):
         error: str,
         message: str,
         path: str,
-        trace: str | None
+        trace: str | None,
     ) -> None:
         self._timestamp = timestamp
         self._status = status
@@ -90,7 +90,7 @@ class RestErrorError(RestError, errors_.RestError):
             error.error,
             error.message,
             error.path,
-            error.trace
+            error.trace,
         )
 
     @property
@@ -117,6 +117,7 @@ class RestErrorError(RestError, errors_.RestError):
     def trace(self) -> str | None:
         return self._trace
 
+
 @attrs.define
 class RestEmptyError(RestError):
     """Raised when the request was 204, but required data."""
@@ -125,7 +126,7 @@ class RestEmptyError(RestError):
 @attrs.define
 class RestExceptionError(RestError, errors_.ExceptionError):
     """Raised when a track search results in a error result."""
-    
+
     def __init__(
         self,
         message: str | None,
@@ -137,15 +138,8 @@ class RestExceptionError(RestError, errors_.ExceptionError):
         self._cause = cause
 
     @classmethod
-    def from_error(
-        cls, 
-        error: errors_.ExceptionError
-    ):
-        return cls(
-            error.message,
-            error.severity,
-            error.cause
-        )
+    def from_error(cls, error: errors_.ExceptionError):
+        return cls(error.message, error.severity, error.cause)
 
     @property
     def message(self) -> str | None:
