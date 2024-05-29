@@ -17,7 +17,7 @@ import hikari
 from ongaku import errors
 from ongaku import events
 from ongaku.abc import track as track_
-from ongaku.enums import TrackEndReasonType
+from ongaku.abc.events import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
 from ongaku.impl.player import Voice

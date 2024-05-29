@@ -11,15 +11,14 @@ from __future__ import annotations
 
 import logging
 
+from ongaku.abc.errors import SeverityType
+from ongaku.abc.events import TrackEndReasonType
 from ongaku.abc.playlist import Playlist
+from ongaku.abc.routeplanner import IPBlockType
+from ongaku.abc.routeplanner import RoutePlannerType
+from ongaku.abc.session import SessionStatus
 from ongaku.abc.track import Track
 from ongaku.client import Client
-from ongaku.enums import BandType
-from ongaku.enums import IPBlockType
-from ongaku.enums import RoutePlannerType
-from ongaku.enums import SessionStatus
-from ongaku.enums import SeverityType
-from ongaku.enums import TrackEndReasonType
 from ongaku.errors import BuildError
 from ongaku.errors import ClientAliveError
 from ongaku.errors import ClientError
@@ -79,7 +78,6 @@ __all__ = (
     # .enums
     "SeverityType",
     "TrackEndReasonType",
-    "BandType",
     "RoutePlannerType",
     "IPBlockType",
     "SessionStatus",
