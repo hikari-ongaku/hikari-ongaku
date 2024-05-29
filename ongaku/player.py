@@ -255,7 +255,7 @@ class Player:
                 f"Could not connect to voice channel {self.channel_id} in {self.guild_id} due to events not being received.",
             )
 
-        if server_event.endpoint is None:
+        if server_event.raw_endpoint is None:
             raise errors.PlayerConnectError(
                 f"Endpoint missing for attempted server connection for voice channel {self.channel_id} in {self.guild_id}",
             )
@@ -267,7 +267,7 @@ class Player:
 
         new_voice = Voice(
             token=server_event.token,
-            endpoint=server_event.endpoint,
+            endpoint=server_event.raw_endpoint,
             session_id=state_event.state.session_id,
         )
 

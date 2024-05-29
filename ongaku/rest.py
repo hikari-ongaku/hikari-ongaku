@@ -475,7 +475,7 @@ class RESTClient:
                 {
                     "voice": {
                         "token": voice.token,
-                        "endpoint": voice.endpoint[6:],
+                        "endpoint": voice.endpoint,
                         "sessionId": voice.session_id,
                     }
                 }
