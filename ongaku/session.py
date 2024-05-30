@@ -359,14 +359,14 @@ class Session:
         elif msg.type == aiohttp.WSMsgType.ERROR:
             self._status = session_.SessionStatus.FAILURE
             _logger.warning("An error occurred.")
-            await self.transfer(self.client._session_handler)
+            await self.transfer(self.client.session_handler)
 
         elif msg.type == aiohttp.WSMsgType.CLOSED:
             self._status = session_.SessionStatus.FAILURE
             _logger.warning(
                 f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
             )
-            await self.transfer(self.client._session_handler)
+            await self.transfer(self.client.session_handler)
 
     async def _websocket(self) -> None:
         bot = self.app.get_me()

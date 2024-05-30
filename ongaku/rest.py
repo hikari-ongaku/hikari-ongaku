@@ -92,7 +92,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method, route.path, dict, params={"identifier": query}
@@ -177,7 +177,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method, route.path, dict, params={"encodedTrack": track}
@@ -227,7 +227,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -287,7 +287,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -348,7 +348,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -488,7 +488,7 @@ class RESTClient:
             str(route),
         )
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -536,7 +536,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         await session.request(
             route.method,
@@ -591,7 +591,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         data: typing.MutableMapping[str, typing.Any] = {}
 
@@ -648,7 +648,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -695,7 +695,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(route.method, route.path, str, version=False)
 
@@ -743,7 +743,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -792,7 +792,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         try:
             response = await session.request(
@@ -842,7 +842,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         await session.request(
             route.method,
@@ -873,7 +873,7 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client._session_handler.fetch_session()
+        session = self._client.session_handler.fetch_session()
 
         await session.request(
             route.method,
