@@ -175,12 +175,24 @@ class Client:
         !!! note
             If the hikari.StartedEvent has already happened, and this is False, ongaku is no longer running and has crashed. Check your logs.
         """
-        return self._session_handler.is_alive
+        return self.session_handler.is_alive
 
     @property
     def entity_builder(self) -> EntityBuilder:
         """The entity builder."""
         return self._entity_builder
+    
+    @property
+    def session_handler(self) -> SessionHandler:
+        """Session handler.
+        
+        The session handler that is currently controlling the sessions.
+
+        !!! warning
+            This should not be touched, or used if you do not know what you are doing.
+            Please use the other methods in client for anything session handler related.
+        """
+        return self._session_handler
 
     def _get_client_session(self) -> aiohttp.ClientSession:
         if not self._client_session:
@@ -214,10 +226,10 @@ class Client:
         return self._selected_session
 
     async def _start_event(self, event: hikari.StartedEvent) -> None:
-        await self._session_handler.start()
+        await self.session_handler.start()
 
     async def _stop_event(self, event: hikari.StoppingEvent) -> None:
-        await self._session_handler.stop()
+        await self.session_handler.stop()
 
         if self._client_session:
             await self._client_session.close()
@@ -268,7 +280,7 @@ class Client:
         password
             The password of the lavalink server.
         """
-        self._session_handler.add_session(ssl, host, port, password, self._attempts)
+        self.session_handler.add_session(ssl, host, port, password, self._attempts)
 
     async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
@@ -293,7 +305,7 @@ class Client:
         guild
             The guild, or guild id you wish to delete the player from.
         """
-        return await self._session_handler.create_player(guild)
+        return await self.session_handler.create_player(guild)
 
     def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
@@ -320,7 +332,7 @@ class Client:
         PlayerMissingException
             Raised when the player for the guild, does not exist.
         """
-        return self._session_handler.fetch_player(guild)
+        return self.session_handler.fetch_player(guild)
 
     async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
         """
@@ -350,7 +362,7 @@ class Client:
         if player.connected:
             await player.disconnect()
 
-        await self._session_handler.delete_player(guild)
+        await self.session_handler.delete_player(guild)
 
 
 # MIT License
