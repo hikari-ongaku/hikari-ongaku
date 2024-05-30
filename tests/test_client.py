@@ -11,7 +11,7 @@ from tanjun.clients import Client as TanjunClient
 
 from ongaku import Player
 from ongaku.client import Client
-from ongaku.errors import PlayerMissingException
+from ongaku.errors import PlayerMissingError
 from ongaku.rest import RESTClient
 from ongaku.session import Session
 
@@ -82,7 +82,7 @@ class TestClient:
         await gateway_bot.dispatch(StartedEvent(app=gateway_bot))
 
         with mock.patch.object(
-            client._session_handler, "fetch_session", return_value=ongaku_session
+            client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             player = await client.create_player(1234567890)
 
@@ -99,7 +99,7 @@ class TestClient:
         await gateway_bot.dispatch(StartedEvent(app=gateway_bot))
 
         with mock.patch.object(
-            client._session_handler, "fetch_session", return_value=ongaku_session
+            client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             await client.create_player(1234567890)
 
@@ -118,7 +118,7 @@ class TestClient:
         await gateway_bot.dispatch(StartedEvent(app=gateway_bot))
 
         with mock.patch.object(
-            client._session_handler, "fetch_session", return_value=ongaku_session
+            client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             await client.create_player(1234567890)
 
@@ -128,7 +128,8 @@ class TestClient:
 
         assert player.guild_id == Snowflake(1234567890)
 
-        await client.delete_player(1234567890)
+        with mock.patch.object(player, "disconnect", return_value=None):
+            await client.delete_player(1234567890)
 
-        with pytest.raises(PlayerMissingException):
+        with pytest.raises(PlayerMissingError):
             client.fetch_player(1234567890)
