@@ -68,7 +68,7 @@ class SessionHandler(abc.ABC):
     @abc.abstractmethod
     def add_session(
         self, ssl: bool, host: str, port: int, password: str, attempts: int
-    ) -> None:
+    ) -> Session:
         """Add a session."""
         ...
 
