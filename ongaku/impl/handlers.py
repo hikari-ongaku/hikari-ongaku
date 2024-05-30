@@ -16,6 +16,7 @@ import hikari
 from ongaku import errors
 from ongaku.abc import handler as handler_
 from ongaku.abc import session as session_
+from ongaku.internal import logger
 from ongaku.player import Player
 from ongaku.session import Session
 
@@ -23,6 +24,9 @@ if typing.TYPE_CHECKING:
     from ongaku.client import Client
 
 __all__ = ("BasicSessionHandler",)
+
+
+_logger = logger.logger.getChild("handlers")
 
 
 class BasicSessionHandler(handler_.SessionHandler):
