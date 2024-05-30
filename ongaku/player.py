@@ -881,7 +881,7 @@ class Player:
         if not self.autoplay:
             return
 
-        if event.reason != TrackEndReasonType.FINISHED:
+        if event.reason != TrackEndReasonType.FINISHED and event.reason != TrackEndReasonType.LOADFAILED:
             return
 
         _logger.log(
@@ -896,6 +896,9 @@ class Player:
             f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
+        if len(self.queue) == 0:
+            return
+
         if len(self.queue) == 1:
             new_event = events.QueueEmptyEvent.from_session(
                 self.session, self.guild_id, self.queue[0]
@@ -903,9 +906,8 @@ class Player:
 
             self.remove(0)
 
-            self.app.event_manager.dispatch(new_event)
+            await self.app.event_manager.dispatch(new_event)
 
-        if len(self.queue) == 0:
             return
 
         self.remove(0)
