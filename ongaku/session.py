@@ -225,15 +225,11 @@ class Session:
             raise errors.RestEmptyError
 
         if response.status >= 400:
-            try:
-                payload = await response.text()
-            except Exception:
-                raise errors.RestStatusError(response.status, response.reason)
+            payload = await response.text()
 
             if len(payload) == 0:
                 raise errors.RestStatusError(response.status, response.reason)
 
-            _logger.warning(f"Rest Exception: {payload}")
             try:
                 rest_error = self.client.entity_builder.build_rest_error(payload)
             except Exception:
@@ -424,8 +420,8 @@ class Session:
             self._status = session_.SessionStatus.NOT_CONNECTED
 
     def _get_session_id(self) -> str:
-        if self._session_id:
-            return self._session_id
+        if self.session_id:
+            return self.session_id
 
         raise errors.SessionStartError
 
