@@ -70,6 +70,8 @@ class BasicSessionHandler(handler_.SessionHandler):
         for player in self.players:
             await player.disconnect()
 
+        self._is_alive = False
+
     def fetch_session(self) -> Session:
         """Fetch a current session."""
         if self._current_session:
@@ -84,7 +86,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
     def add_session(
         self, ssl: bool, host: str, port: int, password: str, attempts: int
-    ) -> None:
+    ) -> Session:
         """Add a session."""
         new_session = Session(
             self._client, str(len(self.sessions)), ssl, host, port, password, attempts
@@ -94,6 +96,8 @@ class BasicSessionHandler(handler_.SessionHandler):
             asyncio.create_task(new_session.start())
 
         self._sessions.update({new_session.name: new_session})
+
+        return new_session
 
     async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
@@ -158,7 +162,9 @@ class BasicSessionHandler(handler_.SessionHandler):
         PlayerMissingException
             Raised when the player for the guild, does not exist.
         """
-        self._players.pop(hikari.Snowflake(guild))
+        player = self._players.pop(hikari.Snowflake(guild))
+
+        await player.disconnect()
 
 
 # MIT License
