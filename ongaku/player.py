@@ -254,7 +254,7 @@ class Player:
             raise errors.PlayerConnectError(
                 f"Could not connect to voice channel {self.channel_id} in {self.guild_id} due to events not being received.",
             )
-
+        
         if server_event.raw_endpoint is None:
             raise errors.PlayerConnectError(
                 f"Endpoint missing for attempted server connection for voice channel {self.channel_id} in {self.guild_id}",
@@ -801,7 +801,7 @@ class Player:
         SessionStartException
             Raised when the players session has not yet been started.
         ValueError
-            Raised when the position is negative.
+            Raised when the position given is negative, or the current tracks length is greater than the length given.
         PlayerQueueException
             Raised when the queue is empty.
         RestEmptyException
@@ -816,10 +816,13 @@ class Player:
         session = self.session._get_session_id()
 
         if value < 0:
-            raise ValueError("Sorry, but a negative value is not allowed.")
+            raise ValueError("Negative value is not allowed.")
 
         if len(self.queue) <= 0:
             raise errors.PlayerQueueError("Queue is empty.")
+        
+        if self.queue[0].info.length < value:
+            raise ValueError("A value greater than the current tracks length is not allowed.")
 
         player = await self.session.client.rest.update_player(
             session,
@@ -856,8 +859,7 @@ class Player:
             await self.disconnect()
 
             await new_player.connect(self.channel_id)
-
-            if not self.is_paused:
+            if self.is_paused is False:
                 await new_player.play()
                 await new_player.set_position(self.position)
 
