@@ -12,7 +12,6 @@ import aiohttp
 import hikari
 
 from ongaku import errors
-from ongaku.abc import session as session_
 from ongaku.builders import EntityBuilder
 from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
@@ -203,28 +202,6 @@ class Client:
 
         return self._client_session
 
-    def _fetch_live_server(self) -> Session:
-        if not self.app.is_alive:
-            raise errors.ClientAliveError("Hikari has not started.")
-
-        if not self.is_alive:
-            raise errors.ClientAliveError("Ongaku has crashed.")
-
-        if self._selected_session:
-            return self._selected_session
-
-        for session in self._sessions:
-            if session.status == session_.SessionStatus.CONNECTED:
-                self._selected_session = session
-
-        if self._selected_session is None:
-            _logger.warning(
-                "Ongaku is shutting down, due to no sessions currently working."
-            )
-            raise errors.NoSessionsError
-
-        return self._selected_session
-
     async def _start_event(self, event: hikari.StartedEvent) -> None:
         await self.session_handler.start()
 
@@ -357,11 +334,6 @@ class Client:
         PlayerMissingException
             Raised when the player for the guild, does not exist.
         """
-        player = self.fetch_player(guild)
-
-        if player.connected:
-            await player.disconnect()
-
         await self.session_handler.delete_player(guild)
 
 
