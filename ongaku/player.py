@@ -847,13 +847,13 @@ class Player:
 
         self._update(player)
 
-    async def transfer_player(self, session: Session) -> Player:
-        """Transfer player.
+    async def transfer(self, session: Session) -> Player:
+        """Transfer.
 
-        Transfer this player to another player.
+        Transfer this player to another session.
 
         !!! warning
-            This will kill the current player the function is ran on.
+            This will kill the current player, and return a new player.
 
         Parameters
         ----------

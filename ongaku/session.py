@@ -435,17 +435,10 @@ class Session:
         session_handler
             The session handler, that will allow this session to move its players too.
         """
-        for id, player in self._players.items():
-            await player.disconnect()
+        for player in self._players.values():
+            player = await player.transfer(session_handler.fetch_session())
 
-            new_player = await session_handler.create_player(id)
-
-            if player.channel_id:
-                await new_player.connect(player.channel_id)
-
-            new_player.add(player.queue)
-
-            new_player.set_autoplay(player.autoplay)
+            session_handler.add_player(player)
 
         await self.stop()
 
