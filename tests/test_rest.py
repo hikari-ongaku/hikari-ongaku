@@ -9,15 +9,21 @@ from hikari import OwnUser
 from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 
+from ongaku import Playlist
+from ongaku import errors
 from ongaku.abc.info import Info
 from ongaku.abc.player import Player
 from ongaku.abc.routeplanner import RoutePlannerStatus
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.client import Client
-from ongaku.errors import RestErrorException
+from ongaku.errors import RestErrorError
+from ongaku.impl import player as player
+from ongaku.impl import track as track_
+from ongaku.impl.player import Voice
 from ongaku.rest import RESTClient
 from ongaku.session import Session
+from tests import payloads
 
 ENCODED_TRACK: typing.Final[str] = (
     "QAAAuQMAGURFQUQgQUhFQUQgfCBEcmVkZ2UgU29uZyEADlRoZSBTdHVwZW5kaXVtAAAAAAAExqgAC2QzQlEtVVpoMGE4AAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9ZDNCUS1VWmgwYTgBADRodHRwczovL2kueXRpbWcuY29tL3ZpL2QzQlEtVVpoMGE4L21heHJlc2RlZmF1bHQuanBnAAAHeW91dHViZQAAAAAAAAAA"
@@ -50,19 +56,148 @@ def bot_user() -> OwnUser:
     )
 
 
+@pytest.fixture
+def track() -> Track:
+    track_info = track_.TrackInfo(
+        "identifier",
+        False,
+        "author",
+        1,
+        True,
+        2,
+        "title",
+        "source_name",
+        "uri",
+        "artwork_url",
+        "isrc",
+    )
+    return track_.Track(ENCODED_TRACK, track_info, {}, {}, None)
+
+
 class TestRest:
     @pytest.mark.asyncio
     async def test_load_track(self, ongaku_client: Client, ongaku_session: Session):
         rest = RESTClient(ongaku_client)
 
+        # Test track return types.
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
+            # Test singular track
+
             track = await rest.load_track("https://youtube.com/watch?v=d3BQ-UZh0a8")
 
-        assert isinstance(track, Track)
+            assert isinstance(track, Track)
 
-        assert track.encoded == ENCODED_TRACK
+            assert track.encoded == ENCODED_TRACK
+
+            # Test playlist
+
+            playlist = await rest.load_track(
+                "https://www.youtube.com/watch?v=vvANy49Kqhw&list=PLVVOXbE6Ls1hIR1dz7HS7pqs4mDLN4JSR"
+            )
+
+            assert isinstance(playlist, Playlist)
+
+            assert playlist.info.name == "STUPENDOUSLY SINISTER SONGS"
+
+            # Test search
+
+            search = await rest.load_track("ytsearch:DEAD AHEAD")
+
+            assert isinstance(search, typing.Sequence)
+
+            assert len(search) >= 1
+
+            # Test no results
+
+            no_result = await rest.load_track(
+                "ytsearch:shjdfhjskdhgjksdhfgkjshdfjhsdgkjhsdkjfhsdjkfhskjhasjkdhgfasdkjfhsjkfh"
+            )
+
+            assert no_result is None
+
+            # Test error track
+
+            with pytest.raises(errors.RestExceptionError) as rest_exception_error:
+                await rest.load_track("https://youtube.com/watch?v=not-a-valid-video")
+
+            assert isinstance(rest_exception_error.value, errors.RestExceptionError)
+
+        # Test malformed search result.
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                return_value={"loadType": "search", "data": [{}, {}, {}]},
+            ) as patched_request,
+            pytest.raises(errors.BuildError) as build_error,
+        ):
+            await rest.load_track("ytsearch:malformed-search")
+
+        patched_request.assert_called_once_with(
+            "GET",
+            "/loadtracks",
+            dict,
+            params={"identifier": "ytsearch:malformed-search"},
+        )
+
+        assert isinstance(build_error.value, errors.BuildError)
+
+        # Test malformed track result.
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                return_value={"loadType": "track", "data": {}},
+            ) as patched_request,
+            pytest.raises(errors.BuildError) as build_error,
+        ):
+            await rest.load_track("ytsearch:malformed-track")
+
+        patched_request.assert_called_once_with(
+            "GET",
+            "/loadtracks",
+            dict,
+            params={"identifier": "ytsearch:malformed-track"},
+        )
+
+        assert isinstance(build_error.value, errors.BuildError)
+
+        # Test malformed playlist result.
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                return_value={"loadType": "playlist", "data": {}},
+            ) as patched_request,
+            pytest.raises(errors.BuildError) as build_error,
+        ):
+            await rest.load_track("ytsearch:malformed-playlist")
+
+        patched_request.assert_called_once_with(
+            "GET",
+            "/loadtracks",
+            dict,
+            params={"identifier": "ytsearch:malformed-playlist"},
+        )
+
+        assert isinstance(build_error.value, errors.BuildError)
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -71,7 +206,7 @@ class TestRest:
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             track = await rest.decode_track(ENCODED_TRACK)
 
@@ -86,7 +221,7 @@ class TestRest:
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             tracks = await rest.decode_tracks([ENCODED_TRACK])
 
@@ -106,7 +241,15 @@ class TestRest:
     ):
         rest = RESTClient(ongaku_client)
 
-        with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
+        with (
+            mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
+            mock.patch.object(
+                gateway_bot.event_manager,
+                "dispatch",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_dispatch,
+        ):
             session = Session(
                 Client(gateway_bot),
                 "test_name",
@@ -116,13 +259,17 @@ class TestRest:
                 "youshallnotpass",
                 3,
             )
-            session._base_headers = {"Authorization": session.password}
+            session._authorization_headers = {"Authorization": session.password}
 
             await session.start()
-            await asyncio.sleep(2)
+
+            while not patched_dispatch.called:
+                await asyncio.sleep(0.05)
+
+            assert session.session_id is not None
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=session
+            rest._client.session_handler, "fetch_session", return_value=session
         ):
             session_id = session._get_session_id()
 
@@ -149,7 +296,15 @@ class TestRest:
     ):
         rest = RESTClient(ongaku_client)
 
-        with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
+        with (
+            mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
+            mock.patch.object(
+                gateway_bot.event_manager,
+                "dispatch",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_dispatch,
+        ):
             session = Session(
                 Client(gateway_bot),
                 "test_name",
@@ -159,23 +314,27 @@ class TestRest:
                 "youshallnotpass",
                 3,
             )
-            session._base_headers = {"Authorization": session.password}
+            session._authorization_headers = {"Authorization": session.password}
 
             await session.start()
-            await asyncio.sleep(2)
+
+            while not patched_dispatch.called:
+                await asyncio.sleep(0.05)
+
+            assert session.session_id is not None
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=session
+            rest._client.session_handler, "fetch_session", return_value=session
         ):
             session_id = session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
 
-            player = await rest.fetch_player(session_id, 1234567890)
+            new_player = await rest.fetch_player(session_id, 1234567890)
 
-            assert isinstance(player, Player)
+            assert isinstance(new_player, Player)
 
-            assert player.guild_id == Snowflake(1234567890)
+            assert new_player.guild_id == Snowflake(1234567890)
 
         await session.stop()
 
@@ -184,49 +343,62 @@ class TestRest:
     @pytest.mark.asyncio
     async def test_update_player(
         self,
-        gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
-        bot_user: OwnUser,
+        ongaku_session: Session,
+        track: Track,
     ):
         rest = RESTClient(ongaku_client)
 
-        with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(
-                Client(gateway_bot),
-                "test_name",
-                False,
-                "127.0.0.1",
-                2333,
-                "youshallnotpass",
-                3,
-            )
-            session._base_headers = {"Authorization": session.password}
-
-            await session.start()
-            await asyncio.sleep(2)
-
-        with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=session
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.PLAYER_PAYLOAD,
+            ) as patched_request,
         ):
-            session_id = session._get_session_id()
+            await rest.update_player(
+                "session_id",
+                1234567890,
+                track=track,
+                position=1,
+                end_time=2,
+                volume=3,
+                paused=False,
+                voice=Voice("token", "endpoint", "session_id"),
+                no_replace=False,
+            )
 
-            await rest.update_player(session_id, 1234567890, volume=3)
+            headers = {"Content-Type": "application/json"}
 
-            player = await rest.fetch_player(session_id, 1234567890)
+            json = {
+                "track": {"encoded": ENCODED_TRACK},
+                "position": 1,
+                "endTime": 2,
+                "volume": 3,
+                "paused": False,
+                "voice": {
+                    "token": "token",
+                    "endpoint": "endpoint",
+                    "sessionId": "session_id",
+                },
+            }
 
-            assert player.guild_id == Snowflake(1234567890)
+            params = {"noReplace": "false"}
 
-            assert player.volume == 3
-
-            await rest.update_player(session_id, 1234567890, volume=5)
-
-            player = await rest.fetch_player(session_id, 1234567890)
-
-            assert player.guild_id == Snowflake(1234567890)
-
-            assert player.volume == 5
-
-        await session.stop()
+            patched_request.assert_called_once_with(
+                "PATCH",
+                "/sessions/session_id/players/1234567890",
+                dict,
+                headers=headers,
+                json=json,
+                params=params,
+            )
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -239,7 +411,15 @@ class TestRest:
     ):
         rest = RESTClient(ongaku_client)
 
-        with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
+        with (
+            mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
+            mock.patch.object(
+                gateway_bot.event_manager,
+                "dispatch",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_dispatch,
+        ):
             session = Session(
                 Client(gateway_bot),
                 "test_name",
@@ -249,27 +429,31 @@ class TestRest:
                 "youshallnotpass",
                 3,
             )
-            session._base_headers = {"Authorization": session.password}
+            session._authorization_headers = {"Authorization": session.password}
 
             await session.start()
-            await asyncio.sleep(2)
+
+            while not patched_dispatch.called:
+                await asyncio.sleep(0.05)
+
+            assert session.session_id is not None
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=session
+            rest._client.session_handler, "fetch_session", return_value=session
         ):
             session_id = session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
 
-            player = await rest.fetch_player(session_id, 1234567890)
+            new_player = await rest.fetch_player(session_id, 1234567890)
 
-            assert isinstance(player, Player)
+            assert isinstance(new_player, Player)
 
-            assert player.guild_id == Snowflake(1234567890)
+            assert new_player.guild_id == Snowflake(1234567890)
 
             await rest.delete_player(session_id, 1234567890)
 
-            with pytest.raises(RestErrorException):
+            with pytest.raises(RestErrorError):
                 await rest.fetch_player(session_id, 1234567890)
 
         await session.stop()
@@ -277,48 +461,39 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_update_session(
-        self,
-        gateway_bot: gateway_bot_.GatewayBot,
-        ongaku_client: Client,
-        bot_user: OwnUser,
-    ):
+    async def test_update_session(self, ongaku_client: Client, ongaku_session: Session):
         rest = RESTClient(ongaku_client)
 
-        with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-            session = Session(
-                Client(gateway_bot),
-                "test_name",
-                False,
-                "127.0.0.1",
-                2333,
-                "youshallnotpass",
-                3,
-            )
-            session._base_headers = {"Authorization": session.password}
-
-            await session.start()
-            await asyncio.sleep(2)
-
-        with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=session
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                return_value={"resuming": False, "timeout": 300},
+            ) as patched_request,
         ):
-            session_id = session._get_session_id()
+            await rest.update_session("session_id", resuming=False, timeout=300)
 
-            await rest.update_session(session_id, resuming=False, timeout=300)
+            patched_request.assert_called_once_with(
+                "PATCH",
+                "/sessions/session_id",
+                dict,
+                headers={"Content-Type": "application/json"},
+                json={"resuming": False, "timeout": 300},
+            )
 
-            # FIXME: I need to see if this actually updated? Not even sure this is something I can test?
-
-        await session.stop()
-
-        await ongaku_client._stop_event(mock.Mock())
+        # await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
     async def test_fetch_info(self, ongaku_client: Client, ongaku_session: Session):
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             info = await rest.fetch_info()
 
@@ -333,7 +508,7 @@ class TestRest:
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             version = await rest.fetch_version()
 
@@ -348,7 +523,7 @@ class TestRest:
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             stats = await rest.fetch_stats()
 
@@ -365,7 +540,7 @@ class TestRest:
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             routeplanner_status = await rest.fetch_routeplanner_status()
 
@@ -385,7 +560,7 @@ class TestRest:
         # TODO: Make sure these methods work with, and without routeplanner enabled.
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             if await rest.fetch_routeplanner_status():
                 await rest.update_routeplanner_address("111.222.333.444")
@@ -401,7 +576,7 @@ class TestRest:
         # TODO: Make sure these methods work with, and without routeplanner enabled.
 
         with mock.patch.object(
-            rest._client._session_handler, "fetch_session", return_value=ongaku_session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             if await rest.fetch_routeplanner_status():
                 await rest.update_all_routeplanner_addresses()
