@@ -51,9 +51,7 @@ class TestBasicSessionHandler:
         assert handler.sessions == ()
 
     @pytest.mark.asyncio
-    async def test_start(
-        self, ongaku_client: Client
-    ):
+    async def test_start(self, ongaku_client: Client):
         handler = BasicSessionHandler(ongaku_client)
 
         assert handler.is_alive is False
@@ -63,8 +61,12 @@ class TestBasicSessionHandler:
         session_2 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
 
         with (
-            mock.patch.object(session_1, "start", return_value=None) as patched_session_1,
-            mock.patch.object(session_2, "start", return_value=None) as patched_session_2
+            mock.patch.object(
+                session_1, "start", return_value=None
+            ) as patched_session_1,
+            mock.patch.object(
+                session_2, "start", return_value=None
+            ) as patched_session_2,
         ):
             await handler.start()
 
@@ -88,8 +90,12 @@ class TestBasicSessionHandler:
         # Start the session up.
 
         with (
-            mock.patch.object(session_1, "start", return_value=None) as patched_session_1,
-            mock.patch.object(session_2, "start", return_value=None) as patched_session_2
+            mock.patch.object(
+                session_1, "start", return_value=None
+            ) as patched_session_1,
+            mock.patch.object(
+                session_2, "start", return_value=None
+            ) as patched_session_2,
         ):
             await handler.start()
 
@@ -99,8 +105,12 @@ class TestBasicSessionHandler:
             assert handler.is_alive is True
 
         with (
-            mock.patch.object(session_1, "stop", return_value=None) as patched_session_1,
-            mock.patch.object(session_2, "stop", return_value=None) as patched_session_2
+            mock.patch.object(
+                session_1, "stop", return_value=None
+            ) as patched_session_1,
+            mock.patch.object(
+                session_2, "stop", return_value=None
+            ) as patched_session_2,
         ):
             await handler.stop()
 
@@ -110,9 +120,7 @@ class TestBasicSessionHandler:
             assert handler.is_alive is False
 
     @pytest.mark.asyncio
-    async def test_fetch_session(
-        self, ongaku_client: Client, ongaku_session: Session
-    ):
+    async def test_fetch_session(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(ongaku_client)
 
         with mock.patch.object(handler, "_current_session", ongaku_session):
@@ -128,10 +136,17 @@ class TestBasicSessionHandler:
         assert len(handler.sessions) == 2
 
         with (
-            mock.patch.object(session_1, "_status", new_callable=mock.PropertyMock(return_value=SessionStatus.FAILURE)),
-            mock.patch.object(session_2, "_status", new_callable=mock.PropertyMock(return_value=SessionStatus.CONNECTED))
+            mock.patch.object(
+                session_1,
+                "_status",
+                new_callable=mock.PropertyMock(return_value=SessionStatus.FAILURE),
+            ),
+            mock.patch.object(
+                session_2,
+                "_status",
+                new_callable=mock.PropertyMock(return_value=SessionStatus.CONNECTED),
+            ),
         ):
-
             # Test without current session, first session failed.
 
             session = handler.fetch_session()
@@ -157,9 +172,17 @@ class TestBasicSessionHandler:
         assert len(handler.sessions) == 1
 
     @pytest.mark.asyncio
-    async def test_create_player(
-        self, ongaku_client: Client, ongaku_session: Session
-    ):
+    async def test_add_player(self, ongaku_client: Client, ongaku_session: Session):
+        handler = BasicSessionHandler(ongaku_client)
+
+        assert len(handler.players) == 0
+
+        handler.add_player(Player(ongaku_session, Snowflake(1234567890)))
+
+        assert len(handler.players) == 1
+
+    @pytest.mark.asyncio
+    async def test_create_player(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(ongaku_client)
 
         # Create a player
@@ -167,7 +190,6 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
-
             original_player = await handler.create_player(Snowflake(1234567890))
 
             assert len(handler.players) == 1
@@ -191,9 +213,7 @@ class TestBasicSessionHandler:
         assert new_player.session == ongaku_session
 
     @pytest.mark.asyncio
-    async def test_fetch_player(
-        self, ongaku_client: Client, ongaku_session: Session
-    ):
+    async def test_fetch_player(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(ongaku_client)
 
         # Create a player
@@ -201,7 +221,6 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
-
             original_player = await handler.create_player(Snowflake(1234567890))
 
             assert len(handler.players) == 1
@@ -233,7 +252,6 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
-
             original_player = await handler.create_player(Snowflake(1234567890))
 
             assert len(handler.players) == 1
@@ -245,7 +263,9 @@ class TestBasicSessionHandler:
 
         # Delete the player.
 
-        with mock.patch.object(original_player, "disconnect", return_value=None) as patched_player:
+        with mock.patch.object(
+            original_player, "disconnect", return_value=None
+        ) as patched_player:
             await handler.delete_player(Snowflake(1234567890))
 
             assert len(handler.players) == 0
