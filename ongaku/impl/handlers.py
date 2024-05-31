@@ -45,21 +45,17 @@ class BasicSessionHandler(handler_.SessionHandler):
 
     @property
     def sessions(self) -> typing.Sequence[Session]:
-        """The sessions attached to this handler."""
         return tuple(self._sessions.values())
 
     @property
     def players(self) -> typing.Sequence[Player]:
-        """The players attached to this handler."""
         return tuple(self._players.values())
 
     @property
     def is_alive(self) -> bool:
-        """Whether the handler is alive or not."""
         return self._is_alive
 
     async def start(self) -> None:
-        """Start the session handler."""
         self._is_alive = True
 
         for session in self.sessions:
@@ -67,7 +63,6 @@ class BasicSessionHandler(handler_.SessionHandler):
                 await session.start()
 
     async def stop(self) -> None:
-        """Stop the session handler."""
         for session in self.sessions:
             await session.stop()
 
@@ -77,7 +72,6 @@ class BasicSessionHandler(handler_.SessionHandler):
         self._is_alive = False
 
     def fetch_session(self) -> Session:
-        """Fetch a current session."""
         if self._current_session:
             return self._current_session
 
@@ -103,17 +97,15 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         return new_session
 
+    def add_player(
+        self,
+        player: Player,
+    ) -> Player:
+        self._players.update({player.guild_id: player})
+
+        return player
+
     async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
-        """
-        Create a player.
-
-        Create a new player for this session.
-
-        Parameters
-        ----------
-        guild
-            The guild, or guild id you wish to delete the player from.
-        """
         try:
             return self.fetch_player(hikari.Snowflake(guild))
         except Exception:
@@ -128,21 +120,6 @@ class BasicSessionHandler(handler_.SessionHandler):
         return new_player
 
     def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
-        """
-        Fetch a player.
-
-        Fetches an existing player.
-
-        Parameters
-        ----------
-        guild
-            The guild, or guild id you wish to delete the player from.
-
-        Raises
-        ------
-        PlayerMissingException
-            Raised when the player for the guild, does not exist.
-        """
         player = self._players.get(hikari.Snowflake(guild))
 
         if player:
@@ -151,21 +128,6 @@ class BasicSessionHandler(handler_.SessionHandler):
         raise errors.PlayerMissingError
 
     async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
-        """
-        Delete a player.
-
-        Delete a pre-existing player.
-
-        Parameters
-        ----------
-        guild
-            The guild, or guild id you wish to delete the player from.
-
-        Raises
-        ------
-        PlayerMissingException
-            Raised when the player for the guild, does not exist.
-        """
         player = self._players.pop(hikari.Snowflake(guild))
 
         await player.disconnect()
