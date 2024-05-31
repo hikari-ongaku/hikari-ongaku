@@ -349,8 +349,8 @@ class Session:
             payload_event = events.PayloadEvent.from_session(self, msg.data)
             event = self._handle_op_code(msg.data)
 
-            self.app.event_manager.dispatch(payload_event)
-            self.app.event_manager.dispatch(event)
+            await self.app.event_manager.dispatch(payload_event)
+            await self.app.event_manager.dispatch(event)
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
             self._status = session_.SessionStatus.FAILURE
