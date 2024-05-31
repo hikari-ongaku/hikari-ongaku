@@ -156,7 +156,7 @@ class TrackInfo(abc.ABC):
         """The track ISRC."""
         ...
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:  # noqa: C901
         if not isinstance(other, TrackInfo):
             return False
 

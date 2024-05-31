@@ -47,7 +47,7 @@ class RESTClient:
     def __init__(self, client: Client) -> None:
         self._client = client
 
-    async def load_track(
+    async def load_track(  # noqa: C901
         self, query: str
     ) -> Playlist | typing.Sequence[Track] | Track | None:
         """
