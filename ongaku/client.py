@@ -180,11 +180,11 @@ class Client:
     def entity_builder(self) -> EntityBuilder:
         """The entity builder."""
         return self._entity_builder
-    
+
     @property
     def session_handler(self) -> SessionHandler:
         """Session handler.
-        
+
         The session handler that is currently controlling the sessions.
 
         !!! warning
