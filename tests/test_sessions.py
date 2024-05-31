@@ -137,7 +137,10 @@ class TestSession:
 
     @pytest.mark.asyncio
     async def test_websocket(
-        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client, bot_user: OwnUser,
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        bot_user: OwnUser,
     ):
         cs = aiohttp.ClientSession()
 
@@ -185,7 +188,7 @@ class TestSession:
 
         with (
             mock.patch.object(gateway_bot, "get_me", return_value=None),
-            pytest.raises(errors.SessionStartError)
+            pytest.raises(errors.SessionStartError),
         ):
             await session._websocket()
 
@@ -625,11 +628,11 @@ class TestRequest:
                     ),
                 ),
             ),
-            pytest.raises(errors.RestErrorError) as rest_error_error,
+            pytest.raises(errors.RestRequestError) as rest_error_error,
         ):
             await ongaku_session.request("GET", "/none", str)
 
-        assert isinstance(rest_error_error.value, errors.RestErrorError)
+        assert isinstance(rest_error_error.value, errors.RestRequestError)
 
         assert rest_error_error.value.timestamp == datetime.datetime.fromtimestamp(
             1 / 1000

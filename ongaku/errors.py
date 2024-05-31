@@ -21,7 +21,7 @@ __all__ = (
     "OngakuError",
     "RestError",
     "RestStatusError",
-    "RestErrorError",
+    "RestRequestError",
     "RestEmptyError",
     "RestExceptionError",
     "ClientError",
@@ -63,7 +63,7 @@ class RestStatusError(RestError):
 
 
 @attrs.define
-class RestErrorError(RestError, errors_.RestError):
+class RestRequestError(RestError, errors_.RestError):
     """Raised when a rest error is received from the response."""
 
     def __init__(

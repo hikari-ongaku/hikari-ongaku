@@ -17,7 +17,6 @@ from ongaku.abc.routeplanner import RoutePlannerStatus
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.client import Client
-from ongaku.errors import RestErrorError
 from ongaku.impl import player as player
 from ongaku.impl import track as track_
 from ongaku.impl.player import Voice
@@ -453,7 +452,7 @@ class TestRest:
 
             await rest.delete_player(session_id, 1234567890)
 
-            with pytest.raises(RestErrorError):
+            with pytest.raises(errors.RestRequestError):
                 await rest.fetch_player(session_id, 1234567890)
 
         await session.stop()

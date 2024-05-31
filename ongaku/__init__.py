@@ -30,8 +30,8 @@ from ongaku.errors import PlayerMissingError
 from ongaku.errors import PlayerQueueError
 from ongaku.errors import RestEmptyError
 from ongaku.errors import RestError
-from ongaku.errors import RestErrorError
 from ongaku.errors import RestExceptionError
+from ongaku.errors import RestRequestError
 from ongaku.errors import RestStatusError
 from ongaku.errors import SessionError
 from ongaku.errors import SessionHandlerError
@@ -85,7 +85,7 @@ __all__ = (
     "OngakuError",
     "RestError",
     "RestStatusError",
-    "RestErrorError",
+    "RestRequestError",
     "RestEmptyError",
     "RestExceptionError",
     "ClientError",

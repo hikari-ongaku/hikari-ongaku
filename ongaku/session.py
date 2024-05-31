@@ -233,7 +233,7 @@ class Session:
                 rest_error = self.client.entity_builder.build_rest_error(payload)
             except Exception:
                 raise errors.RestStatusError(response.status, response.reason)
-            raise errors.RestErrorError.from_error(rest_error)
+            raise errors.RestRequestError.from_error(rest_error)
 
         if return_type is None:
             return
