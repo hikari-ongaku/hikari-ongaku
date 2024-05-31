@@ -78,7 +78,6 @@ class Session:
         self._session_task: asyncio.Task[None] | None = None
         self._status = session_.SessionStatus.NOT_CONNECTED
         self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
-        self._base_headers: typing.MutableMapping[str, typing.Any]
         self._websocket_headers: typing.MutableMapping[str, typing.Any]
         self._authorization_headers: typing.Mapping[str, typing.Any] = {
             "Authorization": password
