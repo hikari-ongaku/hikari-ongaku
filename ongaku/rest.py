@@ -72,12 +72,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built. Or no valid type was found.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the track, playlist or search could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -167,12 +175,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the track could not be built
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -217,12 +233,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the tracks could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -277,12 +301,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the players could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -338,12 +370,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the player could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -388,7 +428,11 @@ class RESTClient:
         ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-player)
 
         !!! note
-            Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None. To not modify them, do not set them to anything.
+            Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None.
+            To not modify them, do not set them to anything.
+
+        !!! warning
+            If you do not set any value (not including `session_id` or `guild_id` as they are required) you will receive a `ValueError`
 
         Example
         -------
@@ -419,14 +463,22 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
         ValueError
             Raised when nothing new has been set.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the track, playlist or search could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -535,8 +587,18 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
         """
         route = routes.DELETE_PLAYER
 
@@ -581,12 +643,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the session could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -638,12 +708,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the information could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -685,12 +763,18 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -731,14 +815,20 @@ class RESTClient:
 
         Raises
         ------
-        SessionException
-            Raised when there is no available session.
-        LavalinkException
-            Raised when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the statistics could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -780,19 +870,27 @@ class RESTClient:
 
         Raises
         ------
-        SessionException
-            Raised when there is no available session.
-        LavalinkException
-            Raised when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the routeplanner status could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
         RoutePlannerStatus
             The RoutePlannerStatus object.
+        None
+            The Route Planner for this server is not active.
         """
         route = routes.GET_ROUTEPLANNER_STATUS
 
@@ -835,14 +933,18 @@ class RESTClient:
 
         Raises
         ------
-        SessionException
-            Raised when there is no available session.
-        LavalinkException
-            Raised when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
         """
         route = routes.POST_ROUTEPLANNER_FREE_ADDRESS
 
@@ -872,8 +974,18 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
         """
         route = routes.POST_ROUTEPLANNER_FREE_ALL
 

@@ -205,17 +205,17 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        PlayerConnectException
+        PlayerConnectError
             Raised when the voice state of the bot cannot be updated, or the voice events required could not be received.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -303,15 +303,15 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -366,17 +366,17 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        PlayerConnectException
+        PlayerConnectError
             Raised when the player is not connected to a channel.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -468,15 +468,15 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -509,15 +509,15 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -543,7 +543,7 @@ class Player:
 
         Raises
         ------
-        PlayerQueueException
+        PlayerQueueError
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
@@ -580,19 +580,19 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
         ValueError
             Raised when the amount set is 0 or negative.
-        PlayerQueueException
+        PlayerQueueError
             Raised when the queue is empty.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -649,7 +649,7 @@ class Player:
 
         Raises
         ------
-        PlayerQueueException
+        PlayerQueueError
             Raised when the removal of a track fails.
         """
         if len(self.queue) == 0:
@@ -695,15 +695,15 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         self._queue.clear()
@@ -762,17 +762,17 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
         ValueError
             Raised when the value is below 0, or above 1000.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -810,19 +810,19 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
         ValueError
             Raised when the position given is negative, or the current tracks length is greater than the length given.
-        PlayerQueueException
+        PlayerQueueError
             Raised when the queue is empty.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()

@@ -132,7 +132,7 @@ nav:
     - Impl:
       - Errors: api/impl/errors.md
       - Events: api/impl/events.md
-      - Handler: api/impl/handlers.md
+      - Handlers: api/impl/handlers.md
       - Info: api/impl/info.md
       - Player: api/impl/player.md
       - Playlist: api/impl/playlist.md

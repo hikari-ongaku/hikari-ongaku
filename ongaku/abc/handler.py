@@ -110,7 +110,7 @@ class SessionHandler(abc.ABC):
 
         Raises
         ------
-        PlayerMissingException
+        PlayerMissingError
             Raised when the player for the guild, does not exist.
         """
         ...
@@ -129,7 +129,7 @@ class SessionHandler(abc.ABC):
 
         Raises
         ------
-        PlayerMissingException
+        PlayerMissingError
             Raised when the player for the guild, does not exist.
         """
         ...

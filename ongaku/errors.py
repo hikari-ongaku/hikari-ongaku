@@ -159,7 +159,7 @@ class RestExceptionError(RestError, errors_.ExceptionError):
 
 @attrs.define
 class ClientError(OngakuError):
-    """The base for all client exception."""
+    """The base for all client errors."""
 
 
 @attrs.define
@@ -167,7 +167,7 @@ class ClientAliveError(ClientError):
     """Raised when the client is not currently alive, or has crashed."""
 
     reason: str
-    """The reason this exception occurred."""
+    """The reason this error occurred."""
 
 
 # Sessions
@@ -188,7 +188,7 @@ class SessionStartError(SessionError):
 
 @attrs.define
 class SessionHandlerError(OngakuError):
-    """The base for all session handler related Errors."""
+    """The base for all session handler related errors."""
 
 
 @attrs.define

@@ -72,6 +72,7 @@ def docs(session: nox.Session) -> None:
 @nox.session()
 def servedocs(session: nox.Session) -> None:
     session.install("-Ur", "requirements/doc.txt")
+    session.install("-Ur", "requirements/injection.txt")
     session.install("-Ur", "requirements.txt")
     session.install("-U", "black")
     session.run("python", "-m", "mkdocs", "serve")

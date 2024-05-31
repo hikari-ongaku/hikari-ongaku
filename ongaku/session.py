@@ -185,18 +185,18 @@ class Session:
 
         Raises
         ------
-        errors.TimeoutException
+        TimeoutError
             Raised when the request takes too long to respond.
-        errors.RestEmptyException
+        RestEmptyError
             Raised when the request required a return type, but received nothing, or a 204 response.
-        errors.RestStatusException
+        RestStatusError
             Raised when a 4XX or a 5XX status is received.
-        errors.BuildException
-            Raised when a mapping or sequence is requested, but could not be created from the response.
-        errors.RestErrorException
+        BuildError
+            Raised when the mapping or sequence could not be built.
+        RestRequestError
             Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
-        errors.RestException
-            Raised when an unknown exception is caught.
+        RestError
+            Raised when an unknown error is caught.
         """
         session = self.client._get_client_session()
 

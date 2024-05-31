@@ -306,7 +306,7 @@ class Client:
 
         Raises
         ------
-        PlayerMissingException
+        PlayerMissingError
             Raised when the player for the guild, does not exist.
         """
         return self.session_handler.fetch_player(guild)
@@ -331,7 +331,7 @@ class Client:
 
         Raises
         ------
-        PlayerMissingException
+        PlayerMissingError
             Raised when the player for the guild, does not exist.
         """
         await self.session_handler.delete_player(guild)
