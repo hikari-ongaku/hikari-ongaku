@@ -73,6 +73,11 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def add_player(self, player: Player) -> Player:
+        """Add a player."""
+        ...
+
+    @abc.abstractmethod
     def fetch_session(self) -> Session:
         """Return a valid session."""
         ...
