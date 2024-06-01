@@ -16,6 +16,7 @@ import hikari
 
 from ongaku import errors
 from ongaku import events
+from ongaku.abc import playlist as playlist_
 from ongaku.abc import track as track_
 from ongaku.abc.events import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
@@ -392,7 +393,7 @@ class Player:
 
     def add(
         self,
-        tracks: t.Sequence[track_.Track] | track_.Track,
+        tracks: t.Sequence[track_.Track] | playlist_.Playlist | track_.Track,
         requestor: RequestorT | None = None,
     ) -> None:
         """
@@ -427,6 +428,9 @@ class Player:
                 tracks._set_requestor = new_requestor
             self._queue.append(tracks)
             return
+
+        if isinstance(tracks, playlist_.Playlist):
+            tracks = tracks.tracks
 
         for track in tracks:
             if new_requestor:

@@ -20,6 +20,7 @@ from ongaku.abc.events import TrackEndReasonType
 from ongaku.client import Client
 from ongaku.impl import player
 from ongaku.impl import player as player_
+from ongaku.impl import playlist
 from ongaku.impl.player import Voice
 from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
@@ -328,7 +329,7 @@ class TestPlayer:
     async def test_add(self, ongaku_session: Session, track: Track):
         player = Player(ongaku_session, 1234567890)
 
-        # Add one track
+        # Add singular track
 
         assert len(player.queue) == 0
 
@@ -340,11 +341,17 @@ class TestPlayer:
 
         tracks: list[Track] = [mock.Mock(), mock.Mock()]
 
-        assert len(player.queue) == 1
-
         player.add(tracks)
 
         assert len(player.queue) == 3
+
+        # Add a playlist
+        info = playlist.PlaylistInfo("beans", -1)
+        new_playlist = playlist.Playlist(info, tracks, {})
+
+        player.add(new_playlist)
+
+        assert len(player.queue) == 5
 
     @pytest.mark.asyncio
     async def test_pause(self, ongaku_session: Session, track: Track):
