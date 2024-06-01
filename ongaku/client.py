@@ -6,6 +6,7 @@ The base client for ongaku.
 
 from __future__ import annotations
 
+import random
 import typing
 
 import aiohttp
@@ -265,7 +266,7 @@ class Client:
         """
         new_session = Session(
             self,
-            str(len(self.session_handler.sessions)),
+            str(random.randint(0, 9999999999)).zfill(10),
             ssl,
             host,
             port,
