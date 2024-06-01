@@ -17,13 +17,13 @@ from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.internal.logger import logger
 from ongaku.player import Player
 from ongaku.rest import RESTClient
+from ongaku.session import Session
 
 if typing.TYPE_CHECKING:
     import arc
     import tanjun
 
     from ongaku.abc.handler import SessionHandler
-    from ongaku.session import Session
 
 
 _logger = logger.getChild("client")
@@ -263,7 +263,17 @@ class Client:
         Session
             The session that was added to the handler.
         """
-        self.session_handler.add_session(ssl, host, port, password, self._attempts)
+        new_session = Session(
+            self,
+            str(len(self.session_handler.sessions)),
+            ssl,
+            host,
+            port,
+            password,
+            self._attempts,
+        )
+
+        self.session_handler.add_session(new_session)
 
     async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """

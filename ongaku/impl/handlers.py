@@ -16,10 +16,10 @@ from ongaku.abc import handler as handler_
 from ongaku.abc import session as session_
 from ongaku.internal import logger
 from ongaku.player import Player
-from ongaku.session import Session
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
+    from ongaku.session import Session
 
 __all__ = ("BasicSessionHandler",)
 
@@ -81,20 +81,14 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.NoSessionsError
 
-    def add_session(
-        self, ssl: bool, host: str, port: int, password: str, attempts: int
-    ) -> Session:
+    def add_session(self, session: Session) -> Session:
         """Add a session."""
-        new_session = Session(
-            self._client, str(len(self.sessions)), ssl, host, port, password, attempts
-        )
-
         if self.is_alive:
-            asyncio.create_task(new_session.start())  # noqa: RUF006
+            asyncio.create_task(session.start())  # noqa: RUF006
 
-        self._sessions.update({new_session.name: new_session})
+        self._sessions.update({session.name: session})
 
-        return new_session
+        return session
 
     def add_player(
         self,

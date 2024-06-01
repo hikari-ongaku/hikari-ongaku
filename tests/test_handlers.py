@@ -56,9 +56,15 @@ class TestBasicSessionHandler:
 
         assert handler.is_alive is False
 
-        session_1 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
+        session_1 = Session(
+            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        )
+        handler.add_session(session_1)
 
-        session_2 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
+        session_2 = Session(
+            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        )
+        handler.add_session(session_2)
 
         with (
             mock.patch.object(
@@ -83,9 +89,15 @@ class TestBasicSessionHandler:
 
         assert handler.is_alive is False
 
-        session_1 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
+        session_1 = Session(
+            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        )
+        handler.add_session(session_1)
 
-        session_2 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
+        session_2 = Session(
+            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        )
+        handler.add_session(session_2)
 
         # Start the session up.
 
@@ -130,8 +142,15 @@ class TestBasicSessionHandler:
 
             assert session == ongaku_session
 
-        session_1 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
-        session_2 = handler.add_session(False, "127.0.0.1", 2333, "youshallnotpass", 3)
+        session_1 = Session(
+            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        )
+        handler.add_session(session_1)
+
+        session_2 = Session(
+            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        )
+        handler.add_session(session_2)
 
         assert len(handler.sessions) == 2
 
@@ -161,13 +180,10 @@ class TestBasicSessionHandler:
 
         assert len(handler.sessions) == 0
 
-        handler.add_session(
-            ongaku_session.ssl,
-            ongaku_session.host,
-            ongaku_session.port,
-            ongaku_session.password,
-            ongaku_session._attempts,
+        session = Session(
+            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
         )
+        handler.add_session(session)
 
         assert len(handler.sessions) == 1
 

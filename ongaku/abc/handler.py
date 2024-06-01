@@ -72,24 +72,14 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def add_session(
-        self, ssl: bool, host: str, port: int, password: str, attempts: int
-    ) -> Session:
+    def add_session(self, session: Session) -> Session:
         """Add a session.
 
         Add a new session to the session handler.
 
         Parameters
-        ssl
-            Whether the server uses `https` or just `http`.
-        host
-            The host of the lavalink server.
-        port
-            The port of the lavalink server.
-        password
-            The password of the lavalink server.
-        attempts
-            The attempts that the session is allowed to use, before completely shutting down.
+        session
+            The session to add to the session handler.
 
         Returns
         -------
@@ -107,7 +97,7 @@ class SessionHandler(abc.ABC):
         Parameters
         ----------
         player
-            The player you wish to add.
+            The player to add to the session handler.
 
         Returns
         -------
