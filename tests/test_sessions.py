@@ -242,7 +242,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/string",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert response == "text"
@@ -271,7 +271,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/integer",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert isinstance(response, int)
@@ -301,7 +301,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/float",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert isinstance(response, float)
@@ -331,7 +331,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/boolean",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert isinstance(response, bool)
@@ -366,7 +366,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/dict",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert isinstance(response, dict)
@@ -401,7 +401,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/list",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert isinstance(response, list)
@@ -436,7 +436,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/tuple",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert isinstance(response, tuple)
@@ -466,7 +466,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/none",
                 headers=ongaku_session.auth_headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert response is None
@@ -505,7 +505,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/headers",
                 headers=headers,
                 json={},
-                params={"trace": "true"},
+                params={},
             )
 
             assert response is None
@@ -521,7 +521,7 @@ class TestRequest:
                 "http://127.0.0.1:2333/v4/json",
                 headers=ongaku_session.auth_headers,
                 json=test_dict,
-                params={"trace": "true"},
+                params={},
             )
 
             assert response is None
@@ -534,7 +534,7 @@ class TestRequest:
 
             params = dict(test_dict)
 
-            params.update({"trace": "true"})
+            params.update({})
 
             patched_request.assert_called_with(
                 "GET",

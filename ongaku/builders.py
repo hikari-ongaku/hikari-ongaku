@@ -32,6 +32,7 @@ from ongaku.internal.converters import DumpType
 from ongaku.internal.converters import LoadType
 from ongaku.internal.converters import json_dumps
 from ongaku.internal.converters import json_loads
+from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if typing.TYPE_CHECKING:
@@ -114,6 +115,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into RestError")
+
         return errors.RestError(
             datetime.datetime.fromtimestamp(
                 int(data["timestamp"]) / 1000, self._tzinfo
@@ -151,6 +154,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into ExceptionError")
+
         return errors.ExceptionError(
             data.get("message", None),
             errors_.SeverityType(data["severity"]),
@@ -183,6 +188,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Ready")
+
         return events.Ready(data["resumed"], data["sessionId"])
 
     def build_player_update(
@@ -210,6 +217,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into PlayerUpdate")
 
         return events.PlayerUpdate(
             hikari.Snowflake(int(data["guildId"])),
@@ -242,6 +251,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into WebsocketClosed")
+
         return events.WebsocketClosed(
             hikari.Snowflake(int(data["guildId"])),
             data["code"],
@@ -273,6 +284,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackStart")
+
         return events.TrackStart(
             hikari.Snowflake(int(data["guildId"])), self.build_track(data["track"])
         )
@@ -300,6 +313,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackEnd")
 
         return events.TrackEnd(
             hikari.Snowflake(int(data["guildId"])),
@@ -333,6 +348,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackException")
+
         return events.TrackException(
             hikari.Snowflake(int(data["guildId"])),
             self.build_track(data["track"]),
@@ -362,6 +379,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackStuck")
 
         return events.TrackStuck(
             hikari.Snowflake(int(data["guildId"])),
@@ -394,6 +413,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Info")
 
         source_managers: list[str] = []
 
@@ -447,6 +468,10 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(
+            TRACE_LEVEL, f"Decoding payload: {payload} into Information Version"
+        )
+
         return info.Version(
             data["semver"],
             data["major"],
@@ -480,6 +505,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Information Git")
+
         return info.Git(
             data["branch"],
             data["commit"],
@@ -512,6 +539,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Information Plugin")
+
         return info.Plugin(data["name"], data["version"])
 
     # Player
@@ -539,6 +568,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Player")
 
         return player.Player(
             hikari.Snowflake(int(data["guildId"])),
@@ -574,6 +605,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Player State")
+
         return player.State(
             datetime.datetime.fromtimestamp(int(data["time"]) / 1000, self._tzinfo),
             data["position"],
@@ -605,6 +638,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Player Voice")
+
         return player.Voice(data["token"], data["endpoint"], data["sessionId"])
 
     # playlist
@@ -632,6 +667,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Playlist")
 
         tracks: list[track_.Track] = []
 
@@ -668,6 +705,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Playlist Info")
+
         return playlist.PlaylistInfo(data["name"], data["selectedTrack"])
 
     # route planner
@@ -697,6 +736,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into RoutePlannerStatus")
 
         return routeplanner.RoutePlannerStatus(
             routeplanner_.RoutePlannerType(data["class"]),
@@ -728,6 +769,10 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(
+            TRACE_LEVEL, f"Decoding payload: {payload} into RoutePlannerDetails"
+        )
 
         failing_addresses: list[routeplanner_.FailingAddress] = []
 
@@ -772,6 +817,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into IPBlock")
+
         return routeplanner.IPBlock(
             routeplanner_.IPBlockType(data["type"]), data["size"]
         )
@@ -801,6 +848,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into FailingAddress")
 
         return routeplanner.FailingAddress(
             data["failingAddress"],
@@ -836,6 +885,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Session")
+
         return session.Session(data["resuming"], data["timeout"])
 
     # statistics
@@ -865,6 +916,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Statistics")
 
         return statistics.Statistics(
             data["players"],
@@ -903,6 +956,8 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Statistics Memory")
+
         return statistics.Memory(
             data["free"], data["used"], data["allocated"], data["reservable"]
         )
@@ -930,6 +985,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Statistics Cpu")
 
         return statistics.Cpu(data["cores"], data["systemLoad"], data["lavalinkLoad"])
 
@@ -959,6 +1016,10 @@ class EntityBuilder:
         """
         data = self._ensure_mapping(payload)
 
+        _logger.log(
+            TRACE_LEVEL, f"Decoding payload: {payload} into Statistics FrameStatistics"
+        )
+
         return statistics.FrameStatistics(data["sent"], data["nulled"], data["deficit"])
 
     # track
@@ -986,6 +1047,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Track")
 
         return track.Track(
             data["encoded"],
@@ -1018,6 +1081,8 @@ class EntityBuilder:
             Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackInfo")
 
         return track.TrackInfo(
             data["identifier"],

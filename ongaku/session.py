@@ -16,6 +16,7 @@ from ongaku import events
 from ongaku.abc import session as session_
 from ongaku.internal.about import __version__
 from ongaku.internal.converters import json_loads
+from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 _logger = logger.getChild("session")
@@ -207,10 +208,13 @@ class Session:
 
         new_params: typing.MutableMapping[str, typing.Any] = dict(params)
 
-        trace = True
-
-        if trace is True:
+        if _logger.isEnabledFor(TRACE_LEVEL):
             new_params.update({"trace": "true"})
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Making request to {self.base_uri}{'/v4' if version else ''}{path} with headers: {new_headers} and json: {json} and params: {new_params}",
+        )
 
         response = await session.request(
             method,
@@ -366,6 +370,11 @@ class Session:
     async def _websocket(self) -> None:
         bot = self.app.get_me()
 
+        _logger.log(
+            TRACE_LEVEL,
+            f"Attempting to start websocket connection to session {self.name}",
+        )
+
         if not bot:
             if self._remaining_attempts > 0:
                 self._status = session_.SessionStatus.NOT_CONNECTED
@@ -406,6 +415,10 @@ class Session:
                         autoclose=False,
                     ) as ws,
                 ):
+                    _logger.log(
+                        TRACE_LEVEL,
+                        f"Successfully made connection to session {self.name}",
+                    )
                     self._status = session_.SessionStatus.CONNECTED
                     async for msg in ws:
                         await self._handle_ws_message(msg)
@@ -438,12 +451,24 @@ class Session:
         session_handler
             The session handler, that will allow this session to move its players too.
         """
+        session = session_handler.fetch_session()
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Attempting transfer players from session {self.name} to {session.name}",
+        )
+
         for player in self._players.values():
-            player = await player.transfer(session_handler.fetch_session())
+            player = await player.transfer(session)
 
             session_handler.add_player(player)
 
         await self.stop()
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully transferred and stopped session {self.name} and moved players to session {session.name}",
+        )
 
     async def start(self) -> None:
         """
@@ -451,7 +476,15 @@ class Session:
 
         Starts up the session, to receive events.
         """
+        _logger.log(
+            TRACE_LEVEL,
+            f"Starting up session {self.name}",
+        )
         self._session_task = asyncio.create_task(self._websocket())
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully started session {self.name}",
+        )
 
     async def stop(self) -> None:
         """
@@ -459,6 +492,10 @@ class Session:
 
         Stops the current session, if it is running.
         """
+        _logger.log(
+            TRACE_LEVEL,
+            f"Shutting down session {self.name}",
+        )
         if self._session_task:
             self._session_task.cancel()
 
@@ -466,6 +503,11 @@ class Session:
                 await self._session_task
             except asyncio.CancelledError:
                 self._session_task = None
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully shut down session {self.name}",
+        )
 
 
 # MIT License

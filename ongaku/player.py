@@ -423,10 +423,13 @@ class Player:
         if requestor:
             new_requestor = hikari.Snowflake(requestor)
 
+        track_count = 0
+
         if isinstance(tracks, track_.Track):
             if new_requestor:
                 tracks._set_requestor = new_requestor
             self._queue.append(tracks)
+            track_count = 1
             return
 
         if isinstance(tracks, playlist_.Playlist):
@@ -436,6 +439,11 @@ class Player:
             if new_requestor:
                 track._set_requestor = new_requestor
             self._queue.append(track)
+            track_count += 1
+
+        _logger.log(
+            TRACE_LEVEL, f"Successfully added {track_count} track(s) to {self.guild_id}"
+        )
 
     async def pause(self, value: bool | None = None) -> None:
         """
@@ -481,6 +489,11 @@ class Player:
             session, self.guild_id, paused=self.is_paused
         )
 
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully set paused state to {self.is_paused} in guild {self.guild_id}",
+        )
+
         self._update(player)
 
     async def stop(self) -> None:
@@ -522,6 +535,8 @@ class Player:
 
         self._is_paused = True
 
+        _logger.log(TRACE_LEVEL, f"Successfully stopped track in guild {self.guild_id}")
+
         self._update(player)
 
     def shuffle(self) -> None:
@@ -551,6 +566,10 @@ class Player:
         new_queue.insert(0, first_track)
 
         self._queue = new_queue
+
+        _logger.log(
+            TRACE_LEVEL, f"Successfully shuffled queue in guild {self.guild_id}"
+        )
 
     async def skip(self, amount: int = 1) -> None:
         """
@@ -593,11 +612,18 @@ class Player:
         if len(self.queue) == 0:
             raise errors.PlayerQueueError("Queue is empty.")
 
+        removed_tracks = 0
         for _ in range(amount):
             if len(self._queue) == 0:
                 break
             else:
                 self._queue.pop(0)
+                removed_tracks += 1
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully removed {removed_tracks} track(s) out of {amount} in guild {self.guild_id}",
+        )
 
         if len(self.queue) <= 0:
             player = await self.session.client.rest.update_player(
@@ -617,6 +643,8 @@ class Player:
             )
 
             self._update(player)
+
+        _logger.log(TRACE_LEVEL, f"Successfully skipped track in {self.guild_id}")
 
     def remove(self, value: track_.Track | int) -> None:
         """
@@ -672,6 +700,8 @@ class Player:
                     f"Failed to remove song in position {value}"
                 )
 
+        _logger.log(TRACE_LEVEL, f"Successfully removed track in {self.guild_id}")
+
     async def clear(self) -> None:
         """
         Clear the queue.
@@ -710,6 +740,8 @@ class Player:
 
         self._update(player)
 
+        _logger.log(TRACE_LEVEL, f"Successfully cleared queue in {self.guild_id}")
+
     def set_autoplay(self, enable: bool | None = None) -> bool:
         """
         Set autoplay.
@@ -732,6 +764,7 @@ class Player:
             return self._autoplay
 
         self._autoplay = not self._autoplay
+
         return self._autoplay
 
     async def set_volume(self, volume: int = 100) -> None:
@@ -781,6 +814,10 @@ class Player:
         )
 
         self._update(player)
+
+        _logger.log(
+            TRACE_LEVEL, f"Successfully set volume to {volume} in {self.guild_id}"
+        )
 
     async def set_position(self, value: int) -> None:
         """
@@ -838,6 +875,11 @@ class Player:
 
         self._update(player)
 
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully set position ({value}) to track in {self.guild_id}",
+        )
+
     async def transfer(self, session: Session) -> Player:
         """Transfer.
 
@@ -856,6 +898,11 @@ class Player:
         Player
             The new player.
         """
+        _logger.log(
+            TRACE_LEVEL,
+            f"Attempting to transfer player in {self.guild_id} from session ({self.session.name}) to session ({session.name})",
+        )
+
         new_player = Player(session, self.guild_id)
 
         new_player.add(self.queue)
@@ -867,6 +914,11 @@ class Player:
             if self.is_paused is False:
                 await new_player.play()
                 await new_player.set_position(self.position)
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully transferred player in {self.guild_id} from session ({self.session.name}) to session ({session.name})",
+        )
 
         return new_player
 
@@ -944,8 +996,18 @@ class Player:
         if event.guild_id != self.guild_id:
             return
 
+        _logger.log(
+            TRACE_LEVEL,
+            f"Updating player state in {self.guild_id}",
+        )
+
         if not event.state.connected and self.connected:
             await self.stop()
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully updated player state in {self.guild_id}",
+        )
 
         self._state = event.state
 

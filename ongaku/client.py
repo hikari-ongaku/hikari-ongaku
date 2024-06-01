@@ -14,6 +14,7 @@ import hikari
 from ongaku import errors
 from ongaku.builders import EntityBuilder
 from ongaku.impl.handlers import BasicSessionHandler
+from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 from ongaku.player import Player
 from ongaku.rest import RESTClient
@@ -38,6 +39,9 @@ class Client:
 
     The client for ongaku.
 
+    !!! note
+        The lowest log level for ongaku is `TRACE_ONGAKU` which will result in all traces being printed to the terminal.
+
     Example
     -------
     ```py
@@ -51,6 +55,8 @@ class Client:
         The application that the client will attach too.
     session_handler
         The session handler to use for the current client.
+    logs
+        The log level for ongaku.
     attempts
         The amount of attempts a session will try to connect to the server.
     """
@@ -60,8 +66,11 @@ class Client:
         app: hikari.GatewayBotAware,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        logs: str | int = "INFO",
         attempts: int = 3,
     ) -> None:
+        _logger.setLevel(logs)
+
         self._attempts = attempts
         self._app = app
         self._selected_session: Session | None = None
@@ -84,6 +93,7 @@ class Client:
         client: arc.GatewayClient,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        logs: str | int = "INFO",
         attempts: int = 3,
     ) -> Client:
         """From Arc.
@@ -104,10 +114,14 @@ class Client:
             Your Gateway client for arc.
         session_handler
             The session handler to use for the current client.
+        logs
+            The log level for ongaku.
         attempts
             The amount of attempts a session will try to connect to the server.
         """
-        cls = cls(client.app, session_handler=session_handler, attempts=attempts)
+        cls = cls(
+            client.app, session_handler=session_handler, logs=logs, attempts=attempts
+        )
 
         client.set_type_dependency(Client, cls)
 
@@ -121,6 +135,7 @@ class Client:
         client: tanjun.abc.Client,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        logs: str | int = "INFO",
         attempts: int = 3,
     ) -> Client:
         """From Tanjun.
@@ -141,6 +156,8 @@ class Client:
             Your Gateway client from tanjun.
         session_handler
             The session handler to use for the current client.
+        logs
+            The log level for ongaku.
         attempts
             The amount of attempts a session will try to connect to the server.
         """
@@ -149,7 +166,7 @@ class Client:
         except KeyError:
             raise Exception("The gateway bot requested was not found.")
 
-        cls = cls(app, session_handler=session_handler, attempts=attempts)
+        cls = cls(app, session_handler=session_handler, logs=logs, attempts=attempts)
 
         client.set_type_dependency(Client, cls)
 
@@ -202,24 +219,35 @@ class Client:
         return self._client_session
 
     async def _start_event(self, event: hikari.StartedEvent) -> None:
+        _logger.log(TRACE_LEVEL, "Starting up ongaku.")
         await self.session_handler.start()
+        _logger.log(TRACE_LEVEL, "Successfully started ongaku.")
 
     async def _stop_event(self, event: hikari.StoppingEvent) -> None:
+        _logger.log(TRACE_LEVEL, "Shutting down ongaku.")
         await self.session_handler.stop()
 
         if self._client_session:
             await self._client_session.close()
 
+        _logger.log(TRACE_LEVEL, "Successfully shut down ongaku.")
+
     async def _arc_player_injector(
         self, ctx: arc.GatewayContext, inj_ctx: arc.InjectorOverridingContext
     ) -> None:
+        _logger.log(TRACE_LEVEL, "Attempting to inject player.")
+
         if ctx.guild_id is None:
+            _logger.log(TRACE_LEVEL, "Player ignored, not in guild.")
             return
 
         try:
             player = self.fetch_player(ctx.guild_id)
         except errors.PlayerMissingError:
+            _logger.log(TRACE_LEVEL, "Player not found for context.")
             return
+
+        _logger.log(TRACE_LEVEL, "Successfully injected player into context.")
 
         inj_ctx.set_type_dependency(Player, player)
 
