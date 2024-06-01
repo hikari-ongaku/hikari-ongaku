@@ -101,7 +101,7 @@ class BasicSessionHandler(handler_.SessionHandler):
     async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         try:
             return self.fetch_player(hikari.Snowflake(guild))
-        except Exception:
+        except errors.PlayerMissingError:
             pass
 
         session = self.fetch_session()
