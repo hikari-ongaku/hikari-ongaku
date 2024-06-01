@@ -619,6 +619,70 @@ class TestPlayer:
         assert player.autoplay is False
 
     @pytest.mark.asyncio
+    async def test_set_volume(self, ongaku_session: Session):
+        new_player = Player(ongaku_session, 1234567890)
+
+        with (
+            mock.patch.object(
+                ongaku_session, "_get_session_id", return_value="session_id"
+            ),
+            mock.patch.object(
+                ongaku_session.client.rest,
+                "update_player",
+                return_value=player.Player(
+                    Snowflake(1234567890),
+                    None,
+                    3,
+                    False,
+                    mock.Mock(),
+                    mock.Mock(),
+                    {},
+                ),
+            ) as patched_request,
+        ):
+            # set volume to a value
+
+            await new_player.set_volume(250)
+
+            patched_request.assert_called_with(
+                ongaku_session._get_session_id(),
+                Snowflake(1234567890),
+                volume=250,
+                no_replace=False,
+            )
+
+            # Reset volume
+
+            await new_player.set_volume()
+
+            patched_request.assert_called_with(
+                ongaku_session._get_session_id(),
+                Snowflake(1234567890),
+                volume=100,
+                no_replace=False,
+            )
+
+        # Give negative number
+
+        with (
+            mock.patch.object(
+                ongaku_session, "_get_session_id", return_value="session_id"
+            ),
+            pytest.raises(ValueError),
+        ):
+            await new_player.set_volume(-100)
+
+        # Give a number greater than 1000
+
+        with (
+            mock.patch.object(
+                ongaku_session, "_get_session_id", return_value="session_id"
+            ),
+            pytest.raises(ValueError),
+        ):
+            await new_player.set_volume(9001)
+
+    @pytest.mark.asyncio
     async def test_set_position(self, ongaku_session: Session, track: Track):
         new_player = Player(ongaku_session, 1234567890)
 
