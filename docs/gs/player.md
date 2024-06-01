@@ -3,7 +3,7 @@ title: Player
 description: All player functions, and general information
 ---
 
-# Player Functions
+# Player
 
 Below, is an explanation of all the available functions for the player, and example usages.
 
@@ -124,6 +124,68 @@ Getting tracks, uses a rest method. There is a few methods of fetching a track (
 
     ```
 
+## Player Functions
+
+All of the functions you can do to a player.
+
+### Connecting and disconnecting.
+
+#### Connecting
+
+You can connect to a channel, via the following methods
+
+```py
+await player.connect(channel_id)
+```
+
+You can also mute and deafen the bot.
+
+=== "Muting"
+
+    This will mute the bot.
+
+    ```py
+    await player.connect(channel_id, mute=True)
+    ```
+
+    !!! tip
+        By default, `mute` is set to `False`.
+
+=== "Deafening"
+
+    This will un-deafen the bot.
+
+    ```py
+    await player.connect(channel_id, deaf=False)
+    ```
+
+    !!! tip
+        By default, `deaf` is set to `True`.
+
+=== "Both"
+
+    This will un-deafen and mute the bot.
+
+    ```py
+    await player.connect(channel_id, mute=True, deaf=False)
+    ```
+
+    !!! tip
+        By default, `mute` is set to `False` and `deaf` is set to `True`.
+
+!!! tip
+    Replace `channel_id` with a [GuildVoiceChannel](https://docs.hikari-py.dev/en/latest/reference/hikari/channels/#hikari.channels.GuildVoiceChannel) or a integer of the channel id!
+
+
+#### Disconnecting
+
+You can disconnect and stop the player, via the following methods.
+
+```py
+await player.disconnect()
+```
+
+
 ### Play
 
 using the play method, has two different usages.
@@ -163,7 +225,7 @@ Using add, allows for the user to add tracks to the queue, without playing/pausi
 Example usage of adding is the following:
 
 ```py
-await player.add(...)
+player.add(...)
 ```
 
 ??? note "What is `...`"
@@ -201,10 +263,25 @@ There is a few options for pausing the tracks.
 
 ### Stop
 
-Stopping the track, tells the lavalink player to play no song. 
+Stopping the track, tells the lavalink player to play no song.
+
+```py
+await player.stop()
+```
 
 !!! note 
     This does not touch any of the tracks in the queue.
+
+### Shuffle
+
+Shuffle the current queue.
+
+```py
+player.shuffle()
+```
+
+!!! note
+    This does not touch the track in the first position.
 
 ### Skip
 
@@ -238,7 +315,7 @@ This allows for removing tracks. You can remove it via a track object, position 
     This method allows for removing a track via its [track][ongaku.abc.track.Track] object.
 
     ```py
-    await player.remove(track)
+    player.remove(track)
     ```
 
 === "Position"
@@ -246,19 +323,11 @@ This allows for removing tracks. You can remove it via a track object, position 
     This method allows for removing a track via its position.
 
     ```py
-    await player.remove(3)
+    player.remove(3)
     ```
 
     !!! note
         Please remember, pythons lists start at 0. So this example will actually remove the track in the 4th position of the queue.
-
-=== "Encoded"
-
-    This method allows for removing a track via its encoded value.
-
-    ```py
-    await player.remove("encoded-track")
-    ```
 
 !!! warning
     If the track you remove is in the first position, it will **not** be stopped. It will continue playing.
@@ -266,6 +335,10 @@ This allows for removing tracks. You can remove it via a track object, position 
 ### Clear
 
 This is basically the same as removing tracks, except it removes all tracks from the queue, and stops the player.
+
+```py
+await player.clear()
+```
 
 ### Autoplay
 
@@ -278,7 +351,7 @@ Autoplay is a feature, that when one track ends in the guild, the next track in 
     The following method will set autoplay to on.
 
     ```py
-    await player.set_autoplay(True)
+    player.set_autoplay(True)
     ```
 
 === "Force pausing"
@@ -286,7 +359,7 @@ Autoplay is a feature, that when one track ends in the guild, the next track in 
     The following method will set autoplay to off.
 
     ```py
-    await player.set_autoplay(False)
+    player.set_autoplay(False)
     ```
 
 === "Toggling"
@@ -294,7 +367,7 @@ Autoplay is a feature, that when one track ends in the guild, the next track in 
     The following method will set autoplay to its opposite value.
 
     ```py
-    await player.set_autoplay()
+    player.set_autoplay()
     ```
 
 ### Volume
