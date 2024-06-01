@@ -58,7 +58,7 @@ class RestStatusError(RestError):
 
     status: int
     """The status of the response."""
-    response: str | None
+    reason: str | None
     """The response of the Error."""
 
 

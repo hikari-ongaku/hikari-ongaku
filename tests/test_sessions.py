@@ -587,7 +587,7 @@ class TestRequest:
         assert isinstance(rest_status_error_1.value, errors.RestStatusError)
 
         assert rest_status_error_1.value.status == 400
-        assert rest_status_error_1.value.response == "reason"
+        assert rest_status_error_1.value.reason == "reason"
 
         # Response status is 400, body included, but not a rest error payload.
 
@@ -610,7 +610,7 @@ class TestRequest:
         assert isinstance(rest_status_error_2.value, errors.RestStatusError)
 
         assert rest_status_error_2.value.status == 400
-        assert rest_status_error_2.value.response == "reason"
+        assert rest_status_error_2.value.reason == "reason"
 
         # Response status is 400, body included, and is a rest error.
 
