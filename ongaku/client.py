@@ -66,7 +66,6 @@ class Client:
         self._attempts = attempts
         self._app = app
         self._selected_session: Session | None = None
-        self._sessions: typing.MutableSequence[Session] = []
         self._client_session: aiohttp.ClientSession | None = None
 
         self._rest_client = RESTClient(self)
