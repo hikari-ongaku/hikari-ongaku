@@ -110,6 +110,7 @@ nav:
     - Session: gs/session.md
     - Filters: gs/filter.md
     - Injection: gs/injection.md
+    - Plugins: gs/plugins.md
   - API Reference:
     - api/index.md
     - Client: api/client.md
