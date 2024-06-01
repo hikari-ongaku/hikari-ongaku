@@ -955,11 +955,7 @@ class RESTClient:
 
         session = self._client.session_handler.fetch_session()
 
-        await session.request(
-            route.method,
-            route.path,
-            None,
-        )
+        await session.request(route.method, route.path, None, json={"address": address})
 
     async def update_all_routeplanner_addresses(self) -> None:
         """
