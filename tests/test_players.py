@@ -1,6 +1,7 @@
 # ruff: noqa: D100, D101, D102, D103
 
 import datetime
+import logging
 import typing
 
 import mock
@@ -62,8 +63,8 @@ def ongaku_session(ongaku_client: Client) -> Session:
 
 
 @pytest.fixture
-def track() -> Track:
-    track_info = TrackInfo(
+def track_info() -> TrackInfo:
+    return TrackInfo(
         "identifier",
         False,
         "author",
@@ -76,6 +77,10 @@ def track() -> Track:
         "artwork_url",
         "isrc",
     )
+
+
+@pytest.fixture
+def track(track_info: TrackInfo) -> Track:
     return Track("encoded", track_info, {}, {}, None)
 
 
@@ -101,11 +106,6 @@ async def connect_events(
         )
 
     raise Exception("Invalid event requested.")
-
-
-async def never_return_value():
-    while True:
-        pass
 
 
 class TestPlayer:
@@ -284,7 +284,7 @@ class TestPlayer:
                 ),
             ) as patched_request,
         ):
-            await new_player.play(track, 123454321)
+            await new_player.play(track, Snowflake(123454321))
 
             patched_request.assert_called_once_with(
                 ongaku_session._get_session_id(),
@@ -294,6 +294,10 @@ class TestPlayer:
             )
 
             assert new_player.is_paused is False
+
+            assert len(new_player.queue) == 1
+
+            assert new_player.queue[0].requestor == Snowflake(123454321)
 
         # No session_id
 
@@ -326,32 +330,54 @@ class TestPlayer:
             await new_player.play()
 
     @pytest.mark.asyncio
-    async def test_add(self, ongaku_session: Session, track: Track):
+    async def test_add(
+        self, ongaku_session: Session, track_info: TrackInfo, track: Track
+    ):
         player = Player(ongaku_session, 1234567890)
 
         # Add singular track
 
         assert len(player.queue) == 0
 
-        player.add(track)
+        player.add(Track("encoded_1", track_info, {}, {}, None), Snowflake(1))
 
         assert len(player.queue) == 1
 
         # Add two tracks.
 
-        tracks: list[Track] = [mock.Mock(), mock.Mock()]
+        tracks: list[Track] = [
+            Track("encoded_2", track_info, {}, {}, None),
+            Track("encoded_3", track_info, {}, {}, None),
+        ]
 
-        player.add(tracks)
+        player.add(tracks, Snowflake(22))
 
         assert len(player.queue) == 3
 
         # Add a playlist
         info = playlist.PlaylistInfo("beans", -1)
-        new_playlist = playlist.Playlist(info, tracks, {})
+        playlist_tracks: list[Track] = [
+            Track("encoded_4", track_info, {}, {}, None),
+            Track("encoded_5", track_info, {}, {}, None),
+        ]
+        new_playlist = playlist.Playlist(info, playlist_tracks, {})
 
-        player.add(new_playlist)
+        player.add(new_playlist, Snowflake(333))
 
         assert len(player.queue) == 5
+
+        # Check correct requestor got set, and make sure none is supported.
+
+        player.add(track)
+
+        assert len(player.queue) == 6
+        logging.warning(player.queue[0].requestor)
+        assert player.queue[0].requestor == Snowflake(1)
+        assert player.queue[1].requestor == Snowflake(22)
+        assert player.queue[2].requestor == Snowflake(22)
+        assert player.queue[3].requestor == Snowflake(333)
+        assert player.queue[4].requestor == Snowflake(333)
+        assert player.queue[5].requestor is None
 
     @pytest.mark.asyncio
     async def test_pause(self, ongaku_session: Session, track: Track):
