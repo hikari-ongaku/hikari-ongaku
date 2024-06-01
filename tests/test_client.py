@@ -10,6 +10,7 @@ from hikari.snowflakes import Snowflake
 from tanjun.clients import Client as TanjunClient
 
 from ongaku import Player
+from ongaku import errors
 from ongaku.client import Client
 from ongaku.errors import PlayerMissingError
 from ongaku.rest import RESTClient
@@ -72,6 +73,28 @@ class TestClient:
         client = Client(gateway_bot)
 
         assert isinstance(client._get_client_session(), ClientSession)
+
+    @pytest.mark.asyncio
+    async def test_create_session(self, ongaku_client: Client, ongaku_session: Session):
+        # Test unique
+        with mock.patch.object(
+            ongaku_client.session_handler,
+            "add_session",
+            new_callable=mock.AsyncMock,
+            return_value=ongaku_session,
+        ) as patched_add_session:
+            ongaku_client.create_session("test_session", False, host="127.0.0.1")
+
+            patched_add_session.assert_called_once()
+
+        # Test not unique
+
+        with pytest.raises(errors.UniqueError):
+            ongaku_client.session_handler.add_session(ongaku_session)
+
+            ongaku_client.create_session("test_session", False, host="127.0.0.1")
+
+            patched_add_session.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_player_create(

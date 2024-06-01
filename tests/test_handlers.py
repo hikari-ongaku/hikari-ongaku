@@ -8,6 +8,7 @@ from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 from hikari.users import OwnUser
 
+from ongaku import errors
 from ongaku.abc.session import SessionStatus
 from ongaku.client import Client
 from ongaku.impl.handlers import BasicSessionHandler
@@ -174,8 +175,41 @@ class TestBasicSessionHandler:
 
             assert handler._current_session == session_2
 
+        # Test with name set
+
+        session = handler.fetch_session("session_1")
+
+        assert session == session_1
+
+        # Test session is not found.
+
+        handler._sessions.clear()
+
+        with pytest.raises(errors.SessionMissingError):
+            handler.fetch_session("session_1")
+
     @pytest.mark.asyncio
-    async def test_add_session(self, ongaku_client: Client, ongaku_session: Session):
+    async def test_delete_session(self, ongaku_client: Client, ongaku_session: Session):
+        handler = BasicSessionHandler(ongaku_client)
+
+        handler.add_session(ongaku_session)
+
+        with mock.patch.object(
+            ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
+        ) as patched_stop:
+            await handler.delete_session("test_session")
+
+            patched_stop.assert_called_once()
+
+        # Delete an existing session
+
+        with pytest.raises(errors.SessionMissingError):
+            await handler.delete_session("test_session")
+
+            patched_stop.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_session(self, ongaku_client: Client):
         handler = BasicSessionHandler(ongaku_client)
 
         assert len(handler.sessions) == 0

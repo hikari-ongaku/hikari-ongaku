@@ -6,7 +6,6 @@ The base client for ongaku.
 
 from __future__ import annotations
 
-import random
 import typing
 
 import aiohttp
@@ -224,17 +223,18 @@ class Client:
 
         inj_ctx.set_type_dependency(Player, player)
 
-    def add_session(
+    def create_session(
         self,
+        name: str,
         ssl: bool = False,
         host: str = "127.0.0.1",
         port: int = 2333,
         password: str = "youshallnotpass",
     ) -> None:
         """
-        Add Session.
+        Create Session.
 
-        Add a new session to the session handler.
+        Create a new session for the session handler.
 
         Example
         -------
@@ -246,7 +246,12 @@ class Client:
         )
         ```
 
+        !!! warning
+            The name set must be unique, otherwise an error will be raised.
+
         Parameters
+        name
+            The name of the session
         ssl
             Whether the server uses `https` or just `http`.
         host
@@ -262,10 +267,14 @@ class Client:
         -------
         Session
             The session that was added to the handler.
+
+        Raises
+        ------
+        UniqueError
         """
         new_session = Session(
             self,
-            str(random.randint(0, 9999999999)).zfill(10),
+            name,
             ssl,
             host,
             port,
@@ -274,6 +283,45 @@ class Client:
         )
 
         self.session_handler.add_session(new_session)
+
+    def fetch_session(self, name: str) -> Session:
+        """Fetch a session.
+
+        Fetch a session from the session handler.
+
+        Parameters
+        ----------
+        name
+            The name of the session
+
+        Returns
+        -------
+        Session
+            The session that was requested.
+
+        Raises
+        ------
+        SessionMissingError
+            Raised when the session does not exist.
+        """
+        return self.session_handler.fetch_session(name)
+
+    async def delete_session(self, name: str) -> None:
+        """Delete a session.
+
+        Delete a session from the session handler.
+
+        Parameters
+        ----------
+        name
+            The name of the session
+
+        Raises
+        ------
+        SessionMissingError
+            Raised when the session does not exist.
+        """
+        await self.session_handler.delete_session(name)
 
     async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """

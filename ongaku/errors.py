@@ -183,6 +183,11 @@ class SessionStartError(SessionError):
     """Raised when the session has not started. (has not received the ready payload)."""
 
 
+@attrs.define
+class SessionMissingError(SessionError):
+    """Raised when the session could not be found."""
+
+
 # Session Handler
 
 
@@ -222,7 +227,7 @@ class PlayerQueueError(PlayerError):
 
 @attrs.define
 class PlayerMissingError(PlayerError):
-    """Raised when the player is missing."""
+    """Raised when the player could not be found."""
 
 
 # Others:
@@ -239,6 +244,13 @@ class BuildError(OngakuError):
 @attrs.define
 class TimeoutError(OngakuError):
     """Raised when an event times out."""
+
+
+@attrs.define
+class UniqueError(OngakuError):
+    """Raised when a value should be unique, but is not."""
+
+    reason: str
 
 
 # MIT License

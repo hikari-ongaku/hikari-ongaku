@@ -70,7 +70,23 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         self._is_alive = False
 
-    def fetch_session(self) -> Session:
+    def add_session(self, session: Session) -> Session:
+        """Add a session."""
+        if self.is_alive:
+            asyncio.create_task(session.start())  # noqa: RUF006
+
+        if self._sessions.get(session.name, None) is None:
+            self._sessions.update({session.name: session})
+            return session
+
+        raise errors.UniqueError(f"The name {session.name} is not unique.")
+
+    def fetch_session(self, name: str | None = None) -> Session:
+        if name is not None:
+            try:
+                return self._sessions[name]
+            except KeyError:
+                raise errors.SessionMissingError
         if self._current_session:
             return self._current_session
 
@@ -81,14 +97,13 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.NoSessionsError
 
-    def add_session(self, session: Session) -> Session:
-        """Add a session."""
-        if self.is_alive:
-            asyncio.create_task(session.start())  # noqa: RUF006
+    async def delete_session(self, name: str) -> None:
+        try:
+            session = self._sessions.pop(name)
+        except KeyError:
+            raise errors.SessionMissingError
 
-        self._sessions.update({session.name: session})
-
-        return session
+        await session.stop()
 
     def add_player(
         self,

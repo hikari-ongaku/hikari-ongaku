@@ -89,6 +89,56 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def fetch_session(self, name: str | None = None) -> Session:
+        """Fetch a session.
+
+        Returns a valid session.
+
+        !!! note
+            If a name is provided, only that session will be attempted to be returned.
+
+        Parameters
+        ----------
+        name
+            The name of the session.
+
+        Returns
+        -------
+        Session
+            The session to use.
+
+        Raises
+        ------
+        NoSessionError
+            Raised when there is no available sessions for the handler to return.
+        SessionMissingError
+            Raised when a session is requested, but does not exist.
+        """
+        ...
+
+    @abc.abstractmethod
+    async def delete_session(self, name: str) -> None:
+        """Delete a session.
+
+        Delete a session from the session handler.
+
+        Parameters
+        name
+            The name of the session to delete.
+
+        Returns
+        -------
+        Session
+            The session that was added to the handler.
+
+        Raises
+        ------
+        SessionMissingError
+            Raised when the session does not exist.
+        """
+        ...
+
+    @abc.abstractmethod
     def add_player(self, player: Player) -> Player:
         """Add a player.
 
@@ -103,24 +153,6 @@ class SessionHandler(abc.ABC):
         -------
         Player
             The player you added to the session handler.
-        """
-        ...
-
-    @abc.abstractmethod
-    def fetch_session(self) -> Session:
-        """Fetch a session.
-
-        Returns a valid session.
-
-        Returns
-        -------
-        Session
-            The session to use.
-
-        Raises
-        ------
-        NoSessionError
-            Raised when there is no available sessions for the handler to return.
         """
         ...
 
