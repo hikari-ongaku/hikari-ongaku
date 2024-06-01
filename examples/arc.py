@@ -160,7 +160,7 @@ async def play_command(
     try:
         player = ongaku_client.fetch_player(ctx.guild_id)
     except ongaku.PlayerMissingError:
-        player = await ongaku_client.create_player(ctx.guild_id)
+        player = ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)

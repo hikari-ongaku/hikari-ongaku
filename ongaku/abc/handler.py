@@ -157,30 +157,6 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
-        """
-        Create a player.
-
-        Create a new player for this session.
-
-        Parameters
-        ----------
-        guild
-            The `guild`, or `guild id` you wish to create a player for.
-
-        Returns
-        -------
-        Player
-            The player that was created.
-
-        Raises
-        ------
-        NoSessionsError
-            When there is no available sessions.
-        """
-        ...
-
-    @abc.abstractmethod
     def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.

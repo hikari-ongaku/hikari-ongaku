@@ -140,7 +140,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
     try:
         player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
-        player = await ongaku_client.create_player(ctx.guild_id)
+        player = ongaku_client.create_player(ctx.guild_id)
 
     await player.play(track)
 

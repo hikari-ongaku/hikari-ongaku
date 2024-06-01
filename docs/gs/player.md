@@ -17,7 +17,7 @@ If you have followed the guide from [Client as State](./client.md) the following
     @arc.slash_command("name", "description")
     async def some_command(ctx: arc.GatewayContext, client: ongaku.Client = arc.inject()) -> None:
         try:
-            player = await client.create_player(...)
+            player = client.create_player(...)
         except:
             await ctx.respond("The player could not be created.")
             return
@@ -34,7 +34,7 @@ If you have followed the guide from [Client as State](./client.md) the following
     class SomeCommand:
         async def callback(self, ctx: crescent.Context) -> None:
             try:
-                player = await client.create_player(...)
+                player = client.create_player(...)
             except:
                 await ctx.respond("The player could not be created.")
                 return
@@ -51,7 +51,7 @@ If you have followed the guide from [Client as State](./client.md) the following
     @lightbulb.implements(lightbulb.SlashCommand)
     async def some_command(ctx: lightbulb.SlashContext) -> None:
         try:
-            player = await client.create_player(...)
+            player = client.create_player(...)
         except:
             await ctx.respond("The player could not be created.")
             return
@@ -71,7 +71,7 @@ If you have followed the guide from [Client as State](./client.md) the following
     @lightbulb.implements(lightbulb.SlashCommand)
     async def some_command(ctx: lightbulb.SlashContext) -> None:
         try:
-            player = await client.create_player(...)
+            player = client.create_player(...)
         except:
             await ctx.create_initial_response("The player could not be created.")
             return

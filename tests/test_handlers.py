@@ -225,42 +225,16 @@ class TestBasicSessionHandler:
     async def test_add_player(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(ongaku_client)
 
-        assert len(handler.players) == 0
-
-        handler.add_player(Player(ongaku_session, Snowflake(1234567890)))
-
-        assert len(handler.players) == 1
-
-    @pytest.mark.asyncio
-    async def test_create_player(self, ongaku_client: Client, ongaku_session: Session):
-        handler = BasicSessionHandler(ongaku_client)
-
-        # Create a player
+        new_player = Player(ongaku_session, Snowflake(1234567890))
 
         assert len(handler.players) == 0
 
-        with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
-            original_player = await handler.create_player(Snowflake(1234567890))
-
-            assert len(handler.players) == 1
-
-            assert isinstance(original_player, Player)
-
-            assert original_player.guild_id == Snowflake(1234567890)
-            assert original_player.session == ongaku_session
-
-        # Create a player but one exists.
-
-        new_player = await handler.create_player(Snowflake(1234567890))
+        handler.add_player(new_player)
 
         assert len(handler.players) == 1
 
-        assert isinstance(new_player, Player)
-
-        assert new_player == original_player
-
-        assert new_player.guild_id == Snowflake(1234567890)
-        assert new_player.session == ongaku_session
+        with pytest.raises(errors.UniqueError):
+            handler.add_player(new_player)
 
     @pytest.mark.asyncio
     async def test_fetch_player(self, ongaku_client: Client, ongaku_session: Session):
@@ -271,7 +245,9 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
-            original_player = await handler.create_player(Snowflake(1234567890))
+            original_player = handler.add_player(
+                Player(ongaku_session, Snowflake(1234567890))
+            )
 
             assert len(handler.players) == 1
 
@@ -302,7 +278,9 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
-            original_player = await handler.create_player(Snowflake(1234567890))
+            original_player = handler.add_player(
+                Player(ongaku_session, Snowflake(1234567890))
+            )
 
             assert len(handler.players) == 1
 

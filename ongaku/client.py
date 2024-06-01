@@ -230,7 +230,7 @@ class Client:
         host: str = "127.0.0.1",
         port: int = 2333,
         password: str = "youshallnotpass",
-    ) -> None:
+    ) -> Session:
         """
         Create Session.
 
@@ -282,7 +282,7 @@ class Client:
             self._attempts,
         )
 
-        self.session_handler.add_session(new_session)
+        return self.session_handler.add_session(new_session)
 
     def fetch_session(self, name: str) -> Session:
         """Fetch a session.
@@ -323,7 +323,7 @@ class Client:
         """
         await self.session_handler.delete_session(name)
 
-    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Create a player.
 
@@ -356,7 +356,16 @@ class Client:
         NoSessionsError
             When there is no available sessions.
         """
-        return await self.session_handler.create_player(guild)
+        try:
+            return self.fetch_player(hikari.Snowflake(guild))
+        except errors.PlayerMissingError:
+            pass
+
+        session = self.session_handler.fetch_session()
+
+        new_player = Player(session, hikari.Snowflake(guild))
+
+        return self.session_handler.add_player(new_player)
 
     def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """

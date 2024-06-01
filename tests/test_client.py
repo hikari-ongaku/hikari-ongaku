@@ -107,7 +107,7 @@ class TestClient:
         with mock.patch.object(
             client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            player = await client.create_player(1234567890)
+            player = client.create_player(1234567890)
 
         assert isinstance(player, Player)
 
@@ -124,7 +124,7 @@ class TestClient:
         with mock.patch.object(
             client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            await client.create_player(1234567890)
+            client.create_player(1234567890)
 
         player = client.fetch_player(1234567890)
 
@@ -143,7 +143,7 @@ class TestClient:
         with mock.patch.object(
             client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            await client.create_player(1234567890)
+            client.create_player(1234567890)
 
         player = client.fetch_player(1234567890)
 

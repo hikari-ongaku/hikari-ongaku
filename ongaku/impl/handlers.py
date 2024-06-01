@@ -15,10 +15,10 @@ from ongaku import errors
 from ongaku.abc import handler as handler_
 from ongaku.abc import session as session_
 from ongaku.internal import logger
-from ongaku.player import Player
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
+    from ongaku.player import Player
     from ongaku.session import Session
 
 __all__ = ("BasicSessionHandler",)
@@ -109,23 +109,14 @@ class BasicSessionHandler(handler_.SessionHandler):
         self,
         player: Player,
     ) -> Player:
+        if self._players.get(player.guild_id, None) is not None:
+            raise errors.UniqueError(
+                f"A player with the guild id {player.guild_id} has already been made."
+            )
+
         self._players.update({player.guild_id: player})
 
         return player
-
-    async def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
-        try:
-            return self.fetch_player(hikari.Snowflake(guild))
-        except errors.PlayerMissingError:
-            pass
-
-        session = self.fetch_session()
-
-        new_player = Player(session, hikari.Snowflake(guild))
-
-        self._players.update({hikari.Snowflake(guild): new_player})
-
-        return new_player
 
     def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         player = self._players.get(hikari.Snowflake(guild))
