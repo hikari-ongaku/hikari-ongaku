@@ -13,7 +13,7 @@ from ongaku import Playlist
 from ongaku import errors
 from ongaku.abc.info import Info
 from ongaku.abc.player import Player
-from ongaku.abc.routeplanner import RoutePlannerStatus
+from ongaku.abc.routeplanner import RoutePlannerType
 from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.client import Client
@@ -538,15 +538,57 @@ class TestRest:
     ):
         rest = RESTClient(ongaku_client)
 
-        with mock.patch.object(
-            rest._client.session_handler, "fetch_session", return_value=ongaku_session
+        # Test with payload
+
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.ROUTEPLANNER_STATUS_PAYLOAD,
+            ) as patched_request,
         ):
             routeplanner_status = await rest.fetch_routeplanner_status()
 
-        if routeplanner_status:
-            assert isinstance(routeplanner_status, RoutePlannerStatus)
+            assert routeplanner_status is not None
 
-            assert routeplanner_status.cls is None
+            assert routeplanner_status.cls == RoutePlannerType.ROTATING_ROUTE_PLANNER
+
+            patched_request.assert_called_once_with(
+                "GET",
+                "/routeplanner/status",
+                dict,
+            )
+
+        # Test without raise empty payload
+
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                side_effect=errors.RestEmptyError,
+            ) as patched_request,
+        ):
+            routeplanner_status = await rest.fetch_routeplanner_status()
+
+            assert routeplanner_status is None
+
+            patched_request.assert_called_once_with(
+                "GET",
+                "/routeplanner/status",
+                dict,
+            )
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -556,13 +598,24 @@ class TestRest:
     ):
         rest = RESTClient(ongaku_client)
 
-        # TODO: Make sure these methods work with, and without routeplanner enabled.
-
-        with mock.patch.object(
-            rest._client.session_handler, "fetch_session", return_value=ongaku_session
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_request,
         ):
-            if await rest.fetch_routeplanner_status():
-                await rest.update_routeplanner_address("111.222.333.444")
+            await rest.update_routeplanner_address("1.0.0.1")
+
+            patched_request.assert_called_once_with(
+                "POST", "/routeplanner/free/address", None, json={"address": "1.0.0.1"}
+            )
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -572,12 +625,25 @@ class TestRest:
     ):
         rest = RESTClient(ongaku_client)
 
-        # TODO: Make sure these methods work with, and without routeplanner enabled.
-
-        with mock.patch.object(
-            rest._client.session_handler, "fetch_session", return_value=ongaku_session
+        with (
+            mock.patch.object(
+                rest._client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_request,
         ):
-            if await rest.fetch_routeplanner_status():
-                await rest.update_all_routeplanner_addresses()
+            await rest.update_all_routeplanner_addresses()
+
+            patched_request.assert_called_once_with(
+                "POST",
+                "/routeplanner/free/all",
+                None,
+            )
 
         await ongaku_client._stop_event(mock.Mock())
