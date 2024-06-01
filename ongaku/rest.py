@@ -212,7 +212,9 @@ class RESTClient:
 
         return self._client.entity_builder.build_track(response)
 
-    async def decode_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
+    async def decode_tracks(
+        self, tracks: typing.Sequence[str]
+    ) -> typing.Sequence[Track]:
         """
         Decode tracks.
 
