@@ -13,7 +13,8 @@ bot = lightbulb.BotApp(token="...f", banner=None)
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="lightbulb-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )

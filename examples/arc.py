@@ -21,7 +21,8 @@ client = arc.GatewayClient(bot)
 
 ongaku_client = ongaku.Client.from_arc(client)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="arc-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
