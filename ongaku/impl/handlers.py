@@ -121,7 +121,10 @@ class BasicSessionHandler(handler_.SessionHandler):
         raise errors.PlayerMissingError
 
     async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
-        player = self._players.pop(hikari.Snowflake(guild))
+        try:
+            player = self._players.pop(hikari.Snowflake(guild))
+        except KeyError:
+            raise errors.PlayerMissingError
 
         await player.disconnect()
 
