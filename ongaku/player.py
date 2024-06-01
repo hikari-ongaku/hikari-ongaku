@@ -743,7 +743,7 @@ class Player:
         self._autoplay = not self._autoplay
         return self._autoplay
 
-    async def set_volume(self, volume: int) -> None:
+    async def set_volume(self, volume: int = 100) -> None:
         """
         Set the volume.
 
