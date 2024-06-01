@@ -104,6 +104,13 @@ class EntityBuilder:
         -------
         errors_.RestError
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -134,6 +141,13 @@ class EntityBuilder:
         -------
         errors_.ExceptionError
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -159,6 +173,13 @@ class EntityBuilder:
         -------
         events_.Ready
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -180,6 +201,13 @@ class EntityBuilder:
         -------
         events_.PlayerUpdate
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -204,6 +232,13 @@ class EntityBuilder:
         -------
         events_.WebsocketClosed
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -228,6 +263,13 @@ class EntityBuilder:
         -------
         events_.TrackStart
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -249,6 +291,13 @@ class EntityBuilder:
         -------
         events_.TrackEnd
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -274,6 +323,13 @@ class EntityBuilder:
         -------
         events_.TrackException
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -297,6 +353,13 @@ class EntityBuilder:
         -------
         events_.TrackStuck
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -322,6 +385,13 @@ class EntityBuilder:
         -------
         info_.Info
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -367,6 +437,13 @@ class EntityBuilder:
         -------
         info_.Version
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -393,6 +470,13 @@ class EntityBuilder:
         -------
         info_.Info
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -418,6 +502,13 @@ class EntityBuilder:
         -------
         info_.Plugin
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -439,6 +530,13 @@ class EntityBuilder:
         -------
         player_.Player
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -466,6 +564,13 @@ class EntityBuilder:
         -------
         player_.State
             The [`State`][ongaku.abc.player.State] object.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -490,6 +595,13 @@ class EntityBuilder:
         -------
         player_.Voice
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -511,6 +623,13 @@ class EntityBuilder:
         -------
         playlist_.Playlist
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -539,6 +658,13 @@ class EntityBuilder:
         -------
         playlist_.PlaylistInfo
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -562,6 +688,13 @@ class EntityBuilder:
         -------
         routeplanner_.RoutePlannerStatus
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -586,6 +719,13 @@ class EntityBuilder:
         -------
         routeplanner_.RoutePlannerDetails
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -622,6 +762,13 @@ class EntityBuilder:
         -------
         routeplanner_.IPBlock
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -645,6 +792,13 @@ class EntityBuilder:
         -------
         routeplanner_.RoutePlannerDetails
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -672,6 +826,13 @@ class EntityBuilder:
         -------
         session_.Session
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -695,6 +856,13 @@ class EntityBuilder:
         -------
         statistics_.Statistics
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -725,6 +893,13 @@ class EntityBuilder:
         -------
         statistics_.Memory
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -746,6 +921,13 @@ class EntityBuilder:
         -------
         statistics_.Cpu
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -767,6 +949,13 @@ class EntityBuilder:
         -------
         statistics_.FrameStatistics
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -788,6 +977,13 @@ class EntityBuilder:
         -------
         track_.Track
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 
@@ -813,6 +1009,13 @@ class EntityBuilder:
         -------
         track_.TrackInfo
             The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
         """
         data = self._ensure_mapping(payload)
 

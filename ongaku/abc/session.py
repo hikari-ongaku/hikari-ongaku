@@ -57,11 +57,11 @@ class SessionStatus(int, enum.Enum):
     """
 
     NOT_CONNECTED = 0
-    """Is not currently connected to its server."""
+    """Not connected to the lavalink server."""
     CONNECTED = 1
-    """Has successfully connected to its server."""
+    """Successfully connected to the lavalink server."""
     FAILURE = 2
-    """Failure to connect to its server."""
+    """A failure occurred connecting to the lavalink server."""
 
 
 class WebsocketOPCode(str, enum.Enum):

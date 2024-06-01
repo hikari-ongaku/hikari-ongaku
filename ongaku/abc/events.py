@@ -69,7 +69,7 @@ class Ready(abc.ABC):
     """
     Ready Event Base.
 
-    The base for the ready event.
+    Dispatched by Lavalink upon successful connection and authorization. Contains fields determining if resuming was successful, as well as the session id.
 
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#ready-op)
     """
@@ -103,7 +103,7 @@ class PlayerUpdate(abc.ABC):
     """
     Player update event base.
 
-    The base for the player update event.
+    Dispatched every x seconds (configurable in `application.yml`) with the current state of the player.
 
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-update-op)
     """
@@ -133,11 +133,174 @@ class PlayerUpdate(abc.ABC):
         return True
 
 
+class TrackStart(abc.ABC):
+    """
+    Track start event base.
+
+    Dispatched when a track starts playing.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
+    """
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def track(self) -> Track:
+        """The track related to this event."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TrackStart):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        return True
+
+
+class TrackEnd(abc.ABC):
+    """
+    Track end event base.
+
+    Dispatched when a track ends.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
+    """
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def track(self) -> Track:
+        """The track related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def reason(self) -> TrackEndReasonType:
+        """The reason for the track ending."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TrackEnd):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.reason != other.reason:
+            return False
+
+        return True
+
+
+class TrackException(abc.ABC):
+    """
+    Track exception event base.
+
+    Dispatched when a track throws an exception.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
+    """
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def track(self) -> Track:
+        """The track related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def exception(self) -> ExceptionError:
+        """The occurred exception."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TrackException):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.exception != other.exception:
+            return False
+
+        return True
+
+
+class TrackStuck(abc.ABC):
+    """
+    Track stuck event base.
+
+    Dispatched when a track gets stuck while playing.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
+    """
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def track(self) -> Track:
+        """The track related to this event."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def threshold_ms(self) -> int:
+        """The threshold in milliseconds that was exceeded."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TrackStuck):
+            return False
+
+        if self.guild_id != other.guild_id:
+            return False
+
+        if self.track != other.track:
+            return False
+
+        if self.threshold_ms != other.threshold_ms:
+            return False
+
+        return True
+
+
 class WebsocketClosed(abc.ABC):
     """
     Websocket closed event base.
 
-    The base for the websocket closed event.
+    Dispatched when an audio WebSocket (to Discord) is closed. This can happen for various reasons (normal and abnormal), e.g. when using an expired voice server update. 4xxx codes are usually bad. See the [Discord Docs](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes).
 
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
@@ -185,174 +348,11 @@ class WebsocketClosed(abc.ABC):
         return True
 
 
-class TrackStart(abc.ABC):
-    """
-    Track start event base.
-
-    The base for the track start event.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
-    """
-
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> hikari.Snowflake:
-        """The guild related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def track(self) -> Track:
-        """The track related to this event."""
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TrackStart):
-            return False
-
-        if self.guild_id != other.guild_id:
-            return False
-
-        if self.track != other.track:
-            return False
-
-        return True
-
-
-class TrackEnd(abc.ABC):
-    """
-    Track end event base.
-
-    The base for the track end event.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
-    """
-
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> hikari.Snowflake:
-        """The guild related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def track(self) -> Track:
-        """The track related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def reason(self) -> TrackEndReasonType:
-        """The reason for the track ending."""
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TrackEnd):
-            return False
-
-        if self.guild_id != other.guild_id:
-            return False
-
-        if self.track != other.track:
-            return False
-
-        if self.reason != other.reason:
-            return False
-
-        return True
-
-
-class TrackException(abc.ABC):
-    """
-    Track exception event base.
-
-    The base for track exception event.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
-    """
-
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> hikari.Snowflake:
-        """The guild related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def track(self) -> Track:
-        """The track related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def exception(self) -> ExceptionError:
-        """The exception error that was returned."""
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TrackException):
-            return False
-
-        if self.guild_id != other.guild_id:
-            return False
-
-        if self.track != other.track:
-            return False
-
-        if self.exception != other.exception:
-            return False
-
-        return True
-
-
-class TrackStuck(abc.ABC):
-    """
-    Track stuck event base.
-
-    The base for track stuck event.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
-    """
-
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> hikari.Snowflake:
-        """The guild related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def track(self) -> Track:
-        """The track related to this event."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def threshold_ms(self) -> int:
-        """The threshold in milliseconds that was exceeded."""
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TrackStuck):
-            return False
-
-        if self.guild_id != other.guild_id:
-            return False
-
-        if self.track != other.track:
-            return False
-
-        if self.threshold_ms != other.threshold_ms:
-            return False
-
-        return True
-
-
 class QueueEmpty(abc.ABC):
     """
     Queue empty event.
 
-    The event that is dispatched, when a players queue is empty.
+    Dispatched when the player finishes all the tracks in the queue.
     """
 
     @property
@@ -384,7 +384,7 @@ class QueueNext(abc.ABC):
     """
     Queue next event.
 
-    The event that is dispatched when a queue is playing the next song.
+    Dispatched when the player starts playing a new track.
     """
 
     @property

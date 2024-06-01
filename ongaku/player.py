@@ -77,37 +77,24 @@ class Player:
 
     @property
     def session(self) -> Session:
-        """Session.
-
-        The session that is attached to this player.
-        """
+        """The session this player is included in."""
         return self._session
 
     @property
     def app(self) -> hikari.GatewayBotAware:
-        """Application.
-
-        The application attached to this player.
-        """
+        """The session this player is included in."""
         return self.session.client.app
 
     @property
     def guild_id(self) -> hikari.Snowflake:
-        """The guild id this player is attached too."""
+        """The `guild id` this player is attached too."""
         return self._guild_id
 
     @property
     def channel_id(self) -> hikari.Snowflake | None:
-        """Channel ID.
+        """The `channel id` this player is attached too.
 
-        The channel id the player is currently in.
-
-        Returns
-        -------
-        hikari.Snowflake
-            The channel ID
-        None
-            The player is not in a channel.
+        `None` if not connected to a channel.
         """
         return self._channel_id
 
@@ -115,7 +102,7 @@ class Player:
     def is_alive(self) -> bool:
         """Is alive.
 
-        Whether the player is alive and connected to discords websocket.
+        Whether the player is alive and attached to lavalink.
         """
         return self._is_alive
 
@@ -152,31 +139,28 @@ class Player:
     def connected(self) -> bool:
         """Connected.
 
-        Whether or not the player is connected to lavalink
+        Whether or not the player is connected to discords gateway.
         """
         return self._connected
 
     @property
     def queue(self) -> t.Sequence[track_.Track]:
-        """Queue.
-
-        Returns the current queue of tracks.
-        """
+        """The current queue of tracks."""
         return self._queue
 
     @property
     def voice(self) -> player_.Voice | None:
-        """The voice state of the player."""
+        """The player's voice state."""
         return self._voice
 
     @property
     def state(self) -> player_.State | None:
-        """The players state."""
+        """The player's player state."""
         return self._state
 
     @property
     def filters(self) -> typing.Mapping[str, typing.Any]:
-        """Filters object."""
+        """Filters for the player."""
         return self._filters
 
     async def connect(
@@ -187,6 +171,8 @@ class Player:
         deaf: bool = True,
     ) -> None:
         """Connect.
+
+        Connect the current player to a voice channel.
 
         Example
         -------
@@ -199,9 +185,9 @@ class Player:
         channel
             The channel (or channel id) that you wish to connect the bot to.
         mute
-            Whether or not to mute the app.
+            Whether or not to mute the player.
         deaf
-            Whether or not to deafen the app.
+            Whether or not to deafen the player.
 
         Raises
         ------
@@ -291,9 +277,9 @@ class Player:
 
     async def disconnect(self) -> None:
         """
-        Disconnect player.
+        Disconnect.
 
-        Disconnect the player from the lavalink server, and discord.
+        Disconnect the player from the discord channel, and stop the currently playing track.
 
         Example
         -------
@@ -415,7 +401,8 @@ class Player:
         Add tracks to the queue.
 
         !!! note
-            This will not automatically start playing the songs. please call `.play()` after, with no track, if the player is not already playing.
+            This will not automatically start playing the songs.
+            please call `.play()` after, with no track, if the player is not already playing.
 
         Example
         -------
@@ -453,7 +440,7 @@ class Player:
         Allows for the user to pause the currently playing track on this player.
 
         !!! info
-            `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it from its current state.
+            `True` will force pause the player, `False` will force unpause the player. Leaving it empty, will toggle it from its current state.
 
         Example
         -------
@@ -723,7 +710,7 @@ class Player:
         """
         Set autoplay.
 
-        whether or not to enable or disable autoplay.
+        whether to enable or disable autoplay.
 
         Example
         -------
@@ -793,7 +780,7 @@ class Player:
 
     async def set_position(self, value: int) -> None:
         """
-        Change the track position.
+        Set the position.
 
         Change the currently playing track's position.
 

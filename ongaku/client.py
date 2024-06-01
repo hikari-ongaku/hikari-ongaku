@@ -49,10 +49,10 @@ class Client:
     ----------
     app
         The application that the client will attach too.
-    attempts
-        The amount of attempts a session will try to connect to the server.
     session_handler
         The session handler to use for the current client.
+    attempts
+        The amount of attempts a session will try to connect to the server.
     """
 
     def __init__(
@@ -103,10 +103,10 @@ class Client:
         ----------
         client
             Your Gateway client for arc.
-        attempts
-            The amount of attempts a session will try to connect to the server.
         session_handler
             The session handler to use for the current client.
+        attempts
+            The amount of attempts a session will try to connect to the server.
         """
         cls = cls(client.app, session_handler=session_handler, attempts=attempts)
 
@@ -140,10 +140,10 @@ class Client:
         ----------
         client
             Your Gateway client from tanjun.
-        attempts
-            The amount of attempts a session will try to connect to the server.
         session_handler
             The session handler to use for the current client.
+        attempts
+            The amount of attempts a session will try to connect to the server.
         """
         try:
             app = client.get_type_dependency(hikari.GatewayBotAware)
@@ -158,21 +158,21 @@ class Client:
 
     @property
     def app(self) -> hikari.GatewayBotAware:
-        """The application attached to this bot."""
+        """The application this client is included in."""
         return self._app
 
     @property
     def rest(self) -> RESTClient:
-        """The rest client for all the rest actions."""
+        """The rest client for calling rest actions."""
         return self._rest_client
 
     @property
     def is_alive(self) -> bool:
         """
-        Whether or not the session handler is alive.
+        Whether the session handler is alive.
 
         !!! note
-            If the hikari.StartedEvent has already happened, and this is False, ongaku is no longer running and has crashed. Check your logs.
+            If the `hikari.StartedEvent` has occurred, and this is False, ongaku is no longer running and has crashed. Check your logs.
         """
         return self.session_handler.is_alive
 
@@ -234,7 +234,7 @@ class Client:
         """
         Add Session.
 
-        Add a new session to the session pool.
+        Add a new session to the session handler.
 
         Example
         -------
@@ -247,15 +247,21 @@ class Client:
         ```
 
         Parameters
-        ----------
         ssl
-            Whether the server is https or just http.
+            Whether the server uses `https` or just `http`.
         host
             The host of the lavalink server.
         port
             The port of the lavalink server.
         password
             The password of the lavalink server.
+        attempts
+            The attempts that the session is allowed to use, before completely shutting down.
+
+        Returns
+        -------
+        Session
+            The session that was added to the handler.
         """
         self.session_handler.add_session(ssl, host, port, password, self._attempts)
 
@@ -263,7 +269,7 @@ class Client:
         """
         Create a player.
 
-        Create a new player for this session.
+        Create a new player to play songs on.
 
         Example
         -------
@@ -280,7 +286,17 @@ class Client:
         Parameters
         ----------
         guild
-            The guild, or guild id you wish to delete the player from.
+            The `guild`, or `guild id` you wish to create a player for.
+
+        Returns
+        -------
+        Player
+            The player that was created.
+
+        Raises
+        ------
+        NoSessionsError
+            When there is no available sessions.
         """
         return await self.session_handler.create_player(guild)
 
@@ -302,12 +318,12 @@ class Client:
         Parameters
         ----------
         guild
-            The guild, or guild id you wish to delete the player from.
+            The `guild`, or `guild id` you wish to fetch the player for.
 
         Raises
         ------
         PlayerMissingError
-            Raised when the player for the guild, does not exist.
+            Raised when the player for the specified guild does not exist.
         """
         return self.session_handler.fetch_player(guild)
 
@@ -327,12 +343,12 @@ class Client:
         Parameters
         ----------
         guild
-            The guild, or guild id you wish to delete the player from.
+            The `guild`, or `guild id` you wish to delete the player from.
 
         Raises
         ------
         PlayerMissingError
-            Raised when the player for the guild, does not exist.
+            Raised when the player for the specified guild does not exist.
         """
         await self.session_handler.delete_player(guild)
 

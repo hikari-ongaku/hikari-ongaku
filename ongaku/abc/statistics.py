@@ -47,13 +47,13 @@ class Statistics(abc.ABC):
     @property
     @abc.abstractmethod
     def cpu(self) -> Cpu:
-        """The cpu stats of the session."""
+        """The CPU stats of the session."""
         ...
 
     @property
     @abc.abstractmethod
     def frame_stats(self) -> FrameStatistics | None:
-        """The frame stats of the session."""
+        """The frame statistics of the session."""
         ...
 
     def __eq__(self, other: object) -> bool:

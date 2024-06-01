@@ -120,7 +120,7 @@ class RestRequestError(RestError, errors_.RestError):
 
 @attrs.define
 class RestEmptyError(RestError):
-    """Raised when the request was 204, but required data."""
+    """Raised when the request was 204, but data was requested."""
 
 
 @attrs.define

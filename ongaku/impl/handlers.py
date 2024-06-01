@@ -4,8 +4,6 @@ Handler Impl's.
 The handler implemented classes.
 """
 
-# ruff: noqa: D101, D102
-
 from __future__ import annotations
 
 import asyncio
@@ -33,7 +31,8 @@ class BasicSessionHandler(handler_.SessionHandler):
     """
     Basic Session Handler.
 
-    This session handler simply fetches the first working session, and returns it. If it dies, it switches to the next available one.
+    This session handler simply fetches the first working session, and returns it.
+    If it closes or fails, it switches to the next available one.
     """
 
     def __init__(self, client: Client) -> None:

@@ -1,7 +1,7 @@
 """
 Checker.
 
-The extension, that allows you to check if a link is a url, or a video/playlist!
+Allows for you to check if a string is a link or a query.
 """
 
 from __future__ import annotations

@@ -19,9 +19,10 @@ __all__ = (
 
 
 class Track(abc.ABC):
-    """Base track.
+    """
+    Track.
 
-    The base track data.
+    The base track.
 
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
     """
@@ -29,7 +30,7 @@ class Track(abc.ABC):
     @property
     @abc.abstractmethod
     def encoded(self) -> str:
-        """The base64 encoded track data."""
+        """The BASE-64 encoded track data."""
         ...
 
     @property

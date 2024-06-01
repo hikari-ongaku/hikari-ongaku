@@ -53,9 +53,9 @@ class RESTClient:
         """
         Load tracks.
 
-        Loads tracks, from a site, or a link to a song, to play on a player.
+        Loads tracks from a site, a playlist or a track, to play on a player.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-loading)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#track-loading)
 
         Example
         -------
@@ -95,6 +95,8 @@ class RESTClient:
             A Playlist object.
         Track
             A Track object.
+        None
+            No result was returned.
         """
         route = routes.GET_LOAD_TRACKS
 
@@ -158,12 +160,12 @@ class RESTClient:
 
         Decode a track from its encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#track-decoding)
 
         Example
         -------
         ```py
-        track = await client.rest.decode_track("BASE64")
+        track = await client.rest.decode_track(BASE64)
 
         await player.play(track)
         ```
@@ -212,16 +214,16 @@ class RESTClient:
 
     async def decode_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
         """
-        Decode multiple tracks.
+        Decode tracks.
 
         Decode multiple tracks from their encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#track-decoding)
 
         Example
         -------
         ```py
-        tracks = await client.rest.decode_many_tracks(["BASE64_1", "BASE64_2"])
+        tracks = await client.rest.decode_tracks([BASE64_1, BASE64_2])
 
         await player.add(tracks)
         ```
@@ -283,7 +285,7 @@ class RESTClient:
 
         Fetches all players on this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-players)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-players)
 
         Example
         -------
@@ -351,7 +353,7 @@ class RESTClient:
 
         Fetches a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-player)
 
         Example
         -------
@@ -366,7 +368,7 @@ class RESTClient:
         session_id
             The Session ID that the players are attached too.
         guild
-            The Guild ID that the player is attached to.
+            The `guild` or `guild id` that the player is attached to.
 
         Raises
         ------
@@ -425,9 +427,9 @@ class RESTClient:
 
         Fetches a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#update-player)
 
-        !!! note
+        !!! tip
             Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None.
             To not modify them, do not set them to anything.
 
@@ -445,7 +447,7 @@ class RESTClient:
         session_id
             The Session ID that the players are attached too.
         guild
-            The Guild ID that the player is attached to.
+            The `guild` or `guild id` that the player is attached to.
         track
             The track you wish to set, or remove
         position
@@ -570,7 +572,7 @@ class RESTClient:
 
         Deletes a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#destroy-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#destroy-player)
 
         Example
         -------
@@ -583,7 +585,7 @@ class RESTClient:
         session_id
             The Session ID that the players are attached too.
         guild
-            The Guild ID that the player is attached to.
+            The `guild` or `guild id` that the player is attached to.
 
         Raises
         ------
@@ -624,7 +626,7 @@ class RESTClient:
 
         Updates the lavalink session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-session)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#update-session)
 
         Example
         -------
@@ -692,9 +694,9 @@ class RESTClient:
 
     async def fetch_info(self) -> Info:
         """
-        Get server statistics.
+        Get information.
 
-        Gets the current Lavalink statistics.
+        Gets the current sessions information.
 
         ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
 
@@ -747,9 +749,9 @@ class RESTClient:
 
     async def fetch_version(self) -> str:
         """
-        Get Lavalink version.
+        Get version.
 
-        Gets the current lavalink version.
+        Gets the current Lavalink version.
 
         ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
 
@@ -796,7 +798,7 @@ class RESTClient:
 
     async def fetch_stats(self) -> Statistics:
         """
-        Get server statistics.
+        Get statistics.
 
         Gets the current Lavalink statistics.
 
@@ -856,16 +858,17 @@ class RESTClient:
         """
         Fetch routeplanner status.
 
-        Fetches the routeplanner status.
+        Fetches the routeplanner status of the current session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
 
         Example
         -------
         ```py
         routeplanner_status = await client.rest.fetch_routeplanner_status()
 
-        print(routeplanner_status.class_type.name)
+        if routeplanner_status:
+            print(routeplanner_status.class_type.name)
         ```
 
         Raises

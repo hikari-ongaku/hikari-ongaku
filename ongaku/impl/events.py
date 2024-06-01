@@ -4,8 +4,6 @@ Error Impl's.
 The error implemented classes.
 """
 
-# ruff: noqa: D101, D102
-
 from __future__ import annotations
 
 import typing

@@ -83,7 +83,7 @@ class ReadyEvent(events_.OngakuEvent, events_.Ready):
     """
     Ready Event.
 
-    The event that is dispatched when the lavalink server is ready for connections.
+    Dispatched by Lavalink upon successful connection and authorization. Contains fields determining if resuming was successful, as well as the session id.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#ready-op)
     """
@@ -132,7 +132,7 @@ class PlayerUpdateEvent(events_.OngakuEvent, events_.PlayerUpdate):
     """
     Player Update Event.
 
-    The event that is dispatched when a players state has been updated.
+    Dispatched every x seconds (configurable in `application.yml`) with the current state of the player.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-update-op)
     """
@@ -183,7 +183,7 @@ class StatisticsEvent(events_.OngakuEvent, stats_.Statistics):
     """
     Statistics Event.
 
-    All of the statistics about the current session.
+    A collection of statistics sent every minute.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#stats-op)
     """
@@ -271,11 +271,245 @@ class StatisticsEvent(events_.OngakuEvent, stats_.Statistics):
         return self._frame_statistics
 
 
+class TrackStartEvent(events_.OngakuEvent, events_.TrackStart):
+    """
+    Track start event.
+
+    Dispatched when a track starts playing.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
+    """
+
+    def __init__(
+        self,
+        app: hikari.RESTAware,
+        client: Client,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+    ) -> None:
+        self._app = app
+        self._client = client
+        self._session = session
+        self._guild_id = guild_id
+        self._track = track
+
+    @classmethod
+    def from_session(
+        cls, session: Session, guild_id: hikari.Snowflake, track: track_.Track
+    ) -> te.Self:
+        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
+        return cls(session.app, session.client, session, guild_id, track)
+
+    @property
+    def app(self) -> hikari.RESTAware:
+        return self._app
+
+    @property
+    def client(self) -> Client:
+        return self._client
+
+    @property
+    def session(self) -> Session:
+        return self._session
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        return self._guild_id
+
+    @property
+    def track(self) -> track_.Track:
+        return self._track
+
+
+class TrackEndEvent(events_.OngakuEvent, events_.TrackEnd):
+    """
+    Track end event.
+
+    Dispatched when a track ends.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
+    """
+
+    def __init__(
+        self,
+        app: hikari.RESTAware,
+        client: Client,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+        reason: events_.TrackEndReasonType,
+    ) -> None:
+        self._app = app
+        self._client = client
+        self._session = session
+        self._guild_id = guild_id
+        self._track = track
+        self._reason = reason
+
+    @classmethod
+    def from_session(
+        cls,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+        reason: events_.TrackEndReasonType,
+    ) -> te.Self:
+        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
+        return cls(session.app, session.client, session, guild_id, track, reason)
+
+    @property
+    def app(self) -> hikari.RESTAware:
+        return self._app
+
+    @property
+    def client(self) -> Client:
+        return self._client
+
+    @property
+    def session(self) -> Session:
+        return self._session
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        return self._guild_id
+
+    @property
+    def track(self) -> track_.Track:
+        return self._track
+
+    @property
+    def reason(self) -> events_.TrackEndReasonType:
+        return self._reason
+
+
+class TrackExceptionEvent(events_.OngakuEvent, events_.TrackException):
+    """
+    Track exception event.
+
+    Dispatched when a track throws an exception.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
+    """
+
+    def __init__(
+        self,
+        app: hikari.RESTAware,
+        client: Client,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+        exception: errors_.ExceptionError,
+    ) -> None:
+        self._app = app
+        self._client = client
+        self._session = session
+        self._guild_id = guild_id
+        self._track = track
+        self._exception = exception
+
+    @classmethod
+    def from_session(
+        cls,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+        exception: errors_.ExceptionError,
+    ) -> te.Self:
+        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
+        return cls(session.app, session.client, session, guild_id, track, exception)
+
+    @property
+    def app(self) -> hikari.RESTAware:
+        return self._app
+
+    @property
+    def client(self) -> Client:
+        return self._client
+
+    @property
+    def session(self) -> Session:
+        return self._session
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        return self._guild_id
+
+    @property
+    def track(self) -> track_.Track:
+        return self._track
+
+    @property
+    def exception(self) -> errors_.ExceptionError:
+        return self._exception
+
+
+class TrackStuckEvent(events_.OngakuEvent, events_.TrackStuck):
+    """
+    Track stuck event.
+
+    Dispatched when a track gets stuck while playing.
+
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
+    """
+
+    def __init__(
+        self,
+        app: hikari.RESTAware,
+        client: Client,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+        threshold_ms: int,
+    ) -> None:
+        self._app = app
+        self._client = client
+        self._session = session
+        self._guild_id = guild_id
+        self._track = track
+        self._threshold_ms = threshold_ms
+
+    @classmethod
+    def from_session(
+        cls,
+        session: Session,
+        guild_id: hikari.Snowflake,
+        track: track_.Track,
+        threshold_ms: int,
+    ) -> te.Self:
+        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
+        return cls(session.app, session.client, session, guild_id, track, threshold_ms)
+
+    @property
+    def app(self) -> hikari.RESTAware:
+        return self._app
+
+    @property
+    def client(self) -> Client:
+        return self._client
+
+    @property
+    def session(self) -> Session:
+        return self._session
+
+    @property
+    def guild_id(self) -> hikari.Snowflake:
+        return self._guild_id
+
+    @property
+    def track(self) -> track_.Track:
+        return self._track
+
+    @property
+    def threshold_ms(self) -> int:
+        return self._threshold_ms
+
+
 class WebsocketClosedEvent(events_.OngakuEvent, events_.WebsocketClosed):
     """
     Websocket Closed Event.
 
-    The event that is dispatched, when a websocket to discord gets closed.
+    Dispatched when an audio WebSocket (to Discord) is closed. This can happen for various reasons (normal and abnormal), e.g. when using an expired voice server update. 4xxx codes are usually bad. See the [Discord Docs](https://discord.com/developers/docs/topics/opcodes-and-status-codes#voice-voice-close-event-codes).
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
@@ -341,245 +575,11 @@ class WebsocketClosedEvent(events_.OngakuEvent, events_.WebsocketClosed):
         return self._by_remote
 
 
-class TrackStartEvent(events_.OngakuEvent, events_.TrackStart):
-    """
-    Track start event.
-
-    The event that is dispatched when a track starts playing.
-
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstartevent)
-    """
-
-    def __init__(
-        self,
-        app: hikari.RESTAware,
-        client: Client,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-    ) -> None:
-        self._app = app
-        self._client = client
-        self._session = session
-        self._guild_id = guild_id
-        self._track = track
-
-    @classmethod
-    def from_session(
-        cls, session: Session, guild_id: hikari.Snowflake, track: track_.Track
-    ) -> te.Self:
-        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track)
-
-    @property
-    def app(self) -> hikari.RESTAware:
-        return self._app
-
-    @property
-    def client(self) -> Client:
-        return self._client
-
-    @property
-    def session(self) -> Session:
-        return self._session
-
-    @property
-    def guild_id(self) -> hikari.Snowflake:
-        return self._guild_id
-
-    @property
-    def track(self) -> track_.Track:
-        return self._track
-
-
-class TrackEndEvent(events_.OngakuEvent, events_.TrackEnd):
-    """
-    Track end event.
-
-    The event that is dispatched when a track ends.
-
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
-    """
-
-    def __init__(
-        self,
-        app: hikari.RESTAware,
-        client: Client,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-        reason: events_.TrackEndReasonType,
-    ) -> None:
-        self._app = app
-        self._client = client
-        self._session = session
-        self._guild_id = guild_id
-        self._track = track
-        self._reason = reason
-
-    @classmethod
-    def from_session(
-        cls,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-        reason: events_.TrackEndReasonType,
-    ) -> te.Self:
-        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, reason)
-
-    @property
-    def app(self) -> hikari.RESTAware:
-        return self._app
-
-    @property
-    def client(self) -> Client:
-        return self._client
-
-    @property
-    def session(self) -> Session:
-        return self._session
-
-    @property
-    def guild_id(self) -> hikari.Snowflake:
-        return self._guild_id
-
-    @property
-    def track(self) -> track_.Track:
-        return self._track
-
-    @property
-    def reason(self) -> events_.TrackEndReasonType:
-        return self._reason
-
-
-class TrackExceptionEvent(events_.OngakuEvent, events_.TrackException):
-    """
-    Track exception event.
-
-    The event that is dispatched when an exception happens with a track.
-
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
-    """
-
-    def __init__(
-        self,
-        app: hikari.RESTAware,
-        client: Client,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-        exception: errors_.ExceptionError,
-    ) -> None:
-        self._app = app
-        self._client = client
-        self._session = session
-        self._guild_id = guild_id
-        self._track = track
-        self._exception = exception
-
-    @classmethod
-    def from_session(
-        cls,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-        exception: errors_.ExceptionError,
-    ) -> te.Self:
-        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, exception)
-
-    @property
-    def app(self) -> hikari.RESTAware:
-        return self._app
-
-    @property
-    def client(self) -> Client:
-        return self._client
-
-    @property
-    def session(self) -> Session:
-        return self._session
-
-    @property
-    def guild_id(self) -> hikari.Snowflake:
-        return self._guild_id
-
-    @property
-    def track(self) -> track_.Track:
-        return self._track
-
-    @property
-    def exception(self) -> errors_.ExceptionError:
-        return self._exception
-
-
-class TrackStuckEvent(events_.OngakuEvent, events_.TrackStuck):
-    """
-    Track stuck event.
-
-    The event that is dispatched when a track gets stuck.
-
-    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
-    """
-
-    def __init__(
-        self,
-        app: hikari.RESTAware,
-        client: Client,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-        threshold_ms: int,
-    ) -> None:
-        self._app = app
-        self._client = client
-        self._session = session
-        self._guild_id = guild_id
-        self._track = track
-        self._threshold_ms = threshold_ms
-
-    @classmethod
-    def from_session(
-        cls,
-        session: Session,
-        guild_id: hikari.Snowflake,
-        track: track_.Track,
-        threshold_ms: int,
-    ) -> te.Self:
-        """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, threshold_ms)
-
-    @property
-    def app(self) -> hikari.RESTAware:
-        return self._app
-
-    @property
-    def client(self) -> Client:
-        return self._client
-
-    @property
-    def session(self) -> Session:
-        return self._session
-
-    @property
-    def guild_id(self) -> hikari.Snowflake:
-        return self._guild_id
-
-    @property
-    def track(self) -> track_.Track:
-        return self._track
-
-    @property
-    def threshold_ms(self) -> int:
-        return self._threshold_ms
-
-
 class QueueEmptyEvent(events_.OngakuEvent, events_.QueueEmpty):
     """
     Queue empty event.
 
-    The event that is dispatched, when a players queue is empty.
+    Dispatched when the player finishes all the tracks in the queue.
     """
 
     def __init__(
@@ -628,7 +628,7 @@ class QueueNextEvent(events_.OngakuEvent, events_.QueueNext):
     """
     Queue next event.
 
-    The event that is dispatched when a queue is playing the next song.
+    Dispatched when the player starts playing a new track.
     """
 
     def __init__(

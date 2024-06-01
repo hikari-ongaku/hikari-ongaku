@@ -44,7 +44,7 @@ class Session:
     name
         The name of the session.
     ssl
-        Whether the server is https or just http.
+        Whether the server is `https` or just `http`.
     host
         The host of the lavalink server.
     port
@@ -85,12 +85,12 @@ class Session:
 
     @property
     def client(self) -> Client:
-        """The client attached to the bot."""
+        """The client this session is included in."""
         return self._client
 
     @property
     def app(self) -> hikari.GatewayBotAware:
-        """The application attached to this bot."""
+        """The application this session is included in."""
         return self.client.app
 
     @property
@@ -100,12 +100,12 @@ class Session:
 
     @property
     def ssl(self) -> bool:
-        """Whether the server uses https or just http."""
+        """Whether the server uses `https` or just `http`."""
         return self._ssl
 
     @property
     def host(self) -> str:
-        """The host, or domain of the site."""
+        """The host or domain of the site."""
         return self._host
 
     @property
@@ -120,17 +120,17 @@ class Session:
 
     @property
     def base_uri(self) -> str:
-        """The base uri for the server."""
+        """The base URI for the server."""
         return self._base_uri
 
     @property
     def auth_headers(self) -> typing.Mapping[str, typing.Any]:
-        """The headers required for authorization. This is automatically added."""
+        """The headers required for authorization."""
         return self._authorization_headers
 
     @property
     def status(self) -> session_.SessionStatus:
-        """The current status of the server."""
+        """The current status of the session."""
         return self._status
 
     @property
@@ -168,11 +168,11 @@ class Session:
         return_type
             The response type you expect.
         headers
-            The headers you wish to send.
+            The headers to send.
         json
-            The json data you wish to send.
+            The json data to send.
         params
-            The parameters you wish to send.
+            The parameters to send.
         ignore_default_headers
             Whether to ignore the default headers or not.
         version
@@ -180,7 +180,7 @@ class Session:
 
         Returns
         -------
-        types.RequestT
+        types.RequestT | None
             Your requested type of data.
 
         Raises
@@ -429,6 +429,9 @@ class Session:
         Transfer.
 
         Transfer all the players from this session, to a different one.
+
+        !!! warning
+            This will close the current sessions connection.
 
         Parameters
         ----------

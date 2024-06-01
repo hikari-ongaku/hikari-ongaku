@@ -186,7 +186,7 @@ class FailingAddress(abc.ABC):
     @property
     @abc.abstractmethod
     def timestamp(self) -> datetime.datetime:
-        """The timestamp when the address failed."""
+        """The datetime object of when the address failed."""
         ...
 
     @property

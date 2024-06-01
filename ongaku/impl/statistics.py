@@ -4,8 +4,6 @@ Statistics Impl's.
 The statistics implemented classes.
 """
 
-# ruff: noqa: D101, D102
-
 from __future__ import annotations
 
 from ongaku.abc import statistics as statistics_

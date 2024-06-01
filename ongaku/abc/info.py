@@ -38,7 +38,7 @@ class Info(abc.ABC):
     @property
     @abc.abstractmethod
     def build_time(self) -> datetime.datetime:
-        """The millisecond unix timestamp when this Lavalink jar was built."""
+        """The datetime object of when this Lavalink jar was built."""
         ...
 
     @property
@@ -202,7 +202,7 @@ class Git(abc.ABC):
     @property
     @abc.abstractmethod
     def commit_time(self) -> datetime.datetime:
-        """The millisecond unix timestamp for when the commit was created."""
+        """The datetime object of when the commit was created."""
         ...
 
     def __eq__(self, other: object) -> bool:

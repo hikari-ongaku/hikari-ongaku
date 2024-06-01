@@ -57,19 +57,19 @@ class Player(abc.ABC):
     @property
     @abc.abstractmethod
     def is_paused(self) -> bool:
-        """Whether the player is paused or not."""
+        """Whether the player is paused."""
         ...
 
     @property
     @abc.abstractmethod
     def state(self) -> State:
-        """The [State][ongaku.abc.player.State] object."""
+        """The player's state."""
         ...
 
     @property
     @abc.abstractmethod
     def voice(self) -> Voice:
-        """The [Voice][ongaku.abc.player.Voice] object."""
+        """The player's voice state."""
         ...
 
     @property
@@ -119,7 +119,7 @@ class State(abc.ABC):
     @property
     @abc.abstractmethod
     def time(self) -> datetime.datetime:
-        """Unix timestamp in milliseconds."""
+        """The current datetime."""
         ...
 
     @property

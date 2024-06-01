@@ -27,7 +27,7 @@ class Playlist(abc.ABC):
     @property
     @abc.abstractmethod
     def info(self) -> PlaylistInfo:
-        """Addition playlist info provided by plugins."""
+        """The info of the playlist."""
         ...
 
     @property

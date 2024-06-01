@@ -57,29 +57,81 @@ class SessionHandler(abc.ABC):
 
     @abc.abstractmethod
     async def start(self) -> None:
-        """Start the session handler."""
+        """Start the session handler.
+
+        Starts up the session handler and attempts to connect all sessions to their websocket.
+        """
         ...
 
     @abc.abstractmethod
     async def stop(self) -> None:
-        """Stop the session handler."""
+        """Stop the session handler.
+
+        Stops the session handler and kills all players and sessions.
+        """
         ...
 
     @abc.abstractmethod
     def add_session(
         self, ssl: bool, host: str, port: int, password: str, attempts: int
     ) -> Session:
-        """Add a session."""
+        """Add a session.
+
+        Add a new session to the session handler.
+
+        Parameters
+        ssl
+            Whether the server uses `https` or just `http`.
+        host
+            The host of the lavalink server.
+        port
+            The port of the lavalink server.
+        password
+            The password of the lavalink server.
+        attempts
+            The attempts that the session is allowed to use, before completely shutting down.
+
+        Returns
+        -------
+        Session
+            The session that was added to the handler.
+        """
         ...
 
     @abc.abstractmethod
     def add_player(self, player: Player) -> Player:
-        """Add a player."""
+        """Add a player.
+
+        Add a new player to the session handler.
+
+        Parameters
+        ----------
+        player
+            The player you wish to add.
+
+        Returns
+        -------
+        Player
+            The player you added to the session handler.
+        """
         ...
 
     @abc.abstractmethod
     def fetch_session(self) -> Session:
-        """Return a valid session."""
+        """Fetch a session.
+
+        Returns a valid session.
+
+        Returns
+        -------
+        Session
+            The session to use.
+
+        Raises
+        ------
+        NoSessionError
+            Raised when there is no available sessions for the handler to return.
+        """
         ...
 
     @abc.abstractmethod
@@ -92,7 +144,17 @@ class SessionHandler(abc.ABC):
         Parameters
         ----------
         guild
-            The guild, or guild id you wish to delete the player from.
+            The `guild`, or `guild id` you wish to create a player for.
+
+        Returns
+        -------
+        Player
+            The player that was created.
+
+        Raises
+        ------
+        NoSessionsError
+            When there is no available sessions.
         """
         ...
 
@@ -106,12 +168,12 @@ class SessionHandler(abc.ABC):
         Parameters
         ----------
         guild
-            The guild, or guild id you wish to delete the player from.
+            The `guild`, or `guild id` you wish to fetch the player for.
 
         Raises
         ------
         PlayerMissingError
-            Raised when the player for the guild, does not exist.
+            Raised when the player for the specified guild does not exist.
         """
         ...
 
@@ -125,12 +187,12 @@ class SessionHandler(abc.ABC):
         Parameters
         ----------
         guild
-            The guild, or guild id you wish to delete the player from.
+            The `guild`, or `guild id` you wish to delete the player from.
 
         Raises
         ------
         PlayerMissingError
-            Raised when the player for the guild, does not exist.
+            Raised when the player for the specified guild does not exist.
         """
         ...
 
