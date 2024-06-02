@@ -7,7 +7,6 @@ A voice library for Hikari.
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
 ![Pyright](https://badgen.net/badge/Pyright/strict/2A6DB2)
 [![Lavalink](https://badgen.net/badge/Lavalink/V4/ff624a)](https://lavalink.dev/)
-[![Docs](https://badgen.net/badge/Docs/Ongaku/ff6b61)](https://ongaku.mplaty.com/)
 
 </div>
 
@@ -21,28 +20,28 @@ Please check out the [docs](https://ongaku.mplaty.com/), and also checkout the [
 
 ### Features
  - Player control
-    - Volume
     - Playlists
     - Queuing
-        - Deleting (via position, and Track)
-        - Clearing
-        - Adding
-    - Skipping
-    - Seeking/Reversing
-    - Filters
-    - Muting
-    - Requestors (users who requested the song.)
+        - Adding songs.
+        - Shuffling the queue.
+        - Skipping a song or multiple.
+        - Deleting via position, or a track object.
+        - Clearing the queue.
+    - Seeking/Reversing the tracks position.
+    - Volume control
+    - Setting requestors (users who requested the song.)
  - Events
-    - Ready
-    - Statistics
-    - Track Start
-    - Track End
-    - Track Exception
-    - Track Stuck
-    - Empty Queue
-    - Next Queue
+    - Ready Event (when a session is online.)
+    - Player Update Event (when a player gets updated.)
+    - Statistics Event (about the server.)
+    - Track Start Event
+    - Track End Event
+    - Track Exception Event
+    - Track Stuck Event
+    - Empty Queue Event
+    - Next Queue Event
  - Sessions
-    - Automatic sessions
-    - Manual sessions
+    - BasicSessionHandler (Gives next available session)
  - Others
     - Traces (for debugging code.)
+    - Tests (Full test coverage.)
