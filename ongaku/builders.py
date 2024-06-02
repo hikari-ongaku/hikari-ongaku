@@ -61,11 +61,9 @@ class EntityBuilder:
         *,
         dumps: DumpType = json_dumps,
         loads: LoadType = json_loads,
-        tzinfo: datetime._TzInfo | None = None,
     ) -> None:
         self._dumps = dumps
         self._loads = loads
-        self._tzinfo = tzinfo
 
     def _ensure_mapping(
         self, payload: types.PayloadMappingT
@@ -119,7 +117,7 @@ class EntityBuilder:
 
         return errors.RestError(
             datetime.datetime.fromtimestamp(
-                int(data["timestamp"]) / 1000, self._tzinfo
+                int(data["timestamp"]) / 1000, datetime.timezone.utc
             ),
             data["status"],
             data["error"],
@@ -434,7 +432,7 @@ class EntityBuilder:
         return info.Info(
             self.build_info_version(data["version"]),
             datetime.datetime.fromtimestamp(
-                int(data["buildTime"]) / 1000, self._tzinfo
+                int(data["buildTime"]) / 1000, datetime.timezone.utc
             ),
             self.build_info_git(data["git"]),
             data["jvm"],
@@ -511,7 +509,7 @@ class EntityBuilder:
             data["branch"],
             data["commit"],
             datetime.datetime.fromtimestamp(
-                int(data["commitTime"]) / 1000, self._tzinfo
+                int(data["commitTime"]) / 1000, datetime.timezone.utc
             ),
         )
 
@@ -608,7 +606,9 @@ class EntityBuilder:
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Player State")
 
         return player.State(
-            datetime.datetime.fromtimestamp(int(data["time"]) / 1000, self._tzinfo),
+            datetime.datetime.fromtimestamp(
+                int(data["time"]) / 1000, datetime.timezone.utc
+            ),
             data["position"],
             data["connected"],
             data["ping"],
@@ -854,7 +854,7 @@ class EntityBuilder:
         return routeplanner.FailingAddress(
             data["failingAddress"],
             datetime.datetime.fromtimestamp(
-                int(data["failingTimestamp"]) / 1000, self._tzinfo
+                int(data["failingTimestamp"]) / 1000, datetime.timezone.utc
             ),
             data["failingTime"],
         )

@@ -23,7 +23,9 @@ class TestBuilderErrors:
     def test_build_rest_error(self, builder: EntityBuilder):
         parsed_result = builder.build_rest_error(payloads.REST_ERROR_PAYLOAD)
 
-        assert parsed_result.timestamp == datetime.datetime.fromtimestamp(1 / 1000)
+        assert parsed_result.timestamp == datetime.datetime.fromtimestamp(
+            1 / 1000, datetime.timezone.utc
+        )
         assert parsed_result.status == 2
         assert parsed_result.error == "error"
         assert parsed_result.message == "message"
@@ -106,7 +108,9 @@ class TestBuilderInfo:
         assert parsed_result.version == builder.build_info_version(
             payloads.INFO_VERSION_PAYLOAD
         )
-        assert parsed_result.build_time == datetime.datetime.fromtimestamp(1 / 1000)
+        assert parsed_result.build_time == datetime.datetime.fromtimestamp(
+            1 / 1000, datetime.timezone.utc
+        )
         assert parsed_result.git == builder.build_info_git(payloads.INFO_GIT_PAYLOAD)
         assert parsed_result.jvm == "jvm"
         assert parsed_result.lavaplayer == "lavaplayer"
@@ -131,7 +135,9 @@ class TestBuilderInfo:
 
         assert parsed_result.branch == "branch"
         assert parsed_result.commit == "commit"
-        assert parsed_result.commit_time == datetime.datetime.fromtimestamp(1 / 1000)
+        assert parsed_result.commit_time == datetime.datetime.fromtimestamp(
+            1 / 1000, datetime.timezone.utc
+        )
 
     def test_build_info_plugin(self, builder: EntityBuilder):
         parsed_result = builder.build_info_plugin(payloads.INFO_PLUGIN_PAYLOAD)
@@ -160,7 +166,9 @@ class TestBuilderPlayer:
     def test_build_player_state(self, builder: EntityBuilder):
         parsed_result = builder.build_player_state(payloads.PLAYER_STATE_PAYLOAD)
 
-        assert parsed_result.time == datetime.datetime.fromtimestamp(1 / 1000)
+        assert parsed_result.time == datetime.datetime.fromtimestamp(
+            1 / 1000, datetime.timezone.utc
+        )
         assert parsed_result.position == 2
         assert parsed_result.connected is True
         assert parsed_result.ping == 3
@@ -238,7 +246,9 @@ class TestBuilderRoutePlanner:
         )
 
         assert parsed_result.address == "failing_address"
-        assert parsed_result.timestamp == datetime.datetime.fromtimestamp(1 / 1000)
+        assert parsed_result.timestamp == datetime.datetime.fromtimestamp(
+            1 / 1000, datetime.timezone.utc
+        )
         assert parsed_result.time == "failing_time"
 
 

@@ -635,7 +635,7 @@ class TestRequest:
         assert isinstance(rest_error_error.value, errors.RestRequestError)
 
         assert rest_error_error.value.timestamp == datetime.datetime.fromtimestamp(
-            1 / 1000
+            1 / 1000, datetime.timezone.utc
         )
         assert rest_error_error.value.status == 2
         assert rest_error_error.value.error == "error"
