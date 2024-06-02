@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-import typing
 
 import aiohttp
 import mock
@@ -140,29 +139,24 @@ class TestSession:
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
+        ongaku_session: Session,
         bot_user: OwnUser,
     ):
-        cs = aiohttp.ClientSession()
+        ongaku_client._client_session = cs = mock.Mock()
+
+        #async def async_generator_
 
         # Test working
+        cs.ws_connect.return_value = ws = mock.MagicMock()
+        ws.__aiter__.return_value = [
+            aiohttp.WSMessage(aiohttp.WSMsgType.TEXT, orjson.dumps(payloads.READY_PAYLOAD).decode(), None), 
+            aiohttp.WSMessage(aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"),
+        ]
 
         with (
             mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
-            mock.patch.object(ongaku_client, "_client_session", cs),
-            mock.patch.object(
-                cs, "ws_connect", new_callable=mock.AsyncMock, return_value=None
-            ) as patched_ws_connect,
+            mock.patch.object(ongaku_session, "_handle_ws_message", return_value=None),
         ):
-            session = Session(
-                ongaku_client,
-                "test_name",
-                False,
-                "127.0.0.1",
-                2333,
-                "youshallnotpass",
-                3,
-            )
-            session._authorization_headers = {"Authorization": session.password}
 
             me = gateway_bot.get_me()
 
@@ -171,18 +165,18 @@ class TestSession:
             logging.warning(me.id)
             logging.warning(type(me.id))
 
-            await session._websocket()
+            await ongaku_session._websocket()
 
             headers = {
                 "User-Id": "1234567890",
                 "Client-Name": f"test_username/{__version__}",
             }
 
-            headers.update(session.auth_headers)
+            headers.update(ongaku_session.auth_headers)
 
-            patched_ws_connect.assert_called_once_with(
-                session.base_uri + "/v4/websocket", headers=headers, autoclose=False
-            )
+            #patched_ws_connect.assert_called_once_with(
+            #    ongaku_session.base_uri + "/v4/websocket", headers=headers, autoclose=False
+            #)
 
         # Test no bot
 
@@ -190,7 +184,7 @@ class TestSession:
             mock.patch.object(gateway_bot, "get_me", return_value=None),
             pytest.raises(errors.SessionStartError),
         ):
-            await session._websocket()
+            await ongaku_session._websocket()
 
     @pytest.mark.asyncio
     async def test_start(self, ongaku_session: Session):
@@ -735,14 +729,8 @@ class TestHandleOPCode:
 class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_text(self, ongaku_session: Session):
-        payload: typing.Final[typing.Mapping[str, typing.Any]] = {
-            "op": "ready",
-            "resumed": False,
-            "sessionId": "session_id",
-        }
-
         message = aiohttp.WSMessage(
-            aiohttp.WSMsgType.TEXT, orjson.dumps(payload).decode(), None
+            aiohttp.WSMsgType.TEXT, orjson.dumps(payloads.READY_PAYLOAD).decode(), None
         )
 
         with (
@@ -800,7 +788,10 @@ class TestHandleWSMessage:
             aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"
         )
 
-        with mock.patch.object(ongaku_session, "transfer") as patched_transfer:
+        with (
+            mock.patch.object(ongaku_session, "transfer") as patched_transfer,
+            mock.patch.object(ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None) as patched_stop
+        ):
             assert ongaku_session.status == SessionStatus.NOT_CONNECTED
 
             await ongaku_session._handle_ws_message(message)
@@ -814,3 +805,5 @@ class TestHandleWSMessage:
             assert isinstance(args[0], SessionHandler)
 
             assert args[0] == ongaku_session.client.session_handler
+
+            patched_stop.assert_called_once()

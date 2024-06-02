@@ -367,6 +367,8 @@ class Session:
             )
             await self.transfer(self.client.session_handler)
 
+            await self.stop()
+
     async def _websocket(self) -> None:
         bot = self.app.get_me()
 
@@ -421,6 +423,8 @@ class Session:
                     )
                     self._status = session_.SessionStatus.CONNECTED
                     async for msg in ws:
+                        #_logger.warning("Reading message uwu")
+                        #raise Exception
                         await self._handle_ws_message(msg)
 
             except Exception as e:
