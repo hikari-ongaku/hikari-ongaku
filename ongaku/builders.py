@@ -52,8 +52,6 @@ class EntityBuilder:
         The dumping method to use when dumping payloads.
     loads
         The loading method to use when loading payloads.
-    tzinfo
-        The timezone to use when decoding [datetime.datetime][] objects.
     """
 
     def __init__(
