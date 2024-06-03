@@ -18,7 +18,6 @@ from ongaku.abc.handler import SessionHandler
 from ongaku.abc.session import SessionStatus
 from ongaku.client import Client
 from ongaku.impl.handlers import BasicSessionHandler
-from ongaku.internal import __version__
 from ongaku.session import Session
 from tests import payloads
 
@@ -144,33 +143,7 @@ class TestSession:
             mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
             mock.patch.object(ongaku_session, "_handle_ws_message", return_value=None),
         ):
-            me = gateway_bot.get_me()
-
-            assert me is not None
-
-            logging.warning(me.id)
-            logging.warning(type(me.id))
-
-            await ongaku_session._websocket()
-
-            headers = {
-                "User-Id": "1234567890",
-                "Client-Name": f"test_username/{__version__}",
-            }
-
-            headers.update(ongaku_session.auth_headers)
-
-            # patched_ws_connect.assert_called_once_with(
-            #    ongaku_session.base_uri + "/v4/websocket", headers=headers, autoclose=False
-            # )
-
-        # Test no bot
-
-        with (
-            mock.patch.object(gateway_bot, "get_me", return_value=None),
-            pytest.raises(errors.SessionStartError),
-        ):
-            await ongaku_session._websocket()
+            raise Exception("Websocket not tested for.")
 
     @pytest.mark.asyncio
     async def test_start(self, ongaku_session: Session):
@@ -219,7 +192,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/string",
+                ongaku_session.base_uri + "/v4/string",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -248,7 +221,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/integer",
+                ongaku_session.base_uri + "/v4/integer",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -278,7 +251,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/float",
+                ongaku_session.base_uri + "/v4/float",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -308,7 +281,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/boolean",
+                ongaku_session.base_uri + "/v4/boolean",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -343,7 +316,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/dict",
+                ongaku_session.base_uri + "/v4/dict",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -378,7 +351,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/list",
+                ongaku_session.base_uri + "/v4/list",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -413,7 +386,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/tuple",
+                ongaku_session.base_uri + "/v4/tuple",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -443,7 +416,7 @@ class TestRequest:
 
             patched_request.assert_called_once_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/none",
+                ongaku_session.base_uri + "/v4/none",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params={},
@@ -482,7 +455,7 @@ class TestRequest:
 
             patched_request.assert_called_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/headers",
+                ongaku_session.base_uri + "/v4/headers",
                 headers=headers,
                 json={},
                 params={},
@@ -498,7 +471,7 @@ class TestRequest:
 
             patched_request.assert_called_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/json",
+                ongaku_session.base_uri + "/v4/json",
                 headers=ongaku_session.auth_headers,
                 json=test_dict,
                 params={},
@@ -518,7 +491,7 @@ class TestRequest:
 
             patched_request.assert_called_with(
                 "GET",
-                "http://127.0.0.1:2333/v4/params",
+                ongaku_session.base_uri + "/v4/params",
                 headers=ongaku_session.auth_headers,
                 json={},
                 params=params,
