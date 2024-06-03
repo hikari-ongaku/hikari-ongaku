@@ -23,7 +23,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -Ur requirements.txt
+          pip install -Ur requirements/tests.txt
+          pip install -Ur requirements/injection.txt
           pip install coverage codeclimate-test-reporter
 
       - name: Run tests with coverage
