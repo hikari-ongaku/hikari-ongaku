@@ -2,6 +2,11 @@
 hide:
   - navigation
   - toc
+social:
+   cards_layout: default/only/image
+   cards_layout_options:
+      background_image: docs/assets/home_page_social_card.png
+      description: A simple voice handler for hikari
 ---
 
 # Home
