@@ -605,8 +605,6 @@ class Player:
         BuildError
             Raised when a construction of a ABC class fails.
         """
-        session = self.session._get_session_id()
-
         if amount <= 0:
             raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
@@ -624,6 +622,8 @@ class Player:
             TRACE_LEVEL,
             f"Successfully removed {removed_tracks} track(s) out of {amount} in guild {self.guild_id}",
         )
+
+        session = self.session._get_session_id()
 
         if len(self.queue) <= 0:
             player = await self.session.client.rest.update_player(
@@ -779,6 +779,9 @@ class Player:
         await player.set_volume(10)
         ```
 
+        !!! note
+            If you don't set a value to volume, it will simply become 100 (The default.)
+
         Parameters
         ----------
         volume
@@ -801,10 +804,12 @@ class Player:
         """
         session = self.session._get_session_id()
 
-        if volume < 0:
-            raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
-        if volume > 1000:
-            raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
+        if volume:
+            if volume < 0:
+                raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
+            if volume > 1000:
+                raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
+        
 
         player = await self.session.client.rest.update_player(
             session,

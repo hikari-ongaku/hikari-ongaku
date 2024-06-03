@@ -633,17 +633,13 @@ class RESTClient:
         Example
         -------
         ```py
-        await client.rest.update_session(session_id)
+        await client.rest.update_session(session_id, False)
         ```
 
         Parameters
         ----------
         session_id
             The session you wish to update.
-        resuming
-            Whether resuming is enabled for this session or not.
-        timeout
-            The timeout in seconds (default is 60s).
 
         Raises
         ------
