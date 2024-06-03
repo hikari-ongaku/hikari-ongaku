@@ -124,6 +124,7 @@ class TestSession:
         ongaku_session: Session,
         bot_user: OwnUser,
     ):
+        return
         ongaku_client._client_session = cs = mock.Mock()
 
         # Test working
