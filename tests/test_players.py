@@ -66,9 +66,9 @@ class TestPlayer:
 
         assert player.app == gateway_bot
 
-        assert player.channel_id is None
-
         assert player.guild_id == Snowflake(1234567890)
+
+        assert player.channel_id is None
 
         assert player.is_alive is False
 
@@ -81,6 +81,16 @@ class TestPlayer:
         assert player.autoplay is True
 
         assert player.connected is False
+
+        assert isinstance(player.queue, typing.Sequence)
+        assert player.queue == []
+
+        assert player.voice is None
+
+        assert player.state is None
+
+        assert isinstance(player.filters, typing.Mapping)
+        assert player.filters == {}
 
     @pytest.mark.asyncio
     async def test_connect(self, ongaku_session: Session, ongaku_player: Player):

@@ -30,16 +30,26 @@ class TestSession:
         )
 
         assert session.client == ongaku_client
+
         assert session.app == ongaku_client.app
+
         assert session.name == "test_name"
+
         assert session.ssl is False
+
         assert session.host == "127.0.0.1"
+
         assert session.port == 2333
+
         assert session.password == "youshallnotpass"
+
         if session.ssl:
             assert session.base_uri == f"https://{session.host}:{session.port}"
         else:
             assert session.base_uri == f"http://{session.host}:{session.port}"
+
+        assert session.auth_headers == {"Authorization": session.password}
+
         assert session.status == SessionStatus.NOT_CONNECTED
 
     @pytest.mark.asyncio

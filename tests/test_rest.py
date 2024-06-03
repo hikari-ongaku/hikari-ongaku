@@ -25,6 +25,11 @@ from tests import payloads
 
 
 class TestRest:
+    def test_properties(self, ongaku_client: Client):
+        rest = RESTClient(ongaku_client)
+
+        assert rest._client == ongaku_client
+
     @pytest.mark.asyncio
     async def test_load_track(
         self, ongaku_client: Client, ongaku_session: Session, track: Track

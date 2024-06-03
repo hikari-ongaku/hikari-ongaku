@@ -4,6 +4,7 @@ import datetime
 import typing
 
 import hikari
+import orjson
 import pytest
 
 from ongaku.abc.errors import SeverityType
@@ -17,6 +18,13 @@ from tests import payloads
 @pytest.fixture
 def builder() -> EntityBuilder:
     return EntityBuilder()
+
+
+def test_properties():
+    builder = EntityBuilder(dumps=orjson.dumps, loads=orjson.loads)
+
+    assert builder._dumps == orjson.dumps
+    assert builder._loads == orjson.loads
 
 
 class TestBuilderErrors:

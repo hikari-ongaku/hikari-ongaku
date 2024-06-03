@@ -10,6 +10,8 @@ from tanjun.clients import Client as TanjunClient
 
 from ongaku import Player
 from ongaku import errors
+from ongaku.abc.handler import SessionHandler
+from ongaku.builders import EntityBuilder
 from ongaku.client import Client
 from ongaku.rest import RESTClient
 from ongaku.session import Session
@@ -38,16 +40,18 @@ class TestClient:
 
         assert isinstance(client.rest, RESTClient)
 
-    @pytest.mark.asyncio
-    async def test_properties(self, gateway_bot: gateway_bot_.GatewayBot):
+    def test_properties(self, gateway_bot: gateway_bot_.GatewayBot):
         client = Client(gateway_bot)
 
         assert client.app == gateway_bot
 
         assert isinstance(client.rest, RESTClient)
 
-        assert isinstance(client.is_alive, bool)
         assert client.is_alive is False
+
+        assert isinstance(client.entity_builder, EntityBuilder)
+
+        assert isinstance(client.session_handler, SessionHandler)
 
     @pytest.mark.asyncio
     async def test_get_client_session(self, gateway_bot: gateway_bot_.GatewayBot):

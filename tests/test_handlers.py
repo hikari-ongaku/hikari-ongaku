@@ -20,13 +20,13 @@ class TestBasicSessionHandler:
     async def test_properties(self, ongaku_client: Client):
         handler = BasicSessionHandler(ongaku_client)
 
-        assert handler.is_alive is False
-
         assert isinstance(handler.players, typing.Sequence)
         assert handler.players == ()
 
         assert isinstance(handler.sessions, typing.Sequence)
         assert handler.sessions == ()
+
+        assert handler.is_alive is False
 
     @pytest.mark.asyncio
     async def test_start(self, ongaku_client: Client):

@@ -61,7 +61,7 @@ class Player:
         self._is_paused = True
         self._voice: player_.Voice | None = None
         self._state: player_.State | None = None
-        self._queue: list[track_.Track] = []
+        self._queue: typing.MutableSequence[track_.Track] = []
         self._filters: typing.Mapping[str, typing.Any] = {}
         self._connected: bool = False
 
