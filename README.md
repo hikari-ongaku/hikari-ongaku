@@ -130,7 +130,7 @@ async def message_event(
 Ongaku has two extension built-in:
 
 - [`ext.checker`](https://ongaku.mplaty.com/ext/checker/) - For checking if a song is a URL, or just a query.
-- [`ext.injection`](https://ongaku.mplaty.com/ext/injection/) - For injecting player instances into commands
+- [`ext.injection`](https://ongaku.mplaty.com/ext/injection/) - For injecting player instances into commands.
 
 ### Issues and support
 
