@@ -423,8 +423,8 @@ class Session:
                     )
                     self._status = session_.SessionStatus.CONNECTED
                     async for msg in ws:
-                        #_logger.warning("Reading message uwu")
-                        #raise Exception
+                        # _logger.warning("Reading message uwu")
+                        # raise Exception
                         await self._handle_ws_message(msg)
 
             except Exception as e:
