@@ -29,6 +29,7 @@ jobs:
 
       - name: Run tests
         env:
+          LL_SSL: ${{ secrets.LL_SSL }}
           LL_HOST: ${{ secrets.LL_HOST }}
           LL_PORT: ${{ secrets.LL_PORT }}
           LL_PASSWORD: ${{ secrets.LL_PASSWORD }}
