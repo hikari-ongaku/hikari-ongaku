@@ -224,8 +224,14 @@ class TestRest:
 
             await session.start()
 
+            wait_time = 0
             while not patched_dispatch.called:
-                await asyncio.sleep(0.05)
+                sleep_for = 0.05
+                await asyncio.sleep(sleep_for)
+                wait_time += sleep_for
+
+                if wait_time >= 5:
+                    raise Exception("Could not connect to lavalink.")
 
             assert session.session_id is not None
 
@@ -279,8 +285,14 @@ class TestRest:
 
             await session.start()
 
+            wait_time = 0
             while not patched_dispatch.called:
-                await asyncio.sleep(0.05)
+                sleep_for = 0.05
+                await asyncio.sleep(sleep_for)
+                wait_time += sleep_for
+
+                if wait_time >= 5:
+                    raise Exception("Could not connect to lavalink.")
 
             assert session.session_id is not None
 
@@ -394,8 +406,14 @@ class TestRest:
 
             await session.start()
 
+            wait_time = 0
             while not patched_dispatch.called:
-                await asyncio.sleep(0.05)
+                sleep_for = 0.05
+                await asyncio.sleep(sleep_for)
+                wait_time += sleep_for
+
+                if wait_time >= 5:
+                    raise Exception("Could not connect to lavalink.")
 
             assert session.session_id is not None
 
