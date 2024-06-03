@@ -198,6 +198,7 @@ class TestRest:
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
+        ongaku_session: Session,
         bot_user: OwnUser,
     ):
         rest = RESTClient(ongaku_client)
@@ -211,18 +212,7 @@ class TestRest:
                 return_value=None,
             ) as patched_dispatch,
         ):
-            session = Session(
-                Client(gateway_bot),
-                "test_name",
-                False,
-                "127.0.0.1",
-                2333,
-                "youshallnotpass",
-                3,
-            )
-            session._authorization_headers = {"Authorization": session.password}
-
-            await session.start()
+            await ongaku_session.start()
 
             wait_time = 0
             while not patched_dispatch.called:
@@ -231,18 +221,18 @@ class TestRest:
                 wait_time += sleep_for
 
                 if wait_time >= 5:
-                    await session.stop()
+                    await ongaku_session.stop()
 
                     await ongaku_client._stop_event(mock.Mock())
 
                     raise Exception("Could not connect to lavalink.")
 
-            assert session.session_id is not None
+            assert ongaku_session.session_id is not None
 
         with mock.patch.object(
-            rest._client.session_handler, "fetch_session", return_value=session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            session_id = session._get_session_id()
+            session_id = ongaku_session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
 
@@ -254,7 +244,7 @@ class TestRest:
 
             assert players[0].guild_id == Snowflake(1234567890)
 
-        await session.stop()
+        await ongaku_session.stop()
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -263,6 +253,7 @@ class TestRest:
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
+        ongaku_session: Session,
         bot_user: OwnUser,
     ):
         rest = RESTClient(ongaku_client)
@@ -276,18 +267,7 @@ class TestRest:
                 return_value=None,
             ) as patched_dispatch,
         ):
-            session = Session(
-                Client(gateway_bot),
-                "test_name",
-                False,
-                "127.0.0.1",
-                2333,
-                "youshallnotpass",
-                3,
-            )
-            session._authorization_headers = {"Authorization": session.password}
-
-            await session.start()
+            await ongaku_session.start()
 
             wait_time = 0
             while not patched_dispatch.called:
@@ -296,18 +276,18 @@ class TestRest:
                 wait_time += sleep_for
 
                 if wait_time >= 5:
-                    await session.stop()
+                    await ongaku_session.stop()
 
                     await ongaku_client._stop_event(mock.Mock())
 
                     raise Exception("Could not connect to lavalink.")
 
-            assert session.session_id is not None
+            assert ongaku_session.session_id is not None
 
         with mock.patch.object(
-            rest._client.session_handler, "fetch_session", return_value=session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            session_id = session._get_session_id()
+            session_id = ongaku_session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
 
@@ -317,7 +297,7 @@ class TestRest:
 
             assert new_player.guild_id == Snowflake(1234567890)
 
-        await session.stop()
+        await ongaku_session.stop()
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -388,6 +368,7 @@ class TestRest:
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
+        ongaku_session: Session,
         bot_user: OwnUser,
     ):
         rest = RESTClient(ongaku_client)
@@ -401,18 +382,7 @@ class TestRest:
                 return_value=None,
             ) as patched_dispatch,
         ):
-            session = Session(
-                Client(gateway_bot),
-                "test_name",
-                False,
-                "127.0.0.1",
-                2333,
-                "youshallnotpass",
-                3,
-            )
-            session._authorization_headers = {"Authorization": session.password}
-
-            await session.start()
+            await ongaku_session.start()
 
             wait_time = 0
             while not patched_dispatch.called:
@@ -421,18 +391,18 @@ class TestRest:
                 wait_time += sleep_for
 
                 if wait_time >= 5:
-                    await session.stop()
+                    await ongaku_session.stop()
 
                     await ongaku_client._stop_event(mock.Mock())
 
                     raise Exception("Could not connect to lavalink.")
 
-            assert session.session_id is not None
+            assert ongaku_session.session_id is not None
 
         with mock.patch.object(
-            rest._client.session_handler, "fetch_session", return_value=session
+            rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            session_id = session._get_session_id()
+            session_id = ongaku_session._get_session_id()
 
             await rest.update_player(session_id, 1234567890, volume=3)
 
@@ -447,7 +417,7 @@ class TestRest:
             with pytest.raises(errors.RestRequestError):
                 await rest.fetch_player(session_id, 1234567890)
 
-        await session.stop()
+        await ongaku_session.stop()
 
         await ongaku_client._stop_event(mock.Mock())
 
