@@ -16,12 +16,12 @@ from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if typing.TYPE_CHECKING:
+    from ongaku.abc import session as session_
     from ongaku.abc.info import Info
     from ongaku.abc.player import Player
     from ongaku.abc.player import Voice
     from ongaku.abc.playlist import Playlist
     from ongaku.abc.routeplanner import RoutePlannerStatus
-    from ongaku.abc.session import Session as ABCSession
     from ongaku.abc.statistics import Statistics
     from ongaku.abc.track import Track
 
@@ -622,7 +622,7 @@ class RESTClient:
         *,
         resuming: bool | None = None,
         timeout: int | None = None,
-    ) -> ABCSession:
+    ) -> session_.Session:
         """
         Update Lavalink session.
 
@@ -640,6 +640,10 @@ class RESTClient:
         ----------
         session_id
             The session you wish to update.
+        resuming
+            Whether resuming is enabled for this session or not.
+        timeout
+            The timeout in seconds (default is 60s)
 
         Raises
         ------

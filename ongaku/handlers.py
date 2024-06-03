@@ -203,7 +203,7 @@ class BasicSessionHandler(SessionHandlerBase):
         )
 
         if self.is_alive:
-            asyncio.create_task(new_session.start())
+            asyncio.create_task(new_session.start())  # noqa: RUF006
 
         self._sessions.update({new_session.name: new_session})
 

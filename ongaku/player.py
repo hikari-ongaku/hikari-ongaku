@@ -809,7 +809,6 @@ class Player:
                 raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
             if volume > 1000:
                 raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
-        
 
         player = await self.session.client.rest.update_player(
             session,
