@@ -7,12 +7,9 @@ import typing
 import mock
 import pytest
 from hikari import Event
-from hikari import OwnUser
 from hikari.events.voice_events import VoiceServerUpdateEvent
 from hikari.events.voice_events import VoiceStateUpdateEvent
 from hikari.impl import gateway_bot as gateway_bot_
-from hikari.impl.event_manager import EventManagerImpl
-from hikari.intents import Intents
 from hikari.snowflakes import Snowflake
 
 from ongaku import errors
@@ -27,56 +24,6 @@ from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 from ongaku.player import Player
 from ongaku.session import Session
-
-
-@pytest.fixture
-def bot_user() -> OwnUser:
-    return mock.Mock(
-        global_name="test_username", username="test_username", id=Snowflake(1234567890)
-    )
-
-
-@pytest.fixture
-def gateway_bot(bot_user: OwnUser) -> gateway_bot_.GatewayBot:
-    gateway_bot: gateway_bot_.GatewayBot = mock.Mock()
-    with mock.patch.object(gateway_bot, "get_me", return_value=bot_user):
-        return gateway_bot
-
-
-@pytest.fixture
-def event_manager() -> EventManagerImpl:
-    return EventManagerImpl(mock.AsyncMock(), mock.AsyncMock(), Intents.ALL)
-
-
-@pytest.fixture
-def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
-    return Client(gateway_bot)
-
-
-@pytest.fixture
-def ongaku_session(ongaku_client: Client) -> Session:
-    session = Session(
-        ongaku_client, "test_session", False, "127.0.0.1", 2333, "youshallnotpass", 3
-    )
-    session._authorization_headers = {"Authorization": session.password}
-    return session
-
-
-@pytest.fixture
-def track_info() -> TrackInfo:
-    return TrackInfo(
-        "identifier",
-        False,
-        "author",
-        100,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
-    )
 
 
 @pytest.fixture
@@ -136,9 +83,7 @@ class TestPlayer:
         assert player.connected is False
 
     @pytest.mark.asyncio
-    async def test_connect(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_connect(self, ongaku_session: Session, ongaku_player: Player):
         # Test Working
 
         voice = Voice("token", "raw_endpoint", "session_id")
@@ -152,7 +97,9 @@ class TestPlayer:
                 "update_voice_state",
                 new_callable=mock.AsyncMock,
             ) as patched_voice_state,
-            mock.patch.object(new_player.app.event_manager, "wait_for", connect_events),
+            mock.patch.object(
+                ongaku_player.app.event_manager, "wait_for", connect_events
+            ),
             mock.patch.object(
                 ongaku_session.client.rest,
                 "update_player",
@@ -162,7 +109,7 @@ class TestPlayer:
                 ),
             ) as patched_update,
         ):
-            await new_player.connect(987654321)
+            await ongaku_player.connect(987654321)
 
             patched_voice_state.assert_called_once_with(
                 Snowflake(1234567890),
@@ -178,13 +125,13 @@ class TestPlayer:
                 no_replace=False,
             )
 
-            assert new_player.voice is not None
+            assert ongaku_player.voice is not None
 
-            assert new_player.voice.endpoint == voice.endpoint
-            assert new_player.voice.token == voice.token
-            assert new_player.voice.session_id == voice.session_id
+            assert ongaku_player.voice.endpoint == voice.endpoint
+            assert ongaku_player.voice.token == voice.token
+            assert ongaku_player.voice.session_id == voice.session_id
 
-            assert new_player.is_alive is True
+            assert ongaku_player.is_alive is True
 
         # Events were received, but raw endpoint was empty.
 
@@ -198,19 +145,17 @@ class TestPlayer:
                 new_callable=mock.AsyncMock,
             ) as patched_voice_state,
             mock.patch.object(
-                new_player.app.event_manager,
+                ongaku_player.app.event_manager,
                 "wait_for",
                 new_callable=mock.AsyncMock,
                 return_value=mock.Mock(raw_endpoint=None),
             ),
             pytest.raises(errors.PlayerConnectError),
         ):
-            await new_player.connect(987654321)
+            await ongaku_player.connect(987654321)
 
     @pytest.mark.asyncio
-    async def test_disconnect(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_disconnect(self, ongaku_session: Session, ongaku_player: Player):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
@@ -220,16 +165,18 @@ class TestPlayer:
                 "update_voice_state",
                 new_callable=mock.AsyncMock,
             ) as patched_voice_state,
-            mock.patch.object(new_player.app.event_manager, "wait_for", connect_events),
+            mock.patch.object(
+                ongaku_player.app.event_manager, "wait_for", connect_events
+            ),
             mock.patch.object(
                 ongaku_session.client.rest, "update_player"
             ) as patched_update,
             mock.patch.object(
                 ongaku_session.client.rest, "delete_player"
             ) as patched_delete,
-            mock.patch.object(new_player, "clear") as patched_clear,
+            mock.patch.object(ongaku_player, "clear") as patched_clear,
         ):
-            await new_player.connect(987654321)
+            await ongaku_player.connect(987654321)
 
             patched_voice_state.assert_called_once_with(
                 Snowflake(1234567890),
@@ -245,7 +192,7 @@ class TestPlayer:
                 no_replace=False,
             )
 
-            await new_player.disconnect()
+            await ongaku_player.disconnect()
 
             patched_clear.assert_called_once()
 
@@ -253,14 +200,14 @@ class TestPlayer:
                 ongaku_session._get_session_id(), Snowflake(1234567890)
             )
 
-            assert new_player.is_alive is False
+            assert ongaku_player.is_alive is False
 
             patched_voice_state.assert_called_with(Snowflake(1234567890), None)
 
     @pytest.mark.asyncio
-    async def test_play(self, ongaku_session: Session, track: Track):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_play(
+        self, ongaku_session: Session, track: Track, ongaku_player: Player
+    ):
         # Test working
 
         with (
@@ -268,7 +215,7 @@ class TestPlayer:
                 ongaku_session, "_get_session_id", return_value="session_id"
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
             mock.patch.object(
                 ongaku_session.client.rest,
@@ -284,7 +231,7 @@ class TestPlayer:
                 ),
             ) as patched_request,
         ):
-            await new_player.play(track, Snowflake(123454321))
+            await ongaku_player.play(track, Snowflake(123454321))
 
             patched_request.assert_called_once_with(
                 ongaku_session._get_session_id(),
@@ -293,16 +240,16 @@ class TestPlayer:
                 no_replace=False,
             )
 
-            assert new_player.is_paused is False
+            assert ongaku_player.is_paused is False
 
-            assert len(new_player.queue) == 1
+            assert len(ongaku_player.queue) == 1
 
-            assert new_player.queue[0].requestor == Snowflake(123454321)
+            assert ongaku_player.queue[0].requestor == Snowflake(123454321)
 
         # No session_id
 
         with pytest.raises(errors.SessionStartError):
-            await new_player.play(track, 123454321)
+            await ongaku_player.play(track, 123454321)
 
         # No channel.
 
@@ -312,7 +259,7 @@ class TestPlayer:
             ),
             pytest.raises(errors.PlayerConnectError),
         ):
-            await new_player.play(track, 123454321)
+            await ongaku_player.play(track, 123454321)
 
         # No track in queue.
 
@@ -321,27 +268,29 @@ class TestPlayer:
                 ongaku_session, "_get_session_id", return_value="session_id"
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
             pytest.raises(errors.PlayerQueueError),
         ):
-            new_player.remove(0)
+            ongaku_player.remove(0)
 
-            await new_player.play()
+            await ongaku_player.play()
 
     @pytest.mark.asyncio
     async def test_add(
-        self, ongaku_session: Session, track_info: TrackInfo, track: Track
+        self,
+        ongaku_session: Session,
+        track_info: TrackInfo,
+        track: Track,
+        ongaku_player: Player,
     ):
-        player = Player(ongaku_session, 1234567890)
-
         # Add singular track
 
-        assert len(player.queue) == 0
+        assert len(ongaku_player.queue) == 0
 
-        player.add(Track("encoded_1", track_info, {}, {}, None), Snowflake(1))
+        ongaku_player.add(Track("encoded_1", track_info, {}, {}, None), Snowflake(1))
 
-        assert len(player.queue) == 1
+        assert len(ongaku_player.queue) == 1
 
         # Add two tracks.
 
@@ -350,9 +299,9 @@ class TestPlayer:
             Track("encoded_3", track_info, {}, {}, None),
         ]
 
-        player.add(tracks, Snowflake(22))
+        ongaku_player.add(tracks, Snowflake(22))
 
-        assert len(player.queue) == 3
+        assert len(ongaku_player.queue) == 3
 
         # Add a playlist
         info = playlist.PlaylistInfo("beans", -1)
@@ -362,33 +311,33 @@ class TestPlayer:
         ]
         new_playlist = playlist.Playlist(info, playlist_tracks, {})
 
-        player.add(new_playlist, Snowflake(333))
+        ongaku_player.add(new_playlist, Snowflake(333))
 
-        assert len(player.queue) == 5
+        assert len(ongaku_player.queue) == 5
 
         # Check correct requestor got set, and make sure none is supported.
 
-        player.add(track)
+        ongaku_player.add(track)
 
-        assert len(player.queue) == 6
-        logging.warning(player.queue[0].requestor)
-        assert player.queue[0].requestor == Snowflake(1)
-        assert player.queue[1].requestor == Snowflake(22)
-        assert player.queue[2].requestor == Snowflake(22)
-        assert player.queue[3].requestor == Snowflake(333)
-        assert player.queue[4].requestor == Snowflake(333)
-        assert player.queue[5].requestor is None
+        assert len(ongaku_player.queue) == 6
+        logging.warning(ongaku_player.queue[0].requestor)
+        assert ongaku_player.queue[0].requestor == Snowflake(1)
+        assert ongaku_player.queue[1].requestor == Snowflake(22)
+        assert ongaku_player.queue[2].requestor == Snowflake(22)
+        assert ongaku_player.queue[3].requestor == Snowflake(333)
+        assert ongaku_player.queue[4].requestor == Snowflake(333)
+        assert ongaku_player.queue[5].requestor is None
 
     @pytest.mark.asyncio
-    async def test_pause(self, ongaku_session: Session, track: Track):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_pause(
+        self, ongaku_session: Session, track: Track, ongaku_player: Player
+    ):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
             mock.patch.object(
                 ongaku_session.client.rest,
@@ -404,22 +353,20 @@ class TestPlayer:
                 ),
             ) as patched_request,
         ):
-            await new_player.pause(True)
+            await ongaku_player.pause(True)
 
             patched_request.assert_called_once_with(
                 ongaku_session._get_session_id(), Snowflake(1234567890), paused=True
             )
 
     @pytest.mark.asyncio
-    async def test_stop(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_stop(self, ongaku_session: Session, ongaku_player: Player):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
             mock.patch.object(
                 ongaku_session.client.rest,
@@ -435,7 +382,7 @@ class TestPlayer:
                 ),
             ) as patched_request,
         ):
-            await new_player.stop()
+            await ongaku_player.stop()
 
             patched_request.assert_called_once_with(
                 ongaku_session._get_session_id(),
@@ -445,9 +392,9 @@ class TestPlayer:
             )
 
     @pytest.mark.asyncio
-    async def test_shuffle(self, ongaku_session: Session, track: Track):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_shuffle(
+        self, ongaku_session: Session, track: Track, ongaku_player: Player
+    ):
         tracks: list[Track] = [  # So many tracks are placed here, to ensure
             mock.Mock(encoded="test_track_1"),
             mock.Mock(encoded="test_track_2"),
@@ -460,43 +407,41 @@ class TestPlayer:
             mock.Mock(encoded="test_track_9"),
         ]
 
-        new_player.add(tracks)
+        ongaku_player.add(tracks)
 
-        assert new_player.queue == tracks
+        assert ongaku_player.queue == tracks
 
-        new_player.shuffle()
+        ongaku_player.shuffle()
 
-        assert new_player.queue[0].encoded == tracks[0].encoded
-        assert new_player.queue != tracks
+        assert ongaku_player.queue[0].encoded == tracks[0].encoded
+        assert ongaku_player.queue != tracks
 
         # Queue has 1 track
 
-        new_player._queue = []
+        ongaku_player._queue = []
 
-        new_player.add(track)
+        ongaku_player.add(track)
 
         with pytest.raises(errors.PlayerQueueError):
-            new_player.shuffle()
+            ongaku_player.shuffle()
 
         # Queue has 2 tracks
 
-        new_player._queue = []
+        ongaku_player._queue = []
 
-        new_player.add([mock.Mock(), mock.Mock()])
+        ongaku_player.add([mock.Mock(), mock.Mock()])
 
         with pytest.raises(errors.PlayerQueueError):
-            new_player.shuffle()
+            ongaku_player.shuffle()
 
     @pytest.mark.asyncio
-    async def test_skip(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_skip(self, ongaku_session: Session, ongaku_player: Player):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
             mock.patch.object(
                 ongaku_session.client.rest,
@@ -517,11 +462,11 @@ class TestPlayer:
                 mock.Mock(encoded="test_track_2"),
             ]
 
-            new_player.add(tracks)
+            ongaku_player.add(tracks)
 
             # Skip to new song.
 
-            await new_player.skip()
+            await ongaku_player.skip()
 
             patched_request.assert_called_with(
                 ongaku_session._get_session_id(),
@@ -530,11 +475,11 @@ class TestPlayer:
                 no_replace=False,
             )
 
-            assert len(new_player.queue) == 1
+            assert len(ongaku_player.queue) == 1
 
             # Skip to no song.
 
-            await new_player.skip()
+            await ongaku_player.skip()
 
             patched_request.assert_called_with(
                 ongaku_session._get_session_id(),
@@ -543,12 +488,10 @@ class TestPlayer:
                 no_replace=False,
             )
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
     @pytest.mark.asyncio
-    async def test_remove(self, ongaku_session: Session, track: Track):
-        new_player = Player(ongaku_session, Snowflake(1234567890))
-
+    async def test_remove(self, track: Track, ongaku_player: Player):
         tracks: list[Track] = [
             mock.Mock(encoded="test_encoded_1"),
             mock.Mock(encoded="test_encoded_2"),
@@ -556,51 +499,49 @@ class TestPlayer:
             mock.Mock(encoded="test_encoded_3"),
         ]
 
-        new_player.add(tracks)
+        ongaku_player.add(tracks)
 
-        assert len(new_player.queue) == 4
+        assert len(ongaku_player.queue) == 4
 
         # Remove particular track
 
-        new_player.remove(track)
+        ongaku_player.remove(track)
 
-        assert len(new_player.queue) == 3
-        assert new_player.queue == [tracks[0], tracks[1], tracks[3]]
+        assert len(ongaku_player.queue) == 3
+        assert ongaku_player.queue == [tracks[0], tracks[1], tracks[3]]
 
         # Remove track based on position
 
-        new_player.remove(1)
+        ongaku_player.remove(1)
 
-        assert len(new_player.queue) == 2
-        assert new_player.queue == [tracks[0], tracks[3]]
+        assert len(ongaku_player.queue) == 2
+        assert ongaku_player.queue == [tracks[0], tracks[3]]
 
         # Test empty queue
 
-        new_player._queue = []
+        ongaku_player._queue = []
 
         with pytest.raises(errors.PlayerQueueError):
-            new_player.remove(0)
+            ongaku_player.remove(0)
 
         tracks.pop(2)
 
-        new_player.add(tracks)
+        ongaku_player.add(tracks)
 
         with pytest.raises(errors.PlayerQueueError):
-            new_player.remove(300)
+            ongaku_player.remove(300)
 
         with pytest.raises(errors.PlayerQueueError):
-            new_player.remove(track)
+            ongaku_player.remove(track)
 
     @pytest.mark.asyncio
-    async def test_clear(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_clear(self, ongaku_session: Session, ongaku_player: Player):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
             mock.patch.object(
                 ongaku_session.client.rest,
@@ -618,11 +559,11 @@ class TestPlayer:
         ):
             tracks: list[Track] = [track, mock.Mock(encoded="test_track_2")]
 
-            new_player.add(tracks)
+            ongaku_player.add(tracks)
 
-            assert len(new_player.queue) == 2
+            assert len(ongaku_player.queue) == 2
 
-            await new_player.clear()
+            await ongaku_player.clear()
 
             patched_request.assert_called_once_with(
                 ongaku_session._get_session_id(),
@@ -631,30 +572,26 @@ class TestPlayer:
                 no_replace=False,
             )
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
     @pytest.mark.asyncio
-    async def test_set_autoplay(self, ongaku_session: Session):
-        player = Player(ongaku_session, 1234567890)
+    async def test_set_autoplay(self, ongaku_player: Player):
+        assert ongaku_player.autoplay is True
 
-        assert player.autoplay is True
+        ongaku_player.set_autoplay()
 
-        player.set_autoplay()
+        assert ongaku_player.autoplay is False
 
-        assert player.autoplay is False
+        ongaku_player.set_autoplay(True)
 
-        player.set_autoplay(True)
+        assert ongaku_player.autoplay is True
 
-        assert player.autoplay is True
+        ongaku_player.set_autoplay(False)
 
-        player.set_autoplay(False)
-
-        assert player.autoplay is False
+        assert ongaku_player.autoplay is False
 
     @pytest.mark.asyncio
-    async def test_set_volume(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_set_volume(self, ongaku_session: Session, ongaku_player: Player):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
@@ -675,7 +612,7 @@ class TestPlayer:
         ):
             # set volume to a value
 
-            await new_player.set_volume(250)
+            await ongaku_player.set_volume(250)
 
             patched_request.assert_called_with(
                 ongaku_session._get_session_id(),
@@ -686,7 +623,7 @@ class TestPlayer:
 
             # Reset volume
 
-            await new_player.set_volume()
+            await ongaku_player.set_volume()
 
             patched_request.assert_called_with(
                 ongaku_session._get_session_id(),
@@ -703,7 +640,7 @@ class TestPlayer:
             ),
             pytest.raises(ValueError),
         ):
-            await new_player.set_volume(-100)
+            await ongaku_player.set_volume(-100)
 
         # Give a number greater than 1000
 
@@ -713,12 +650,12 @@ class TestPlayer:
             ),
             pytest.raises(ValueError),
         ):
-            await new_player.set_volume(9001)
+            await ongaku_player.set_volume(9001)
 
     @pytest.mark.asyncio
-    async def test_set_position(self, ongaku_session: Session, track: Track):
-        new_player = Player(ongaku_session, 1234567890)
-
+    async def test_set_position(
+        self, ongaku_session: Session, track: Track, ongaku_player: Player
+    ):
         with (
             mock.patch.object(
                 ongaku_session, "_get_session_id", return_value="session_id"
@@ -737,11 +674,11 @@ class TestPlayer:
                 ),
             ) as patched_request,
         ):
-            new_player.add(track)
+            ongaku_player.add(track)
 
-            assert len(new_player.queue) == 1
+            assert len(ongaku_player.queue) == 1
 
-            await new_player.set_position(10)
+            await ongaku_player.set_position(10)
 
             patched_request.assert_called_once_with(
                 ongaku_session._get_session_id(),
@@ -758,11 +695,11 @@ class TestPlayer:
             ),
             pytest.raises(ValueError),
         ):
-            await new_player.set_position(-10)
+            await ongaku_player.set_position(-10)
 
         # Queue is empty
 
-        new_player._queue = []
+        ongaku_player._queue = []
 
         with (
             mock.patch.object(
@@ -770,11 +707,11 @@ class TestPlayer:
             ),
             pytest.raises(errors.PlayerQueueError),
         ):
-            await new_player.set_position(10)
+            await ongaku_player.set_position(10)
 
         # Queue is empty
 
-        new_player.add(track)
+        ongaku_player.add(track)
 
         with (
             mock.patch.object(
@@ -782,14 +719,16 @@ class TestPlayer:
             ),
             pytest.raises(ValueError),
         ):
-            await new_player.set_position(1000000000000000000000000)
+            await ongaku_player.set_position(1000000000000000000000000)
 
     @pytest.mark.asyncio
     async def test_transfer(
-        self, ongaku_client: Client, ongaku_session: Session, track: Track
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
+        track: Track,
+        ongaku_player: Player,
     ):
-        original_player = Player(ongaku_session, Snowflake(1234567890))
-
         new_session = Session(
             ongaku_client, "session", False, "127.0.0.1", 2333, "youshallnotpass", 3
         )
@@ -803,11 +742,11 @@ class TestPlayer:
             mock.Mock(encoded="encoded_3"),
         ]
 
-        original_player.add(tracks)
+        ongaku_player.add(tracks)
 
-        new_player = await original_player.transfer(new_session)
+        ongaku_player = await ongaku_player.transfer(new_session)
 
-        assert original_player.queue == new_player.queue
+        assert ongaku_player.queue == ongaku_player.queue
 
         # Test connected.
 
@@ -830,26 +769,26 @@ class TestPlayer:
                 ongaku_session.client.rest, "update_player"
             ) as patched_update,
             mock.patch.object(
-                original_player,
+                ongaku_player,
                 "_connected",
                 new_callable=mock.PropertyMock(return_value=True),
             ),
             mock.patch.object(
-                original_player,
+                ongaku_player,
                 "_is_paused",
                 new_callable=mock.PropertyMock(return_value=False),
             ),
             mock.patch.object(
-                original_player,
+                ongaku_player,
                 "_position",
                 new_callable=mock.PropertyMock(return_value=30),
             ),
             mock.patch.object(
-                original_player, "_channel_id", return_value=Snowflake(987654321)
+                ongaku_player, "_channel_id", return_value=Snowflake(987654321)
             ),
-            mock.patch.object(original_player, "disconnect") as patch_disconnect,
+            mock.patch.object(ongaku_player, "disconnect") as patch_disconnect,
         ):
-            new_player = await original_player.transfer(new_session)
+            ongaku_player = await ongaku_player.transfer(new_session)
 
             patch_disconnect.assert_called_once()
 
@@ -878,14 +817,12 @@ class TestPlayer:
             )
 
     @pytest.mark.asyncio
-    async def test_update(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, Snowflake(1234567890))
-
-        assert new_player.volume == -1
-        assert new_player.is_paused is True
-        assert new_player.state is None
-        assert new_player.voice is None
-        assert new_player.filters == {}
+    async def test_update(self, ongaku_player: Player):
+        assert ongaku_player.volume == -1
+        assert ongaku_player.is_paused is True
+        assert ongaku_player.state is None
+        assert ongaku_player.voice is None
+        assert ongaku_player.filters == {}
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         voice = player_.Voice("token", "endpoint", "session_id")
@@ -894,18 +831,18 @@ class TestPlayer:
             Snowflake(1234567890), None, 10, False, state, voice, filters
         )
 
-        new_player._update(replacement_player)
+        ongaku_player._update(replacement_player)
 
-        assert new_player.volume == 10
-        assert new_player.is_paused is False
-        assert new_player.state == state
-        assert new_player.voice == voice
-        assert new_player.filters == filters
+        assert ongaku_player.volume == 10
+        assert ongaku_player.is_paused is False
+        assert ongaku_player.state == state
+        assert ongaku_player.voice == voice
+        assert ongaku_player.filters == filters
 
     @pytest.mark.asyncio
-    async def test_track_end_event(self, ongaku_session: Session, track: Track):
-        new_player = Player(ongaku_session, Snowflake(1234567890))
-
+    async def test_track_end_event(
+        self, ongaku_session: Session, track: Track, ongaku_player: Player
+    ):
         track_finished_event = (
             events.TrackEndEvent.from_session(  # This should play the new song.
                 ongaku_session,
@@ -952,10 +889,10 @@ class TestPlayer:
                 new_callable=mock.AsyncMock,
             ) as patched_dispatch,
             mock.patch.object(
-                new_player, "play", new_callable=mock.AsyncMock
+                ongaku_player, "play", new_callable=mock.AsyncMock
             ) as patched_play,
             mock.patch.object(
-                new_player.session.client.rest,
+                ongaku_player.session.client.rest,
                 "update_player",
                 return_value=player_.Player(
                     Snowflake(1234567890),
@@ -970,42 +907,42 @@ class TestPlayer:
         ):
             # Test autoplay
 
-            new_player.set_autoplay(False)
+            ongaku_player.set_autoplay(False)
 
-            await new_player._track_end_event(track_finished_event)
+            await ongaku_player._track_end_event(track_finished_event)
 
             patched_dispatch.assert_not_called()
 
-            new_player.set_autoplay(True)
+            ongaku_player.set_autoplay(True)
 
             # Test not allowed track end reason type.
 
-            await new_player._track_end_event(track_stopped_event)
+            await ongaku_player._track_end_event(track_stopped_event)
 
             patched_dispatch.assert_not_called()
 
             # Test allowed track type, but wrong guild ID.
 
-            await new_player._track_end_event(track_wrong_guild_event)
+            await ongaku_player._track_end_event(track_wrong_guild_event)
 
             patched_dispatch.assert_not_called()
 
             # Test empty queue
 
-            await new_player._track_end_event(track_finished_event)
+            await ongaku_player._track_end_event(track_finished_event)
 
             patched_dispatch.assert_not_called()
 
             # Test one track (finished end reason)
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
-            new_player.add(track)
+            ongaku_player.add(track)
 
-            assert len(new_player.queue) == 1
-            assert new_player.queue[0] == track
+            assert len(ongaku_player.queue) == 1
+            assert ongaku_player.queue[0] == track
 
-            await new_player._track_end_event(track_finished_event)
+            await ongaku_player._track_end_event(track_finished_event)
 
             patched_dispatch.assert_called_with(
                 events.QueueEmptyEvent.from_session(
@@ -1013,24 +950,24 @@ class TestPlayer:
                 )
             )
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
-            await new_player.clear()
+            await ongaku_player.clear()
 
             # Test two tracks (finished end reason)
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
             tracks: list[Track] = [
                 mock.Mock(encoded="encoded_1"),
                 mock.Mock(encoded="encoded_2"),
             ]
 
-            new_player.add(tracks)
+            ongaku_player.add(tracks)
 
-            assert len(new_player.queue) == 2
+            assert len(ongaku_player.queue) == 2
 
-            await new_player._track_end_event(track_finished_event)
+            await ongaku_player._track_end_event(track_finished_event)
 
             patched_dispatch.assert_called_with(
                 events.QueueEmptyEvent.from_session(
@@ -1040,22 +977,22 @@ class TestPlayer:
 
             patched_play.assert_called_with()
 
-            assert len(new_player.queue) == 1
+            assert len(ongaku_player.queue) == 1
 
-            assert new_player.queue[0].encoded == "encoded_2"
+            assert ongaku_player.queue[0].encoded == "encoded_2"
 
-            await new_player.clear()
+            await ongaku_player.clear()
 
             # Test one track (load failed end reason)
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
-            new_player.add(track)
+            ongaku_player.add(track)
 
-            assert len(new_player.queue) == 1
-            assert new_player.queue[0] == track
+            assert len(ongaku_player.queue) == 1
+            assert ongaku_player.queue[0] == track
 
-            await new_player._track_end_event(track_load_failed_event)
+            await ongaku_player._track_end_event(track_load_failed_event)
 
             patched_dispatch.assert_called_with(
                 events.QueueEmptyEvent.from_session(
@@ -1063,24 +1000,24 @@ class TestPlayer:
                 )
             )
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
-            await new_player.clear()
+            await ongaku_player.clear()
 
             # Test two tracks (load failed end reason)
 
-            assert len(new_player.queue) == 0
+            assert len(ongaku_player.queue) == 0
 
             tracks: list[Track] = [
                 mock.Mock(encoded="encoded_1"),
                 mock.Mock(encoded="encoded_2"),
             ]
 
-            new_player.add(tracks)
+            ongaku_player.add(tracks)
 
-            assert len(new_player.queue) == 2
+            assert len(ongaku_player.queue) == 2
 
-            await new_player._track_end_event(track_load_failed_event)
+            await ongaku_player._track_end_event(track_load_failed_event)
 
             patched_dispatch.assert_called_with(
                 events.QueueEmptyEvent.from_session(
@@ -1090,21 +1027,21 @@ class TestPlayer:
 
             patched_play.assert_called_with()
 
-            assert len(new_player.queue) == 1
+            assert len(ongaku_player.queue) == 1
 
-            assert new_player.queue[0].encoded == "encoded_2"
+            assert ongaku_player.queue[0].encoded == "encoded_2"
 
     @pytest.mark.asyncio
-    async def test_player_update_event(self, ongaku_session: Session):
-        new_player = Player(ongaku_session, Snowflake(1234567890))
-
-        assert new_player.state is None
+    async def test_player_update_event(
+        self, ongaku_session: Session, ongaku_player: Player
+    ):
+        assert ongaku_player.state is None
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         event = events.PlayerUpdateEvent.from_session(
             ongaku_session, Snowflake(1234567890), state
         )
 
-        await new_player._player_update_event(event)
+        await ongaku_player._player_update_event(event)
 
-        assert new_player.state == state
+        assert ongaku_player.state == state

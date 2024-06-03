@@ -23,33 +23,6 @@ from ongaku.session import Session
 from tests import payloads
 
 
-@pytest.fixture
-def gateway_bot() -> gateway_bot_.GatewayBot:
-    return mock.Mock()
-
-
-@pytest.fixture
-def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
-    return Client(gateway_bot)
-
-
-@pytest.fixture
-def ongaku_session(ongaku_client: Client) -> Session:
-    session = Session(
-        ongaku_client, "test_session", False, "127.0.0.1", 2333, "youshallnotpass", 3
-    )
-    session._authorization_headers = {"Authorization": session.password}
-
-    return session
-
-
-@pytest.fixture
-def bot_user() -> OwnUser:
-    return mock.Mock(
-        global_name="test_username", username="test_username", id=Snowflake(1234567890)
-    )
-
-
 class TestSession:
     def test_properties(self, ongaku_client: Client):
         session = Session(
@@ -144,20 +117,23 @@ class TestSession:
     ):
         ongaku_client._client_session = cs = mock.Mock()
 
-        #async def async_generator_
-
         # Test working
         cs.ws_connect.return_value = ws = mock.MagicMock()
         ws.__aiter__.return_value = [
-            aiohttp.WSMessage(aiohttp.WSMsgType.TEXT, orjson.dumps(payloads.READY_PAYLOAD).decode(), None), 
-            aiohttp.WSMessage(aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"),
+            aiohttp.WSMessage(
+                aiohttp.WSMsgType.TEXT,
+                orjson.dumps(payloads.READY_PAYLOAD).decode(),
+                None,
+            ),
+            aiohttp.WSMessage(
+                aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"
+            ),
         ]
 
         with (
             mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
             mock.patch.object(ongaku_session, "_handle_ws_message", return_value=None),
         ):
-
             me = gateway_bot.get_me()
 
             assert me is not None
@@ -174,9 +150,9 @@ class TestSession:
 
             headers.update(ongaku_session.auth_headers)
 
-            #patched_ws_connect.assert_called_once_with(
+            # patched_ws_connect.assert_called_once_with(
             #    ongaku_session.base_uri + "/v4/websocket", headers=headers, autoclose=False
-            #)
+            # )
 
         # Test no bot
 
@@ -790,7 +766,9 @@ class TestHandleWSMessage:
 
         with (
             mock.patch.object(ongaku_session, "transfer") as patched_transfer,
-            mock.patch.object(ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None) as patched_stop
+            mock.patch.object(
+                ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
+            ) as patched_stop,
         ):
             assert ongaku_session.status == SessionStatus.NOT_CONNECTED
 

@@ -4,7 +4,6 @@ import typing
 
 import mock
 import pytest
-from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 from hikari.users import OwnUser
 
@@ -14,28 +13,6 @@ from ongaku.client import Client
 from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.player import Player
 from ongaku.session import Session
-
-
-@pytest.fixture
-def gateway_bot() -> gateway_bot_.GatewayBot:
-    return gateway_bot_.GatewayBot("", banner=None, suppress_optimization_warning=True)
-
-
-@pytest.fixture
-def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
-    return Client(gateway_bot)
-
-
-@pytest.fixture
-def ongaku_session(ongaku_client: Client) -> Session:
-    return Session(
-        ongaku_client, "test_session", False, "127.0.0.1", 2333, "youshallnotpass", 3
-    )
-
-
-@pytest.fixture
-def bot_user() -> OwnUser:
-    return mock.Mock(global_name="test_username", username="test_username")
 
 
 class TestBasicSessionHandler:
@@ -222,19 +199,17 @@ class TestBasicSessionHandler:
         assert len(handler.sessions) == 1
 
     @pytest.mark.asyncio
-    async def test_add_player(self, ongaku_client: Client, ongaku_session: Session):
+    async def test_add_player(self, ongaku_client: Client, ongaku_player: Player):
         handler = BasicSessionHandler(ongaku_client)
-
-        new_player = Player(ongaku_session, Snowflake(1234567890))
 
         assert len(handler.players) == 0
 
-        handler.add_player(new_player)
+        handler.add_player(ongaku_player)
 
         assert len(handler.players) == 1
 
         with pytest.raises(errors.UniqueError):
-            handler.add_player(new_player)
+            handler.add_player(ongaku_player)
 
     @pytest.mark.asyncio
     async def test_fetch_player(self, ongaku_client: Client, ongaku_session: Session):

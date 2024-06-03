@@ -18,64 +18,17 @@ from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.client import Client
 from ongaku.impl import player as player
-from ongaku.impl import track as track_
 from ongaku.impl.player import Voice
 from ongaku.rest import RESTClient
 from ongaku.session import Session
 from tests import payloads
 
-ENCODED_TRACK: typing.Final[str] = (
-    "QAAAuQMAGURFQUQgQUhFQUQgfCBEcmVkZ2UgU29uZyEADlRoZSBTdHVwZW5kaXVtAAAAAAAExqgAC2QzQlEtVVpoMGE4AAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9ZDNCUS1VWmgwYTgBADRodHRwczovL2kueXRpbWcuY29tL3ZpL2QzQlEtVVpoMGE4L21heHJlc2RlZmF1bHQuanBnAAAHeW91dHViZQAAAAAAAAAA"
-)
-
-
-@pytest.fixture
-def gateway_bot() -> gateway_bot_.GatewayBot:
-    return mock.Mock()
-
-
-@pytest.fixture
-def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
-    return Client(gateway_bot)
-
-
-@pytest.fixture
-def ongaku_session(ongaku_client: Client) -> Session:
-    session = Session(
-        ongaku_client, "test_session", False, "127.0.0.1", 2333, "youshallnotpass", 3
-    )
-    session._authorization_headers = {"Authorization": session.password}
-    return session
-
-
-@pytest.fixture
-def bot_user() -> OwnUser:
-    return mock.Mock(
-        global_name="test_username", username="test_username", id=Snowflake(1234567890)
-    )
-
-
-@pytest.fixture
-def track() -> Track:
-    track_info = track_.TrackInfo(
-        "identifier",
-        False,
-        "author",
-        1,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
-    )
-    return track_.Track(ENCODED_TRACK, track_info, {}, {}, None)
-
 
 class TestRest:
     @pytest.mark.asyncio
-    async def test_load_track(self, ongaku_client: Client, ongaku_session: Session):
+    async def test_load_track(
+        self, ongaku_client: Client, ongaku_session: Session, track: Track
+    ):
         rest = RESTClient(ongaku_client)
 
         # Test track return types.
@@ -84,11 +37,11 @@ class TestRest:
         ):
             # Test singular track
 
-            track = await rest.load_track("https://youtube.com/watch?v=d3BQ-UZh0a8")
+            new_track = await rest.load_track("https://youtube.com/watch?v=d3BQ-UZh0a8")
 
-            assert isinstance(track, Track)
+            assert isinstance(new_track, Track)
 
-            assert track.encoded == ENCODED_TRACK
+            assert new_track.encoded == track.encoded
 
             # Test playlist
 
@@ -201,33 +154,37 @@ class TestRest:
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_decode_track(self, ongaku_client: Client, ongaku_session: Session):
+    async def test_decode_track(
+        self, ongaku_client: Client, ongaku_session: Session, track: Track
+    ):
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
             rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            track = await rest.decode_track(ENCODED_TRACK)
+            new_track = await rest.decode_track(track.encoded)
 
         assert isinstance(track, Track)
 
-        assert track.encoded == ENCODED_TRACK
+        assert new_track.encoded == track.encoded
 
         await ongaku_client._stop_event(mock.Mock())
 
     @pytest.mark.asyncio
-    async def test_decode_tracks(self, ongaku_client: Client, ongaku_session: Session):
+    async def test_decode_tracks(
+        self, ongaku_client: Client, ongaku_session: Session, track: Track
+    ):
         rest = RESTClient(ongaku_client)
 
         with mock.patch.object(
             rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
-            tracks = await rest.decode_tracks([ENCODED_TRACK])
+            tracks = await rest.decode_tracks([track.encoded])
 
         assert isinstance(tracks, typing.Sequence)
         assert isinstance(tracks[0], Track)
 
-        assert tracks[0].encoded == ENCODED_TRACK
+        assert tracks[0].encoded == track.encoded
 
         await ongaku_client._stop_event(mock.Mock())
 
@@ -376,7 +333,7 @@ class TestRest:
             headers = {"Content-Type": "application/json"}
 
             json = {
-                "track": {"encoded": ENCODED_TRACK},
+                "track": {"encoded": track.encoded},
                 "position": 1,
                 "endTime": 2,
                 "volume": 3,

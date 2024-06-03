@@ -3,7 +3,6 @@
 import datetime
 
 import hikari
-import pytest
 from hikari.impl import gateway_bot as gateway_bot_
 
 from ongaku import events
@@ -13,43 +12,7 @@ from ongaku.client import Client
 from ongaku.impl import player
 from ongaku.impl.errors import ExceptionError
 from ongaku.impl.track import Track
-from ongaku.impl.track import TrackInfo
 from ongaku.session import Session
-
-
-@pytest.fixture
-def gateway_bot() -> gateway_bot_.GatewayBot:
-    return gateway_bot_.GatewayBot("", banner=None, suppress_optimization_warning=True)
-
-
-@pytest.fixture
-def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
-    return Client(gateway_bot)
-
-
-@pytest.fixture
-def ongaku_session(ongaku_client: Client) -> Session:
-    return Session(
-        ongaku_client, "test_session", False, "127.0.0.1", 2333, "youshallnotpass", 3
-    )
-
-
-@pytest.fixture
-def track() -> Track:
-    track_info = TrackInfo(
-        "identifier",
-        False,
-        "author",
-        1,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
-    )
-    return Track("encoded", track_info, {}, {}, None)
 
 
 class TestPayloadEvent:
