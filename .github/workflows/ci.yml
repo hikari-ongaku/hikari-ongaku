@@ -29,8 +29,12 @@ jobs:
           pip install coverage codeclimate-test-reporter
 
       - name: Run tests with coverage
-        run: |
-          coverage run -m pytest ./tests
+        env:
+          LL_SSL: ${{ secrets.LL_SSL }}
+          LL_HOST: ${{ secrets.LL_HOST }}
+          LL_PORT: ${{ secrets.LL_PORT }}
+          LL_PASSWORD: ${{ secrets.LL_PASSWORD }}
+        run: coverage run -m pytest ./tests
 
       - name: Generate coverage report
         run: |
