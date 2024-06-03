@@ -28,4 +28,8 @@ jobs:
           pip install -Ur requirements/injection.txt
 
       - name: Run tests
+        env:
+          LL_HOST: ${{ secrets.LL_HOST }}
+          LL_PORT: ${{ secrets.LL_PORT }}
+          LL_PASSWORD: ${{ secrets.LL_PASSWORD }}
         run: pytest tests

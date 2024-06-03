@@ -1,3 +1,4 @@
+import os
 import typing
 
 import mock
@@ -31,8 +32,10 @@ def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
 
 @pytest.fixture
 def ongaku_session(ongaku_client: Client) -> Session:
+    ssl = os.getenv("LL_SSL", "false").lower() != "false"
+
     return Session(
-        ongaku_client, "test_session", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        ongaku_client, "test_session", ssl, os.getenv("LL_HOST", "127.0.0.1"), int(os.getenv("LL_PORT", "2333")), os.getenv("LL_PASSWORD", "youshallnotpass"), 3
     )
 
 
