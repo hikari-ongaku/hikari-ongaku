@@ -231,6 +231,10 @@ class TestRest:
                 wait_time += sleep_for
 
                 if wait_time >= 5:
+                    await session.stop()
+
+                    await ongaku_client._stop_event(mock.Mock())
+
                     raise Exception("Could not connect to lavalink.")
 
             assert session.session_id is not None
@@ -292,6 +296,10 @@ class TestRest:
                 wait_time += sleep_for
 
                 if wait_time >= 5:
+                    await session.stop()
+
+                    await ongaku_client._stop_event(mock.Mock())
+
                     raise Exception("Could not connect to lavalink.")
 
             assert session.session_id is not None
@@ -413,6 +421,10 @@ class TestRest:
                 wait_time += sleep_for
 
                 if wait_time >= 5:
+                    await session.stop()
+
+                    await ongaku_client._stop_event(mock.Mock())
+
                     raise Exception("Could not connect to lavalink.")
 
             assert session.session_id is not None
