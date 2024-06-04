@@ -65,7 +65,6 @@ class TestClient:
         with mock.patch.object(
             ongaku_client.session_handler,
             "add_session",
-            new_callable=mock.AsyncMock,
             return_value=ongaku_session,
         ) as patched_add_session:
             ongaku_client.create_session("test_session", False, host="127.0.0.1")
