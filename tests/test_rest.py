@@ -1,6 +1,7 @@
 # ruff: noqa: D100, D101, D102, D103
 
 import asyncio
+import logging
 import typing
 
 import mock
@@ -229,10 +230,14 @@ class TestRest:
 
             assert ongaku_session.session_id is not None
 
+            logging.warning(ongaku_session.session_id)
+
         with mock.patch.object(
             rest._client.session_handler, "fetch_session", return_value=ongaku_session
         ):
             session_id = ongaku_session._get_session_id()
+
+            logging.warning(session_id)
 
             await rest.update_player(session_id, 1234567890, volume=3)
 
@@ -247,6 +252,9 @@ class TestRest:
         await ongaku_session.stop()
 
         await ongaku_client._stop_event(mock.Mock())
+
+        
+        raise Exception
 
     @pytest.mark.asyncio
     async def test_fetch_player(
