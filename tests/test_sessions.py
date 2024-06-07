@@ -1,20 +1,23 @@
 # ruff: noqa: D100, D101, D102, D103
 
+import asyncio
 import datetime
-import logging
+import os
+import typing
 
 import aiohttp
 import mock
 import orjson
 import pytest
+from aiohttp import web
 from hikari import OwnUser
 from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 
+import ongaku
 from ongaku import Player
 from ongaku import errors
 from ongaku import events
-from ongaku.abc.handler import SessionHandler
 from ongaku.abc.session import SessionStatus
 from ongaku.client import Client
 from ongaku.impl.handlers import BasicSessionHandler
@@ -109,12 +112,33 @@ class TestSession:
             patched_player_1.assert_called_once_with(handler.fetch_session())
             patched_player_2.assert_called_once_with(handler.fetch_session())
 
-            logging.warning(handler.players)
-
             assert len(handler.players) == 2
 
             assert handler.players[0].guild_id == player_1.guild_id
             assert handler.players[1].guild_id == player_2.guild_id
+
+    @staticmethod
+    async def handler(request: web.Request):
+        assert request.url.path == "/v4/websocket"
+
+        assert request.headers.get("User-Id", None) == "1234567890"
+        assert (
+            request.headers.get("Client-Name", None)
+            == f"test_username/{ongaku.__version__}"
+        )
+        assert request.headers.get("Authorization", None) == os.getenv(
+            "LL_PASSWORD", "youshallnotpass"
+        )
+
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        await ws.send_str(orjson.dumps(payloads.READY_PAYLOAD).decode())
+
+        await asyncio.sleep(2)
+
+        await ws.close()
+
+        return ws
 
     @pytest.mark.asyncio
     async def test_websocket(
@@ -123,28 +147,50 @@ class TestSession:
         ongaku_client: Client,
         ongaku_session: Session,
         bot_user: OwnUser,
+        aiohttp_client: typing.Any,
     ):
-        return
-        ongaku_client._client_session = cs = mock.Mock()
+        app = web.Application()
+        app.router.add_route("GET", "/v4/websocket", self.handler)
 
-        # Test working
-        cs.ws_connect.return_value = ws = mock.MagicMock()
-        ws.__aiter__.return_value = [
-            aiohttp.WSMessage(
-                aiohttp.WSMsgType.TEXT,
-                orjson.dumps(payloads.READY_PAYLOAD).decode(),
-                None,
-            ),
-            aiohttp.WSMessage(
-                aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"
-            ),
-        ]
+        app.router.routes
+
+        client = await aiohttp_client(app)
 
         with (
             mock.patch.object(gateway_bot, "get_me", return_value=bot_user),
-            mock.patch.object(ongaku_session, "_handle_ws_message", return_value=None),
+            mock.patch.object(
+                ongaku_client, "_get_client_session", return_value=client
+            ),
+            mock.patch.object(
+                ongaku_session,
+                "_base_uri",
+                new_callable=mock.PropertyMock(return_value=""),
+            ),
+            mock.patch.object(
+                gateway_bot.event_manager,
+                "dispatch",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_dispatch,
+            mock.patch.object(ongaku_session, "transfer") as patched_transfer,
         ):
-            raise Exception("Websocket not tested for.")
+            await ongaku_session._websocket()
+
+            assert len(patched_dispatch.call_args_list) == 2
+
+            first_event_args = patched_dispatch.call_args_list[0].args
+
+            assert len(first_event_args) == 1
+
+            assert isinstance(first_event_args[0], events.PayloadEvent)
+
+            first_event_args = patched_dispatch.call_args_list[1].args
+
+            assert len(first_event_args) == 1
+
+            assert isinstance(first_event_args[0], events.ReadyEvent)
+
+            patched_transfer.assert_called_once_with(ongaku_client.session_handler)
 
     @pytest.mark.asyncio
     async def test_start(self, ongaku_session: Session):
@@ -707,7 +753,7 @@ class TestHandleWSMessage:
                 return_value=None,
             ) as event_dispatched,
         ):
-            await ongaku_session._handle_ws_message(message)
+            assert await ongaku_session._handle_ws_message(message) is True
 
             assert len(event_dispatched.call_args_list) == 2
 
@@ -727,20 +773,9 @@ class TestHandleWSMessage:
     async def test_error(self, ongaku_session: Session):
         message = aiohttp.WSMessage(aiohttp.WSMsgType.ERROR, "", None)
 
-        with mock.patch.object(ongaku_session, "transfer") as patched_transfer:
-            assert ongaku_session.status == SessionStatus.NOT_CONNECTED
+        assert ongaku_session.status == SessionStatus.NOT_CONNECTED
 
-            await ongaku_session._handle_ws_message(message)
-
-            assert ongaku_session.status == SessionStatus.FAILURE
-
-            args = patched_transfer.call_args.args
-
-            assert len(args) == 1
-
-            assert isinstance(args[0], SessionHandler)
-
-            assert args[0] == ongaku_session.client.session_handler
+        assert await ongaku_session._handle_ws_message(message) is False
 
     @pytest.mark.asyncio
     async def test_closed(self, ongaku_session: Session):
@@ -748,24 +783,6 @@ class TestHandleWSMessage:
             aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"
         )
 
-        with (
-            mock.patch.object(ongaku_session, "transfer") as patched_transfer,
-            mock.patch.object(
-                ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
-            ) as patched_stop,
-        ):
-            assert ongaku_session.status == SessionStatus.NOT_CONNECTED
+        assert ongaku_session.status == SessionStatus.NOT_CONNECTED
 
-            await ongaku_session._handle_ws_message(message)
-
-            assert ongaku_session.status == SessionStatus.FAILURE
-
-            args = patched_transfer.call_args.args
-
-            assert len(args) == 1
-
-            assert isinstance(args[0], SessionHandler)
-
-            assert args[0] == ongaku_session.client.session_handler
-
-            patched_stop.assert_called_once()
+        assert await ongaku_session._handle_ws_message(message) is False

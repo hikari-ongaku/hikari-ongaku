@@ -347,7 +347,8 @@ class Session:
                 )
         return event
 
-    async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> None:
+    async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> bool:
+        """Returns false if failure or closure, true otherwise."""
         if msg.type == aiohttp.WSMsgType.TEXT:
             payload_event = events.PayloadEvent.from_session(self, msg.data)
             event = self._handle_op_code(msg.data)
@@ -355,19 +356,17 @@ class Session:
             await self.app.event_manager.dispatch(payload_event)
             await self.app.event_manager.dispatch(event)
 
+            return True
+
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            self._status = session_.SessionStatus.FAILURE
             _logger.warning("An error occurred.")
-            await self.transfer(self.client.session_handler)
 
         elif msg.type == aiohttp.WSMsgType.CLOSED:
-            self._status = session_.SessionStatus.FAILURE
             _logger.warning(
                 f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
             )
-            await self.transfer(self.client.session_handler)
 
-            await self.stop()
+        return False
 
     async def _websocket(self) -> None:
         bot = self.app.get_me()
@@ -403,36 +402,38 @@ class Session:
         new_headers.update(self._websocket_headers)
 
         new_headers.update(self.auth_headers)
-
         while self._remaining_attempts >= 1:
             if self._remaining_attempts != self._attempts:
                 await asyncio.sleep(2.5)
+
             self._remaining_attempts -= 1
             try:
-                async with (
-                    self.client._get_client_session() as session,
-                    session.ws_connect(
-                        self.base_uri + "/v4/websocket",
-                        headers=new_headers,
-                        autoclose=False,
-                    ) as ws,
-                ):
+                session = self.client._get_client_session()
+                async with session.ws_connect(
+                    self.base_uri + "/v4/websocket",
+                    headers=new_headers,
+                    autoclose=False,
+                ) as ws:
                     _logger.log(
                         TRACE_LEVEL,
                         f"Successfully made connection to session {self.name}",
                     )
                     self._status = session_.SessionStatus.CONNECTED
-                    async for msg in ws:
-                        # _logger.warning("Reading message uwu")
-                        # raise Exception
-                        await self._handle_ws_message(msg)
+                    while True:
+                        msg = await ws.receive()
+
+                        if await self._handle_ws_message(msg) is False:
+                            self._status = session_.SessionStatus.FAILURE
+                            await self.transfer(self.client.session_handler)
+                            return
 
             except Exception as e:
                 _logger.warning(f"Websocket connection failure: {e}")
                 self._status = session_.SessionStatus.NOT_CONNECTED
+                break
 
         else:
-            _logger.critical("Server has no more attempts.")
+            _logger.warning(f"Session {self.name} has no more attempts.")
             self._status = session_.SessionStatus.NOT_CONNECTED
 
     def _get_session_id(self) -> str:
