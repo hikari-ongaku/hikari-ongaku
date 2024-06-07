@@ -551,7 +551,7 @@ class RESTClient:
         )
 
         session = self._client.session_handler.fetch_session()
-        _logger.warning(patch_data)
+
         response = await session.request(
             route.method,
             route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),

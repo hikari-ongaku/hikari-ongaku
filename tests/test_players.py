@@ -1,7 +1,6 @@
 # ruff: noqa: D100, D101, D102, D103
 
 import datetime
-import logging
 import typing
 
 import mock
@@ -330,7 +329,6 @@ class TestPlayer:
         ongaku_player.add(track)
 
         assert len(ongaku_player.queue) == 6
-        logging.warning(ongaku_player.queue[0].requestor)
         assert ongaku_player.queue[0].requestor == Snowflake(1)
         assert ongaku_player.queue[1].requestor == Snowflake(22)
         assert ongaku_player.queue[2].requestor == Snowflake(22)
