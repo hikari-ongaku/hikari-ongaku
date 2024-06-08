@@ -1,6 +1,6 @@
 [project]
-name = "Ongaku"
-description = "A voice library, for hikari."
+name = "hikari-ongaku"
+description = "A simple voice library, for hikari."
 readme = "README.md"
 authors = [ {name = "mplaty", email = "contact@mplaty.com"} ]
 requires-python = ">=3.10.0, <3.13"
