@@ -87,9 +87,9 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
-# ╔══════════╗
-# ║ Commands ║
-# ╚══════════╝
+# ╔═══════════════╗
+# ║ Error Handler ║
+# ╚═══════════════╝
 
 
 @client.set_error_handler()
