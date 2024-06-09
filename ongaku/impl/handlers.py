@@ -65,8 +65,7 @@ class BasicSessionHandler(handler_.SessionHandler):
         for session in self.sessions:
             await session.stop()
 
-        for player in self.players:
-            await player.disconnect()
+        self._players.clear()
 
         self._is_alive = False
 
