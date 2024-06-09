@@ -152,8 +152,6 @@ class TestSession:
         app = web.Application()
         app.router.add_route("GET", "/v4/websocket", self.handler)
 
-        app.router.routes
-
         client = await aiohttp_client(app)
 
         with (
