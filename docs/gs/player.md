@@ -220,7 +220,7 @@ player.add(...)
 ```
 
 ??? note "What is `...`"
-    replace the `...` with a track (or multiple tracks). Need help getting a track? check [here](#getting-tracks)
+    replace the `...` with a track, multiple tracks or a playlist. Need help getting a track? check [here](#getting-tracks)
 
 ### Pause
 
