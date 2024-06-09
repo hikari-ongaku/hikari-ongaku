@@ -1,0 +1,3 @@
+# Injection
+
+::: ongaku.ext.injection

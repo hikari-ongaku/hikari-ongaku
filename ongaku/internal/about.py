@@ -7,11 +7,11 @@ __author_email__: typing.Final[str] = "contact@mplaty.com"
 __maintainer__: typing.Final[str] = "MPlaty"
 __license__: typing.Final[str] = "MIT"
 __url__: typing.Final[str] = "https://github.com/MPlatypus/hikari-ongaku"
-__version__: typing.Final[str] = "0.6.0"
+__version__: typing.Final[str] = "1.0.0"
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

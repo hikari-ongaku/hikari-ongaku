@@ -10,14 +10,20 @@ import typing
 
 __all__ = ("json_dumps", "json_loads")
 
-json_dumps: typing.Callable[
+DumpType = typing.Callable[
     [typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]], bytes
 ]
+"""The json dump type."""
+
+json_dumps: DumpType
 """The json dumper."""
 
-json_loads: typing.Callable[
+LoadType = typing.Callable[
     [str | bytes], typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]
 ]
+"""The json load type."""
+
+json_loads: LoadType
 """The json loader."""
 
 try:
@@ -41,7 +47,7 @@ except ModuleNotFoundError:
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

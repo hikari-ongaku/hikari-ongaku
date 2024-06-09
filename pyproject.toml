@@ -1,5 +1,43 @@
+[project]
+name = "hikari-ongaku"
+description = "A simple voice library, for hikari."
+readme = "README.md"
+authors = [ {name = "mplaty", email = "contact@mplaty.com"} ]
+requires-python = ">=3.10.0, <3.13"
+license = {file = "LICENSE"}
+keywords = ["hikari", "voice", "voice handler", "audio", "discord", "song"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.urls]
+Documentation = "https://ongaku.mplaty.com"
+Repository = "https://github.com/MPlatypus/hikari-ongaku"
+Issues = "https://github.com/MPlatypus/hikari-ongaku/issues"
+Changelog = "https://ongaku.mplaty.com/changelog"
+
+[tool.setuptools]
+py-modules = ["ongaku"]
+
+[tool.setuptools.dynamic]
+version = {attr = "ongaku.internal.about.__version__"}
+dependencies = {file = "requirements.txt"}
+optional-dependencies = {"docs" = {file = "requirements/doc.txt"}, "dev" = {file = "requirements/dev.txt"}, "speedups" = {file = "requirements/speedups.txt"}, "injection" = {file = "requirements/injection.txt"}}
+
+[tool.setuptools.package-data]
+ongaku = ["py.typed"]
+
 [tool.pyright]
-pythonVersion = "3.11"
+pythonVersion = "3.10"
 typeCheckingMode = "strict"
 reportPrivateUsage = false
 reportMissingTypeStubs = true
@@ -10,11 +48,16 @@ reportShadowedImports = "warning"
 [tool.ruff]
 extend-exclude = ["examples/*", ".venv/*"]
 
+[tool.ruff.format]
+docstring-code-format = true
+
 [tool.ruff.lint.isort]
 force-single-line = true
 
 [tool.ruff.lint]
-select = ["D"]
+select = ["E", "F", "I", "TCH", "C", "N", "D2", "D3", "D415", "D417", "D418", "D419", "ASYNC", "Q", "RSE", "SIM", "RUF"]
+ignore = ["F405", "F403", "E501", "D205"]
+fixable = ["I", "TCH", "D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
