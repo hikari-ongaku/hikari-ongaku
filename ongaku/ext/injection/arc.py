@@ -32,12 +32,10 @@ async def arc_ensure_player(ctx: arc.GatewayContext):
     ```py
     from ongaku.ext import injection
 
+
     @arc.with_hook(injection.arc_ensure_player)
     @arc.slash_command("name", "description")
-    async def example_command(
-        ctx: arc.GatewayContext,
-        player: ongaku.Player
-    ) -> None:
+    async def example_command(ctx: arc.GatewayContext, player: ongaku.Player) -> None:
         await player.pause()
     ```
 

@@ -269,9 +269,7 @@ class Client:
         ```py
         client = ongaku.Client(...)
 
-        client.add_session(
-            host="192.168.68.69"
-        )
+        client.add_session(host="192.168.68.69")
         ```
 
         !!! warning
