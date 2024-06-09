@@ -8,35 +8,26 @@ from __future__ import annotations
 
 import typing
 
-if typing.TYPE_CHECKING:
-    import hikari
+import hikari
 
-    from ongaku.abc.info import Info
-    from ongaku.abc.player import Player
-    from ongaku.abc.player import PlayerVoice
-    from ongaku.abc.playlist import Playlist
-    from ongaku.abc.route_planner import RoutePlannerStatus
-    from ongaku.abc.session import Session
-    from ongaku.abc.statistics import Statistics
-    from ongaku.abc.track import Track
-
-__all__ = ("RESTClientT",)
+__all__ = ("RequestT", "RequestorT", "PayloadMappingT", "PayloadSequenceT")
 
 # Type Variables.
 
-RESTClientT = typing.TypeVar(
-    "RESTClientT",
-    Info,
-    Player,
-    PlayerVoice,
-    Session,
-    Playlist,
-    Track,
-    RoutePlannerStatus,
-    Statistics,
+RequestT = typing.TypeVar(
+    "RequestT",
     str,
+    int,
+    bool,
+    float,
     dict[str, typing.Any],
+    list[typing.Any],
+    tuple[typing.Any, ...],
 )
+"""Request Type.
+
+The types you can request for.
+"""
 
 
 # Type Aliases
@@ -44,10 +35,25 @@ RESTClientT = typing.TypeVar(
 RequestorT: typing.TypeAlias = (
     hikari.SnowflakeishOr[hikari.User] | hikari.SnowflakeishOr[hikari.Member]
 )
+"""Requestor Type.
+
+The types to set for a requestor of a track.s
+"""
+
+PayloadMappingT: typing.TypeAlias = typing.Mapping[str, typing.Any] | str | bytes
+"""Payload Mapping Type. 
+
+Supports string, bytes, or a mapping.
+"""
+PayloadSequenceT: typing.TypeAlias = typing.Sequence[typing.Any] | str | bytes
+"""Payload Sequence Type. 
+
+Supports string, bytes, or a sequence.
+"""
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

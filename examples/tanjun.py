@@ -20,7 +20,8 @@ client = tanjun.Client.from_gateway_bot(bot)
 
 ongaku_client = ongaku.Client.from_tanjun(client)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="tanjun-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -145,9 +146,9 @@ async def play_command(
     )
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
-        player = await ongaku_client.create_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
+    except ongaku.PlayerMissingError:
+        player = ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -178,7 +179,7 @@ async def add_command(
         return
 
     try:
-        current_player = await ongaku_client.fetch_player(ctx.guild_id)
+        current_player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "You must have a player currently running!",
@@ -211,7 +212,7 @@ async def add_command(
     else:
         tracks.extend(result)
 
-    await current_player.add(tracks)
+    current_player.add(tracks)
 
     embed = hikari.Embed(
         title="Tracks added",
@@ -237,7 +238,7 @@ async def pause_command(
         )
         return
     try:
-        current_player = await ongaku_client.fetch_player(ctx.guild_id)
+        current_player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "You must have a player currently running!",
@@ -270,7 +271,7 @@ async def queue_command(
         return
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -319,7 +320,7 @@ async def volume_command(
         return
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -361,7 +362,7 @@ async def skip_command(
         return
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",
@@ -371,7 +372,7 @@ async def skip_command(
 
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.create_initial_response(
             "It looks like the queue is empty, so no new songs will be played."
         )
@@ -394,7 +395,7 @@ async def stop_command(
         )
         return
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
         await ctx.create_initial_response(
             "There is no player currently playing in this server.",

@@ -6,12 +6,11 @@ The tracks abstract classes.
 
 from __future__ import annotations
 
+import abc
 import typing
 
-import hikari
-import msgspec
-
-from ongaku.abc.bases import PayloadBase
+if typing.TYPE_CHECKING:
+    import hikari
 
 __all__ = (
     "TrackInfo",
@@ -19,7 +18,71 @@ __all__ = (
 )
 
 
-class TrackInfo(PayloadBase):
+class Track(abc.ABC):
+    """
+    Track.
+
+    The base track.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
+    """
+
+    @property
+    @abc.abstractmethod
+    def encoded(self) -> str:
+        """The BASE-64 encoded track data."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def info(self) -> TrackInfo:
+        """Information about the track."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
+        """Additional track info provided by plugins."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def user_data(self) -> typing.Mapping[str, typing.Any]:
+        """Additional track data."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def requestor(self) -> hikari.Snowflake | None:
+        """The person who requested this track."""
+        ...
+
+    @requestor.setter
+    def _set_requestor(self, value: hikari.Snowflake): ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Track):
+            return False
+
+        if self.encoded != other.encoded:
+            return False
+
+        if self.info != other.info:
+            return False
+
+        if self.plugin_info != other.plugin_info:
+            return False
+
+        if self.user_data != other.user_data:
+            return False
+
+        if self.requestor != other.requestor:
+            return False
+
+        return True
+
+
+class TrackInfo(abc.ABC):
     """
     Track information.
 
@@ -28,62 +91,115 @@ class TrackInfo(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track-info)
     """
 
-    identifier: str
-    """The track identifier."""
-    is_seekable: bool = msgspec.field(name="isSeekable")
-    """Whether the track is seekable."""
-    author: str
-    """The track author."""
-    length: int
-    """The track length in milliseconds."""
-    is_stream: bool = msgspec.field(name="isStream")
-    """Whether the track is a stream."""
-    position: int
-    """The track position in milliseconds."""
-    title: str
-    """The track title."""
-    source_name: str = msgspec.field(name="sourceName")
-    """The tracks source name."""
-    uri: str | None = msgspec.field(default=None)
-    """The track uri."""
-    artwork_url: str | None = msgspec.field(default=None, name="artworkUrl")
-    """The track artwork url."""
-    isrc: str | None = msgspec.field(default=None)
-    """The track ISRC."""
+    @property
+    @abc.abstractmethod
+    def identifier(self) -> str:
+        """The track identifier."""
+        ...
 
+    @property
+    @abc.abstractmethod
+    def is_seekable(self) -> bool:
+        """Whether the track is seekable."""
+        ...
 
-class Track(PayloadBase):
-    """Base track.
+    @property
+    @abc.abstractmethod
+    def author(self) -> str:
+        """The track author."""
+        ...
 
-    The base track data.
+    @property
+    @abc.abstractmethod
+    def length(self) -> int:
+        """The track length in milliseconds."""
+        ...
 
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
-    """
+    @property
+    @abc.abstractmethod
+    def is_stream(self) -> bool:
+        """Whether the track is a stream."""
+        ...
 
-    encoded: str
-    """The base64 encoded track data."""
-    info: TrackInfo
-    """Information about the track."""
-    plugin_info: typing.Mapping[typing.Any, typing.Any] | None = msgspec.field(
-        default=None, name="pluginInfo"
-    )
-    """Additional track info provided by plugins."""
-    user_data: typing.Mapping[typing.Any, typing.Any] | None = msgspec.field(
-        default=None, name="userData"
-    )
-    """Additional track data."""
-    requestor: hikari.Snowflake | None = msgspec.field(default=None)
-    """
-    The user who requested this track.
+    @property
+    @abc.abstractmethod
+    def position(self) -> int:
+        """The track position in milliseconds."""
+        ...
 
-    !!! INFO
-        This is an internal feature, not something from lavalink. If this track is apart of a lavalink event, then it will most likely be empty.
-    """
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The track title."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def source_name(self) -> str:
+        """The tracks source name."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def uri(self) -> str | None:
+        """The track URI."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def artwork_url(self) -> str | None:
+        """The track artwork URL."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def isrc(self) -> str | None:
+        """The track ISRC."""
+        ...
+
+    def __eq__(self, other: object) -> bool:  # noqa: C901
+        if not isinstance(other, TrackInfo):
+            return False
+
+        if self.identifier != other.identifier:
+            return False
+
+        if self.is_seekable != other.is_seekable:
+            return False
+
+        if self.author != other.author:
+            return False
+
+        if self.length != other.length:
+            return False
+
+        if self.is_stream != other.is_stream:
+            return False
+
+        if self.position != other.position:
+            return False
+
+        if self.title != other.title:
+            return False
+
+        if self.source_name != other.source_name:
+            return False
+
+        if self.uri != other.uri:
+            return False
+
+        if self.artwork_url != other.artwork_url:
+            return False
+
+        if self.isrc != other.isrc:
+            return False
+
+        return True
 
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

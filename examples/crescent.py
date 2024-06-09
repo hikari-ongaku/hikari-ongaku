@@ -25,7 +25,8 @@ bot = hikari.GatewayBot("...")
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="crescent-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -161,7 +162,7 @@ class Play:
 
         try:
             player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
-        except ongaku.PlayerMissingException:
+        except ongaku.PlayerMissingError:
             player = await ctx.client.model.ongaku_client.player.create(ctx.guild_id)
 
         if player.connected is False:
@@ -383,7 +384,7 @@ class Skip:
 
         try:
             await player.skip(self.amount)
-        except ongaku.PlayerQueueException:
+        except ongaku.PlayerQueueError:
             await ctx.respond(
                 "It looks like the queue is empty, so no new songs will be played."
             )

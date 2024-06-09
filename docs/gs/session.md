@@ -27,4 +27,4 @@ Below is all the available session handlers.
 
 This session handler is the default session handler.
 
-The basic session handler simply just fetches (and stores) the current session. It will only give a different session, if the current session dies.
+The basic session handler simply just fetches (and stores) the current session. It will only give a different session, if the current session closes, or errors out.

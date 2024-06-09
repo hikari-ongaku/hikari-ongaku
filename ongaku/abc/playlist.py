@@ -4,32 +4,18 @@ Playlist ABC's.
 The playlist abstract classes.
 """
 
+from __future__ import annotations
+
+import abc
 import typing
 
-import msgspec
-
-from ongaku.abc.bases import PayloadBase
-from ongaku.abc.track import Track
+if typing.TYPE_CHECKING:
+    from ongaku.abc.track import Track
 
 __all__ = ("PlaylistInfo", "Playlist")
 
 
-class PlaylistInfo(PayloadBase):
-    """
-    Playlist information.
-
-    The playlist info object.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#playlist-info)
-    """
-
-    name: str
-    """The name of the playlist."""
-    selected_track: int | None = msgspec.field(default=-1, name="selectedTrack")
-    """The selected track of the playlist (`-1` if no track is selected)."""
-
-
-class Playlist(PayloadBase):
+class Playlist(abc.ABC):
     """
     Playlist.
 
@@ -38,19 +24,77 @@ class Playlist(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
     """
 
-    info: PlaylistInfo
-    """The info of the playlist."""
-    plugin_info: typing.Mapping[typing.Any, typing.Any] | None = msgspec.field(
-        name="pluginInfo"
-    )
-    """Addition playlist info provided by plugins."""
-    tracks: typing.Sequence[Track]
-    """The tracks in this playlist."""
+    @property
+    @abc.abstractmethod
+    def info(self) -> PlaylistInfo:
+        """The info of the playlist."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def tracks(self) -> typing.Sequence[Track]:
+        """The tracks in this playlist."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
+        """Addition playlist info provided by plugins."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Playlist):
+            return False
+
+        if self.info != other.info:
+            return False
+
+        if self.tracks != other.tracks:
+            return False
+
+        if self.plugin_info != other.plugin_info:
+            return False
+
+        return True
+
+
+class PlaylistInfo(abc.ABC):
+    """
+    Playlist information.
+
+    The playlist info object.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#playlist-info)
+    """
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """The name of the playlist."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def selected_track(self) -> int:
+        """The selected track of the playlist (`-1` if no track is selected)."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, PlaylistInfo):
+            return False
+
+        if self.name != other.name:
+            return False
+
+        if self.selected_track != other.selected_track:
+            return False
+
+        return True
 
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

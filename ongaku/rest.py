@@ -6,33 +6,29 @@ All REST based actions, happen in here.
 
 from __future__ import annotations
 
-import asyncio
 import typing
 
 import hikari
 
 from ongaku import errors
-from ongaku.abc.error import ExceptionError
-from ongaku.abc.error import RestError
-from ongaku.abc.info import Info
-from ongaku.abc.player import Player
-from ongaku.abc.player import PlayerVoice
-from ongaku.abc.playlist import Playlist
-from ongaku.abc.route_planner import RoutePlannerStatus
-from ongaku.abc.session import Session as ABCSession
-from ongaku.abc.statistics import Statistics
-from ongaku.abc.track import Track
 from ongaku.internal import routes
-from ongaku.internal.converters import json_dumps
-from ongaku.internal.converters import json_loads
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
+
+if typing.TYPE_CHECKING:
+    from ongaku.abc import session as session_
+    from ongaku.abc.info import Info
+    from ongaku.abc.player import Player
+    from ongaku.abc.player import Voice
+    from ongaku.abc.playlist import Playlist
+    from ongaku.abc.routeplanner import RoutePlannerStatus
+    from ongaku.abc.statistics import Statistics
+    from ongaku.abc.track import Track
 
 _logger = logger.getChild("rest")
 
 if typing.TYPE_CHECKING:
     from ongaku.client import Client
-    from ongaku.internal.types import RESTClientT
 
 
 __all__ = ("RESTClient",)
@@ -51,15 +47,15 @@ class RESTClient:
     def __init__(self, client: Client) -> None:
         self._client = client
 
-    async def load_track(
+    async def load_track(  # noqa: C901
         self, query: str
     ) -> Playlist | typing.Sequence[Track] | Track | None:
         """
         Load tracks.
 
-        Loads tracks, from a site, or a link to a song, to play on a player.
+        Loads tracks from a site, a playlist or a track, to play on a player.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-loading)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#track-loading)
 
         Example
         -------
@@ -76,12 +72,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built. Or no valid type was found.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the track, playlist or search could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -91,52 +95,62 @@ class RESTClient:
             A Playlist object.
         Track
             A Track object.
+        None
+            No result was returned.
         """
         route = routes.GET_LOAD_TRACKS
 
-        params = {"identifier": query}
-
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(route.build(), dict, params=params)
+        session = self._client.session_handler.fetch_session()
 
-        load_type: str = resp["loadType"]
+        response = await session.request(
+            route.method, route.path, dict, params={"identifier": query}
+        )
+
+        if response is None:
+            raise ValueError("Response is required for this request.")
+
+        load_type: str = response["loadType"]
 
         if load_type == "empty":
-            _logger.log(TRACE_LEVEL, f"loadType is empty.")
+            _logger.log(TRACE_LEVEL, "loadType is empty.")
             return
 
         elif load_type == "error":
-            _logger.log(TRACE_LEVEL, f"loadType caused an error.")
-            raise errors.RestTrackException(
-                ExceptionError._from_payload(json_dumps(resp["data"]))
+            _logger.log(TRACE_LEVEL, "loadType caused an error.")
+
+            raise errors.RestExceptionError.from_error(
+                self._client.entity_builder.build_exception_error(response["data"])
             )
 
         elif load_type == "search":
-            _logger.log(TRACE_LEVEL, f"loadType was a search result.")
+            _logger.log(TRACE_LEVEL, "loadType was a search result.")
             tracks: typing.Sequence[Track] = []
-            for trk in resp["data"]:
+            for track in response["data"]:
                 try:
-                    track = Track._from_payload(json_dumps(trk))
+                    tracks.append(self._client.entity_builder.build_track(track))
                 except Exception as e:
-                    raise errors.BuildException(str(e))
-                else:
-                    tracks.append(track)
+                    raise errors.BuildError(str(e))
 
             build = tracks
 
         elif load_type == "track":
-            _logger.log(TRACE_LEVEL, f"loadType was a track link.")
-            build = Track._from_payload(json_dumps(resp["data"]))
+            _logger.log(TRACE_LEVEL, "loadType was a track link.")
+            try:
+                build = self._client.entity_builder.build_track(response["data"])
+            except Exception as e:
+                raise errors.BuildError(str(e))
 
         elif load_type == "playlist":
-            _logger.log(TRACE_LEVEL, f"loadType was a playlist link.")
-            build = Playlist._from_payload(json_dumps(resp["data"]))
+            _logger.log(TRACE_LEVEL, "loadType was a playlist link.")
+            try:
+                build = self._client.entity_builder.build_playlist(response["data"])
+            except Exception as e:
+                raise errors.BuildError(str(e))
 
         else:
-            raise errors.BuildException(
-                f"An unknown loadType was received: {load_type}"
-            )
+            raise errors.BuildError(f"An unknown loadType was received: {load_type}")
 
         return build
 
@@ -146,12 +160,12 @@ class RESTClient:
 
         Decode a track from its encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#track-decoding)
 
         Example
         -------
         ```py
-        track = await client.rest.decode_track("BASE64")
+        track = await client.rest.decode_track(BASE64)
 
         await player.play(track)
         ```
@@ -163,12 +177,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the track could not be built
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -177,26 +199,33 @@ class RESTClient:
         """
         route = routes.GET_DECODE_TRACK
 
-        params = {"encoded_track": track}
+        _logger.log(TRACE_LEVEL, str(route))
 
-        _logger.log(TRACE_LEVEL, f"running GET /decodetrack with params: {params}")
+        session = self._client.session_handler.fetch_session()
 
-        resp = await self._handle_request(route.build(), Track, params=params)
+        response = await session.request(
+            route.method, route.path, dict, params={"encodedTrack": track}
+        )
 
-        return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-    async def decode_many_tracks(self, tracks: list[str]) -> typing.Sequence[Track]:
+        return self._client.entity_builder.build_track(response)
+
+    async def decode_tracks(
+        self, tracks: typing.Sequence[str]
+    ) -> typing.Sequence[Track]:
         """
-        Decode multiple tracks.
+        Decode tracks.
 
         Decode multiple tracks from their encoded state.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#track-decoding)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#track-decoding)
 
         Example
         -------
         ```py
-        tracks = await client.rest.decode_many_tracks(["BASE64_1", "BASE64_2"])
+        tracks = await client.rest.decode_tracks([BASE64_1, BASE64_2])
 
         await player.add(tracks)
         ```
@@ -208,33 +237,49 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the tracks could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
         typing.Sequence[Track]
             The Track object.
         """
-        route = routes.GET_DECODE_TRACKS
+        route = routes.POST_DECODE_TRACKS
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            Track,
-            json=[*tracks],
-            sequence=True,
+        session = self._client.session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            list,
+            headers={"Content-Type": "application/json"},
+            json=tracks,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("decode_many requires an object to be returned.")
+        new_tracks: list[Track] = []
+
+        for track in response:
+            new_tracks.append(self._client.entity_builder.build_track(track))
+
+        return new_tracks
 
     async def fetch_players(self, session_id: str) -> typing.Sequence[Player]:
         """
@@ -242,7 +287,7 @@ class RESTClient:
 
         Fetches all players on this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-players)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-players)
 
         Example
         -------
@@ -260,12 +305,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the players could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -276,26 +329,33 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build({"session_id": session_id}),
-            Player,
-            sequence=True,
+        session = self._client.session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path.format(session_id=session_id),
+            list,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("fetch_all requires an object to be returned.")
+        players: list[Player] = []
+
+        for player in response:
+            players.append(self._client.entity_builder.build_player(player))
+
+        return players
 
     async def fetch_player(
         self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
-    ) -> Player | None:
+    ) -> Player:
         """
         Fetch a player.
 
         Fetches a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-player)
 
         Example
         -------
@@ -310,16 +370,24 @@ class RESTClient:
         session_id
             The Session ID that the players are attached too.
         guild
-            The Guild ID that the player is attached to.
+            The `guild` or `guild id` that the player is attached to.
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the player could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -330,17 +398,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
-            Player,
+        session = self._client.session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
+            dict,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("fetch update requires an object to be returned.")
+        return self._client.entity_builder.build_player(response)
 
     async def update_player(
         self,
@@ -352,7 +421,7 @@ class RESTClient:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
-        voice: hikari.UndefinedOr[PlayerVoice] = hikari.UNDEFINED,
+        voice: hikari.UndefinedOr[Voice] = hikari.UNDEFINED,
         no_replace: bool = True,
     ) -> Player:
         """
@@ -360,10 +429,14 @@ class RESTClient:
 
         Fetches a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#update-player)
 
-        !!! note
-            Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None. To not modify them, do not set them to anything.
+        !!! tip
+            Setting any value (except for `session_id`, or `guild_id`) to None, will set their values to None.
+            To not modify them, do not set them to anything.
+
+        !!! warning
+            If you do not set any value (not including `session_id` or `guild_id` as they are required) you will receive a `ValueError`
 
         Example
         -------
@@ -376,7 +449,7 @@ class RESTClient:
         session_id
             The Session ID that the players are attached too.
         guild
-            The Guild ID that the player is attached to.
+            The `guild` or `guild id` that the player is attached to.
         track
             The track you wish to set, or remove
         position
@@ -394,14 +467,22 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
         ValueError
             Raised when nothing new has been set.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the track, playlist or search could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -414,7 +495,6 @@ class RESTClient:
             and end_time is hikari.UNDEFINED
             and volume is hikari.UNDEFINED
             and paused is hikari.UNDEFINED
-            and filter is hikari.UNDEFINED
             and voice is hikari.UNDEFINED
             and position is hikari.UNDEFINED
         ):
@@ -457,16 +537,11 @@ class RESTClient:
                 {
                     "voice": {
                         "token": voice.token,
-                        "endpoint": voice.endpoint[6:],
+                        "endpoint": voice.endpoint,
                         "sessionId": voice.session_id,
                     }
                 }
             )
-
-        params = {"noReplace": "false"}
-
-        if no_replace:
-            params.update({"noReplace": "true"})
 
         route = routes.PATCH_PLAYER_UPDATE
 
@@ -475,20 +550,21 @@ class RESTClient:
             str(route),
         )
 
-        resp = await self._handle_request(
-            route.build(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
-            Player,
+        session = self._client.session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
+            dict,
             headers={"Content-Type": "application/json"},
             json=patch_data,
-            params=params,
+            params={"noReplace": "true" if no_replace else "false"},
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("fetch update requires an object to be returned.")
+        return self._client.entity_builder.build_player(response)
 
     async def delete_player(
         self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
@@ -498,7 +574,7 @@ class RESTClient:
 
         Deletes a specific player from this session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#destroy-player)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#destroy-player)
 
         Example
         -------
@@ -511,51 +587,80 @@ class RESTClient:
         session_id
             The Session ID that the players are attached too.
         guild
-            The Guild ID that the player is attached to.
+            The `guild` or `guild id` that the player is attached to.
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
         """
         route = routes.DELETE_PLAYER
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        await self._handle_request(
-            route.build(
-                {"session_id": session_id, "guild_id": hikari.Snowflake(guild)}
-            ),
+        session = self._client.session_handler.fetch_session()
+
+        await session.request(
+            route.method,
+            route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
             None,
         )
 
-    async def update_session(self, session_id: str) -> ABCSession:
+    async def update_session(
+        self,
+        session_id: str,
+        *,
+        resuming: bool | None = None,
+        timeout: int | None = None,
+    ) -> session_.Session:
         """
         Update Lavalink session.
 
         Updates the lavalink session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#update-session)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#update-session)
 
         Example
         -------
         ```py
-        await client.rest.update_session(session_id)
+        await client.rest.update_session(session_id, False)
         ```
 
         Parameters
         ----------
         session_id
             The session you wish to update.
+        resuming
+            Whether resuming is enabled for this session or not.
+        timeout
+            The timeout in seconds (default is 60s)
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the session could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -566,21 +671,34 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build({"session_id": session_id}),
-            ABCSession,
+        session = self._client.session_handler.fetch_session()
+
+        data: typing.MutableMapping[str, typing.Any] = {}
+
+        if resuming is not None:
+            data.update({"resuming": resuming})
+
+        if timeout:
+            data.update({"timeout": timeout})
+
+        response = await session.request(
+            route.method,
+            route.path.format(session_id=session_id),
+            dict,
+            headers={"Content-Type": "application/json"},
+            json=data,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("Session update requires an object to be returned.")
+        return self._client.entity_builder.build_session(response)
 
     async def fetch_info(self) -> Info:
         """
-        Get server statistics.
+        Get information.
 
-        Gets the current Lavalink statistics.
+        Gets the current sessions information.
 
         ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
 
@@ -594,12 +712,20 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the information could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -610,21 +736,24 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            Info,
+        session = self._client.session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            dict,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("Session update requires an object to be returned.")
+        return self._client.entity_builder.build_info(response)
 
     async def fetch_version(self) -> str:
         """
-        Get Lavalink version.
+        Get version.
 
-        Gets the current lavalink version.
+        Gets the current Lavalink version.
 
         ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
 
@@ -638,12 +767,18 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -654,19 +789,18 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            str,
-        )
+        session = self._client.session_handler.fetch_session()
 
-        if resp:
-            return resp
+        response = await session.request(route.method, route.path, str, version=False)
 
-        raise TypeError("Session update requires an object to be returned.")
+        if response is None:
+            raise ValueError("Response is required for this request.")
+
+        return response
 
     async def fetch_stats(self) -> Statistics:
         """
-        Get server statistics.
+        Get statistics.
 
         Gets the current Lavalink statistics.
 
@@ -685,14 +819,20 @@ class RESTClient:
 
         Raises
         ------
-        SessionException
-            Raised when there is no available session.
-        LavalinkException
-            Raised when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the statistics could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
@@ -703,58 +843,79 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            Statistics,
+        session = self._client.session_handler.fetch_session()
+
+        response = await session.request(
+            route.method,
+            route.path,
+            dict,
         )
 
-        if resp:
-            return resp
+        if response is None:
+            raise ValueError("Response is required for this request.")
 
-        raise TypeError("Session update requires an object to be returned.")
+        return self._client.entity_builder.build_statistics(response)
 
-    async def fetch_routeplanner_status(self) -> RoutePlannerStatus:
+    async def fetch_routeplanner_status(self) -> RoutePlannerStatus | None:
         """
         Fetch routeplanner status.
 
-        Fetches the routeplanner status.
+        Fetches the routeplanner status of the current session.
 
-        ![Lavalink](../assets/lavalink_logo.png){ .twemoji }  [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
+        ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-routeplanner-status)
 
         Example
         -------
         ```py
         routeplanner_status = await client.rest.fetch_routeplanner_status()
 
-        print(routeplanner_status.class_type.name)
+        if routeplanner_status:
+            print(routeplanner_status.class_type.name)
         ```
 
         Raises
         ------
-        SessionException
-            Raised when there is no available session.
-        LavalinkException
-            Raised when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the routeplanner status could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
 
         Returns
         -------
         RoutePlannerStatus
             The RoutePlannerStatus object.
+        None
+            The Route Planner for this server is not active.
         """
         route = routes.GET_ROUTEPLANNER_STATUS
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        resp = await self._handle_request(
-            route.build(),
-            RoutePlannerStatus,
-        )
+        session = self._client.session_handler.fetch_session()
 
-        return resp
+        try:
+            response = await session.request(
+                route.method,
+                route.path,
+                dict,
+            )
+        except errors.RestEmptyError:
+            response = None
+
+        if response is None:
+            return
+
+        return self._client.entity_builder.build_routeplanner_status(response)
 
     async def update_routeplanner_address(self, address: str) -> None:
         """
@@ -777,24 +938,26 @@ class RESTClient:
 
         Raises
         ------
-        SessionException
-            Raised when there is no available session.
-        LavalinkException
-            Raised when a invalid response type is received.
-        ValueError
-            Raised when a return type is set, and no data was received.
-        BuildException
-            Raised when the object could not be built.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
         """
         route = routes.POST_ROUTEPLANNER_FREE_ADDRESS
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        await self._handle_request(
-            route.build(),
-            None,
-            json={"address": address},
-        )
+        session = self._client.session_handler.fetch_session()
+
+        await session.request(route.method, route.path, None, json={"address": address})
 
     async def update_all_routeplanner_addresses(self) -> None:
         """
@@ -812,166 +975,35 @@ class RESTClient:
 
         Raises
         ------
-        LavalinkException
-            Raise when a invalid response type is received.
+        NoSessionsError
+            Raised when there is no available sessions for this request to take place.
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
         """
         route = routes.POST_ROUTEPLANNER_FREE_ALL
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        await self._handle_request(
-            route.build(),
+        session = self._client.session_handler.fetch_session()
+
+        await session.request(
+            route.method,
+            route.path,
             None,
         )
-
-    @typing.overload
-    async def _handle_request(
-        self,
-        route: routes.Route,
-        return_type: typing.Type[RESTClientT] | None,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
-        sequence: typing.Literal[False] = False,
-    ) -> RESTClientT: ...
-
-    @typing.overload
-    async def _handle_request(
-        self,
-        route: routes.Route,
-        return_type: typing.Type[RESTClientT] | None,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
-        sequence: typing.Literal[True] = True,
-    ) -> typing.Sequence[RESTClientT]: ...
-
-    async def _handle_request(
-        self,
-        route: routes.Route,
-        return_type: typing.Type[RESTClientT] | None,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
-        sequence: bool = False,
-    ) -> RESTClientT | typing.Sequence[RESTClientT] | None:
-        """Handle rest request.
-
-        Parameters
-        ----------
-        route
-            The route you wish to query.
-        return_type
-            The type that this function should return.
-        headers
-            The headers to attach to this request.
-        json
-            The json data to send to this request.
-        params
-            The parameters to add to this request.
-        sequence
-            Whether or not the return type is a list of return type, or just one.
-
-        Returns
-        -------
-        RESTClientT | typing.Sequence[RESTClientT] | None
-            the return type you requested.
-
-        Raises
-        ------
-        RestEmptyException
-            Raised when a return type was requested, yet nothing was received.
-        RestStatusException
-            Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
-            Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
-            Raised when a construction of a ABC class fails.
-        """
-        session = self._client._get_client_session()
-
-        current_session = self._client._session_handler.fetch_session()
-
-        new_headers: typing.MutableMapping[str, typing.Any] = dict(
-            current_session._base_headers
-        )
-
-        new_headers.update(headers)
-
-        try:
-            async with session.request(
-                route.route.method,
-                route.build_url(current_session.base_uri),
-                headers=new_headers,
-                json=json,
-                params=params,
-            ) as response:
-                _logger.log(
-                    TRACE_LEVEL,
-                    f"Received code: {response.status} with response {await response.text()} on url {response.url}",
-                )
-                if response.status == 204 and return_type:
-                    raise errors.RestEmptyException
-
-                if response.status >= 400:
-                    try:
-                        payload = await response.text()
-                    except Exception:
-                        raise errors.RestStatusException(
-                            response.status, response.reason
-                        )
-                    else:
-                        raise errors.RestErrorException(
-                            RestError._from_payload(payload)
-                        )
-
-                if not return_type:
-                    return
-
-                try:
-                    payload = await response.text()
-                except Exception:
-                    raise errors.RestEmptyException
-
-                if issubclass(return_type, str):
-                    return return_type(payload)
-
-                if issubclass(return_type, dict):
-                    return return_type(json_loads(payload))
-
-                if sequence:
-                    model_seq: list[typing.Any] = []
-                    for item in payload:
-                        try:
-                            model = return_type._from_payload(item)
-                        except Exception as e:
-                            raise errors.BuildException(str(e))
-                        else:
-                            model_seq.append(model)
-
-                    return model_seq
-                else:
-                    try:
-                        model = return_type._from_payload(payload)
-                    except Exception as e:
-                        raise errors.BuildException(str(e))
-                    else:
-                        return model
-        except asyncio.TimeoutError:
-            _logger.warning(f"timed out on {str(route)}")
-            raise errors.TimeoutException
-
-        except Exception as e:
-            _logger.warning(f"{e} occurred on {str(route)}")
-            raise errors.RestException
 
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

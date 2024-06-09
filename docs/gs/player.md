@@ -3,11 +3,11 @@ title: Player
 description: All player functions, and general information
 ---
 
-# Player Functions
+# Player
 
 Below, is an explanation of all the available functions for the player, and example usages.
 
-## Creating and fetching a player.
+## Creating and fetching a player
 
 If you have followed the guide from [Client as State](./client.md) the following methods will work for fetching the player.
 
@@ -17,13 +17,12 @@ If you have followed the guide from [Client as State](./client.md) the following
     @arc.slash_command("name", "description")
     async def some_command(ctx: arc.GatewayContext, client: ongaku.Client = arc.inject()) -> None:
         try:
-            player = await client.create_player(...)
+            player = client.create_player(...)
         except:
             await ctx.respond("The player could not be created.")
             return
             # Or possibly raise an error when it fails to fetch the player.
-        
-        
+
         # Do stuff with the player.
     ```
 
@@ -34,13 +33,12 @@ If you have followed the guide from [Client as State](./client.md) the following
     class SomeCommand:
         async def callback(self, ctx: crescent.Context) -> None:
             try:
-                player = await client.create_player(...)
+                player = client.create_player(...)
             except:
                 await ctx.respond("The player could not be created.")
                 return
                 # Or possibly raise an error when it fails to fetch the player.
-            
-            
+
             # Do stuff with the player.
     ```
 
@@ -51,13 +49,12 @@ If you have followed the guide from [Client as State](./client.md) the following
     @lightbulb.implements(lightbulb.SlashCommand)
     async def some_command(ctx: lightbulb.SlashContext) -> None:
         try:
-            player = await client.create_player(...)
+            player = client.create_player(...)
         except:
             await ctx.respond("The player could not be created.")
             return
             # Or possibly raise an error when it fails to fetch the player.
-        
-        
+
         # Do stuff with the player.
     ```
 
@@ -71,13 +68,12 @@ If you have followed the guide from [Client as State](./client.md) the following
     @lightbulb.implements(lightbulb.SlashCommand)
     async def some_command(ctx: lightbulb.SlashContext) -> None:
         try:
-            player = await client.create_player(...)
+            player = client.create_player(...)
         except:
             await ctx.create_initial_response("The player could not be created.")
             return
             # Or possibly raise an error when it fails to fetch the player.
-        
-        
+
         # Do stuff with the player.
     ```
 
@@ -93,9 +89,7 @@ Getting tracks, uses a rest method. There is a few methods of fetching a track (
     This method allows for the user to search on a platform for a track.
 
     ```py
-
     track = await client.rest.load_track(...)
-
     ```
 
     You need to replace the `...` with a link, or a track with a searching parameter, then followed by the query.
@@ -124,6 +118,66 @@ Getting tracks, uses a rest method. There is a few methods of fetching a track (
 
     ```
 
+## Player Functions
+
+All of the functions you can do to a player.
+
+### Connecting and disconnecting
+
+#### Connecting
+
+You can connect to a channel, via the following methods
+
+```py
+await player.connect(channel_id)
+```
+
+You can also mute and deafen the bot.
+
+=== "Muting"
+
+    This will mute the bot.
+
+    ```py
+    await player.connect(channel_id, mute=True)
+    ```
+
+    !!! tip
+        By default, `mute` is set to `False`.
+
+=== "Deafening"
+
+    This will un-deafen the bot.
+
+    ```py
+    await player.connect(channel_id, deaf=False)
+    ```
+
+    !!! tip
+        By default, `deaf` is set to `True`.
+
+=== "Both"
+
+    This will un-deafen and mute the bot.
+
+    ```py
+    await player.connect(channel_id, mute=True, deaf=False)
+    ```
+
+    !!! tip
+        By default, `mute` is set to `False` and `deaf` is set to `True`.
+
+!!! tip
+    Replace `channel_id` with a [GuildVoiceChannel](https://docs.hikari-py.dev/en/latest/reference/hikari/channels/#hikari.channels.GuildVoiceChannel) or a integer of the channel id!
+
+#### Disconnecting
+
+You can disconnect and stop the player, via the following methods.
+
+```py
+await player.disconnect()
+```
+
 ### Play
 
 using the play method, has two different usages.
@@ -147,10 +201,9 @@ using the play method, has two different usages.
     ```
 
 ??? note "What is `...`"
-    
     replace the `...` with a track. Need help getting a track? check [here](#getting-tracks)
-    
-!!! note 
+
+!!! note
     `.play()` does not support multiple tracks. That is why the with .add() method exists.
 
 !!! warning
@@ -163,11 +216,10 @@ Using add, allows for the user to add tracks to the queue, without playing/pausi
 Example usage of adding is the following:
 
 ```py
-await player.add(...)
+player.add(...)
 ```
 
 ??? note "What is `...`"
-    
     replace the `...` with a track (or multiple tracks). Need help getting a track? check [here](#getting-tracks)
 
 ### Pause
@@ -176,7 +228,7 @@ Pausing, allows for you to play/pause the current track playing on the bot.
 There is a few options for pausing the tracks.
 
 === "Force playing"
-    
+
     The following method will force play the player, whether it is playing or not.
 
     ```py
@@ -184,7 +236,7 @@ There is a few options for pausing the tracks.
     ```
 
 === "Force pausing"
-    
+
     The following method will force pause the player, whether it is playing or not.
 
     ```py
@@ -201,10 +253,25 @@ There is a few options for pausing the tracks.
 
 ### Stop
 
-Stopping the track, tells the lavalink player to play no song. 
+Stopping the track, tells the lavalink player to play no song.
 
-!!! note 
+```py
+await player.stop()
+```
+
+!!! note
     This does not touch any of the tracks in the queue.
+
+### Shuffle
+
+Shuffle the current queue.
+
+```py
+player.shuffle()
+```
+
+!!! note
+    This does not touch the track in the first position.
 
 ### Skip
 
@@ -224,7 +291,7 @@ Skipping songs allows for you to skip one, or multiple songs.
 
     The following code allows for skipping one or more tracks.
 
-    ```py 
+    ```py
     # This will skip 3 songs in the queue, starting from the first, playing track.
     await player.skip(3)
     ```
@@ -238,7 +305,7 @@ This allows for removing tracks. You can remove it via a track object, position 
     This method allows for removing a track via its [track][ongaku.abc.track.Track] object.
 
     ```py
-    await player.remove(track)
+    player.remove(track)
     ```
 
 === "Position"
@@ -246,47 +313,44 @@ This allows for removing tracks. You can remove it via a track object, position 
     This method allows for removing a track via its position.
 
     ```py
-    await player.remove(3)
+    player.remove(3)
     ```
 
     !!! note
         Please remember, pythons lists start at 0. So this example will actually remove the track in the 4th position of the queue.
-
-=== "Encoded"
-
-    This method allows for removing a track via its encoded value.
-
-    ```py
-    await player.remove("encoded-track")
-    ```
 
 !!! warning
     If the track you remove is in the first position, it will **not** be stopped. It will continue playing.
 
 ### Clear
 
-This is basically the same as removing tracks, except it removes all tracks from the queue, and stops the player.
+This is very similar to the [Remove](#remove).
+It removes all tracks from the queue, and stops the player.
+
+```py
+await player.clear()
+```
 
 ### Autoplay
 
 This allows you to toggle autoplay on or off.
 
-Autoplay is a feature, that when one track ends in the guild, the next track in the queue (if it exists) will start playing.
+Autoplay allows for playing the next track in the queue when the previous one ends.
 
 === "Force enable"
-    
+
     The following method will set autoplay to on.
 
     ```py
-    await player.set_autoplay(True)
+    player.set_autoplay(True)
     ```
 
 === "Force pausing"
-    
+
     The following method will set autoplay to off.
 
     ```py
-    await player.set_autoplay(False)
+    player.set_autoplay(False)
     ```
 
 === "Toggling"
@@ -294,7 +358,7 @@ Autoplay is a feature, that when one track ends in the guild, the next track in 
     The following method will set autoplay to its opposite value.
 
     ```py
-    await player.set_autoplay()
+    player.set_autoplay()
     ```
 
 ### Volume
@@ -303,7 +367,7 @@ This allows you to change the volume of the player.
 
 === "Change"
 
-    This allows you to change the volume of the player. 
+    This allows you to change the volume of the player.
 
     ```py
     # The following sets the volume to half of its original.

@@ -1,2 +1,2 @@
-aiohttp[speedups] ~= 3.9
-orjson ~=3.10
+aiohttp[speedups] == 3.9.5
+orjson == 3.10.3

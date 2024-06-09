@@ -10,12 +10,9 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 <br>
 
-!!! warning
-    This voice handler will not be complete, until version **1.0**. Anything prior to it, may have massive breaking changes.
-
 <div class="grid cards" markdown>
 
- -  Hikari
+-  Hikari
 
     ---
 
@@ -23,7 +20,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
     [:material-arrow-right: Learn more](https://hikari-py.dev/)
 
- -  Guides
+-  Guides
 
     ---
 
@@ -31,7 +28,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
     [:material-arrow-right: Learn more](https://hikari-py.dev/)
 
- -  Examples
+-  Examples
 
     ---
 
@@ -41,9 +38,8 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 </div>
 
-
 ## Notable mentions
 
-A big thanks to [Hyper](https://github.com/hypergonial), for their amazing help towards my program :D Would not have been here without them.
+A big thanks to [Hyper](https://github.com/hypergonial/), for their amazing help towards my program :D Would not have been here without them.
 
 Another large thank you to all of the staff and contributors to hikari for their amazing support in my journey of building ongaku.

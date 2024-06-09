@@ -12,8 +12,8 @@ import arc
 import hikari
 
 import ongaku
-from ongaku.ext import checker
 from ongaku.ext import injection
+from ongaku.ext import checker
 
 bot = hikari.GatewayBot("...")
 
@@ -21,7 +21,8 @@ client = arc.GatewayClient(bot)
 
 ongaku_client = ongaku.Client.from_arc(client)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="arc-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -86,21 +87,21 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
-# ╔════════╗
-# ║ Errors ║
-# ╚════════╝
+# ╔═══════════════╗
+# ║ Error Handler ║
+# ╚═══════════════╝
+
 
 @client.set_error_handler()
 async def error_handler(ctx: arc.GatewayContext, exc: Exception):
     if isinstance(exc, arc.GuildOnlyError):
-        await ctx.respond("This command needs to be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond("You must be in a guild to use this command.", flags=hikari.MessageFlag.EPHEMERAL)
         return
     
-    elif isinstance(exc, ongaku.PlayerMissingException):
+    elif isinstance(exc, ongaku.PlayerMissingError):
         await ctx.respond("There is no player playing in this guild.", flags=hikari.MessageFlag.EPHEMERAL)
         return
-    
-    
+
 
 # ╔══════════╗
 # ║ Commands ║
@@ -112,7 +113,7 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception):
 async def play_command(
     ctx: arc.GatewayContext,
     query: arc.Option[str, arc.StrParams("The song you wish to play.")],
-    ongaku_client: ongaku.Client = arc.inject(),
+    music: ongaku.Client = arc.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
@@ -158,9 +159,9 @@ async def play_command(
     )
 
     try:
-        player = await ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
-        player = await ongaku_client.create_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
+    except ongaku.PlayerMissingError:
+        player = ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -184,12 +185,13 @@ async def add_command(
     query: arc.Option[str, arc.StrParams("The song you wish to add.")],
     player: ongaku.Player = arc.inject(),
 ) -> None:
+
     checked_query = await checker.check(query)
 
     if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+        result = await player.session.client.rest.load_track(f"ytsearch:{checked_query.value}")
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await player.session.client.rest.load_track(checked_query.value)
 
     if result is None:
         await ctx.respond(
@@ -209,7 +211,7 @@ async def add_command(
     else:
         tracks.extend(result)
 
-    await player.add(tracks)
+    player.add(tracks)
 
     embed = hikari.Embed(
         title="Tracks added",
@@ -243,7 +245,7 @@ async def pause_command(
 @arc.with_hook(injection.arc_ensure_player)
 @arc.slash_command("queue", "View the queue of the player.")
 async def queue_command(
-    ctx: arc.GatewayContext, 
+    ctx: arc.GatewayContext,
     player: ongaku.Player = arc.inject(),
 ) -> None:
     if len(player.queue) == 0:
@@ -300,7 +302,7 @@ async def skip_command(
 ) -> None:
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.respond(
             "It looks like the queue is empty, so no new songs will be played."
         )

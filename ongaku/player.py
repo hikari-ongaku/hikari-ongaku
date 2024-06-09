@@ -7,6 +7,7 @@ The player function, for all player related things.
 from __future__ import annotations
 
 import random
+import typing
 import typing as t
 from asyncio import TimeoutError
 from asyncio import gather
@@ -14,18 +15,18 @@ from asyncio import gather
 import hikari
 
 from ongaku import errors
-from ongaku.abc.player import PlayerVoice
-from ongaku.abc.track import Track
-from ongaku.enums import TrackEndReasonType
+from ongaku import events
+from ongaku.abc import playlist as playlist_
+from ongaku.abc import track as track_
+from ongaku.abc.events import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
-from ongaku.events import QueueEmptyEvent
-from ongaku.events import QueueNextEvent
 from ongaku.events import TrackEndEvent
+from ongaku.impl.player import Voice
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
-    from ongaku.abc.player import Player as ABCPlayer
+    from ongaku.abc import player as player_
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -56,71 +57,53 @@ class Player:
         self._session = session
         self._guild_id = hikari.Snowflake(guild)
         self._channel_id = None
-
         self._is_alive = False
         self._is_paused = True
-
-        self._queue: list[Track] = []
-
-        self._voice: PlayerVoice | None = None
+        self._voice: player_.Voice | None = None
+        self._state: player_.State | None = None
+        self._queue: typing.MutableSequence[track_.Track] = []
+        self._filters: typing.Mapping[str, typing.Any] = {}
+        self._connected: bool = False
 
         self._session_id: str | None = None
 
-        self._connected: bool = False
-
         self._volume: int = -1
 
-        self._autoplay = True
+        self._autoplay: bool = True
 
         self._position: int = 0
 
         self.app.event_manager.subscribe(TrackEndEvent, self._track_end_event)
-        self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update)
+        self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update_event)
 
     @property
     def session(self) -> Session:
-        """Session.
-
-        The session that is attached to this player.
-        """
+        """The session this player is included in."""
         return self._session
 
     @property
     def app(self) -> hikari.GatewayBotAware:
-        """Application.
-
-        The application attached to this player.
-        """
+        """The session this player is included in."""
         return self.session.client.app
 
     @property
-    def channel_id(self) -> hikari.Snowflake | None:
-        """Channel ID.
-
-        The channel id the player is currently in.
-
-        Returns
-        -------
-        hikari.Snowflake
-            The channel ID
-        None
-            The player is not in a channel.
-        """
-        return self._channel_id
+    def guild_id(self) -> hikari.Snowflake:
+        """The `guild id` this player is attached too."""
+        return self._guild_id
 
     @property
-    def guild_id(self) -> hikari.Snowflake:
-        """Guild ID.
+    def channel_id(self) -> hikari.Snowflake | None:
+        """The `channel id` this player is attached too.
 
-        The guild id attached to this player.
+        `None` if not connected to a channel.
         """
-        return self._guild_id
+        return self._channel_id
 
     @property
     def is_alive(self) -> bool:
         """Is alive.
 
-        Whether the bot is alive or not. True if alive.
+        Whether the player is alive and attached to lavalink.
         """
         return self._is_alive
 
@@ -134,20 +117,15 @@ class Player:
 
     @property
     def volume(self) -> int:
-        """
-        The volume of the player.
+        """The volume of the player.
 
-        !!! note
-            If volume is -1, it has either not been updated, or connected to lavalink.
+        If `-1` the player has not been connected to lavalink and updated.
         """
         return self._volume
 
     @property
     def is_paused(self) -> bool:
-        """Is paused.
-
-        Whether the player is paused or not. True if paused.
-        """
+        """Whether the player is currently paused."""
         return self._is_paused
 
     @property
@@ -162,17 +140,29 @@ class Player:
     def connected(self) -> bool:
         """Connected.
 
-        Whether or not the bot is connected to a voice channel.
+        Whether or not the player is connected to discords gateway.
         """
         return self._connected
 
     @property
-    def queue(self) -> t.Sequence[Track]:
-        """Queue.
-
-        Returns the current queue of tracks.
-        """
+    def queue(self) -> t.Sequence[track_.Track]:
+        """The current queue of tracks."""
         return self._queue
+
+    @property
+    def voice(self) -> player_.Voice | None:
+        """The player's voice state."""
+        return self._voice
+
+    @property
+    def state(self) -> player_.State | None:
+        """The player's player state."""
+        return self._state
+
+    @property
+    def filters(self) -> typing.Mapping[str, typing.Any]:
+        """Filters for the player."""
+        return self._filters
 
     async def connect(
         self,
@@ -182,6 +172,8 @@ class Player:
         deaf: bool = True,
     ) -> None:
         """Connect.
+
+        Connect the current player to a voice channel.
 
         Example
         -------
@@ -194,23 +186,23 @@ class Player:
         channel
             The channel (or channel id) that you wish to connect the bot to.
         mute
-            Whether or not to mute the app.
+            Whether or not to mute the player.
         deaf
-            Whether or not to deafen the app.
+            Whether or not to deafen the player.
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        PlayerConnectException
+        PlayerConnectError
             Raised when the voice state of the bot cannot be updated, or the voice events required could not be received.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -227,7 +219,7 @@ class Player:
                 self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
             )
         except Exception as e:
-            raise errors.PlayerConnectException(str(e))
+            raise errors.PlayerConnectError(str(e))
 
         _logger.log(
             TRACE_LEVEL,
@@ -245,13 +237,13 @@ class Player:
                     timeout=5,
                 ),
             )
-        except TimeoutError as e:
-            raise errors.PlayerConnectException(
+        except TimeoutError:
+            raise errors.PlayerConnectError(
                 f"Could not connect to voice channel {self.channel_id} in {self.guild_id} due to events not being received.",
             )
 
-        if server_event.endpoint is None:
-            raise errors.PlayerConnectException(
+        if server_event.raw_endpoint is None:
+            raise errors.PlayerConnectError(
                 f"Endpoint missing for attempted server connection for voice channel {self.channel_id} in {self.guild_id}",
             )
 
@@ -260,42 +252,35 @@ class Player:
             f"Successfully received events for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._voice = PlayerVoice(
+        new_voice = Voice(
             token=server_event.token,
-            endpoint=server_event.endpoint,
+            endpoint=server_event.raw_endpoint,
             session_id=state_event.state.session_id,
         )
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                voice=self._voice,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        self._voice = new_voice
 
-        self._connected = True
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            voice=new_voice,
+            no_replace=False,
+        )
+
+        self._is_alive = True
 
         _logger.log(
             TRACE_LEVEL,
             f"Successfully connected, and sent data to lavalink for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        await self._update(player)
+        self._update(player)
 
     async def disconnect(self) -> None:
         """
-        Disconnect player.
+        Disconnect.
 
-        Disconnect the player from the lavalink server, and discord.
+        Disconnect the player from the discord channel, and stop the currently playing track.
 
         Example
         -------
@@ -305,20 +290,19 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
-        self._is_alive = False
         await self.clear()
 
         _logger.log(
@@ -326,23 +310,14 @@ class Player:
             f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        try:
-            await self.session.client.rest.delete_player(session, self._guild_id)
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        await self.session.client.rest.delete_player(session, self._guild_id)
 
         _logger.log(
             TRACE_LEVEL,
             f"Successfully deleted player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._connected = False
+        self._is_alive = False
 
         _logger.log(
             TRACE_LEVEL,
@@ -357,7 +332,7 @@ class Player:
         )
 
     async def play(
-        self, track: Track | None = None, requestor: RequestorT | None = None
+        self, track: track_.Track | None = None, requestor: RequestorT | None = None
     ) -> None:
         """Play.
 
@@ -378,55 +353,48 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        PlayerConnectException
+        PlayerConnectError
             Raised when the player is not connected to a channel.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
         if self.channel_id is None:
-            raise errors.PlayerConnectException("Not connected to a channel.")
+            raise errors.PlayerConnectError("Not connected to a channel.")
 
-        if len(self.queue) <= 0 and track == None:
-            raise errors.PlayerQueueException("Queue is empty.")
+        if len(self.queue) == 0 and track is None:
+            raise errors.PlayerQueueError("Queue is empty.")
 
         if track:
             if requestor:
-                track.requestor = hikari.Snowflake(requestor)
+                track._set_requestor = hikari.Snowflake(requestor)
 
             self._queue.insert(0, track)
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                track=self.queue[0],
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            track=self.queue[0],
+            no_replace=False,
+        )
 
         self._is_paused = False
 
-        await self._update(player)
+        self._update(player)
 
-    async def add(
-        self, tracks: t.Sequence[Track] | Track, requestor: RequestorT | None = None
+    def add(
+        self,
+        tracks: t.Sequence[track_.Track] | playlist_.Playlist | track_.Track,
+        requestor: RequestorT | None = None,
     ) -> None:
         """
         Add tracks.
@@ -434,7 +402,8 @@ class Player:
         Add tracks to the queue.
 
         !!! note
-            This will not automatically start playing the songs. please call `.play()` after, with no track, if the player is not already playing.
+            This will not automatically start playing the songs.
+            please call `.play()` after, with no track, if the player is not already playing.
 
         Example
         -------
@@ -454,16 +423,27 @@ class Player:
         if requestor:
             new_requestor = hikari.Snowflake(requestor)
 
-        if isinstance(tracks, Track):
-            if requestor:
-                tracks.requestor = new_requestor
+        track_count = 0
+
+        if isinstance(tracks, track_.Track):
+            if new_requestor:
+                tracks._set_requestor = new_requestor
             self._queue.append(tracks)
+            track_count = 1
             return
 
+        if isinstance(tracks, playlist_.Playlist):
+            tracks = tracks.tracks
+
         for track in tracks:
-            if requestor:
-                track.requestor = new_requestor
+            if new_requestor:
+                track._set_requestor = new_requestor
             self._queue.append(track)
+            track_count += 1
+
+        _logger.log(
+            TRACE_LEVEL, f"Successfully added {track_count} track(s) to {self.guild_id}"
+        )
 
     async def pause(self, value: bool | None = None) -> None:
         """
@@ -472,7 +452,7 @@ class Player:
         Allows for the user to pause the currently playing track on this player.
 
         !!! info
-            `True` will force pause the bot, `False` will force unpause the bot. Leaving it empty, will toggle it from its current state.
+            `True` will force pause the player, `False` will force unpause the player. Leaving it empty, will toggle it from its current state.
 
         Example
         -------
@@ -487,15 +467,15 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -505,20 +485,16 @@ class Player:
         else:
             self._is_paused = not self.is_paused
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session, self.guild_id, paused=self.is_paused
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session, self.guild_id, paused=self.is_paused
+        )
 
-        await self._update(player)
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully set paused state to {self.is_paused} in guild {self.guild_id}",
+        )
+
+        self._update(player)
 
     async def stop(self) -> None:
         """
@@ -537,40 +513,33 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                track=None,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            track=None,
+            no_replace=False,
+        )
 
         self._is_paused = True
 
-        await self._update(player)
+        _logger.log(TRACE_LEVEL, f"Successfully stopped track in guild {self.guild_id}")
 
-    async def shuffle(self) -> None:
+        self._update(player)
+
+    def shuffle(self) -> None:
         """Shuffle.
 
         Shuffle the current queue.
@@ -580,11 +549,11 @@ class Player:
 
         Raises
         ------
-        PlayerQueueException
+        PlayerQueueError
             Raised when the queue has 2 or less tracks in it.
         """
         if len(self.queue) <= 2:
-            raise errors.PlayerQueueException(
+            raise errors.PlayerQueueError(
                 "Queue must have more than 2 tracks to shuffle."
             )
 
@@ -597,6 +566,10 @@ class Player:
         new_queue.insert(0, first_track)
 
         self._queue = new_queue
+
+        _logger.log(
+            TRACE_LEVEL, f"Successfully shuffled queue in guild {self.guild_id}"
+        )
 
     async def skip(self, amount: int = 1) -> None:
         """
@@ -617,72 +590,63 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
         ValueError
             Raised when the amount set is 0 or negative.
-        PlayerQueueException
+        PlayerQueueError
             Raised when the queue is empty.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
-        session = self.session._get_session_id()
-
         if amount <= 0:
             raise ValueError(f"Skip amount cannot be 0 or negative. Value: {amount}")
         if len(self.queue) == 0:
-            raise errors.PlayerQueueException("Queue is empty.")
+            raise errors.PlayerQueueError("Queue is empty.")
 
+        removed_tracks = 0
         for _ in range(amount):
             if len(self._queue) == 0:
                 break
             else:
                 self._queue.pop(0)
+                removed_tracks += 1
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully removed {removed_tracks} track(s) out of {amount} in guild {self.guild_id}",
+        )
+
+        session = self.session._get_session_id()
 
         if len(self.queue) <= 0:
-            try:
-                player = await self.session.client.rest.update_player(
-                    session,
-                    self.guild_id,
-                    track=None,
-                    no_replace=False,
-                )
-            except errors.RestEmptyException:
-                raise
-            except errors.RestStatusException:
-                raise
-            except errors.RestErrorException:
-                raise
-            except errors.BuildException:
-                raise
+            player = await self.session.client.rest.update_player(
+                session,
+                self.guild_id,
+                track=None,
+                no_replace=False,
+            )
 
-            await self._update(player)
+            self._update(player)
         else:
-            try:
-                player = await self.session.client.rest.update_player(
-                    session,
-                    self.guild_id,
-                    track=self.queue[0],
-                    no_replace=False,
-                )
-            except errors.RestEmptyException:
-                raise
-            except errors.RestStatusException:
-                raise
-            except errors.RestErrorException:
-                raise
-            except errors.BuildException:
-                raise
+            player = await self.session.client.rest.update_player(
+                session,
+                self.guild_id,
+                track=self.queue[0],
+                no_replace=False,
+            )
 
-            await self._update(player)
+            self._update(player)
 
-    async def remove(self, value: Track | int) -> None:
+        _logger.log(TRACE_LEVEL, f"Successfully skipped track in {self.guild_id}")
+
+    def remove(self, value: track_.Track | int) -> None:
         """
         Remove track.
 
@@ -704,29 +668,39 @@ class Player:
 
         Raises
         ------
-        PlayerQueueException
+        PlayerQueueError
             Raised when the removal of a track fails.
         """
         if len(self.queue) == 0:
-            raise errors.PlayerQueueException("Queue is empty.")
-
-        if isinstance(value, Track):
-            index = self._queue.index(value)
-
-        else:
-            index = value
+            raise errors.PlayerQueueError("Queue is empty.")
 
         try:
-            self._queue.pop(index)
-        except KeyError:
-            if isinstance(value, Track):
-                raise errors.PlayerQueueException(
+            index = (
+                self._queue.index(value) if isinstance(value, track_.Track) else value
+            )
+        except ValueError:
+            if isinstance(value, track_.Track):
+                raise errors.PlayerQueueError(
                     f"Failed to remove song: {value.info.title}"
                 )
             else:
-                raise errors.PlayerQueueException(
+                raise errors.PlayerQueueError(
                     f"Failed to remove song in position {value}"
                 )
+
+        try:
+            self._queue.pop(index)
+        except IndexError:
+            if isinstance(value, track_.Track):
+                raise errors.PlayerQueueError(
+                    f"Failed to remove song: {value.info.title}"
+                )
+            else:
+                raise errors.PlayerQueueError(
+                    f"Failed to remove song in position {value}"
+                )
+
+        _logger.log(TRACE_LEVEL, f"Successfully removed track in {self.guild_id}")
 
     async def clear(self) -> None:
         """
@@ -742,44 +716,37 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         self._queue.clear()
 
         session = self.session._get_session_id()
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                track=None,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            track=None,
+            no_replace=False,
+        )
 
-        await self._update(player)
+        self._update(player)
 
-    async def set_autoplay(self, enable: bool | None = None) -> bool:
+        _logger.log(TRACE_LEVEL, f"Successfully cleared queue in {self.guild_id}")
+
+    def set_autoplay(self, enable: bool | None = None) -> bool:
         """
         Set autoplay.
 
-        whether or not to enable or disable autoplay.
+        whether to enable or disable autoplay.
 
         Example
         -------
@@ -797,9 +764,10 @@ class Player:
             return self._autoplay
 
         self._autoplay = not self._autoplay
+
         return self._autoplay
 
-    async def set_volume(self, volume: int | None = None) -> None:
+    async def set_volume(self, volume: int = 100) -> None:
         """
         Set the volume.
 
@@ -821,17 +789,17 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
         ValueError
             Raised when the value is below 0, or above 1000.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
@@ -841,32 +809,26 @@ class Player:
                 raise ValueError(f"Volume cannot be below zero. Volume: {volume}")
             if volume > 1000:
                 raise ValueError(f"Volume cannot be above 1000. Volume: {volume}")
-        
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                volume=100 if volume is None else volume,
-                no_replace=False,
-            )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            volume=volume,
+            no_replace=False,
+        )
 
-        await self._update(player)
+        self._update(player)
+
+        _logger.log(
+            TRACE_LEVEL, f"Successfully set volume to {volume} in {self.guild_id}"
+        )
 
     async def set_position(self, value: int) -> None:
         """
-        Change the track position.
+        Set the position.
 
         Change the currently playing track's position.
-        
+
         Example
         -------
         ```py
@@ -880,54 +842,55 @@ class Player:
 
         Raises
         ------
-        SessionStartException
+        SessionStartError
             Raised when the players session has not yet been started.
         ValueError
-            Raised when the position is negative.
-        PlayerQueueException
+            Raised when the position given is negative, or the current tracks length is greater than the length given.
+        PlayerQueueError
             Raised when the queue is empty.
-        RestEmptyException
+        RestEmptyError
             Raised when a return type was requested, yet nothing was received.
-        RestStatusException
+        RestStatusError
             Raised when nothing was received, but a 4XX/5XX error was reported.
-        RestErrorException
+        RestRequestError
             Raised when a rest error is returned with a 4XX/5XX error.
-        BuildException
+        BuildError
             Raised when a construction of a ABC class fails.
         """
         session = self.session._get_session_id()
 
-        if value < 0:
-            raise ValueError("Sorry, but a negative value is not allowed.")
+        if value <= 0:
+            raise ValueError("Negative value is not allowed.")
 
         if len(self.queue) <= 0:
-            raise errors.PlayerQueueException("Queue is empty.")
+            raise errors.PlayerQueueError("Queue is empty.")
 
-        try:
-            player = await self.session.client.rest.update_player(
-                session,
-                self.guild_id,
-                position=value,
-                no_replace=False,
+        if self.queue[0].info.length < value:
+            raise ValueError(
+                "A value greater than the current tracks length is not allowed."
             )
-        except errors.RestEmptyException:
-            raise
-        except errors.RestStatusException:
-            raise
-        except errors.RestErrorException:
-            raise
-        except errors.BuildException:
-            raise
 
-        await self._update(player)
+        player = await self.session.client.rest.update_player(
+            session,
+            self.guild_id,
+            position=value,
+            no_replace=False,
+        )
 
-    async def transfer_player(self, session: Session) -> Player:
-        """Transfer player.
+        self._update(player)
 
-        Transfer this player to another player.
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully set position ({value}) to track in {self.guild_id}",
+        )
+
+    async def transfer(self, session: Session) -> Player:
+        """Transfer.
+
+        Transfer this player to another session.
 
         !!! warning
-            This will kill the current player the function is ran on.
+            This will kill the current player, and return a new player.
 
         Parameters
         ----------
@@ -939,30 +902,41 @@ class Player:
         Player
             The new player.
         """
+        _logger.log(
+            TRACE_LEVEL,
+            f"Attempting to transfer player in {self.guild_id} from session ({self.session.name}) to session ({session.name})",
+        )
+
         new_player = Player(session, self.guild_id)
 
-        await new_player.add(self.queue)
+        new_player.add(self.queue)
 
         if self.connected and self.channel_id:
             await self.disconnect()
 
             await new_player.connect(self.channel_id)
-
-            if not self.is_paused:
+            if self.is_paused is False:
                 await new_player.play()
                 await new_player.set_position(self.position)
 
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully transferred player in {self.guild_id} from session ({self.session.name}) to session ({session.name})",
+        )
+
         return new_player
 
-    async def _update(self, player: ABCPlayer) -> None:
+    def _update(self, player: player_.Player) -> None:
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        self._is_paused = player.is_paused
-        self._voice = player.voice
         self._volume = player.volume
+        self._is_paused = player.is_paused
+        self._state = player.state
+        self._voice = player.voice
+        self._filters = player.filters
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
@@ -970,7 +944,10 @@ class Player:
         if not self.autoplay:
             return
 
-        if event.reason != TrackEndReasonType.FINISHED:
+        if (
+            event.reason != TrackEndReasonType.FINISHED
+            and event.reason != TrackEndReasonType.LOADFAILED
+        ):
             return
 
         _logger.log(
@@ -978,75 +955,70 @@ class Player:
             f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        if int(event.guild_id) == int(self.guild_id):
-            _logger.log(
-                TRACE_LEVEL,
-                f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
-            )
-            try:
-                await self.remove(0)
-            except ValueError:
-                await self.app.event_manager.dispatch(
-                    QueueEmptyEvent(
-                        self.app,
-                        event.client,
-                        event.session,
-                        self.guild_id,
-                    )
-                )
-                return
+        if event.guild_id != self.guild_id:
+            return
+        _logger.log(
+            TRACE_LEVEL,
+            f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
-            if len(self.queue) <= 0:
-                _logger.log(
-                    TRACE_LEVEL,
-                    f"Auto-play has empty queue for channel: {self.channel_id} in guild: {self.guild_id}",
-                )
-                await self.app.event_manager.dispatch(
-                    QueueEmptyEvent(
-                        self.app,
-                        event.client,
-                        event.session,
-                        self.guild_id,
-                    )
-                )
-                return
+        if len(self.queue) == 0:
+            return
 
-            _logger.log(
-                TRACE_LEVEL,
-                f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
+        if len(self.queue) == 1:
+            new_event = events.QueueEmptyEvent.from_session(
+                self.session, self.guild_id, self.queue[0]
             )
 
-            await self.play()
+            self.remove(0)
 
-            await self.app.event_manager.dispatch(
-                QueueNextEvent(
-                    self.app,
-                    event.client,
-                    event.session,
-                    self.guild_id,
-                    self._queue[0],
-                    event.track,
-                )
+            await self.app.event_manager.dispatch(new_event)
+
+            return
+
+        self.remove(0)
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Auto-playing next track for channel: {self.channel_id} in guild: {self.guild_id}. Track title: {self.queue[0].info.title}",
+        )
+
+        await self.play()
+
+        await self.app.event_manager.dispatch(
+            events.QueueNextEvent.from_session(
+                self.session, self.guild_id, self._queue[0], event.track
             )
+        )
 
-            _logger.log(
-                TRACE_LEVEL,
-                f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
-            )
+        _logger.log(
+            TRACE_LEVEL,
+            f"Auto-playing successfully completed for channel: {self.channel_id} in guild: {self.guild_id}",
+        )
 
-    async def _player_update(self, event: PlayerUpdateEvent) -> None:
+    async def _player_update_event(self, event: PlayerUpdateEvent) -> None:
         if event.guild_id != self.guild_id:
             return
 
-        if not event.state.connected:
+        _logger.log(
+            TRACE_LEVEL,
+            f"Updating player state in {self.guild_id}",
+        )
+
+        if not event.state.connected and self.connected:
             await self.stop()
 
-        self._position = event.state.position
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully updated player state in {self.guild_id}",
+        )
+
+        self._state = event.state
 
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
