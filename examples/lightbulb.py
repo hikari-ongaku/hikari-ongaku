@@ -13,7 +13,8 @@ bot = lightbulb.BotApp(token="...f", banner=None)
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="lightbulb-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -139,7 +140,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
     try:
         player = ongaku_client.fetch_player(ctx.guild_id)
     except Exception:
-        player = await ongaku_client.create_player(ctx.guild_id)
+        player = ongaku_client.create_player(ctx.guild_id)
 
     await player.play(track)
 
@@ -328,7 +329,7 @@ async def skip_command(
 
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.respond(
             "It looks like the queue is empty, so no new songs will be played."
         )

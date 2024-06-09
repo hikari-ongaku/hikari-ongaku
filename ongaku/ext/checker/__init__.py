@@ -1,7 +1,7 @@
 """
 Checker.
 
-The extension, that allows you to check if a link is a url, or a video/playlist!
+Allows for you to check if a string is a link or a query.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ __all__ = ("check", "Checked", "CheckedType")
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

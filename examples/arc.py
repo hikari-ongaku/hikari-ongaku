@@ -21,7 +21,8 @@ client = arc.GatewayClient(bot)
 
 ongaku_client = ongaku.Client.from_arc(client)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="arc-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -86,9 +87,9 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
-# ╔══════════╗
-# ║ Commands ║
-# ╚══════════╝
+# ╔═══════════════╗
+# ║ Error Handler ║
+# ╚═══════════════╝
 
 
 @client.set_error_handler()
@@ -97,11 +98,9 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception):
         await ctx.respond("You must be in a guild to use this command.", flags=hikari.MessageFlag.EPHEMERAL)
         return
     
-    elif isinstance(exc, ongaku.PlayerMissingException):
-        await ctx.respond("There was no player found for this guild.", flags=hikari.MessageFlag.EPHEMERAL)
+    elif isinstance(exc, ongaku.PlayerMissingError):
+        await ctx.respond("There is no player playing in this guild.", flags=hikari.MessageFlag.EPHEMERAL)
         return
-    
-    await ctx.respond(f"An unexpected error occurred: {exc}", flags=hikari.MessageFlag.EPHEMERAL)
 
 
 # ╔══════════╗
@@ -160,9 +159,9 @@ async def play_command(
     )
 
     try:
-        player = music.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
-        player = await music.create_player(ctx.guild_id)
+        player = ongaku_client.fetch_player(ctx.guild_id)
+    except ongaku.PlayerMissingError:
+        player = ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -303,7 +302,7 @@ async def skip_command(
 ) -> None:
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.respond(
             "It looks like the queue is empty, so no new songs will be played."
         )

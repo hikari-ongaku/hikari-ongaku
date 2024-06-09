@@ -6,12 +6,16 @@ The session abstract classes.
 
 from __future__ import annotations
 
-from ongaku.abc.bases import PayloadBase
+import abc
+import enum
 
-__all__ = ("Session",)
+__all__ = (
+    "Session",
+    "SessionStatus",
+)
 
 
-class Session(PayloadBase):
+class Session(abc.ABC):
     """
     Session information.
 
@@ -20,15 +24,64 @@ class Session(PayloadBase):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
-    resuming: bool
-    """Whether resuming is enabled for this session or not."""
-    timeout: int
-    """The timeout in seconds."""
+    @property
+    @abc.abstractmethod
+    def resuming(self) -> bool:
+        """Whether resuming is enabled for this session or not."""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def timeout(self) -> int:
+        """The timeout in seconds."""
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Session):
+            return False
+
+        if self.resuming != other.resuming:
+            return False
+
+        if self.timeout != other.timeout:
+            return False
+
+        return True
+
+
+class SessionStatus(int, enum.Enum):
+    """
+    Session Status.
+
+    The status of the session.
+    """
+
+    NOT_CONNECTED = 0
+    """Not connected to the lavalink server."""
+    CONNECTED = 1
+    """Successfully connected to the lavalink server."""
+    FAILURE = 2
+    """A failure occurred connecting to the lavalink server."""
+
+
+class WebsocketOPCode(str, enum.Enum):
+    READY = "ready"
+    PLAYER_UPDATE = "playerUpdate"
+    STATS = "stats"
+    EVENT = "event"
+
+
+class WebsocketEvent(str, enum.Enum):
+    TRACK_START_EVENT = "TrackStartEvent"
+    TRACK_END_EVENT = "TrackEndEvent"
+    TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
+    TRACK_STUCK_EVENT = "TrackStuckEvent"
+    WEBSOCKET_CLOSED_EVENT = "WebSocketClosedEvent"
 
 
 # MIT License
 
-# Copyright (c) 2023 MPlatypus
+# Copyright (c) 2023-present MPlatypus
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

@@ -17,7 +17,7 @@ To install Ongaku, simply run the following:
 pip install hikari-ongaku
 ```
 
-## Where to next?
+## Where to next
 
 <div class="grid cards" markdown>
 
@@ -61,10 +61,10 @@ pip install hikari-ongaku
 
     [:material-arrow-right: Learn more](./injection.md)
 
-
 </div>
 
 ## Q's and A's
+
 Below, will be the most common questions, and some answers to said questions.
 
 <br>

@@ -47,17 +47,17 @@ def format(session: nox.Session) -> None:
 
 @nox.session()
 def pyright(session: nox.Session) -> None:
-    session.install(".")
+    session.install(".[injection, speedups]")
     session.install("-U", "pyright")
-    session.install("-U", "-r", "examples/examples_requirements.txt")
+    session.install("-Ur", "examples/examples_requirements.txt")
     session.run("pyright", PATH_TO_PROJECT, EXAMPLES_PATH)
 
 
 @nox.session()
 def pytest(session: nox.Session) -> None:
-    session.install(".")
-    session.install("-U", "pytest")
-    session.install("-U", "pytest-asyncio")
+    session.install("-U", ".[injection, dev]")
+    session.install("-Ur", "requirements/tests.txt")
+    session.install
     session.run("pytest", "tests")
 
 

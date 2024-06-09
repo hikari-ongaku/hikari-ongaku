@@ -14,7 +14,8 @@ bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikar
 
 ongaku_client = ongaku.Client(bot)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="hikari-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -145,8 +146,8 @@ async def play_command(
 
     try:
         player = ongaku_client.fetch_player(event.guild_id)
-    except ongaku.PlayerMissingException:
-        player = await ongaku_client.create_player(event.guild_id)
+    except ongaku.PlayerMissingError:
+        player = ongaku_client.create_player(event.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -435,7 +436,7 @@ async def skip_command(
 
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await bot.rest.create_message(
             event.channel_id,
             "It looks like the queue is empty, so no new songs will be played.",

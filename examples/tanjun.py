@@ -20,7 +20,8 @@ client = tanjun.Client.from_gateway_bot(bot)
 
 ongaku_client = ongaku.Client.from_tanjun(client)
 
-ongaku_client.add_session(
+ongaku_client.create_session(
+    name="tanjun-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
@@ -146,8 +147,8 @@ async def play_command(
 
     try:
         player = ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingException:
-        player = await ongaku_client.create_player(ctx.guild_id)
+    except ongaku.PlayerMissingError:
+        player = ongaku_client.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
@@ -371,7 +372,7 @@ async def skip_command(
 
     try:
         await player.skip(amount)
-    except ongaku.PlayerQueueException:
+    except ongaku.PlayerQueueError:
         await ctx.create_initial_response(
             "It looks like the queue is empty, so no new songs will be played."
         )
