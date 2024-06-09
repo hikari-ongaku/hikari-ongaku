@@ -10,6 +10,9 @@ hide:
 
 All the changelogs for `hikari-ongaku`.
 
+## **v0.5.1**
+ - Logging removed from imports.
+
 ## **v0.5.0**
 
  - About: Added about, so a few terminal commands can be used, to check the version of ongaku your using, about ongaku, and where it is installed.
