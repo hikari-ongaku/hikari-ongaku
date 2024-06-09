@@ -48,6 +48,9 @@ reportShadowedImports = "warning"
 [tool.ruff]
 extend-exclude = ["examples/*", ".venv/*"]
 
+[tool.ruff.format]
+docstring-code-format = true
+
 [tool.ruff.lint.isort]
 force-single-line = true
 
