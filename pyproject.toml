@@ -1,5 +1,5 @@
 [project]
-name = "hikari-ongaku"
+name = "ongaku"
 description = "A simple voice library, for hikari."
 readme = "README.md"
 authors = [ {name = "mplaty", email = "contact@mplaty.com"} ]
