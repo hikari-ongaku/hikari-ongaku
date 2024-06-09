@@ -33,7 +33,7 @@ All the changelogs for `hikari-ongaku`.
     - Kill players: Sessions now kill, and delete all players when shutting down.
     - request: You can now make requests to a session! simply call `.request()` and add your arguments, and away you go!
 - Player:
-    - Add: Add now supports a singular track, or a sequence of tracks.
+    - Add: Add now supports a singular track, a sequence of tracks or a playlist.
     - Fixed issue where the track would continue playing, if you disconnected the bot.
     - Shuffle: Shuffle the current queue!
     - Volume reset: Allow for you to reset the volume
