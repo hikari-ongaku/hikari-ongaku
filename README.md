@@ -15,40 +15,41 @@ Ongaku is a voice library that allows for playing tracks from a lavalink server,
 Ongaku tries to make everything as simple as possible for new users, but still having full access to add custom plugins and change (or create) session handlers.
 
 ## Current Features
- - Player control
-    - Playlists
-    - Queuing
-        - Adding songs.
-        - Shuffling the queue.
-        - Skipping a song or multiple.
-        - Deleting via position, or a track object.
-        - Clearing the queue.
-    - Seeking/Reversing the tracks position.
-    - Volume control
-    - Setting requestors (users who requested the song.)
- - Events
-    - Ready Event (when a session is online.)
-    - Player Update Event (when a player gets updated.)
-    - Statistics Event (about the server.)
-    - Track Start Event
-    - Track End Event
-    - Track Exception Event
-    - Track Stuck Event
-    - Empty Queue Event
-    - Next Queue Event
- - Sessions
-    - BasicSessionHandler (Gives next available session)
- - Others
-    - Traces (for debugging code.)
-    - Tests (Full test coverage.)
+
+- Player control
+   - Playlists
+   - Queuing
+      - Adding songs.
+      - Shuffling the queue.
+      - Skipping a song or multiple.
+      - Deleting via position, or a track object.
+      - Clearing the queue.
+   - Seeking/Reversing the tracks position.
+   - Volume control
+   - Setting requestors (users who requested the song.)
+- Events
+   - Ready Event (when a session is online.)
+   - Player Update Event (when a player gets updated.)
+   - Statistics Event (about the server.)
+   - Track Start Event
+   - Track End Event
+   - Track Exception Event
+   - Track Stuck Event
+   - Empty Queue Event
+   - Next Queue Event
+- Sessions
+   - BasicSessionHandler (Gives next available session)
+- Others
+   - Traces (for debugging code.)
+   - Tests (Full test coverage.)
 
 ## Future Features
 
- - More session handlers: so there is more methods to use the sessions you have provided.
- - Cache: a method to store information, and fetch it later, from events and rest actions.
- - Filters: support for filters, to change the audio you receive.
- - Changing channels: support for moving to different channels, without leaving and rejoining.
- - Session failures: More control, like seeing why a session failed and allow for reconnecting, or resetting attempts.
+- More session handlers: so there is more methods to use the sessions you have provided.
+- Cache: a method to store information, and fetch it later, from events and rest actions.
+- Filters: support for filters, to change the audio you receive.
+- Changing channels: support for moving to different channels, without leaving and rejoining.
+- Session failures: More control, like seeing why a session failed and allow for reconnecting, or resetting attempts.
 
 ## Installation
 
@@ -138,7 +139,6 @@ For general usage help or questions, see the `#ongaku` channel in the [hikari di
 
 ### Links
 
- - [**Documentation**](https://ongaku.mplaty.com)
- - [**Examples**](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples)
- - [**License**](https://github.com/MPlatypus/hikari-ongaku/blob/main/LICENSE)
-
+- [**Documentation**](https://ongaku.mplaty.com)
+- [**Examples**](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples)
+- [**License**](https://github.com/MPlatypus/hikari-ongaku/blob/main/LICENSE)

@@ -7,7 +7,6 @@ Below is an explanation of how ongaku supports injection.
 
 Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka) for its dependency injection support.
 
-
 === "Arc"
 
     First of all, for the injection to work, you need to use `.from_arc()` client creation
@@ -23,16 +22,19 @@ Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka
     ```py linenums="1"
     bot = hikari.GatewayBot(...)
     ```
+
     This line simply sets up your GatewayBot.
 
     ```py linenums="2"
     client = arc.GatewayClient(bot)
     ```
+
     This sets up the arc client (your command handler.)
 
     ```py linenums="3"
     ongaku_client = ongaku.Client.from_arc(client)
     ```
+
     Finally, this sets up ongaku's client.
 
     Now, there is a few ways to use ongaku's client.
@@ -54,7 +56,7 @@ Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka
 
     ```
     pip install ongaku[arc]
-    ```    
+    ```
 
     Then, you can do the following:
 
@@ -73,7 +75,7 @@ Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka
         ) -> None:
             ...
         ```
-    
+
     === "Optional player"
 
         This method allows for an optional player.
@@ -88,10 +90,6 @@ Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka
         ```
 
     You can still get the client from a player, simply by using `player.client`
-
-
-
-
 
 === "Tanjun"
 
@@ -108,22 +106,25 @@ Ongaku relies on the framework [alluka](https://github.com/FasterSpeeding/Alluka
     ```py linenums="1"
     bot = hikari.GatewayBot(...)
     ```
+
     This line simply sets up your GatewayBot.
 
     ```py linenums="2"
     client = tanjun.Client.from_gateway_bot(bot)
     ```
+
     This sets up the tanjun client (your command handler.)
 
     ```py linenums="3"
     ongaku_client = ongaku.Client.from_tanjun(client)
     ```
+
     Finally, this sets up ongaku's client.
 
     ```py linenums="1"
     @tanjun.as_slash_command("name", "description")
     async def some_command(
-        ctx: tanjun.abc.SlashContext, 
+        ctx: tanjun.abc.SlashContext,
         ongaku_client: ongaku.Client = alluka.inject()
     ) -> None:
         ...

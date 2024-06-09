@@ -7,7 +7,7 @@ description: All player functions, and general information
 
 Below, is an explanation of all the available functions for the player, and example usages.
 
-## Creating and fetching a player.
+## Creating and fetching a player
 
 If you have followed the guide from [Client as State](./client.md) the following methods will work for fetching the player.
 
@@ -22,8 +22,7 @@ If you have followed the guide from [Client as State](./client.md) the following
             await ctx.respond("The player could not be created.")
             return
             # Or possibly raise an error when it fails to fetch the player.
-        
-        
+
         # Do stuff with the player.
     ```
 
@@ -39,8 +38,7 @@ If you have followed the guide from [Client as State](./client.md) the following
                 await ctx.respond("The player could not be created.")
                 return
                 # Or possibly raise an error when it fails to fetch the player.
-            
-            
+
             # Do stuff with the player.
     ```
 
@@ -56,8 +54,7 @@ If you have followed the guide from [Client as State](./client.md) the following
             await ctx.respond("The player could not be created.")
             return
             # Or possibly raise an error when it fails to fetch the player.
-        
-        
+
         # Do stuff with the player.
     ```
 
@@ -76,8 +73,7 @@ If you have followed the guide from [Client as State](./client.md) the following
             await ctx.create_initial_response("The player could not be created.")
             return
             # Or possibly raise an error when it fails to fetch the player.
-        
-        
+
         # Do stuff with the player.
     ```
 
@@ -93,9 +89,7 @@ Getting tracks, uses a rest method. There is a few methods of fetching a track (
     This method allows for the user to search on a platform for a track.
 
     ```py
-
     track = await client.rest.load_track(...)
-
     ```
 
     You need to replace the `...` with a link, or a track with a searching parameter, then followed by the query.
@@ -128,7 +122,7 @@ Getting tracks, uses a rest method. There is a few methods of fetching a track (
 
 All of the functions you can do to a player.
 
-### Connecting and disconnecting.
+### Connecting and disconnecting
 
 #### Connecting
 
@@ -176,7 +170,6 @@ You can also mute and deafen the bot.
 !!! tip
     Replace `channel_id` with a [GuildVoiceChannel](https://docs.hikari-py.dev/en/latest/reference/hikari/channels/#hikari.channels.GuildVoiceChannel) or a integer of the channel id!
 
-
 #### Disconnecting
 
 You can disconnect and stop the player, via the following methods.
@@ -184,7 +177,6 @@ You can disconnect and stop the player, via the following methods.
 ```py
 await player.disconnect()
 ```
-
 
 ### Play
 
@@ -209,10 +201,9 @@ using the play method, has two different usages.
     ```
 
 ??? note "What is `...`"
-    
     replace the `...` with a track. Need help getting a track? check [here](#getting-tracks)
-    
-!!! note 
+
+!!! note
     `.play()` does not support multiple tracks. That is why the with .add() method exists.
 
 !!! warning
@@ -229,7 +220,6 @@ player.add(...)
 ```
 
 ??? note "What is `...`"
-    
     replace the `...` with a track (or multiple tracks). Need help getting a track? check [here](#getting-tracks)
 
 ### Pause
@@ -238,7 +228,7 @@ Pausing, allows for you to play/pause the current track playing on the bot.
 There is a few options for pausing the tracks.
 
 === "Force playing"
-    
+
     The following method will force play the player, whether it is playing or not.
 
     ```py
@@ -246,7 +236,7 @@ There is a few options for pausing the tracks.
     ```
 
 === "Force pausing"
-    
+
     The following method will force pause the player, whether it is playing or not.
 
     ```py
@@ -269,7 +259,7 @@ Stopping the track, tells the lavalink player to play no song.
 await player.stop()
 ```
 
-!!! note 
+!!! note
     This does not touch any of the tracks in the queue.
 
 ### Shuffle
@@ -301,7 +291,7 @@ Skipping songs allows for you to skip one, or multiple songs.
 
     The following code allows for skipping one or more tracks.
 
-    ```py 
+    ```py
     # This will skip 3 songs in the queue, starting from the first, playing track.
     await player.skip(3)
     ```
@@ -334,7 +324,8 @@ This allows for removing tracks. You can remove it via a track object, position 
 
 ### Clear
 
-This is basically the same as removing tracks, except it removes all tracks from the queue, and stops the player.
+This is very similar to the [Remove](#remove).
+It removes all tracks from the queue, and stops the player.
 
 ```py
 await player.clear()
@@ -344,10 +335,10 @@ await player.clear()
 
 This allows you to toggle autoplay on or off.
 
-Autoplay is a feature, that when one track ends in the guild, the next track in the queue (if it exists) will start playing.
+Autoplay allows for playing the next track in the queue when the previous one ends.
 
 === "Force enable"
-    
+
     The following method will set autoplay to on.
 
     ```py
@@ -355,7 +346,7 @@ Autoplay is a feature, that when one track ends in the guild, the next track in 
     ```
 
 === "Force pausing"
-    
+
     The following method will set autoplay to off.
 
     ```py
@@ -376,7 +367,7 @@ This allows you to change the volume of the player.
 
 === "Change"
 
-    This allows you to change the volume of the player. 
+    This allows you to change the volume of the player.
 
     ```py
     # The following sets the volume to half of its original.

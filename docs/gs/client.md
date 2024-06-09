@@ -19,7 +19,7 @@ Below is some examples of how to use the client within a bot setup.
     @arc.slash_command("name", "description")
     async def some_command(ctx: arc.GatewayContext, client: ongaku.Client = arc.inject()) -> None:
         player = await client.fetch_player(...)
-        
+
         await player.play(...)
     ```
 
@@ -49,7 +49,7 @@ Below is some examples of how to use the client within a bot setup.
     ```
 
 === "Lightbulb"
-    
+
     The best method for adding ongaku to lightbulb, is to use the datastore.
 
     ```py
@@ -85,6 +85,6 @@ Below is some examples of how to use the client within a bot setup.
     @tanjun.as_slash_command("name", "description")
     async def some_command(ctx: tanjun.abc.SlashContext, client: ongaku.Client = alluka.inject()) -> None:
         player = await client.fetch_player(...)
-        
+
         await player.play(...)
     ```

@@ -2,11 +2,6 @@
 hide:
   - navigation
   - toc
-social:
-   cards_layout: default/only/image
-   cards_layout_options:
-      background_image: docs/assets/home_page_social_card.png
-      description: A simple voice handler for hikari
 ---
 
 # Home
@@ -17,7 +12,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 <div class="grid cards" markdown>
 
- -  Hikari
+-  Hikari
 
     ---
 
@@ -25,7 +20,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
     [:material-arrow-right: Learn more](https://hikari-py.dev/)
 
- -  Guides
+-  Guides
 
     ---
 
@@ -33,7 +28,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
     [:material-arrow-right: Learn more](https://hikari-py.dev/)
 
- -  Examples
+-  Examples
 
     ---
 
@@ -43,9 +38,8 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 </div>
 
-
 ## Notable mentions
 
-A big thanks to [Hyper](https://github.com/hypergonial), for their amazing help towards my program :D Would not have been here without them.
+A big thanks to [Hyper](https://github.com/hypergonial/), for their amazing help towards my program :D Would not have been here without them.
 
 Another large thank you to all of the staff and contributors to hikari for their amazing support in my journey of building ongaku.
