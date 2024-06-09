@@ -15,9 +15,6 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
 <br>
 
-!!! warning
-    This voice handler will not be complete, until version **1.0**. Anything prior to it, may have massive breaking changes.
-
 <div class="grid cards" markdown>
 
  -  Hikari
