@@ -1,5 +1,5 @@
 pytest == 8.2.1
 mock == 5.1.0
-orjson == 3.10.3
+orjson == 3.10.4
 pytest-asyncio == 0.23.7
 pytest-aiohttp == 1.0.5
