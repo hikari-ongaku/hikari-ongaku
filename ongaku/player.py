@@ -265,6 +265,7 @@ class Player:
             self.guild_id,
             voice=new_voice,
             no_replace=False,
+            session=self.session,
         )
 
         self._is_alive = True
@@ -310,7 +311,9 @@ class Player:
             f"Attempting to delete player for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        await self.session.client.rest.delete_player(session, self._guild_id)
+        await self.session.client.rest.delete_player(
+            session, self._guild_id, session=self.session
+        )
 
         _logger.log(
             TRACE_LEVEL,
@@ -385,6 +388,7 @@ class Player:
             self.guild_id,
             track=self.queue[0],
             no_replace=False,
+            session=self.session,
         )
 
         self._is_paused = False
@@ -486,7 +490,7 @@ class Player:
             self._is_paused = not self.is_paused
 
         player = await self.session.client.rest.update_player(
-            session, self.guild_id, paused=self.is_paused
+            session, self.guild_id, paused=self.is_paused, session=self.session
         )
 
         _logger.log(
@@ -527,10 +531,7 @@ class Player:
         session = self.session._get_session_id()
 
         player = await self.session.client.rest.update_player(
-            session,
-            self.guild_id,
-            track=None,
-            no_replace=False,
+            session, self.guild_id, track=None, no_replace=False, session=self.session
         )
 
         self._is_paused = True
@@ -631,6 +632,7 @@ class Player:
                 self.guild_id,
                 track=None,
                 no_replace=False,
+                session=self.session,
             )
 
             self._update(player)
@@ -640,6 +642,7 @@ class Player:
                 self.guild_id,
                 track=self.queue[0],
                 no_replace=False,
+                session=self.session,
             )
 
             self._update(player)
@@ -732,10 +735,7 @@ class Player:
         session = self.session._get_session_id()
 
         player = await self.session.client.rest.update_player(
-            session,
-            self.guild_id,
-            track=None,
-            no_replace=False,
+            session, self.guild_id, track=None, no_replace=False, session=self.session
         )
 
         self._update(player)
@@ -815,6 +815,7 @@ class Player:
             self.guild_id,
             volume=volume,
             no_replace=False,
+            session=self.session,
         )
 
         self._update(player)
@@ -875,6 +876,7 @@ class Player:
             self.guild_id,
             position=value,
             no_replace=False,
+            session=self.session,
         )
 
         self._update(player)
