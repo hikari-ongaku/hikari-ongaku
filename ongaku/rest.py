@@ -135,7 +135,7 @@ class RESTClient:
                 try:
                     tracks.append(self._client.entity_builder.build_track(track))
                 except Exception as e:
-                    raise errors.BuildError(str(e))
+                    raise errors.BuildError(e)
 
             build = tracks
 
@@ -144,17 +144,19 @@ class RESTClient:
             try:
                 build = self._client.entity_builder.build_track(response["data"])
             except Exception as e:
-                raise errors.BuildError(str(e))
+                raise errors.BuildError(e)
 
         elif load_type == "playlist":
             _logger.log(TRACE_LEVEL, "loadType was a playlist link.")
             try:
                 build = self._client.entity_builder.build_playlist(response["data"])
             except Exception as e:
-                raise errors.BuildError(str(e))
+                raise errors.BuildError(e)
 
         else:
-            raise errors.BuildError(f"An unknown loadType was received: {load_type}")
+            raise errors.BuildError(
+                None, f"An unknown loadType was received: {load_type}"
+            )
 
         return build
 
@@ -222,7 +224,7 @@ class RESTClient:
         try:
             return self._client.entity_builder.build_track(response)
         except Exception as e:
-            raise errors.BuildError(str(e))
+            raise errors.BuildError(e)
 
     async def decode_tracks(
         self, tracks: typing.Sequence[str], *, session: Session | None = None
@@ -295,7 +297,7 @@ class RESTClient:
             try:
                 new_tracks.append(self._client.entity_builder.build_track(track))
             except Exception as e:
-                raise errors.BuildError(str(e))
+                raise errors.BuildError(e)
 
         return new_tracks
 
