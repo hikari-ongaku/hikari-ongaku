@@ -132,6 +132,7 @@ class TestPlayer:
                 Snowflake(1234567890),
                 voice=voice,
                 no_replace=False,
+                session=ongaku_session,
             )
 
             assert ongaku_player.voice is not None
@@ -199,6 +200,7 @@ class TestPlayer:
                 Snowflake(1234567890),
                 voice=Voice("token", "raw_endpoint", "session_id"),
                 no_replace=False,
+                session=ongaku_session,
             )
 
             await ongaku_player.disconnect()
@@ -206,7 +208,9 @@ class TestPlayer:
             patched_clear.assert_called_once()
 
             patched_delete.assert_called_once_with(
-                ongaku_session._get_session_id(), Snowflake(1234567890)
+                ongaku_session._get_session_id(),
+                Snowflake(1234567890),
+                session=ongaku_session,
             )
 
             assert ongaku_player.is_alive is False
@@ -238,15 +242,16 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             await ongaku_player.play(track, Snowflake(123454321))
 
-            patched_request.assert_called_once_with(
+            patched_update.assert_called_once_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 track=track,
                 no_replace=False,
+                session=ongaku_session,
             )
 
             assert ongaku_player.is_paused is False
@@ -288,7 +293,6 @@ class TestPlayer:
     @pytest.mark.asyncio
     async def test_add(
         self,
-        ongaku_session: Session,
         track_info: TrackInfo,
         track: Track,
         ongaku_player: Player,
@@ -359,12 +363,15 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             await ongaku_player.pause(True)
 
-            patched_request.assert_called_once_with(
-                ongaku_session._get_session_id(), Snowflake(1234567890), paused=True
+            patched_update.assert_called_once_with(
+                ongaku_session._get_session_id(),
+                Snowflake(1234567890),
+                paused=True,
+                session=ongaku_session,
             )
 
     @pytest.mark.asyncio
@@ -388,21 +395,20 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             await ongaku_player.stop()
 
-            patched_request.assert_called_once_with(
+            patched_update.assert_called_once_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 track=None,
                 no_replace=False,
+                session=ongaku_session,
             )
 
     @pytest.mark.asyncio
-    async def test_shuffle(
-        self, ongaku_session: Session, track: Track, ongaku_player: Player
-    ):
+    async def test_shuffle(self, track: Track, ongaku_player: Player):
         tracks: list[Track] = [  # So many tracks are placed here, to ensure
             mock.Mock(encoded="test_track_1"),
             mock.Mock(encoded="test_track_2"),
@@ -463,7 +469,7 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             tracks: list[Track] = [
                 mock.Mock(encoded="test_track_1"),
@@ -476,11 +482,12 @@ class TestPlayer:
 
             await ongaku_player.skip()
 
-            patched_request.assert_called_with(
+            patched_update.assert_called_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 track=tracks[1],
                 no_replace=False,
+                session=ongaku_session,
             )
 
             assert len(ongaku_player.queue) == 1
@@ -489,11 +496,12 @@ class TestPlayer:
 
             await ongaku_player.skip()
 
-            patched_request.assert_called_with(
+            patched_update.assert_called_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 track=None,
                 no_replace=False,
+                session=ongaku_session,
             )
 
             assert len(ongaku_player.queue) == 0
@@ -563,7 +571,7 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             tracks: list[Track] = [track, mock.Mock(encoded="test_track_2")]
 
@@ -573,11 +581,12 @@ class TestPlayer:
 
             await ongaku_player.clear()
 
-            patched_request.assert_called_once_with(
+            patched_update.assert_called_once_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 track=None,
                 no_replace=False,
+                session=ongaku_session,
             )
 
             assert len(ongaku_player.queue) == 0
@@ -616,28 +625,30 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             # set volume to a value
 
             await ongaku_player.set_volume(250)
 
-            patched_request.assert_called_with(
+            patched_update.assert_called_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 volume=250,
                 no_replace=False,
+                session=ongaku_session,
             )
 
             # Reset volume
 
             await ongaku_player.set_volume()
 
-            patched_request.assert_called_with(
+            patched_update.assert_called_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 volume=100,
                 no_replace=False,
+                session=ongaku_session,
             )
 
         # Give negative number
@@ -680,7 +691,7 @@ class TestPlayer:
                     mock.Mock(),
                     {},
                 ),
-            ) as patched_request,
+            ) as patched_update,
         ):
             ongaku_player.add(track)
 
@@ -688,11 +699,12 @@ class TestPlayer:
 
             await ongaku_player.set_position(10)
 
-            patched_request.assert_called_once_with(
+            patched_update.assert_called_once_with(
                 ongaku_session._get_session_id(),
                 Snowflake(1234567890),
                 position=10,
                 no_replace=False,
+                session=ongaku_session,
             )
 
         # Negative number provided
@@ -806,6 +818,7 @@ class TestPlayer:
                 Snowflake(1234567890),
                 voice=Voice("token", "raw_endpoint", "session_id"),
                 no_replace=False,
+                session=new_session,
             )
 
             # Check .play() method of the new player was called.
@@ -814,6 +827,7 @@ class TestPlayer:
                 Snowflake(1234567890),
                 track=tracks[0],
                 no_replace=False,
+                session=new_session,
             )
 
             # Check .set_position() method of the new player was called.
@@ -822,6 +836,7 @@ class TestPlayer:
                 Snowflake(1234567890),
                 position=30,
                 no_replace=False,
+                session=new_session,
             )
 
     @pytest.mark.asyncio
