@@ -86,6 +86,7 @@ class BasicSessionHandler(handler_.SessionHandler):
                 return self._sessions[name]
             except KeyError:
                 raise errors.SessionMissingError
+
         if self._current_session:
             return self._current_session
 
