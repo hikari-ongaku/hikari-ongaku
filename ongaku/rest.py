@@ -24,6 +24,7 @@ if typing.TYPE_CHECKING:
     from ongaku.abc.routeplanner import RoutePlannerStatus
     from ongaku.abc.statistics import Statistics
     from ongaku.abc.track import Track
+    from ongaku.session import Session
 
 _logger = logger.getChild("rest")
 
@@ -48,7 +49,7 @@ class RESTClient:
         self._client = client
 
     async def load_track(  # noqa: C901
-        self, query: str
+        self, query: str, *, session: Session | None = None
     ) -> Playlist | typing.Sequence[Track] | Track | None:
         """
         Load tracks.
@@ -69,6 +70,8 @@ class RESTClient:
         ----------
         query
             The query for the search/link.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -102,7 +105,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method, route.path, dict, params={"identifier": query}
@@ -154,7 +158,9 @@ class RESTClient:
 
         return build
 
-    async def decode_track(self, track: str) -> Track:
+    async def decode_track(
+        self, track: str, *, session: Session | None = None
+    ) -> Track:
         """
         Decode a track.
 
@@ -174,6 +180,8 @@ class RESTClient:
         ----------
         track
             The BASE64 code, from a previously encoded track.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -201,7 +209,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method, route.path, dict, params={"encodedTrack": track}
@@ -210,10 +219,13 @@ class RESTClient:
         if response is None:
             raise ValueError("Response is required for this request.")
 
-        return self._client.entity_builder.build_track(response)
+        try:
+            return self._client.entity_builder.build_track(response)
+        except Exception as e:
+            raise errors.BuildError(str(e))
 
     async def decode_tracks(
-        self, tracks: typing.Sequence[str]
+        self, tracks: typing.Sequence[str], *, session: Session | None = None
     ) -> typing.Sequence[Track]:
         """
         Decode tracks.
@@ -234,6 +246,8 @@ class RESTClient:
         ----------
         tracks
             The BASE64 codes, from all the previously encoded tracks.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -261,7 +275,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -277,11 +292,16 @@ class RESTClient:
         new_tracks: list[Track] = []
 
         for track in response:
-            new_tracks.append(self._client.entity_builder.build_track(track))
+            try:
+                new_tracks.append(self._client.entity_builder.build_track(track))
+            except Exception as e:
+                raise errors.BuildError(str(e))
 
         return new_tracks
 
-    async def fetch_players(self, session_id: str) -> typing.Sequence[Player]:
+    async def fetch_players(
+        self, session_id: str, *, session: Session | None = None
+    ) -> typing.Sequence[Player]:
         """
         Fetch all players.
 
@@ -302,6 +322,8 @@ class RESTClient:
         ----------
         session_id
             The Session ID that the players are attached too.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -329,7 +351,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -348,7 +371,11 @@ class RESTClient:
         return players
 
     async def fetch_player(
-        self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
+        self,
+        session_id: str,
+        guild: hikari.SnowflakeishOr[hikari.Guild],
+        *,
+        session: Session | None = None,
     ) -> Player:
         """
         Fetch a player.
@@ -371,6 +398,8 @@ class RESTClient:
             The Session ID that the players are attached too.
         guild
             The `guild` or `guild id` that the player is attached to.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -398,7 +427,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -411,7 +441,7 @@ class RESTClient:
 
         return self._client.entity_builder.build_player(response)
 
-    async def update_player(
+    async def update_player(  # noqa: C901
         self,
         session_id: str,
         guild: hikari.SnowflakeishOr[hikari.Guild],
@@ -423,6 +453,7 @@ class RESTClient:
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
         voice: hikari.UndefinedOr[Voice] = hikari.UNDEFINED,
         no_replace: bool = True,
+        session: Session | None = None,
     ) -> Player:
         """
         Fetch a player.
@@ -464,6 +495,8 @@ class RESTClient:
             The player voice object you wish to set.
         no_replace
             Whether or not the track can be replaced.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -550,7 +583,8 @@ class RESTClient:
             str(route),
         )
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -567,7 +601,10 @@ class RESTClient:
         return self._client.entity_builder.build_player(response)
 
     async def delete_player(
-        self, session_id: str, guild: hikari.SnowflakeishOr[hikari.Guild]
+        self,
+        session_id: str,
+        guild: hikari.SnowflakeishOr[hikari.Guild],
+        session: Session | None = None,
     ) -> None:
         """
         Delete a player.
@@ -588,6 +625,8 @@ class RESTClient:
             The Session ID that the players are attached too.
         guild
             The `guild` or `guild id` that the player is attached to.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -608,7 +647,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         await session.request(
             route.method,
@@ -622,6 +662,7 @@ class RESTClient:
         *,
         resuming: bool | None = None,
         timeout: int | None = None,
+        session: Session | None = None,
     ) -> session_.Session:
         """
         Update Lavalink session.
@@ -644,6 +685,8 @@ class RESTClient:
             Whether resuming is enabled for this session or not.
         timeout
             The timeout in seconds (default is 60s)
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -671,7 +714,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         data: typing.MutableMapping[str, typing.Any] = {}
 
@@ -694,7 +738,7 @@ class RESTClient:
 
         return self._client.entity_builder.build_session(response)
 
-    async def fetch_info(self) -> Info:
+    async def fetch_info(self, *, session: Session | None = None) -> Info:
         """
         Get information.
 
@@ -709,6 +753,11 @@ class RESTClient:
 
         print(info.version.semver)
         ```
+
+        Parameters
+        ----------
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -736,7 +785,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -749,7 +799,7 @@ class RESTClient:
 
         return self._client.entity_builder.build_info(response)
 
-    async def fetch_version(self) -> str:
+    async def fetch_version(self, *, session: Session | None = None) -> str:
         """
         Get version.
 
@@ -764,6 +814,11 @@ class RESTClient:
 
         print(version)
         ```
+
+        Parameters
+        ----------
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -789,7 +844,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(route.method, route.path, str, version=False)
 
@@ -798,7 +854,7 @@ class RESTClient:
 
         return response
 
-    async def fetch_stats(self) -> Statistics:
+    async def fetch_stats(self, *, session: Session | None = None) -> Statistics:
         """
         Get statistics.
 
@@ -816,6 +872,11 @@ class RESTClient:
 
         print(stats.players)
         ```
+
+        Parameters
+        ----------
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -843,7 +904,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         response = await session.request(
             route.method,
@@ -856,7 +918,9 @@ class RESTClient:
 
         return self._client.entity_builder.build_statistics(response)
 
-    async def fetch_routeplanner_status(self) -> RoutePlannerStatus | None:
+    async def fetch_routeplanner_status(
+        self, *, session: Session | None = None
+    ) -> RoutePlannerStatus | None:
         """
         Fetch routeplanner status.
 
@@ -872,6 +936,11 @@ class RESTClient:
         if routeplanner_status:
             print(routeplanner_status.class_type.name)
         ```
+
+        Parameters
+        ----------
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -901,7 +970,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         try:
             response = await session.request(
@@ -917,7 +987,9 @@ class RESTClient:
 
         return self._client.entity_builder.build_routeplanner_status(response)
 
-    async def update_routeplanner_address(self, address: str) -> None:
+    async def update_routeplanner_address(
+        self, address: str, *, session: Session | None = None
+    ) -> None:
         """
         Free routeplanner address.
 
@@ -935,6 +1007,8 @@ class RESTClient:
         ----------
         address
             The address you wish to free.
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -955,11 +1029,14 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         await session.request(route.method, route.path, None, json={"address": address})
 
-    async def update_all_routeplanner_addresses(self) -> None:
+    async def update_all_routeplanner_addresses(
+        self, *, session: Session | None = None
+    ) -> None:
         """
         Free all routeplanner addresses.
 
@@ -972,6 +1049,11 @@ class RESTClient:
         ```py
         await client.rest.update_all_routeplanner_addresses()
         ```
+
+        Parameters
+        ----------
+        session
+            If provided, the session to use for this request.
 
         Raises
         ------
@@ -992,7 +1074,8 @@ class RESTClient:
 
         _logger.log(TRACE_LEVEL, str(route))
 
-        session = self._client.session_handler.fetch_session()
+        if not session:
+            session = self._client.session_handler.fetch_session()
 
         await session.request(
             route.method,
