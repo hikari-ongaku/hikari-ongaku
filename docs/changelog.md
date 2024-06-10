@@ -10,6 +10,11 @@ hide:
 
 All the changelogs for `hikari-ongaku`.
 
+## **v1.0.1**
+
+- Import issue: Moved back to `setup.py` as its much more stable, and does not have weird errors.
+- Documentation: Cleaned up issue in 1.0.0 changelog.
+
 ## **v1.0.0**
 - JSON -> ORJSON: switched libraries, due to performance increases. (only if you do `pip install ongaku[speedups]`, which also enables a few other performance improvers.)
 - SearchResult -> typing.Sequence[Track]: This has been changed, so there is less boilerplate within ongaku. This may break your code, so please check it.
