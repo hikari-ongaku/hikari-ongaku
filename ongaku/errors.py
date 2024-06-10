@@ -237,7 +237,10 @@ class PlayerMissingError(PlayerError):
 class BuildError(OngakuError):
     """Raised when a abstract class fails to build."""
 
-    reason: str | None
+    exception: Exception | None
+    """The exception raised to receive the build error."""
+
+    reason: str | None = None
     """The reason for the failure of the build."""
 
 
