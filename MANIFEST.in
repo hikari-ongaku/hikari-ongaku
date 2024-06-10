@@ -1,8 +1,11 @@
 graft ongaku
 include LICENSE
 include requirements.txt
-include doc_requirements.txt
-include dev_requirements.txt
+include requirements/dev.txt
+include requirements/doc.txt
+include requirements/injection.txt
+include requirements/speedups.txt
+include requirements/tests.txt
 include setup.py
 include README.md
 global-exclude *.py[cod]
