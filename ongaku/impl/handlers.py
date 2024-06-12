@@ -35,6 +35,12 @@ class BasicSessionHandler(handler_.SessionHandler):
     If it closes or fails, it switches to the next available one.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_current_session",
+        "_sessions",
+        "_players",
+    )
+
     def __init__(self, client: Client) -> None:
         self._client = client
         self._is_alive = False
@@ -44,20 +50,23 @@ class BasicSessionHandler(handler_.SessionHandler):
 
     @property
     def sessions(self) -> typing.Sequence[Session]:
+        """The sessions attached to this handler."""
         return tuple(self._sessions.values())
 
     @property
     def players(self) -> typing.Sequence[Player]:
+        """The players attached to this handler."""
         return tuple(self._players.values())
 
     @property
     def is_alive(self) -> bool:
+        """Whether the handler is alive or not."""
         return self._is_alive
 
     async def start(self) -> None:
         self._is_alive = True
 
-        for session in self.sessions:
+        for _, session in self._sessions.items():
             if session.status == session_.SessionStatus.NOT_CONNECTED:
                 await session.start()
 

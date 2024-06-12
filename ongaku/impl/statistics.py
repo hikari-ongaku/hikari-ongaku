@@ -6,12 +6,23 @@ The statistics implemented classes.
 
 from __future__ import annotations
 
+import typing
+
 from ongaku.abc import statistics as statistics_
 
 __all__ = ("Statistics", "Memory", "Cpu", "FrameStatistics")
 
 
 class Statistics(statistics_.Statistics):
+    __slots__: typing.Sequence[str] = (
+        "_players",
+        "_playing_players",
+        "_uptime",
+        "_memory",
+        "_cpu",
+        "_frame_statistics",
+    )
+
     def __init__(
         self,
         players: int,
@@ -30,26 +41,32 @@ class Statistics(statistics_.Statistics):
 
     @property
     def players(self) -> int:
+        """The amount of players connected to the session."""
         return self._players
 
     @property
     def playing_players(self) -> int:
+        """The amount of players playing a track."""
         return self._playing_players
 
     @property
     def uptime(self) -> int:
+        """The uptime of the session in milliseconds."""
         return self._uptime
 
     @property
     def memory(self) -> statistics_.Memory:
+        """The memory stats of the session."""
         return self._memory
 
     @property
     def cpu(self) -> statistics_.Cpu:
+        """The CPU stats of the session."""
         return self._cpu
 
     @property
     def frame_stats(self) -> statistics_.FrameStatistics | None:
+        """The frame statistics of the session."""
         return self._frame_statistics
 
 
@@ -60,22 +77,6 @@ class Memory(statistics_.Memory):
         self._allocated = allocated
         self._reservable = reservable
 
-    @property
-    def free(self) -> int:
-        return self._free
-
-    @property
-    def used(self) -> int:
-        return self._used
-
-    @property
-    def allocated(self) -> int:
-        return self._allocated
-
-    @property
-    def reservable(self) -> int:
-        return self._reservable
-
 
 class Cpu(statistics_.Cpu):
     def __init__(self, cores: int, system_load: float, lavalink_load: float) -> None:
@@ -83,36 +84,12 @@ class Cpu(statistics_.Cpu):
         self._system_load = system_load
         self._lavalink_load = lavalink_load
 
-    @property
-    def cores(self) -> int:
-        return self._cores
-
-    @property
-    def system_load(self) -> float:
-        return self._system_load
-
-    @property
-    def lavalink_load(self) -> float:
-        return self._lavalink_load
-
 
 class FrameStatistics(statistics_.FrameStatistics):
     def __init__(self, sent: int, nulled: int, deficit: int) -> None:
         self._sent = sent
         self._nulled = nulled
         self._deficit = deficit
-
-    @property
-    def sent(self) -> int:
-        return self._sent
-
-    @property
-    def nulled(self) -> int:
-        return self._nulled
-
-    @property
-    def deficit(self) -> int:
-        return self._deficit
 
 
 # MIT License

@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import typing
 
-import attrs
-
 from ongaku.abc import errors as errors_
 
 if typing.TYPE_CHECKING:
@@ -39,7 +37,6 @@ __all__ = (
 )
 
 
-@attrs.define
 class OngakuError(Exception):
     """The base ongaku error."""
 
@@ -47,24 +44,41 @@ class OngakuError(Exception):
 # Rest:
 
 
-@attrs.define
 class RestError(OngakuError):
     """The base rest error for all rest action errors."""
 
 
-@attrs.define
 class RestStatusError(RestError):
     """Raised when the status is 4XX or 5XX."""
 
-    status: int
-    """The status of the response."""
-    reason: str | None
-    """The response of the Error."""
+    __slots__: typing.Sequence[str] = ("_status", "_reason")
+
+    def __init__(self, status: int, reason: str | None) -> None:
+        self._status = status
+        self._reason = reason
+
+    @property
+    def status(self) -> int:
+        """The status of the response."""
+        return self._status
+
+    @property
+    def reason(self) -> str | None:
+        """The response of the error."""
+        return self._reason
 
 
-@attrs.define
-class RestRequestError(RestError, errors_.RestError):
+class RestRequestError(RestError):
     """Raised when a rest error is received from the response."""
+
+    __slots__: typing.Sequence[str] = (
+        "_timestamp",
+        "_status",
+        "_error",
+        "_message",
+        "_path",
+        "_trace",
+    )
 
     def __init__(
         self,
@@ -82,50 +96,45 @@ class RestRequestError(RestError, errors_.RestError):
         self._path = path
         self._trace = trace
 
-    @classmethod
-    def from_error(cls, error: errors_.RestError):
-        return cls(
-            error.timestamp,
-            error.status,
-            error.error,
-            error.message,
-            error.path,
-            error.trace,
-        )
-
     @property
     def timestamp(self) -> datetime.datetime:
+        """The timestamp of the error in milliseconds since the Unix epoch."""
         return self._timestamp
 
     @property
     def status(self) -> int:
+        """The HTTP status code."""
         return self._status
 
     @property
     def error(self) -> str:
+        """The HTTP status code message."""
         return self._error
 
     @property
     def message(self) -> str:
+        """The error message."""
         return self._message
 
     @property
     def path(self) -> str:
+        """The request path."""
         return self._path
 
     @property
     def trace(self) -> str | None:
+        """The stack trace of the error."""
         return self._trace
 
 
-@attrs.define
 class RestEmptyError(RestError):
     """Raised when the request was 204, but data was requested."""
 
 
-@attrs.define
 class RestExceptionError(RestError, errors_.ExceptionError):
     """Raised when a track search results in a error result."""
+
+    __slots__: typing.Sequence[str] = ()
 
     def __init__(
         self,
@@ -146,7 +155,7 @@ class RestExceptionError(RestError, errors_.ExceptionError):
         return self._message
 
     @property
-    def severity(self) -> SeverityType:
+    def severity(self) -> errors_.SeverityType:
         return self._severity
 
     @property
@@ -157,33 +166,35 @@ class RestExceptionError(RestError, errors_.ExceptionError):
 # Client
 
 
-@attrs.define
 class ClientError(OngakuError):
     """The base for all client errors."""
 
 
-@attrs.define
 class ClientAliveError(ClientError):
     """Raised when the client is not currently alive, or has crashed."""
 
-    reason: str
-    """The reason this error occurred."""
+    __slots__: typing.Sequence[str] = ("_reason",)
+
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    @property
+    def reason(self) -> str:
+        """The reason this error occurred."""
+        return self._reason
 
 
 # Sessions
 
 
-@attrs.define
 class SessionError(OngakuError):
     """The base session error for all session related errors."""
 
 
-@attrs.define
 class SessionStartError(SessionError):
     """Raised when the session has not started. (has not received the ready payload)."""
 
 
-@attrs.define
 class SessionMissingError(SessionError):
     """Raised when the session could not be found."""
 
@@ -191,12 +202,10 @@ class SessionMissingError(SessionError):
 # Session Handler
 
 
-@attrs.define
 class SessionHandlerError(OngakuError):
     """The base for all session handler related errors."""
 
 
-@attrs.define
 class NoSessionsError(SessionHandlerError):
     """Raised when there is no available sessions for the handler to return."""
 
@@ -204,28 +213,38 @@ class NoSessionsError(SessionHandlerError):
 # Player
 
 
-@attrs.define
 class PlayerError(OngakuError):
     """The base for all player related errors."""
 
 
-@attrs.define
 class PlayerConnectError(PlayerError):
     """Raised when the player cannot connect to lavalink, or discord."""
 
-    reason: str
-    """The reason for failure of connection."""
+    __slots__: typing.Sequence[str] = "_reason"
+
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    @property
+    def reason(self) -> str:
+        """The reason for failure of connection."""
+        return self._reason
 
 
-@attrs.define
 class PlayerQueueError(PlayerError):
     """Raised when the players queue is empty."""
 
-    reason: str
-    """Reason for the queue error."""
+    __slots__: typing.Sequence[str] = "_reason"
+
+    def __init__(self, reason: str) -> None:
+        self._reason = reason
+
+    @property
+    def reason(self) -> str:
+        """Reason for the queue error."""
+        return self._reason
 
 
-@attrs.define
 class PlayerMissingError(PlayerError):
     """Raised when the player could not be found."""
 
@@ -233,24 +252,36 @@ class PlayerMissingError(PlayerError):
 # Others:
 
 
-@attrs.define
 class BuildError(OngakuError):
     """Raised when a abstract class fails to build."""
 
-    reason: str | None
-    """The reason for the failure of the build."""
+    __slots__: typing.Sequence[str] = "_reason"
+
+    def __init__(self, reason: str | None) -> None:
+        self._reason = reason
+
+    @property
+    def reason(self) -> str | None:
+        """The reason for the failure of the build."""
+        return self._reason
 
 
-@attrs.define
 class TimeoutError(OngakuError):
     """Raised when an event times out."""
 
 
-@attrs.define
 class UniqueError(OngakuError):
     """Raised when a value should be unique, but is not."""
 
-    reason: str
+    __slots__: typing.Sequence[str] = "_reason"
+
+    def __init__(self, reason: str | None) -> None:
+        self._reason = reason
+
+    @property
+    def reason(self) -> str | None:
+        """The reason for the unique error."""
+        return self._reason
 
 
 # MIT License

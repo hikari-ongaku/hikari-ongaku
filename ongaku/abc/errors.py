@@ -8,86 +8,11 @@ from __future__ import annotations
 
 import abc
 import enum
-import typing
-
-if typing.TYPE_CHECKING:
-    import datetime
 
 __all__ = (
-    "RestError",
     "ExceptionError",
     "SeverityType",
 )
-
-
-class RestError(abc.ABC):
-    """
-    Rest error information.
-
-    This is the error that is formed, when a call to a rest method fails.
-
-    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#error-responses)
-    """
-
-    @property
-    @abc.abstractmethod
-    def timestamp(self) -> datetime.datetime:
-        """The timestamp of the error in milliseconds since the Unix epoch."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def status(self) -> int:
-        """The HTTP status code."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def error(self) -> str:
-        """The HTTP status code message."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def message(self) -> str:
-        """The error message."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def path(self) -> str:
-        """The request path."""
-        ...
-
-    @property
-    @abc.abstractmethod
-    def trace(self) -> str | None:
-        """The stack trace of the error."""
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, RestError):
-            return False
-
-        if self.timestamp != other.timestamp:
-            return False
-
-        if self.status != other.status:
-            return False
-
-        if self.error != other.error:
-            return False
-
-        if self.message != other.message:
-            return False
-
-        if self.path != other.path:
-            return False
-
-        if self.trace != other.trace:
-            return False
-
-        return True
 
 
 class ExceptionError(abc.ABC):

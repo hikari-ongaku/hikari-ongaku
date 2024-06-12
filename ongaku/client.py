@@ -61,6 +61,16 @@ class Client:
         The amount of attempts a session will try to connect to the server.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_attempts",
+        "_app",
+        "_client_session",
+        "_rest_client",
+        "_is_alive",
+        "_session_handler",
+        "_entity_builder",
+    )
+
     def __init__(
         self,
         app: hikari.GatewayBotAware,
@@ -73,7 +83,6 @@ class Client:
 
         self._attempts = attempts
         self._app = app
-        self._selected_session: Session | None = None
         self._client_session: aiohttp.ClientSession | None = None
 
         self._rest_client = RESTClient(self)

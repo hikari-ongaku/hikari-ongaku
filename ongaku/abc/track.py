@@ -27,38 +27,38 @@ class Track(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_encoded",
+        "_info",
+        "_plugin_info",
+        "_user_data",
+        "_requestor",
+    )
+
     @property
-    @abc.abstractmethod
     def encoded(self) -> str:
         """The BASE-64 encoded track data."""
-        ...
+        return self._encoded
 
     @property
-    @abc.abstractmethod
     def info(self) -> TrackInfo:
         """Information about the track."""
-        ...
+        return self._info
 
     @property
-    @abc.abstractmethod
     def plugin_info(self) -> typing.Mapping[str, typing.Any]:
         """Additional track info provided by plugins."""
-        ...
+        return self._plugin_info
 
     @property
-    @abc.abstractmethod
     def user_data(self) -> typing.Mapping[str, typing.Any]:
         """Additional track data."""
-        ...
+        return self._user_data
 
     @property
-    @abc.abstractmethod
     def requestor(self) -> hikari.Snowflake | None:
         """The person who requested this track."""
-        ...
-
-    @requestor.setter
-    def _set_requestor(self, value: hikari.Snowflake): ...
+        return self._requestor
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Track):
@@ -91,71 +91,74 @@ class TrackInfo(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track-info)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_identifier",
+        "_is_seekable",
+        "_author",
+        "_length",
+        "_is_stream",
+        "_position",
+        "_title",
+        "_source_name",
+        "_uri",
+        "_artwork_url",
+        "_isrc",
+    )
+
     @property
-    @abc.abstractmethod
     def identifier(self) -> str:
         """The track identifier."""
-        ...
+        return self._identifier
 
     @property
-    @abc.abstractmethod
     def is_seekable(self) -> bool:
         """Whether the track is seekable."""
-        ...
+        return self._is_seekable
 
     @property
-    @abc.abstractmethod
     def author(self) -> str:
         """The track author."""
-        ...
+        return self._author
 
     @property
-    @abc.abstractmethod
     def length(self) -> int:
         """The track length in milliseconds."""
-        ...
+        return self._length
 
     @property
-    @abc.abstractmethod
     def is_stream(self) -> bool:
         """Whether the track is a stream."""
-        ...
+        return self._is_stream
 
     @property
-    @abc.abstractmethod
     def position(self) -> int:
         """The track position in milliseconds."""
-        ...
+        return self._position
 
     @property
-    @abc.abstractmethod
     def title(self) -> str:
         """The track title."""
-        ...
+        return self._title
 
     @property
-    @abc.abstractmethod
     def source_name(self) -> str:
         """The tracks source name."""
-        ...
+        return self._source_name
 
     @property
-    @abc.abstractmethod
     def uri(self) -> str | None:
         """The track URI."""
-        ...
+        return self._uri
 
     @property
-    @abc.abstractmethod
     def artwork_url(self) -> str | None:
         """The track artwork URL."""
-        ...
+        return self._artwork_url
 
     @property
-    @abc.abstractmethod
     def isrc(self) -> str | None:
         """The track ISRC."""
-        ...
+        return self._isrc
 
     def __eq__(self, other: object) -> bool:  # noqa: C901
         if not isinstance(other, TrackInfo):

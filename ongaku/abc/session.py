@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import abc
 import enum
+import typing
 
 __all__ = (
     "Session",
@@ -24,17 +25,17 @@ class Session(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#update-session)
     """
 
-    @property
-    @abc.abstractmethod
-    def resuming(self) -> bool:
-        """Whether resuming is enabled for this session or not."""
-        ...
+    __slots__: typing.Sequence[str] = ("_resuming", "_timeout")
 
     @property
-    @abc.abstractmethod
+    def resuming(self) -> bool:
+        """Whether resuming is enabled for this session or not."""
+        return self._resuming
+
+    @property
     def timeout(self) -> int:
         """The timeout in seconds."""
-        ...
+        return self._timeout
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Session):

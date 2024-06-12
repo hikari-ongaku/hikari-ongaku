@@ -7,11 +7,9 @@ A extension, that checks if your query, is a track/playlist, or just a query.
 from __future__ import annotations
 
 import enum
+import typing
 
-import attrs
 
-
-@attrs.define
 class Checked:
     """
     Checked value.
@@ -19,14 +17,25 @@ class Checked:
     The checked, and confirmed value, with its specific type attached.
     """
 
-    value: str
-    """
-    The value.
-    
-    This is the value, based on the [type][ongaku.ext.checker.abc.CheckedType] it is.
-    """
-    type: CheckedType
-    """The type of the checked value."""
+    __slots__: typing.Sequence[str] = ("_value", "_type")
+
+    def __init__(self, value: str, type: CheckedType) -> None:
+        self._value = value
+        self._type = type
+
+    @property
+    def value(self) -> str:
+        """
+        The value.
+
+        This is the value, based on the [type][ongaku.ext.checker.abc.CheckedType] it is.
+        """
+        return self._value
+
+    @property
+    def type(self) -> CheckedType:
+        """The type of the checked value."""
+        return self._type
 
 
 class CheckedType(enum.IntEnum):

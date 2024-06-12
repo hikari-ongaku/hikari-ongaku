@@ -34,6 +34,11 @@ class SessionHandler(abc.ABC):
         The base ongaku client.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_client",
+        "_is_alive",
+    )
+
     @abc.abstractmethod
     def __init__(self, client: Client): ...
 
@@ -50,10 +55,9 @@ class SessionHandler(abc.ABC):
         ...
 
     @property
-    @abc.abstractmethod
     def is_alive(self) -> bool:
         """Whether the handler is alive or not."""
-        ...
+        return self._is_alive
 
     @abc.abstractmethod
     async def start(self) -> None:

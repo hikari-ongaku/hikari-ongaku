@@ -7,6 +7,7 @@ The statistic abstract classes.
 from __future__ import annotations
 
 import abc
+import typing
 
 __all__ = ("Memory", "Cpu", "FrameStatistics", "Statistics")
 
@@ -90,29 +91,32 @@ class Memory(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#memory)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_free",
+        "_used",
+        "_allocated",
+        "_reservable",
+    )
+
     @property
-    @abc.abstractmethod
     def free(self) -> int:
         """The amount of free memory in bytes."""
-        ...
+        return self._free
 
     @property
-    @abc.abstractmethod
     def used(self) -> int:
         """The amount of used memory in bytes."""
-        ...
+        return self._used
 
     @property
-    @abc.abstractmethod
     def allocated(self) -> int:
         """The amount of allocated memory in bytes."""
-        ...
+        return self._allocated
 
     @property
-    @abc.abstractmethod
     def reservable(self) -> int:
         """The amount of reservable memory in bytes."""
-        ...
+        return self._reservable
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Memory):
@@ -142,23 +146,26 @@ class Cpu(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#cpu)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_cores",
+        "_system_load",
+        "_lavalink_load",
+    )
+
     @property
-    @abc.abstractmethod
     def cores(self) -> int:
         """The amount of cores the server has."""
-        ...
+        return self._cores
 
     @property
-    @abc.abstractmethod
     def system_load(self) -> float:
         """The system load of the server."""
-        ...
+        return self._system_load
 
     @property
-    @abc.abstractmethod
     def lavalink_load(self) -> float:
         """The load of Lavalink on the server."""
-        ...
+        return self._lavalink_load
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Cpu):
@@ -185,23 +192,22 @@ class FrameStatistics(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#frame-stats)
     """
 
+    __slots__: typing.Sequence[str] = ("_sent", "_nulled", "_deficit")
+
     @property
-    @abc.abstractmethod
     def sent(self) -> int:
         """The amount of frames sent to Discord."""
-        ...
+        return self._sent
 
     @property
-    @abc.abstractmethod
     def nulled(self) -> int:
         """The amount of frames that were nulled."""
-        ...
+        return self._nulled
 
     @property
-    @abc.abstractmethod
     def deficit(self) -> int:
         """The difference between sent frames and the expected amount of frames."""
-        ...
+        return self._deficit
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FrameStatistics):

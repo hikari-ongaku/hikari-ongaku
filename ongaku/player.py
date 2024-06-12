@@ -49,6 +49,23 @@ class Player:
         The Guild the bot is attached too.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_session",
+        "_guild_id",
+        "_channel_id",
+        "_is_alive",
+        "_is_paused",
+        "_voice",
+        "_state",
+        "_queue",
+        "_filters",
+        "_connected",
+        "_session_id",
+        "_volume",
+        "_autoplay",
+        "_position",
+    )
+
     def __init__(
         self,
         session: Session,
@@ -64,13 +81,9 @@ class Player:
         self._queue: typing.MutableSequence[track_.Track] = []
         self._filters: typing.Mapping[str, typing.Any] = {}
         self._connected: bool = False
-
         self._session_id: str | None = None
-
         self._volume: int = -1
-
         self._autoplay: bool = True
-
         self._position: int = 0
 
         self.app.event_manager.subscribe(TrackEndEvent, self._track_end_event)
@@ -371,6 +384,9 @@ class Player:
         """
         session = self.session._get_session_id()
 
+        _logger.warning(session)
+
+        _logger.warning(self.channel_id)
         if self.channel_id is None:
             raise errors.PlayerConnectError("Not connected to a channel.")
 
@@ -379,7 +395,7 @@ class Player:
 
         if track:
             if requestor:
-                track._set_requestor = hikari.Snowflake(requestor)
+                track._requestor = hikari.Snowflake(requestor)
 
             self._queue.insert(0, track)
 
@@ -431,7 +447,7 @@ class Player:
 
         if isinstance(tracks, track_.Track):
             if new_requestor:
-                tracks._set_requestor = new_requestor
+                tracks._requestor = new_requestor
             self._queue.append(tracks)
             track_count = 1
             return
@@ -441,7 +457,7 @@ class Player:
 
         for track in tracks:
             if new_requestor:
-                track._set_requestor = new_requestor
+                track._requestor = new_requestor
             self._queue.append(track)
             track_count += 1
 
