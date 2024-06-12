@@ -384,9 +384,6 @@ class Player:
         """
         session = self.session._get_session_id()
 
-        _logger.warning(session)
-
-        _logger.warning(self.channel_id)
         if self.channel_id is None:
             raise errors.PlayerConnectError("Not connected to a channel.")
 

@@ -2,7 +2,6 @@
 
 import asyncio
 import datetime
-import logging
 import typing
 
 import aiohttp
@@ -112,8 +111,6 @@ class TestSession:
             assert patched_player_transfer.call_count == 2
 
             assert len(handler.players) == 2
-
-            logging.warning(handler.players)
 
             assert handler.players[0].guild_id == player_1.guild_id
             assert handler.players[1].guild_id == player_2.guild_id

@@ -255,14 +255,20 @@ class PlayerMissingError(PlayerError):
 class BuildError(OngakuError):
     """Raised when a abstract class fails to build."""
 
-    __slots__: typing.Sequence[str] = "_reason"
+    __slots__: typing.Sequence[str] = ("_exception", "_reason")
 
-    def __init__(self, reason: str | None) -> None:
+    def __init__(self, exception: Exception | None, reason: str | None = None) -> None:
+        self._exception = exception
         self._reason = reason
 
     @property
+    def exception(self) -> Exception | None:
+        """The exception raised to receive the build error."""
+        return self._exception
+
+    @property
     def reason(self) -> str | None:
-        """The reason for the failure of the build."""
+        """The reason this error occurred."""
         return self._reason
 
 

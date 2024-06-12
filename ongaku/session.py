@@ -268,7 +268,7 @@ class Session:
         try:
             json_payload = json_loads(payload)
         except Exception as e:
-            raise errors.BuildError(str(e))
+            raise errors.BuildError(e)
 
         return return_type(json_payload)
 
@@ -277,7 +277,8 @@ class Session:
 
         if isinstance(mapped_data, typing.Sequence):
             raise errors.BuildError(
-                "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'"
+                None,
+                "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'",
             )
 
         op_code = session_.WebsocketOPCode(mapped_data["op"])

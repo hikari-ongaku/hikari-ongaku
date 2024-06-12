@@ -1,7 +1,6 @@
 # ruff: noqa: D100, D101, D102, D103
 
 import datetime
-import logging
 import typing
 
 import mock
@@ -244,8 +243,6 @@ class TestPlayer:
                 ),
             ) as patched_update,
         ):
-            logging.warning(new_player.channel_id)
-            logging.warning(new_player.channel_id is None)
             await new_player.play(track, Snowflake(123454321))
 
             patched_update.assert_called_once_with(
