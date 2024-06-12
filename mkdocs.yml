@@ -132,8 +132,6 @@ nav:
       - Statistics: api/abc/statistics.md
       - Track: api/abc/track.md
     - Impl:
-      - Errors: api/impl/errors.md
-      - Events: api/impl/events.md
       - Handlers: api/impl/handlers.md
       - Info: api/impl/info.md
       - Player: api/impl/player.md
