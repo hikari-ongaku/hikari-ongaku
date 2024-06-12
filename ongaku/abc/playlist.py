@@ -24,23 +24,26 @@ class Playlist(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#playlist-result-data)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_info",
+        "_tracks",
+        "_plugin_info",
+    )
+
     @property
-    @abc.abstractmethod
     def info(self) -> PlaylistInfo:
         """The info of the playlist."""
-        ...
+        return self._info
 
     @property
-    @abc.abstractmethod
     def tracks(self) -> typing.Sequence[Track]:
         """The tracks in this playlist."""
-        ...
+        return self._tracks
 
     @property
-    @abc.abstractmethod
     def plugin_info(self) -> typing.Mapping[str, typing.Any]:
         """Addition playlist info provided by plugins."""
-        ...
+        return self._plugin_info
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Playlist):
@@ -67,17 +70,20 @@ class PlaylistInfo(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#playlist-info)
     """
 
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        """The name of the playlist."""
-        ...
+    __slots__: typing.Sequence[str] = (
+        "_name",
+        "_selected_track",
+    )
 
     @property
-    @abc.abstractmethod
+    def name(self) -> str:
+        """The name of the playlist."""
+        return self._name
+
+    @property
     def selected_track(self) -> int:
         """The selected track of the playlist (`-1` if no track is selected)."""
-        ...
+        return self._selected_track
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PlaylistInfo):

@@ -1,4 +1,3 @@
-import os
 import typing
 
 import mock
@@ -31,23 +30,24 @@ def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
 
 
 @pytest.fixture
-def ongaku_session(ongaku_client: Client) -> Session:
-    ssl = os.getenv("LL_SSL", "false").lower() != "false"
-
-    return Session(
-        ongaku_client,
-        "test_session",
-        ssl,
-        os.getenv("LL_HOST", "127.0.0.1"),
-        int(os.getenv("LL_PORT", "2333")),
-        os.getenv("LL_PASSWORD", "youshallnotpass"),
-        3,
+def ongaku_session(
+    gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client
+) -> Session:
+    return mock.Mock(
+        app=gateway_bot,
+        client=ongaku_client,
+        name="test_session",
+        ssl=False,
+        host="host",
+        port=1234,
+        password="password",
+        attempts=3,
     )
 
 
 @pytest.fixture
 def ongaku_player(ongaku_session: Session) -> Player:
-    return Player(ongaku_session, Snowflake(1234567890))
+    return mock.Mock(session=ongaku_session, guild_id=Snowflake(1234567890))
 
 
 @pytest.fixture

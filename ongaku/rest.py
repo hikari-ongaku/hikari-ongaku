@@ -45,6 +45,8 @@ class RESTClient:
         Please do not create this on your own. Please use the rest attribute, in the base client object you created.
     """
 
+    __slots__: typing.Sequence[str] = "_client"
+
     def __init__(self, client: Client) -> None:
         self._client = client
 

@@ -5,7 +5,6 @@ import typing
 import mock
 import pytest
 from hikari.snowflakes import Snowflake
-from hikari.users import OwnUser
 
 from ongaku import errors
 from ongaku.abc.session import SessionStatus
@@ -37,32 +36,26 @@ class TestBasicSessionHandler:
         session_1 = Session(
             ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
         )
-        handler.add_session(session_1)
-
         session_2 = Session(
             ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
         )
+
+        handler.add_session(session_1)
         handler.add_session(session_2)
 
-        with (
-            mock.patch.object(
-                session_1, "start", return_value=None
-            ) as patched_session_1,
-            mock.patch.object(
-                session_2, "start", return_value=None
-            ) as patched_session_2,
-        ):
+        assert len(handler.sessions) == 2
+
+        with mock.patch(
+            "ongaku.session.Session.start", return_value=None
+        ) as patched_session_start:
             await handler.start()
 
-            patched_session_1.assert_called_once()
-            patched_session_2.assert_called_once()
+            assert patched_session_start.call_count == 2
 
             assert handler.is_alive is True
 
     @pytest.mark.asyncio
-    async def test_stop(
-        self, ongaku_client: Client, ongaku_session: Session, bot_user: OwnUser
-    ):
+    async def test_stop(self, ongaku_client: Client):
         handler = BasicSessionHandler(ongaku_client)
 
         assert handler.is_alive is False
@@ -79,33 +72,21 @@ class TestBasicSessionHandler:
 
         # Start the session up.
 
-        with (
-            mock.patch.object(
-                session_1, "start", return_value=None
-            ) as patched_session_1,
-            mock.patch.object(
-                session_2, "start", return_value=None
-            ) as patched_session_2,
-        ):
+        with mock.patch(
+            "ongaku.session.Session.start", return_value=None
+        ) as patched_session_start:
             await handler.start()
 
-            patched_session_1.assert_called_once()
-            patched_session_2.assert_called_once()
+            assert patched_session_start.call_count == 2
 
             assert handler.is_alive is True
 
-        with (
-            mock.patch.object(
-                session_1, "stop", return_value=None
-            ) as patched_session_1,
-            mock.patch.object(
-                session_2, "stop", return_value=None
-            ) as patched_session_2,
-        ):
+        with mock.patch(
+            "ongaku.session.Session.stop", return_value=None
+        ) as patched_session_stop:
             await handler.stop()
 
-            patched_session_1.assert_called_once()
-            patched_session_2.assert_called_once()
+            assert patched_session_stop.call_count == 2
 
             assert handler.is_alive is False
 
@@ -169,7 +150,7 @@ class TestBasicSessionHandler:
     async def test_delete_session(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(ongaku_client)
 
-        handler.add_session(ongaku_session)
+        handler._sessions = {"test_session": ongaku_session}
 
         with mock.patch.object(
             ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
@@ -219,7 +200,9 @@ class TestBasicSessionHandler:
 
         assert len(handler.players) == 0
 
-        with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
+        with mock.patch.object(
+            handler, "_current_session", return_value=ongaku_session
+        ):
             original_player = handler.add_player(
                 Player(ongaku_session, Snowflake(1234567890))
             )
@@ -243,16 +226,16 @@ class TestBasicSessionHandler:
         assert new_player.session == ongaku_session
 
     @pytest.mark.asyncio
-    async def test_delete_player(
-        self, ongaku_client: Client, ongaku_session: Session, bot_user: OwnUser
-    ):
+    async def test_delete_player(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(ongaku_client)
 
         # Create a player
 
         assert len(handler.players) == 0
 
-        with mock.patch.object(handler, "fetch_session", return_value=ongaku_session):
+        with mock.patch.object(
+            handler, "_current_session", return_value=ongaku_session
+        ):
             original_player = handler.add_player(
                 Player(ongaku_session, Snowflake(1234567890))
             )
@@ -266,8 +249,8 @@ class TestBasicSessionHandler:
 
         # Delete the player.
 
-        with mock.patch.object(
-            original_player, "disconnect", return_value=None
+        with mock.patch(
+            "ongaku.player.Player.disconnect", return_value=None
         ) as patched_player:
             await handler.delete_player(Snowflake(1234567890))
 

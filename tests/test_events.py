@@ -10,7 +10,6 @@ from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import TrackEndReasonType
 from ongaku.client import Client
 from ongaku.impl import player
-from ongaku.impl.errors import ExceptionError
 from ongaku.impl.track import Track
 from ongaku.session import Session
 
@@ -247,6 +246,15 @@ class TestTrackEndEvent:
         assert event.reason == TrackEndReasonType.FINISHED
 
 
+class TestTrackException:
+    def test_event(self):
+        exception = events.TrackException("message", SeverityType.COMMON, "cause")
+
+        assert exception.message == "message"
+        assert exception.severity == SeverityType.COMMON
+        assert exception.cause == "cause"
+
+
 class TestTrackExceptionEvent:
     def test_event(
         self,
@@ -255,7 +263,7 @@ class TestTrackExceptionEvent:
         ongaku_session: Session,
         track: Track,
     ):
-        exception = ExceptionError("message", SeverityType.COMMON, "cause")
+        exception = events.TrackException("message", SeverityType.COMMON, "cause")
         event = events.TrackExceptionEvent(
             gateway_bot,
             ongaku_client,
@@ -279,7 +287,7 @@ class TestTrackExceptionEvent:
         ongaku_session: Session,
         track: Track,
     ):
-        exception = ExceptionError("message", SeverityType.COMMON, "cause")
+        exception = events.TrackException("message", SeverityType.COMMON, "cause")
         event = events.TrackExceptionEvent.from_session(
             ongaku_session, hikari.Snowflake(1234567890), track, exception
         )

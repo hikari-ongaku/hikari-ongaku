@@ -7,18 +7,9 @@ All of the abstract classes for Ongaku.
 from __future__ import annotations
 
 from ongaku.abc.errors import ExceptionError
-from ongaku.abc.errors import RestError
 from ongaku.abc.errors import SeverityType
-from ongaku.abc.events import PlayerUpdate
-from ongaku.abc.events import QueueEmpty
-from ongaku.abc.events import QueueNext
-from ongaku.abc.events import Ready
-from ongaku.abc.events import TrackEnd
+from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
-from ongaku.abc.events import TrackException
-from ongaku.abc.events import TrackStart
-from ongaku.abc.events import TrackStuck
-from ongaku.abc.events import WebsocketClosed
 from ongaku.abc.handler import SessionHandler
 from ongaku.abc.info import Git
 from ongaku.abc.info import Info
@@ -46,19 +37,10 @@ from ongaku.abc.track import TrackInfo
 
 __all__ = (
     # .errors
-    "RestError",
     "ExceptionError",
     "SeverityType",
     # .events
-    "Ready",
-    "PlayerUpdate",
-    "WebsocketClosed",
-    "TrackStart",
-    "TrackEnd",
-    "TrackException",
-    "TrackStuck",
-    "QueueEmpty",
-    "QueueNext",
+    "OngakuEvent",
     "TrackEndReasonType",
     # .handler
     "SessionHandler",

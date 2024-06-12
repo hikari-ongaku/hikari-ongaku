@@ -12,6 +12,7 @@ from ongaku.abc.events import TrackEndReasonType
 from ongaku.abc.routeplanner import IPBlockType
 from ongaku.abc.routeplanner import RoutePlannerType
 from ongaku.builders import EntityBuilder
+from ongaku.session import Session
 from tests import payloads
 
 
@@ -49,50 +50,88 @@ class TestBuilderErrors:
 
 
 class TestBuilderEvents:
-    def test_build_ready(self, builder: EntityBuilder):
-        parsed_result = builder.build_ready(payloads.READY_PAYLOAD)
+    def test_build_ready_event(self, ongaku_session: Session, builder: EntityBuilder):
+        parsed_result = builder.build_ready_event(
+            payloads.READY_PAYLOAD, ongaku_session
+        )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert parsed_result.resumed is False
         assert parsed_result.session_id == "session_id"
 
-    def test_build_player_update(self, builder: EntityBuilder):
-        parsed_result = builder.build_player_update(payloads.PLAYER_UPDATE_PAYLOAD)
+    def test_build_player_update_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.build_player_update_event(
+            payloads.PLAYER_UPDATE_PAYLOAD, ongaku_session
+        )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert isinstance(parsed_result.guild_id, hikari.Snowflake)
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.state == builder.build_player_state(
             payloads.PLAYER_STATE_PAYLOAD
         )
 
-    def test_build_websocket_closed(self, builder: EntityBuilder):
-        parsed_result = builder.build_websocket_closed(
-            payloads.WEBSOCKET_CLOSED_PAYLOAD
+    def test_build_websocket_closed_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.build_websocket_closed_event(
+            payloads.WEBSOCKET_CLOSED_PAYLOAD, ongaku_session
         )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert isinstance(parsed_result.guild_id, hikari.Snowflake)
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.code == 1
         assert parsed_result.reason == "reason"
         assert parsed_result.by_remote is False
 
-    def test_build_track_start(self, builder: EntityBuilder):
-        parsed_result = builder.build_track_start(payloads.TRACK_START_PAYLOAD)
+    def test_build_track_start_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.build_track_start_event(
+            payloads.TRACK_START_PAYLOAD, ongaku_session
+        )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert isinstance(parsed_result.guild_id, hikari.Snowflake)
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.track == builder.build_track(payloads.TRACK_PAYLOAD)
 
-    def test_build_track_end(self, builder: EntityBuilder):
-        parsed_result = builder.build_track_end(payloads.TRACK_END_PAYLOAD)
+    def test_build_track_end_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.build_track_end_event(
+            payloads.TRACK_END_PAYLOAD, ongaku_session
+        )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert isinstance(parsed_result.guild_id, hikari.Snowflake)
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.track == builder.build_track(payloads.TRACK_PAYLOAD)
         assert parsed_result.reason == TrackEndReasonType.FINISHED
 
-    def test_build_track_exception(self, builder: EntityBuilder):
-        parsed_result = builder.build_track_exception(payloads.TRACK_EXCEPTION_PAYLOAD)
+    def test_build_track_exception_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.build_track_exception_event(
+            payloads.TRACK_EXCEPTION_PAYLOAD, ongaku_session
+        )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert isinstance(parsed_result.guild_id, hikari.Snowflake)
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.track == builder.build_track(payloads.TRACK_PAYLOAD)
@@ -100,9 +139,16 @@ class TestBuilderEvents:
             payloads.EXCEPTION_ERROR_PAYLOAD
         )
 
-    def test_build_track_stuck(self, builder: EntityBuilder):
-        parsed_result = builder.build_track_stuck(payloads.TRACK_STUCK_PAYLOAD)
+    def test_build_track_stuck_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.build_track_stuck_event(
+            payloads.TRACK_STUCK_PAYLOAD, ongaku_session
+        )
 
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
         assert isinstance(parsed_result.guild_id, hikari.Snowflake)
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.track == builder.build_track(payloads.TRACK_PAYLOAD)

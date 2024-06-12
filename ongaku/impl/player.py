@@ -38,34 +38,6 @@ class Player(player_.Player):
         self._voice = voice
         self._filters = filters
 
-    @property
-    def guild_id(self) -> hikari.Snowflake:
-        return self._guild_id
-
-    @property
-    def track(self) -> track_.Track | None:
-        return self._track
-
-    @property
-    def volume(self) -> int:
-        return self._volume
-
-    @property
-    def is_paused(self) -> bool:
-        return self._is_paused
-
-    @property
-    def state(self) -> player_.State:
-        return self._state
-
-    @property
-    def voice(self) -> player_.Voice:
-        return self._voice
-
-    @property
-    def filters(self) -> typing.Mapping[str, typing.Any]:
-        return self._filters
-
 
 class State(player_.State):
     def __init__(
@@ -76,40 +48,12 @@ class State(player_.State):
         self._connected = connected
         self._ping = ping
 
-    @property
-    def time(self) -> datetime.datetime:
-        return self._time
-
-    @property
-    def position(self) -> int:
-        return self._position
-
-    @property
-    def connected(self) -> bool:
-        return self._connected
-
-    @property
-    def ping(self) -> int:
-        return self._ping
-
 
 class Voice(player_.Voice):
     def __init__(self, token: str, endpoint: str, session_id: str) -> None:
         self._token = token
         self._endpoint = endpoint
         self._session_id = session_id
-
-    @property
-    def token(self) -> str:
-        return self._token
-
-    @property
-    def endpoint(self) -> str:
-        return self._endpoint
-
-    @property
-    def session_id(self) -> str:
-        return self._session_id
 
 
 # MIT License

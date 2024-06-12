@@ -56,6 +56,24 @@ class Session:
         The attempts that the session is allowed to use, before completely shutting down.
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_client",
+        "_name",
+        "_ssl",
+        "_host",
+        "_port",
+        "_password",
+        "_attempts",
+        "_remaining_attempts",
+        "_base_uri",
+        "_session_id",
+        "_session_task",
+        "_status",
+        "_players",
+        "_websocket_headers",
+        "_authorization_headers",
+    )
+
     def __init__(
         self,
         client: Client,
@@ -79,7 +97,7 @@ class Session:
         self._session_task: asyncio.Task[None] | None = None
         self._status = session_.SessionStatus.NOT_CONNECTED
         self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
-        self._websocket_headers: typing.MutableMapping[str, typing.Any]
+        self._websocket_headers: typing.MutableMapping[str, typing.Any] = {}
         self._authorization_headers: typing.Mapping[str, typing.Any] = {
             "Authorization": password
         }
@@ -237,7 +255,7 @@ class Session:
                 rest_error = self.client.entity_builder.build_rest_error(payload)
             except Exception:
                 raise errors.RestStatusError(response.status, response.reason)
-            raise errors.RestRequestError.from_error(rest_error)
+            raise rest_error
 
         if return_type is None:
             return
@@ -266,86 +284,46 @@ class Session:
         op_code = session_.WebsocketOPCode(mapped_data["op"])
 
         if op_code == session_.WebsocketOPCode.READY:
-            parser = self.client.entity_builder.build_ready(mapped_data)
-            event = events.ReadyEvent.from_session(
-                self, parser.resumed, parser.session_id
-            )
+            event = self.client.entity_builder.build_ready_event(mapped_data, self)
 
-            self._session_id = parser.session_id
+            self._session_id = event.session_id
 
         elif op_code == session_.WebsocketOPCode.PLAYER_UPDATE:
-            parser = self.client.entity_builder.build_player_update(mapped_data)
-            event = events.PlayerUpdateEvent.from_session(
-                self,
-                parser.guild_id,
-                parser.state,
+            event = self.client.entity_builder.build_player_update_event(
+                mapped_data, self
             )
 
         elif op_code == session_.WebsocketOPCode.STATS:
-            parser = self.client.entity_builder.build_statistics(mapped_data)
-
-            event = events.StatisticsEvent.from_session(
-                self,
-                parser.players,
-                parser.playing_players,
-                parser.uptime,
-                parser.memory,
-                parser.cpu,
-                parser.frame_stats,
-            )
+            event = self.client.entity_builder.build_statistics_event(mapped_data, self)
 
         else:
             event_type = session_.WebsocketEvent(mapped_data["type"])
 
             if event_type == session_.WebsocketEvent.TRACK_START_EVENT:
-                parser = self.client.entity_builder.build_track_start(mapped_data)
-
-                event = events.TrackStartEvent.from_session(
-                    self,
-                    parser.guild_id,
-                    parser.track,
+                event = self.client.entity_builder.build_track_start_event(
+                    mapped_data, self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_END_EVENT:
-                parser = self.client.entity_builder.build_track_end(mapped_data)
-
-                event = events.TrackEndEvent.from_session(
-                    self,
-                    parser.guild_id,
-                    parser.track,
-                    parser.reason,
+                event = self.client.entity_builder.build_track_end_event(
+                    mapped_data, self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
-                parser = self.client.entity_builder.build_track_exception(mapped_data)
-
-                event = events.TrackExceptionEvent.from_session(
-                    self,
-                    parser.guild_id,
-                    parser.track,
-                    parser.exception,
+                event = self.client.entity_builder.build_track_exception_event(
+                    mapped_data, self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
-                parser = self.client.entity_builder.build_track_stuck(mapped_data)
-
-                event = events.TrackStuckEvent.from_session(
-                    self,
-                    parser.guild_id,
-                    parser.track,
-                    parser.threshold_ms,
+                event = self.client.entity_builder.build_track_stuck_event(
+                    mapped_data, self
                 )
 
             else:
-                parser = self.client.entity_builder.build_websocket_closed(mapped_data)
-
-                event = events.WebsocketClosedEvent.from_session(
-                    self,
-                    parser.guild_id,
-                    parser.code,
-                    parser.reason,
-                    parser.by_remote,
+                event = self.client.entity_builder.build_websocket_closed_event(
+                    mapped_data, self
                 )
+
         return event
 
     async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> bool:

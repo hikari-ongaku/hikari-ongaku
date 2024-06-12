@@ -32,51 +32,54 @@ class Player(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#player)
     """
 
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> hikari.Snowflake:
-        """The guild id this player is attached too."""
-        ...
+    __slots__: typing.Sequence[str] = (
+        "_guild_id",
+        "_track",
+        "_volume",
+        "_is_paused",
+        "_state",
+        "_voice",
+        "_filters",
+    )
 
     @property
-    @abc.abstractmethod
+    def guild_id(self) -> hikari.Snowflake:
+        """The guild id this player is attached too."""
+        return self._guild_id
+
+    @property
     def track(self) -> Track | None:
         """The track the player is currently playing.
 
         !!! note
             If the track is `None` then there is no current track playing.
         """
-        ...
+        return self._track
 
     @property
-    @abc.abstractmethod
     def volume(self) -> int:
         """The volume of the player."""
-        ...
+        return self._volume
 
     @property
-    @abc.abstractmethod
     def is_paused(self) -> bool:
         """Whether the player is paused."""
-        ...
+        return self._is_paused
 
     @property
-    @abc.abstractmethod
     def state(self) -> State:
         """The player's state."""
-        ...
+        return self._state
 
     @property
-    @abc.abstractmethod
     def voice(self) -> Voice:
         """The player's voice state."""
-        ...
+        return self._voice
 
     @property
-    @abc.abstractmethod
     def filters(self) -> typing.Mapping[str, typing.Any]:
         """The filter object."""
-        ...
+        return self._filters
         # FIXME: This should return a filter object. (or at least  try to parse one.)
 
     def __eq__(self, other: object) -> bool:
@@ -116,29 +119,32 @@ class State(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#player-state)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_time",
+        "_position",
+        "_connected",
+        "_ping",
+    )
+
     @property
-    @abc.abstractmethod
     def time(self) -> datetime.datetime:
         """The current datetime."""
-        ...
+        return self._time
 
     @property
-    @abc.abstractmethod
     def position(self) -> int:
         """The position of the track in milliseconds."""
-        ...
+        return self._position
 
     @property
-    @abc.abstractmethod
     def connected(self) -> bool:
         """Whether Lavalink is connected to the voice gateway."""
-        ...
+        return self._connected
 
     @property
-    @abc.abstractmethod
     def ping(self) -> int:
         """The ping of the session to the Discord voice server in milliseconds (-1 if not connected)."""
-        ...
+        return self._ping
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, State):
@@ -168,23 +174,26 @@ class Voice(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#voice-state)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_token",
+        "_endpoint",
+        "_session_id",
+    )
+
     @property
-    @abc.abstractmethod
     def token(self) -> str:
         """The Discord voice token to authenticate with."""
-        ...
+        return self._token
 
     @property
-    @abc.abstractmethod
     def endpoint(self) -> str:
         """The Discord voice endpoint to connect to."""
-        ...
+        return self._endpoint
 
     @property
-    @abc.abstractmethod
     def session_id(self) -> str:
         """The Discord voice session id to authenticate with."""
-        ...
+        return self._session_id
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Voice):

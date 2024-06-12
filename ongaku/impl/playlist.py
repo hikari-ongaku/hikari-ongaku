@@ -25,31 +25,11 @@ class Playlist(playlist_.Playlist):
         self._tracks = tracks
         self._plugin_info = plugin_info
 
-    @property
-    def info(self) -> playlist_.PlaylistInfo:
-        return self._info
-
-    @property
-    def tracks(self) -> typing.Sequence[track_.Track]:
-        return self._tracks
-
-    @property
-    def plugin_info(self) -> typing.Mapping[str, typing.Any]:
-        return self._plugin_info
-
 
 class PlaylistInfo(playlist_.PlaylistInfo):
     def __init__(self, name: str, selected_track: int) -> None:
         self._name = name
         self._selected_track = selected_track
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def selected_track(self) -> int:
-        return self._selected_track
 
 
 # MIT License

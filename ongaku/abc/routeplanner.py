@@ -32,17 +32,17 @@ class RoutePlannerStatus(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#get-routeplanner-status)
     """
 
-    @property
-    @abc.abstractmethod
-    def cls(self) -> RoutePlannerType:
-        """The name of the RoutePlanner implementation being used by this server."""
-        ...
+    __slots__: typing.Sequence[str] = ("_cls", "_details")
 
     @property
-    @abc.abstractmethod
+    def cls(self) -> RoutePlannerType:
+        """The name of the RoutePlanner implementation being used by this server."""
+        return self._cls
+
+    @property
     def details(self) -> RoutePlannerDetails:
         """The status details of the RoutePlanner."""
-        ...
+        return self._details
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RoutePlannerStatus):
@@ -66,47 +66,50 @@ class RoutePlannerDetails(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#details-object)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_ip_block",
+        "_failing_addresses",
+        "_rotate_index",
+        "_ip_index",
+        "_current_address",
+        "_current_address_index",
+        "_block_index",
+    )
+
     @property
-    @abc.abstractmethod
     def ip_block(self) -> IPBlock:
         """The ip block being used."""
-        ...
+        return self._ip_block
 
     @property
-    @abc.abstractmethod
     def failing_addresses(self) -> typing.Sequence[FailingAddress]:
         """The failing addresses."""
-        ...
+        return self._failing_addresses
 
     @property
-    @abc.abstractmethod
     def rotate_index(self) -> str | None:
         """The number of rotations."""
-        ...
+        return self._rotate_index
 
     @property
-    @abc.abstractmethod
     def ip_index(self) -> str | None:
         """The current offset in the block."""
-        ...
+        return self._ip_index
 
     @property
-    @abc.abstractmethod
     def current_address(self) -> str | None:
         """The current address being used."""
-        ...
+        return self._current_address
 
     @property
-    @abc.abstractmethod
     def current_address_index(self) -> str | None:
         """The current offset in the ip block."""
-        ...
+        return self._current_address_index
 
     @property
-    @abc.abstractmethod
     def block_index(self) -> str | None:
         """The current offset in the ip block."""
-        ...
+        return self._block_index
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RoutePlannerDetails):
@@ -145,17 +148,17 @@ class IPBlock(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
     """
 
-    @property
-    @abc.abstractmethod
-    def type(self) -> IPBlockType:
-        """The type of the ip block."""
-        ...
+    __slots__: typing.Sequence[str] = ("_type", "_size")
 
     @property
-    @abc.abstractmethod
+    def type(self) -> IPBlockType:
+        """The type of the ip block."""
+        return self._type
+
+    @property
     def size(self) -> str:
         """The size of the ip block."""
-        ...
+        return self._size
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, IPBlock):
@@ -177,23 +180,26 @@ class FailingAddress(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_address",
+        "_timestamp",
+        "_time",
+    )
+
     @property
-    @abc.abstractmethod
     def address(self) -> str:
         """The failing address."""
-        ...
+        return self._address
 
     @property
-    @abc.abstractmethod
     def timestamp(self) -> datetime.datetime:
         """The datetime object of when the address failed."""
-        ...
+        return self._timestamp
 
     @property
-    @abc.abstractmethod
     def time(self) -> str:
         """The timestamp when the address failed as a pretty string."""
-        ...
+        return self._time
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FailingAddress):

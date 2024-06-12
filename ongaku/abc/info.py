@@ -29,53 +29,56 @@ class Info(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#info-response)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_version",
+        "_build_time",
+        "_git",
+        "_jvm",
+        "_lavaplayer",
+        "_source_managers",
+        "_filters",
+        "_plugins",
+    )
+
     @property
-    @abc.abstractmethod
     def version(self) -> Version:
         """The version of this Lavalink server."""
-        ...
+        return self._version
 
     @property
-    @abc.abstractmethod
     def build_time(self) -> datetime.datetime:
         """The datetime object of when this Lavalink jar was built."""
-        ...
+        return self._build_time
 
     @property
-    @abc.abstractmethod
     def git(self) -> Git:
         """The git information of this Lavalink server."""
-        ...
+        return self._git
 
     @property
-    @abc.abstractmethod
     def jvm(self) -> str:
         """The JVM version this Lavalink server runs on."""
-        ...
+        return self._jvm
 
     @property
-    @abc.abstractmethod
     def lavaplayer(self) -> str:
         """The Lavaplayer version being used by this server."""
-        ...
+        return self._lavaplayer
 
     @property
-    @abc.abstractmethod
     def source_managers(self) -> typing.Sequence[str]:
         """The enabled source managers for this server."""
-        ...
+        return self._source_managers
 
     @property
-    @abc.abstractmethod
     def filters(self) -> typing.Sequence[str]:
         """The enabled filters for this server."""
-        ...
+        return self._filters
 
     @property
-    @abc.abstractmethod
     def plugins(self) -> typing.Sequence[Plugin]:
         """The enabled plugins for this server."""
-        ...
+        return self._plugins
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Info):
@@ -117,41 +120,44 @@ class Version(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#version-object)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_semver",
+        "_major",
+        "_minor",
+        "_patch",
+        "_pre_release",
+        "_build",
+    )
+
     @property
-    @abc.abstractmethod
     def semver(self) -> str:
         """The full version string of this Lavalink server."""
-        ...
+        return self._semver
 
     @property
-    @abc.abstractmethod
     def major(self) -> int:
         """The major version of this Lavalink server."""
-        ...
+        return self._major
 
     @property
-    @abc.abstractmethod
     def minor(self) -> int:
         """The minor version of this Lavalink server."""
-        ...
+        return self._minor
 
     @property
-    @abc.abstractmethod
     def patch(self) -> int:
         """The patch version of this Lavalink server."""
-        ...
+        return self._patch
 
     @property
-    @abc.abstractmethod
     def pre_release(self) -> str:
         """The pre-release version according to semver as a `.` separated list of identifiers."""
-        ...
+        return self._pre_release
 
     @property
-    @abc.abstractmethod
     def build(self) -> str | None:
         """The build metadata according to semver as a `.` separated list of identifiers."""
-        ...
+        return self._build
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Version):
@@ -187,23 +193,26 @@ class Git(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#git-object)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_branch",
+        "_commit",
+        "_commit_time",
+    )
+
     @property
-    @abc.abstractmethod
     def branch(self) -> str:
         """The branch this Lavalink server was built on."""
-        ...
+        return self._branch
 
     @property
-    @abc.abstractmethod
     def commit(self) -> str:
         """The commit this Lavalink server was built on."""
-        ...
+        return self._commit
 
     @property
-    @abc.abstractmethod
     def commit_time(self) -> datetime.datetime:
         """The datetime object of when the commit was created."""
-        ...
+        return self._commit_time
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Git):
@@ -230,17 +239,17 @@ class Plugin(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#plugin-object)
     """
 
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        """The name of the plugin."""
-        ...
+    __slots__: typing.Sequence[str] = ("_name", "_version")
 
     @property
-    @abc.abstractmethod
+    def name(self) -> str:
+        """The name of the plugin."""
+        return self._name
+
+    @property
     def version(self) -> str:
         """The version of the plugin."""
-        ...
+        return self._version
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Plugin):

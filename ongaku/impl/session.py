@@ -16,14 +16,6 @@ class Session(session_.Session):
         self._resuming = resuming
         self._timeout = timeout
 
-    @property
-    def resuming(self) -> bool:
-        return self._resuming
-
-    @property
-    def timeout(self) -> int:
-        return self._timeout
-
 
 # MIT License
 

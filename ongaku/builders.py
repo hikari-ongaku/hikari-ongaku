@@ -10,6 +10,7 @@ import typing
 
 import hikari
 
+from ongaku import events
 from ongaku.abc import errors as errors_
 from ongaku.abc import events as events_
 from ongaku.abc import info as info_
@@ -19,8 +20,8 @@ from ongaku.abc import routeplanner as routeplanner_
 from ongaku.abc import session as session_
 from ongaku.abc import statistics as statistics_
 from ongaku.abc import track as track_
-from ongaku.impl import errors
-from ongaku.impl import events
+from ongaku.errors import RestExceptionError
+from ongaku.errors import RestRequestError
 from ongaku.impl import info
 from ongaku.impl import player
 from ongaku.impl import playlist
@@ -37,6 +38,7 @@ from ongaku.internal.logger import logger
 
 if typing.TYPE_CHECKING:
     from ongaku.internal import types
+    from ongaku.session import Session
 
 _logger = logger.getChild("builders")
 
@@ -53,6 +55,11 @@ class EntityBuilder:
     loads
         The loading method to use when loading payloads.
     """
+
+    __slots__: typing.Sequence[str] = (
+        "_dumps",
+        "_loads",
+    )
 
     def __init__(
         self,
@@ -87,10 +94,10 @@ class EntityBuilder:
 
     # errors
 
-    def build_rest_error(self, payload: types.PayloadMappingT) -> errors_.RestError:
-        """Build Rest Error.
+    def build_rest_error(self, payload: types.PayloadMappingT) -> RestRequestError:
+        """Build Rest Request Error.
 
-        Builds a [`RestError`][ongaku.abc.errors.RestError] object, from a payload.
+        Builds a [`RestRequestError`][ongaku.errors.RestRequestError] object, from a payload.
 
         Parameters
         ----------
@@ -99,7 +106,7 @@ class EntityBuilder:
 
         Returns
         -------
-        errors_.RestError
+        RestRequestError
             The object from the payload.
 
         Raises
@@ -113,7 +120,7 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into RestError")
 
-        return errors.RestError(
+        return RestRequestError(
             datetime.datetime.fromtimestamp(
                 int(data["timestamp"]) / 1000, datetime.timezone.utc
             ),
@@ -126,10 +133,10 @@ class EntityBuilder:
 
     def build_exception_error(
         self, payload: types.PayloadMappingT
-    ) -> errors_.ExceptionError:
-        """Build Exception Error.
+    ) -> RestExceptionError:
+        """Build Rest Exception Error.
 
-        Builds a [`ExceptionError`][ongaku.abc.errors.ExceptionError] object, from a payload.
+        Builds a [`RestExceptionError`][ongaku.errors.RestExceptionError] object, from a payload.
 
         Parameters
         ----------
@@ -138,7 +145,7 @@ class EntityBuilder:
 
         Returns
         -------
-        errors_.ExceptionError
+        RestExceptionError
             The object from the payload.
 
         Raises
@@ -152,7 +159,7 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into ExceptionError")
 
-        return errors.ExceptionError(
+        return RestExceptionError(
             data.get("message", None),
             errors_.SeverityType(data["severity"]),
             data["cause"],
@@ -160,19 +167,23 @@ class EntityBuilder:
 
     # Events
 
-    def build_ready(self, payload: types.PayloadMappingT) -> events_.Ready:
-        """Build Ready.
+    def build_ready_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.ReadyEvent:
+        """Build Ready Event.
 
-        Builds a [`Ready`][ongaku.abc.events.Ready] object, from a payload.
+        Builds a [`Ready`][ongaku.events.Ready] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.Ready
+        events.ReadyEvent
             The object from the payload.
 
         Raises
@@ -186,23 +197,27 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Ready")
 
-        return events.Ready(data["resumed"], data["sessionId"])
+        return events.ReadyEvent.from_session(
+            session, data["resumed"], data["sessionId"]
+        )
 
-    def build_player_update(
-        self, payload: types.PayloadMappingT
-    ) -> events_.PlayerUpdate:
-        """Build Player Update.
+    def build_player_update_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.PlayerUpdateEvent:
+        """Build Player Update Event.
 
-        Builds a [`PlayerUpdate`][ongaku.abc.events.PlayerUpdate] object, from a payload.
+        Builds a [`PlayerUpdateEvent`][ongaku.events.PlayerUpdateEvent] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.PlayerUpdate
+        events.PlayerUpdateEvent
             The object from the payload.
 
         Raises
@@ -216,26 +231,29 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into PlayerUpdate")
 
-        return events.PlayerUpdate(
+        return events.PlayerUpdateEvent.from_session(
+            session,
             hikari.Snowflake(int(data["guildId"])),
             self.build_player_state(data["state"]),
         )
 
-    def build_websocket_closed(
-        self, payload: types.PayloadMappingT
-    ) -> events_.WebsocketClosed:
-        """Build Websocket Closed.
+    def build_statistics_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.StatisticsEvent:
+        """Build Statistics Event.
 
-        Builds a [`WebsocketClosed`][ongaku.abc.events.WebsocketClosed] object, from a payload.
+        Builds a [`StatisticsEvent`][ongaku.events.StatisticsEvent] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.WebsocketClosed
+        events.StatisticsEvent
             The object from the payload.
 
         Raises
@@ -245,30 +263,35 @@ class EntityBuilder:
         KeyError
             Raised when a value was not found in the payload.
         """
-        data = self._ensure_mapping(payload)
+        statistics = self.build_statistics(payload)
 
-        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into WebsocketClosed")
-
-        return events.WebsocketClosed(
-            hikari.Snowflake(int(data["guildId"])),
-            data["code"],
-            data["reason"],
-            data["byRemote"],
+        return events.StatisticsEvent.from_session(
+            session,
+            statistics.players,
+            statistics.playing_players,
+            statistics.uptime,
+            statistics.memory,
+            statistics.cpu,
+            statistics.frame_stats,
         )
 
-    def build_track_start(self, payload: types.PayloadMappingT) -> events_.TrackStart:
-        """Build Track Start.
+    def build_track_start_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.TrackStartEvent:
+        """Build Track Start Event.
 
-        Builds a [`TrackStart`][ongaku.abc.events.TrackStart] object, from a payload.
+        Builds a [`TrackStartEvent`][ongaku.events.TrackStartEvent] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.TrackStart
+        events.TrackStartEvent
             The object from the payload.
 
         Raises
@@ -282,23 +305,29 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackStart")
 
-        return events.TrackStart(
-            hikari.Snowflake(int(data["guildId"])), self.build_track(data["track"])
+        return events.TrackStartEvent.from_session(
+            session,
+            hikari.Snowflake(int(data["guildId"])),
+            self.build_track(data["track"]),
         )
 
-    def build_track_end(self, payload: types.PayloadMappingT) -> events_.TrackEnd:
-        """Build Track End.
+    def build_track_end_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.TrackEndEvent:
+        """Build Track End Event.
 
-        Builds a [`TrackEnd`][ongaku.abc.events.TrackEnd] object, from a payload.
+        Builds a [`TrackEndEvent`][ongaku.events.TrackEndEvent] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.TrackEnd
+        events.TrackEndEvent
             The object from the payload.
 
         Raises
@@ -312,7 +341,8 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackEnd")
 
-        return events.TrackEnd(
+        return events.TrackEndEvent.from_session(
+            session,
             hikari.Snowflake(int(data["guildId"])),
             self.build_track(data["track"]),
             events_.TrackEndReasonType(data["reason"]),
@@ -320,19 +350,55 @@ class EntityBuilder:
 
     def build_track_exception(
         self, payload: types.PayloadMappingT
-    ) -> events_.TrackException:
+    ) -> events.TrackException:
         """Build Track Exception.
 
-        Builds a [`WebsocketClosed`][ongaku.abc.events.TrackException] object, from a payload.
+        Builds a [`TrackException`][ongaku.events.TrackException] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.TrackException
+        events.TrackException
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
+        data = self._ensure_mapping(payload)
+
+        return events.TrackException(
+            data.get("message", None),
+            errors_.SeverityType(data["severity"]),
+            data["cause"],
+        )
+
+    def build_track_exception_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.TrackExceptionEvent:
+        """Build Track Exception Event.
+
+        Builds a [`TrackExceptionEvent`][ongaku.events.TrackExceptionEvent] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+        session
+            The session attached to this event.
+
+        Returns
+        -------
+        events.TrackExceptionEvent
             The object from the payload.
 
         Raises
@@ -346,25 +412,30 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackException")
 
-        return events.TrackException(
+        return events.TrackExceptionEvent.from_session(
+            session,
             hikari.Snowflake(int(data["guildId"])),
             self.build_track(data["track"]),
-            self.build_exception_error(data["exception"]),
+            self.build_track_exception(data["exception"]),
         )
 
-    def build_track_stuck(self, payload: types.PayloadMappingT) -> events_.TrackStuck:
-        """Build Track Stuck.
+    def build_track_stuck_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.TrackStuckEvent:
+        """Build Track Stuck Event.
 
-        Builds a [`TrackStuck`][ongaku.abc.events.TrackStuck] object, from a payload.
+        Builds a [`TrackStuckEvent`][ongaku.events.TrackStuckEvent] object, from a payload.
 
         Parameters
         ----------
         payload
             The payload you provide.
+        session
+            The session attached to this event.
 
         Returns
         -------
-        events_.TrackStuck
+        events.TrackStuckEvent
             The object from the payload.
 
         Raises
@@ -378,10 +449,49 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into TrackStuck")
 
-        return events.TrackStuck(
+        return events.TrackStuckEvent.from_session(
+            session,
             hikari.Snowflake(int(data["guildId"])),
             self.build_track(data["track"]),
             data["thresholdMs"],
+        )
+
+    def build_websocket_closed_event(
+        self, payload: types.PayloadMappingT, session: Session
+    ) -> events.WebsocketClosedEvent:
+        """Build Websocket Closed Event.
+
+        Builds a [`WebsocketClosedEvent`][ongaku.abc.events.WebsocketClosedEvent] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+        session
+            The session attached to this event.
+
+        Returns
+        -------
+        events.WebsocketClosedEvent
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into WebsocketClosed")
+
+        return events.WebsocketClosedEvent.from_session(
+            session,
+            hikari.Snowflake(int(data["guildId"])),
+            data["code"],
+            data["reason"],
+            data["byRemote"],
         )
 
     # info
