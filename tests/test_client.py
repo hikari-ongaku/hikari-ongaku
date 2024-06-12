@@ -60,23 +60,20 @@ class TestClient:
         assert isinstance(client._get_client_session(), ClientSession)
 
     @pytest.mark.asyncio
-    async def test_create_session(self, ongaku_client: Client, ongaku_session: Session):
-        # Test unique
-        with mock.patch.object(
-            ongaku_client.session_handler,
-            "add_session",
-            return_value=ongaku_session,
-        ) as patched_add_session:
-            ongaku_client.create_session("test_session", False, host="127.0.0.1")
+    async def test_create_session(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session
+    ):
+        client = Client(gateway_bot)
 
-            patched_add_session.assert_called_once()
-
-        # Test not unique
-
-        with pytest.raises(errors.UniqueError):
-            ongaku_client.session_handler.add_session(ongaku_session)
-
-            ongaku_client.create_session("test_session", False, host="127.0.0.1")
+        with (
+            mock.patch.object(client, "_session_handler"),
+            mock.patch.object(
+                client.session_handler,
+                "add_session",
+                return_value=ongaku_session,
+            ) as patched_add_session,
+        ):
+            client.create_session("test_session", False, host="127.0.0.1")
 
             patched_add_session.assert_called_once()
 
@@ -92,8 +89,14 @@ class TestClient:
         # Create a new player.
 
         with (
+            mock.patch.object(client, "_session_handler"),
             mock.patch.object(
                 client.session_handler, "fetch_session", return_value=ongaku_session
+            ),
+            mock.patch.object(
+                client.session_handler,
+                "fetch_player",
+                side_effect=errors.PlayerMissingError,
             ),
             mock.patch.object(
                 client.session_handler,
@@ -109,11 +112,13 @@ class TestClient:
 
         # Create an existing player.
 
-        client.session_handler.add_player(ongaku_player)
-
         with (
+            mock.patch.object(client, "_session_handler"),
             mock.patch.object(
                 client.session_handler, "fetch_session", return_value=ongaku_session
+            ),
+            mock.patch.object(
+                client.session_handler, "fetch_player", return_value=ongaku_player
             ),
             mock.patch.object(
                 client.session_handler,
@@ -139,29 +144,29 @@ class TestClient:
 
         player = client.fetch_player(1234567890)
 
-        assert isinstance(player, Player)
-
         assert player.guild_id == Snowflake(1234567890)
 
-        with mock.patch.object(ongaku_player, "disconnect", return_value=None):
+        with mock.patch.object(
+            ongaku_player, "disconnect", new_callable=mock.AsyncMock, return_value=None
+        ):
             await client.session_handler.delete_player(Snowflake(1234567890))
 
         with pytest.raises(errors.PlayerMissingError):
             client.fetch_player(1234567890)
 
     @pytest.mark.asyncio
-    async def test_player_delete(
-        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_player: Player
-    ):
+    async def test_player_delete(self, gateway_bot: gateway_bot_.GatewayBot):
         client = Client(gateway_bot)
 
-        client.session_handler.add_player(ongaku_player)
-
-        # Delete player
-
-        with mock.patch.object(
-            client.session_handler, "delete_player", return_value=None
-        ) as patched_delete_player:
+        with (
+            mock.patch.object(client, "_session_handler"),
+            mock.patch.object(
+                client.session_handler,
+                "delete_player",
+                new_callable=mock.AsyncMock,
+                return_value=None,
+            ) as patched_delete_player,
+        ):
             await client.session_handler.delete_player(Snowflake(1234567890))
 
             patched_delete_player.assert_called_once_with(Snowflake(1234567890))

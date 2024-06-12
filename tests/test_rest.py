@@ -30,6 +30,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -38,6 +39,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "track", "data": payloads.TRACK_PAYLOAD},
             ) as patched_request,
         ):
@@ -65,6 +67,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -73,6 +76,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "track", "data": payloads.TRACK_PAYLOAD},
             ) as patched_request,
         ):
@@ -98,6 +102,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -106,6 +111,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "track", "data": {}},
             ) as patched_request,
             pytest.raises(errors.BuildError) as build_error,
@@ -130,6 +136,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -138,6 +145,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={
                     "loadType": "playlist",
                     "data": payloads.PLAYLIST_PAYLOAD,
@@ -170,6 +178,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -178,6 +187,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "playlist", "data": {}},
             ) as patched_request,
             pytest.raises(errors.BuildError) as build_error,
@@ -202,6 +212,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -210,6 +221,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "search", "data": [payloads.TRACK_PAYLOAD]},
             ) as patched_request,
         ):
@@ -232,6 +244,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -240,6 +253,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "search", "data": [{}, {}, {}]},
             ) as patched_request,
             pytest.raises(errors.BuildError) as build_error,
@@ -264,6 +278,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -272,6 +287,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={"loadType": "empty", "data": {}},
             ) as patched_request,
         ):
@@ -295,6 +311,7 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -303,6 +320,7 @@ class TestRestTrack:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value={
                     "loadType": "error",
                     "data": payloads.EXCEPTION_ERROR_PAYLOAD,
@@ -330,13 +348,17 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.TRACK_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.TRACK_PAYLOAD,
             ) as patched_request,
         ):
             new_track = await rest.decode_track("encoded", session=ongaku_session)
@@ -356,13 +378,17 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.TRACK_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.TRACK_PAYLOAD,
             ) as patched_request,
         ):
             new_track = await rest.decode_track("encoded")
@@ -384,13 +410,14 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value={}
+                ongaku_session, "request", new_callable=mock.AsyncMock, return_value={}
             ) as patched_request,
             pytest.raises(errors.BuildError),
         ):
@@ -409,13 +436,17 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=[payloads.TRACK_PAYLOAD]
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=[payloads.TRACK_PAYLOAD],
             ) as patched_request,
         ):
             tracks = await rest.decode_tracks(["encoded"], session=ongaku_session)
@@ -440,13 +471,17 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=[payloads.TRACK_PAYLOAD]
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=[payloads.TRACK_PAYLOAD],
             ) as patched_request,
         ):
             tracks = await rest.decode_tracks(["encoded"])
@@ -473,13 +508,17 @@ class TestRestTrack:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=[{}]
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=[{}],
             ) as patched_request,
             pytest.raises(errors.BuildError),
         ):
@@ -506,13 +545,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=[payloads.PLAYER_PAYLOAD]
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=[payloads.PLAYER_PAYLOAD],
             ) as patched_request,
         ):
             await rest.fetch_players("session_id", session=ongaku_session)
@@ -532,13 +575,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=[payloads.PLAYER_PAYLOAD]
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=[payloads.PLAYER_PAYLOAD],
             ) as patched_request,
         ):
             await rest.fetch_players("session_id")
@@ -558,13 +605,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.PLAYER_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.PLAYER_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_player(
@@ -586,13 +637,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.PLAYER_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.PLAYER_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_player("session_id", Snowflake(1234567890))
@@ -612,13 +667,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.PLAYER_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.PLAYER_PAYLOAD,
             ) as patched_request,
         ):
             await rest.update_player(
@@ -665,13 +724,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.PLAYER_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.PLAYER_PAYLOAD,
             ) as patched_request,
         ):
             await rest.update_player(
@@ -717,13 +780,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=None
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=None,
             ) as patched_request,
         ):
             await rest.delete_player(
@@ -745,13 +812,17 @@ class TestRestPlayer:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=None
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=None,
             ) as patched_request,
         ):
             await rest.delete_player("session_id", Snowflake(1234567890))
@@ -771,13 +842,17 @@ class TestRestSession:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.SESSION_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.SESSION_PAYLOAD,
             ) as patched_request,
         ):
             await rest.update_session(
@@ -799,13 +874,17 @@ class TestRestSession:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.SESSION_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.SESSION_PAYLOAD,
             ) as patched_request,
         ):
             await rest.update_session("session_id", resuming=False, timeout=230)
@@ -829,13 +908,17 @@ class TestRestInformation:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.INFO_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.INFO_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_info(session=ongaku_session)
@@ -853,13 +936,17 @@ class TestRestInformation:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.INFO_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.INFO_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_info()
@@ -879,13 +966,17 @@ class TestRestInformation:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.INFO_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.INFO_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_version(session=ongaku_session)
@@ -901,13 +992,17 @@ class TestRestInformation:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.INFO_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.INFO_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_version()
@@ -925,13 +1020,17 @@ class TestRestInformation:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.STATISTICS_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.STATISTICS_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_stats(session=ongaku_session)
@@ -949,13 +1048,17 @@ class TestRestInformation:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", return_value=payloads.STATISTICS_PAYLOAD
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value=payloads.STATISTICS_PAYLOAD,
             ) as patched_request,
         ):
             await rest.fetch_stats()
@@ -977,6 +1080,7 @@ class TestRestRoutePlanner:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -985,6 +1089,7 @@ class TestRestRoutePlanner:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value=payloads.ROUTEPLANNER_STATUS_PAYLOAD,
             ) as patched_request,
         ):
@@ -1007,6 +1112,7 @@ class TestRestRoutePlanner:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -1015,6 +1121,7 @@ class TestRestRoutePlanner:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value=payloads.ROUTEPLANNER_STATUS_PAYLOAD,
             ) as patched_request,
         ):
@@ -1035,13 +1142,17 @@ class TestRestRoutePlanner:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", side_effect=errors.RestEmptyError
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                side_effect=errors.RestEmptyError,
             ) as patched_request,
         ):
             assert await rest.fetch_routeplanner_status() is None
@@ -1062,6 +1173,7 @@ class TestRestRoutePlanner:
 
         # Test with payload
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -1070,6 +1182,7 @@ class TestRestRoutePlanner:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value=payloads.ROUTEPLANNER_STATUS_PAYLOAD,
             ) as patched_request,
         ):
@@ -1089,6 +1202,7 @@ class TestRestRoutePlanner:
 
         # Test with payload
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -1097,6 +1211,7 @@ class TestRestRoutePlanner:
             mock.patch.object(
                 ongaku_session,
                 "request",
+                new_callable=mock.AsyncMock,
                 return_value=payloads.ROUTEPLANNER_STATUS_PAYLOAD,
             ) as patched_request,
         ):
@@ -1115,6 +1230,7 @@ class TestRestRoutePlanner:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
@@ -1146,6 +1262,7 @@ class TestRestRoutePlanner:
         rest = RESTClient(ongaku_client)
 
         with (
+            mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
                 rest._client.session_handler,
                 "fetch_session",
