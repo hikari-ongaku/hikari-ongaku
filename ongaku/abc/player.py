@@ -14,6 +14,7 @@ if typing.TYPE_CHECKING:
 
     import hikari
 
+    from ongaku.abc.filters import Filters
     from ongaku.abc.track import Track
 
 __all__ = (
@@ -77,10 +78,9 @@ class Player(abc.ABC):
         return self._voice
 
     @property
-    def filters(self) -> typing.Mapping[str, typing.Any]:
+    def filters(self) -> Filters | None:
         """The filter object."""
         return self._filters
-        # FIXME: This should return a filter object. (or at least  try to parse one.)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Player):

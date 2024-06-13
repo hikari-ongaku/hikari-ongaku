@@ -27,6 +27,7 @@ from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
     from ongaku.abc import player as player_
+    from ongaku.abc.filters import Filters
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
 
@@ -79,7 +80,7 @@ class Player:
         self._voice: player_.Voice | None = None
         self._state: player_.State | None = None
         self._queue: typing.MutableSequence[track_.Track] = []
-        self._filters: typing.Mapping[str, typing.Any] = {}
+        self._filters: Filters | None = None
         self._connected: bool = False
         self._session_id: str | None = None
         self._volume: int = -1
@@ -173,7 +174,7 @@ class Player:
         return self._state
 
     @property
-    def filters(self) -> typing.Mapping[str, typing.Any]:
+    def filters(self) -> Filters | None:
         """Filters for the player."""
         return self._filters
 
@@ -898,6 +899,22 @@ class Player:
             TRACE_LEVEL,
             f"Successfully set position ({value}) to track in {self.guild_id}",
         )
+
+    async def set_filters(self, filters: Filters | None) -> None:
+        # FIXME: Docs need doing
+
+        session = self.session._get_session_id()
+
+        player = await self.session.client.rest.update_player(
+            session, self.guild_id, filters=filters, session=self.session
+        )
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Successfully updated filters in guild {self.guild_id}",
+        )
+
+        self._update(player)
 
     async def transfer(self, session: Session) -> Player:
         """Transfer.
