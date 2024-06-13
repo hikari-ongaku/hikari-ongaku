@@ -5,6 +5,8 @@ All implementations of abstract classes.
 
 from __future__ import annotations
 
+from ongaku.abc.filters import BandType
+from ongaku.impl.filters import Filters
 from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.impl.info import Git
 from ongaku.impl.info import Info
@@ -28,6 +30,9 @@ from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 
 __all__ = (
+    # .filters
+    "BandType",
+    "Filters",
     # .handlers
     "BasicSessionHandler",
     # .info

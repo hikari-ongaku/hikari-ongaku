@@ -10,6 +10,17 @@ from ongaku.abc.errors import ExceptionError
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.filters import BandType
+from ongaku.abc.filters import ChannelMix
+from ongaku.abc.filters import Distortion
+from ongaku.abc.filters import Equalizer
+from ongaku.abc.filters import Filters
+from ongaku.abc.filters import Karaoke
+from ongaku.abc.filters import LowPass
+from ongaku.abc.filters import Rotation
+from ongaku.abc.filters import Timescale
+from ongaku.abc.filters import Tremolo
+from ongaku.abc.filters import Vibrato
 from ongaku.abc.handler import SessionHandler
 from ongaku.abc.info import Git
 from ongaku.abc.info import Info
@@ -42,6 +53,18 @@ __all__ = (
     # .events
     "OngakuEvent",
     "TrackEndReasonType",
+    # .filters
+    "Filters",
+    "Equalizer",
+    "Karaoke",
+    "Timescale",
+    "Tremolo",
+    "Vibrato",
+    "Rotation",
+    "Distortion",
+    "ChannelMix",
+    "LowPass",
+    "BandType",
     # .handler
     "SessionHandler",
     # .info
