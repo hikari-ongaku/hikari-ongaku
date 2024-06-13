@@ -2,38 +2,19 @@
 
 import datetime
 
-import pytest
 from hikari.snowflakes import Snowflake
 
+from ongaku.impl.filters import Filters
 from ongaku.impl.player import Player
 from ongaku.impl.player import State
 from ongaku.impl.player import Voice
 from ongaku.impl.track import Track
-from ongaku.impl.track import TrackInfo
 
 
-@pytest.fixture()
-def track() -> Track:
-    track_info = TrackInfo(
-        "identifier",
-        False,
-        "author",
-        1,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
-    )
-    return Track("encoded", track_info, {}, {}, None)
-
-
-def test_player(track: Track):
+def test_player(track: Track, filters: Filters):
     state = State(datetime.datetime.now(), 2, True, 3)
     voice = Voice("token", "endpoint", "session_id")
-    player = Player(Snowflake(1234567890), track, 1, True, state, voice, {})
+    player = Player(Snowflake(1234567890), track, 1, True, state, voice, filters)
 
     assert isinstance(player.guild_id, Snowflake)
     assert player.guild_id == Snowflake(1234567890)
@@ -42,7 +23,7 @@ def test_player(track: Track):
     assert player.is_paused is True
     assert player.state == state
     assert player.voice == voice
-    assert player.filters == {}
+    assert player.filters == filters
 
 
 def test_player_state():

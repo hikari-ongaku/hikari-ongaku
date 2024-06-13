@@ -112,7 +112,13 @@ class TestPlayer:
                 "ongaku.rest.RESTClient.update_player",
                 new_callable=mock.AsyncMock,
                 return_value=player_.Player(
-                    Snowflake(1234567890), None, 1, False, mock.Mock(), voice, {}
+                    Snowflake(1234567890),
+                    None,
+                    1,
+                    False,
+                    mock.Mock(),
+                    voice,
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -239,7 +245,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -365,7 +371,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -398,7 +404,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -475,7 +481,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -580,7 +586,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -637,7 +643,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -702,7 +708,7 @@ class TestPlayer:
                     False,
                     mock.Mock(),
                     mock.Mock(),
-                    {},
+                    mock.Mock(),
                 ),
             ) as patched_update,
         ):
@@ -862,7 +868,7 @@ class TestPlayer:
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         voice = player_.Voice("token", "endpoint", "session_id")
-        filters: typing.Mapping[str, typing.Any] = {"filter": {}}
+        filters = mock.Mock()
         replacement_player = player_.Player(
             Snowflake(1234567890), None, 10, False, state, voice, filters
         )

@@ -155,6 +155,38 @@ class TestBuilderEvents:
         assert parsed_result.threshold_ms == 1
 
 
+class TestBuildFilters:
+    def test_build_filters(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_equalizer(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_karaoke(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_timescale(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_tremolo(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_vibrato(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_rotation(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_distortion(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_channel_mix(self, builder: EntityBuilder):
+        raise Exception
+
+    def test_build_filters_low_pass(self, builder: EntityBuilder):
+        raise Exception
+
+
 class TestBuilderInfo:
     def test_build_info(self, builder: EntityBuilder):
         parsed_result = builder.build_info(payloads.INFO_PAYLOAD)
