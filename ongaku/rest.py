@@ -16,7 +16,9 @@ from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if typing.TYPE_CHECKING:
+    
     from ongaku.abc import session as session_
+    from ongaku.abc.filters import Filters
     from ongaku.abc.info import Info
     from ongaku.abc.player import Player
     from ongaku.abc.player import Voice
@@ -455,6 +457,7 @@ class RESTClient:
         end_time: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         volume: hikari.UndefinedOr[int] = hikari.UNDEFINED,
         paused: hikari.UndefinedOr[bool] = hikari.UNDEFINED,
+        filters: hikari.UndefinedNoneOr[Filters] = hikari.UNDEFINED,
         voice: hikari.UndefinedOr[Voice] = hikari.UNDEFINED,
         no_replace: bool = True,
         session: Session | None = None,
@@ -495,6 +498,8 @@ class RESTClient:
             The volume of the player.
         paused
             Whether or not to pause the player.
+        filters
+            The filters to apply to the player.
         voice
             The player voice object you wish to set.
         no_replace
@@ -532,8 +537,8 @@ class RESTClient:
             and end_time is hikari.UNDEFINED
             and volume is hikari.UNDEFINED
             and paused is hikari.UNDEFINED
+            and filters is hikari.UNDEFINED
             and voice is hikari.UNDEFINED
-            and position is hikari.UNDEFINED
         ):
             raise ValueError("Update requires at least one change.")
 
@@ -568,6 +573,158 @@ class RESTClient:
 
         if paused != hikari.UNDEFINED:
             patch_data.update({"paused": paused})
+
+        if filters != hikari.UNDEFINED:
+            if filters is None:
+                patch_data.update({"filters": None})
+            else:
+                filters_payload: typing.MutableMapping[str, typing.Any] = {}
+
+                print(filters.plugin_filters)
+                if len(filters.plugin_filters.items()) > 0:
+                    filters_payload.update({"pluginFilters": filters.plugin_filters})
+
+                if filters.volume:
+                    filters_payload.update({"volume": filters.volume})
+
+                if filters.equalizer and len(filters.equalizer) > 0:
+                    equalizer_list: typing.MutableSequence[typing.Any] = []
+                    for eq in filters.equalizer:
+                        equalizer_list.append({"band": eq.band.value, "gain": eq.gain})
+
+                    filters_payload.update({"equalizer": equalizer_list})
+
+                if filters.karaoke:
+                    karaoke_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.karaoke.level:
+                        karaoke_payload.update({"level": filters.karaoke.level})
+                    if filters.karaoke.mono_level:
+                        karaoke_payload.update(
+                            {"monoLevel": filters.karaoke.mono_level}
+                        )
+                    if filters.karaoke.filter_band:
+                        karaoke_payload.update(
+                            {"filterBand": filters.karaoke.filter_band}
+                        )
+                    if filters.karaoke.filter_width:
+                        karaoke_payload.update(
+                            {"filterWidth": filters.karaoke.filter_width}
+                        )
+
+                    if len(karaoke_payload.items()) > 0:
+                        filters_payload.update({"karaoke": karaoke_payload})
+
+                if filters.timescale:
+                    timescale_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.timescale.speed:
+                        timescale_payload.update({"speed": filters.timescale.speed})
+                    if filters.timescale.pitch:
+                        timescale_payload.update({"pitch": filters.timescale.pitch})
+                    if filters.timescale.rate:
+                        timescale_payload.update({"rate": filters.timescale.rate})
+
+                    if len(timescale_payload.items()) > 0:
+                        filters_payload.update({"timescale": timescale_payload})
+
+                if filters.tremolo:
+                    tremolo_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.tremolo.frequency:
+                        tremolo_payload.update({"frequency": filters.tremolo.frequency})
+                    if filters.tremolo.depth:
+                        tremolo_payload.update({"depth": filters.tremolo.depth})
+
+                    if len(tremolo_payload.items()) > 0:
+                        filters_payload.update({"tremolo": tremolo_payload})
+
+                if filters.vibrato:
+                    vibrato_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.vibrato.frequency:
+                        vibrato_payload.update({"frequency": filters.vibrato.frequency})
+                    if filters.vibrato.depth:
+                        vibrato_payload.update({"depth": filters.vibrato.depth})
+
+                    if len(vibrato_payload.items()) > 0:
+                        filters_payload.update({"vibrato": vibrato_payload})
+
+                if filters.rotation:
+                    rotation_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.rotation.rotation_hz:
+                        rotation_payload.update({"rotationHz": filters.rotation.rotation_hz})
+
+                    if len(rotation_payload.items()) > 0:
+                        filters_payload.update({"rotation": rotation_payload})
+
+                if filters.distortion:
+                    distortion_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.distortion.sin_offset:
+                        distortion_payload.update(
+                            {"sinOffset": filters.distortion.sin_offset}
+                        )
+                    if filters.distortion.sin_scale:
+                        distortion_payload.update(
+                            {"sinScale": filters.distortion.sin_scale}
+                        )
+                    if filters.distortion.cos_offset:
+                        distortion_payload.update(
+                            {"cosOffset": filters.distortion.cos_offset}
+                        )
+                    if filters.distortion.cos_scale:
+                        distortion_payload.update(
+                            {"cosScale": filters.distortion.cos_scale}
+                        )
+                    if filters.distortion.tan_offset:
+                        distortion_payload.update(
+                            {"tanOffset": filters.distortion.tan_offset}
+                        )
+                    if filters.distortion.tan_scale:
+                        distortion_payload.update(
+                            {"tanScale": filters.distortion.tan_scale}
+                        )
+                    if filters.distortion.offset:
+                        distortion_payload.update(
+                            {"offset": filters.distortion.offset}
+                        )
+                    if filters.distortion.scale:
+                        distortion_payload.update(
+                            {"scale": filters.distortion.scale}
+                        )
+
+                    if len(distortion_payload.items()) > 0:
+                        filters_payload.update({"distortion": distortion_payload})
+
+                if filters.channel_mix:
+                    channel_mix_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.channel_mix.left_to_left:
+                        channel_mix_payload.update(
+                            {"leftToLeft": filters.channel_mix.left_to_left}
+                        )
+                    if filters.channel_mix.left_to_right:
+                        channel_mix_payload.update(
+                            {"leftToRight": filters.channel_mix.left_to_right}
+                        )
+                    if filters.channel_mix.right_to_left:
+                        channel_mix_payload.update(
+                            {"rightToLeft": filters.channel_mix.right_to_left}
+                        )
+                    if filters.channel_mix.right_to_right:
+                        channel_mix_payload.update(
+                            {"rightToRight": filters.channel_mix.right_to_right}
+                        )
+
+                    if len(channel_mix_payload.items()) > 0:
+                        filters_payload.update({"channelMix": channel_mix_payload})
+
+                if filters.low_pass:
+                    low_pass_payload: typing.MutableMapping[str, typing.Any] = {}
+                    if filters.low_pass.smoothing:
+                        low_pass_payload.update(
+                            {"smoothing": filters.low_pass.smoothing}
+                        )
+
+                    if len(low_pass_payload.items()) > 0:
+                        filters_payload.update({"lowPass": low_pass_payload})
+
+                patch_data.update({"filters": filters_payload})
 
         if voice != hikari.UNDEFINED:
             patch_data.update(
