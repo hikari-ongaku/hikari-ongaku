@@ -10,7 +10,10 @@ Below is some examples of how to use the client within a bot setup.
     ```py
     bot = hikari.GatewayBot(...)
     arc_client = arc.GatewayClient(bot)
+
     client = ongaku.Client.from_arc(arc_client)
+
+    client.create_session(...)
     ```
 
     Example usage:
@@ -34,7 +37,10 @@ Below is some examples of how to use the client within a bot setup.
 
     bot = hikari.GatewayBot(...)
     client = ongaku.Client(bot)
+
     crescent_client = crescent.Client(bot, MyModel(client))
+
+    client.model.ongaku.create_session(...)
     ```
 
     Example usage:
@@ -56,6 +62,8 @@ Below is some examples of how to use the client within a bot setup.
     bot = lightbulb.BotApp(...)
 
     bot.d.ongaku = ongaku.Client(bot)
+
+    bot.d.ongaku.create_session(...)
     ```
 
     Example usage:
@@ -76,7 +84,10 @@ Below is some examples of how to use the client within a bot setup.
     ```py
     bot = hikari.GatewayBot(...)
     tanjun_client = tanjun.Client.from_gateway_bot(bot)
+
     client = ongaku.Client.from_tanjun(tanjun_client)
+
+    client.create_session(...)
     ```
 
     Example usage:
@@ -88,3 +99,6 @@ Below is some examples of how to use the client within a bot setup.
 
         await player.play(...)
     ```
+
+!!! note
+    To actually play any tracks, you will need to make sure you have [added a session](session.md#adding-a-new-session-to-the-session-handler) and also need to [fetch a track](player.md#getting-tracks).

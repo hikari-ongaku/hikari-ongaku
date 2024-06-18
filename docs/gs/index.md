@@ -41,7 +41,7 @@ pip install hikari-ongaku
 
     ---
 
-    How to change to a different session handler, and what all session handlers do.
+    How to add a session, change to a different session handler and what all session handlers do.
 
     [:material-arrow-right: Learn more](./session.md)
 
