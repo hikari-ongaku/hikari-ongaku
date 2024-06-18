@@ -5,7 +5,27 @@ description: Using, switching and creating session handlers
 
 # sessions
 
-## Changing Session Handler
+## Adding a new session to the Session Handler
+
+Something that is needed to run a session is to add a new session.
+This is the lavalink server that ongaku will connect too.
+
+```py
+client.create_session(
+    ssl=False,
+    host="127.0.0.1",
+    port=2333,
+    password="youshallnotpass"
+)
+```
+
+!!! tip
+    You can have more than one session connected to a singular client!
+
+    This will give your bot more servers to fallback on if one fails.
+
+
+## Changing The default Session Handler
 
 The way you change your session handler, is when you create your client.
 
