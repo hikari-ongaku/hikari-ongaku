@@ -1026,7 +1026,7 @@ class Player:
         if not self._loop:
             _logger.log(
                 TRACE_LEVEL,
-                "Removing first track."
+                f"Removing first track from guild {self.guild_id}"
             )
             self.remove(0)
 
