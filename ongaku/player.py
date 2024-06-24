@@ -906,7 +906,7 @@ class Player:
             f"Successfully set position ({value}) to track in {self.guild_id}",
         )
 
-    def set_loop(self, enable: bool | None) -> None:
+    def set_loop(self, enable: bool | None = None) -> bool:
         """
         Set loop.
 
@@ -925,8 +925,11 @@ class Player:
         """
         if enable:
             self._loop = enable
-        else:
-            self._loop = not self._loop
+            return self._loop
+
+        self._loop = not self._loop
+
+        return self._loop
 
     async def transfer(self, session: Session) -> Player:
         """Transfer.
@@ -1021,6 +1024,10 @@ class Player:
             return
 
         if not self._loop:
+            _logger.log(
+                TRACE_LEVEL,
+                "Removing first track."
+            )
             self.remove(0)
 
         _logger.log(
