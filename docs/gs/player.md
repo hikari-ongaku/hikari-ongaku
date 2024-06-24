@@ -371,7 +371,7 @@ There is a few options for pausing the tracks.
     The following method will force loop the player, whether it is looping or not.
 
     ```py
-    await player.set_loop(False)
+    player.set_loop(False)
     ```
 
 === "Force disable looping"
@@ -379,7 +379,7 @@ There is a few options for pausing the tracks.
     The following method will force loop the player, whether it is looping or not.
 
     ```py
-    await player.set_loop(True)
+    player.set_loop(True)
     ```
 
 === "Toggling"
@@ -387,7 +387,7 @@ There is a few options for pausing the tracks.
     The following method will change it from its current state, to the opposite state.
 
     ```py
-    await player.set_loop()
+    player.set_loop()
     ```
 
 ### Volume
