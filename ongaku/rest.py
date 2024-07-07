@@ -16,7 +16,6 @@ from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if typing.TYPE_CHECKING:
-    
     from ongaku.abc import session as session_
     from ongaku.abc.filters import Filters
     from ongaku.abc.info import Info
@@ -584,7 +583,7 @@ class RESTClient:
                 if len(filters.plugin_filters.items()) > 0:
                     filters_payload.update({"pluginFilters": filters.plugin_filters})
 
-                if filters.volume:
+                if filters.volume is not None:
                     filters_payload.update({"volume": filters.volume})
 
                 if filters.equalizer and len(filters.equalizer) > 0:
@@ -598,15 +597,15 @@ class RESTClient:
                     karaoke_payload: typing.MutableMapping[str, typing.Any] = {}
                     if filters.karaoke.level:
                         karaoke_payload.update({"level": filters.karaoke.level})
-                    if filters.karaoke.mono_level:
+                    if filters.karaoke.mono_level is not None:
                         karaoke_payload.update(
                             {"monoLevel": filters.karaoke.mono_level}
                         )
-                    if filters.karaoke.filter_band:
+                    if filters.karaoke.filter_band is not None:
                         karaoke_payload.update(
                             {"filterBand": filters.karaoke.filter_band}
                         )
-                    if filters.karaoke.filter_width:
+                    if filters.karaoke.filter_width is not None:
                         karaoke_payload.update(
                             {"filterWidth": filters.karaoke.filter_width}
                         )
@@ -616,11 +615,11 @@ class RESTClient:
 
                 if filters.timescale:
                     timescale_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.timescale.speed:
+                    if filters.timescale.speed is not None:
                         timescale_payload.update({"speed": filters.timescale.speed})
-                    if filters.timescale.pitch:
+                    if filters.timescale.pitch is not None:
                         timescale_payload.update({"pitch": filters.timescale.pitch})
-                    if filters.timescale.rate:
+                    if filters.timescale.rate is not None:
                         timescale_payload.update({"rate": filters.timescale.rate})
 
                     if len(timescale_payload.items()) > 0:
@@ -628,9 +627,9 @@ class RESTClient:
 
                 if filters.tremolo:
                     tremolo_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.tremolo.frequency:
+                    if filters.tremolo.frequency is not None:
                         tremolo_payload.update({"frequency": filters.tremolo.frequency})
-                    if filters.tremolo.depth:
+                    if filters.tremolo.depth is not None:
                         tremolo_payload.update({"depth": filters.tremolo.depth})
 
                     if len(tremolo_payload.items()) > 0:
@@ -638,9 +637,9 @@ class RESTClient:
 
                 if filters.vibrato:
                     vibrato_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.vibrato.frequency:
+                    if filters.vibrato.frequency is not None:
                         vibrato_payload.update({"frequency": filters.vibrato.frequency})
-                    if filters.vibrato.depth:
+                    if filters.vibrato.depth is not None:
                         vibrato_payload.update({"depth": filters.vibrato.depth})
 
                     if len(vibrato_payload.items()) > 0:
@@ -648,65 +647,63 @@ class RESTClient:
 
                 if filters.rotation:
                     rotation_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.rotation.rotation_hz:
-                        rotation_payload.update({"rotationHz": filters.rotation.rotation_hz})
+                    if filters.rotation.rotation_hz is not None:
+                        rotation_payload.update(
+                            {"rotationHz": filters.rotation.rotation_hz}
+                        )
 
                     if len(rotation_payload.items()) > 0:
                         filters_payload.update({"rotation": rotation_payload})
 
                 if filters.distortion:
                     distortion_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.distortion.sin_offset:
+                    if filters.distortion.sin_offset is not None:
                         distortion_payload.update(
                             {"sinOffset": filters.distortion.sin_offset}
                         )
-                    if filters.distortion.sin_scale:
+                    if filters.distortion.sin_scale is not None:
                         distortion_payload.update(
                             {"sinScale": filters.distortion.sin_scale}
                         )
-                    if filters.distortion.cos_offset:
+                    if filters.distortion.cos_offset is not None:
                         distortion_payload.update(
                             {"cosOffset": filters.distortion.cos_offset}
                         )
-                    if filters.distortion.cos_scale:
+                    if filters.distortion.cos_scale is not None:
                         distortion_payload.update(
                             {"cosScale": filters.distortion.cos_scale}
                         )
-                    if filters.distortion.tan_offset:
+                    if filters.distortion.tan_offset is not None:
                         distortion_payload.update(
                             {"tanOffset": filters.distortion.tan_offset}
                         )
-                    if filters.distortion.tan_scale:
+                    if filters.distortion.tan_scale is not None:
                         distortion_payload.update(
                             {"tanScale": filters.distortion.tan_scale}
                         )
-                    if filters.distortion.offset:
-                        distortion_payload.update(
-                            {"offset": filters.distortion.offset}
-                        )
-                    if filters.distortion.scale:
-                        distortion_payload.update(
-                            {"scale": filters.distortion.scale}
-                        )
+                    if filters.distortion.offset is not None:
+                        distortion_payload.update({"offset": filters.distortion.offset})
+                    if filters.distortion.scale is not None:
+                        distortion_payload.update({"scale": filters.distortion.scale})
 
                     if len(distortion_payload.items()) > 0:
                         filters_payload.update({"distortion": distortion_payload})
 
                 if filters.channel_mix:
                     channel_mix_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.channel_mix.left_to_left:
+                    if filters.channel_mix.left_to_left is not None:
                         channel_mix_payload.update(
                             {"leftToLeft": filters.channel_mix.left_to_left}
                         )
-                    if filters.channel_mix.left_to_right:
+                    if filters.channel_mix.left_to_right is not None:
                         channel_mix_payload.update(
                             {"leftToRight": filters.channel_mix.left_to_right}
                         )
-                    if filters.channel_mix.right_to_left:
+                    if filters.channel_mix.right_to_left is not None:
                         channel_mix_payload.update(
                             {"rightToLeft": filters.channel_mix.right_to_left}
                         )
-                    if filters.channel_mix.right_to_right:
+                    if filters.channel_mix.right_to_right is not None:
                         channel_mix_payload.update(
                             {"rightToRight": filters.channel_mix.right_to_right}
                         )
@@ -716,7 +713,7 @@ class RESTClient:
 
                 if filters.low_pass:
                     low_pass_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.low_pass.smoothing:
+                    if filters.low_pass.smoothing is not None:
                         low_pass_payload.update(
                             {"smoothing": filters.low_pass.smoothing}
                         )
