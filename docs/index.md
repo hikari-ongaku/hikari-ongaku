@@ -26,7 +26,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
     Here you can find explanations on how to use ongaku, and its features.
 
-    [:material-arrow-right: Learn more](https://hikari-py.dev/)
+    [:material-arrow-right: Learn more](gs/index.md)
 
 -  Examples
 

@@ -174,7 +174,7 @@ class EntityBuilder:
     ) -> events.ReadyEvent:
         """Build Ready Event.
 
-        Builds a [`Ready`][ongaku.events.Ready] object, from a payload.
+        Builds a [`Ready`][ongaku.events.ReadyEvent] object, from a payload.
 
         Parameters
         ----------
@@ -361,8 +361,6 @@ class EntityBuilder:
         ----------
         payload
             The payload you provide.
-        session
-            The session attached to this event.
 
         Returns
         -------
@@ -463,7 +461,7 @@ class EntityBuilder:
     ) -> events.WebsocketClosedEvent:
         """Build Websocket Closed Event.
 
-        Builds a [`WebsocketClosedEvent`][ongaku.abc.events.WebsocketClosedEvent] object, from a payload.
+        Builds a [`WebsocketClosedEvent`][ongaku.events.WebsocketClosedEvent] object, from a payload.
 
         Parameters
         ----------
