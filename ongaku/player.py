@@ -1017,17 +1017,18 @@ class Player:
                 self.session, self.guild_id, self.queue[0]
             )
 
-            self.remove(0)
+            if not self._loop:
+                _logger.log(
+                    TRACE_LEVEL, f"Removing last track in guild {self.guild_id}"
+                )
+                self.remove(0)
 
             await self.app.event_manager.dispatch(new_event)
 
             return
 
         if not self._loop:
-            _logger.log(
-                TRACE_LEVEL,
-                f"Removing first track from guild {self.guild_id}"
-            )
+            _logger.log(TRACE_LEVEL, f"Removing first track from guild {self.guild_id}")
             self.remove(0)
 
         _logger.log(
