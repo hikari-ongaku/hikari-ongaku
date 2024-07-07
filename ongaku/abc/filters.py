@@ -70,6 +70,45 @@ class Filters:
     def plugin_filters(self) -> typing.Mapping[str, typing.Any]:
         return self._plugin_filters
 
+    def __eq__(self, other: object) -> bool: # noqa: C901
+        if not isinstance(other, Filters):
+            return False
+
+        if self.volume != other.volume:
+            return False
+
+        if self.equalizer != other.equalizer:
+            return False
+
+        if self.karaoke != other.karaoke:
+            return False
+
+        if self.timescale != other.timescale:
+            return False
+
+        if self.tremolo != other.tremolo:
+            return False
+
+        if self.vibrato != other.vibrato:
+            return False
+
+        if self.rotation != other.rotation:
+            return False
+
+        if self.distortion != other.distortion:
+            return False
+
+        if self.channel_mix != other.channel_mix:
+            return False
+
+        if self.low_pass != other.low_pass:
+            return False
+
+        if self.plugin_filters != other.plugin_filters:
+            return False
+
+        return True
+
 
 class Equalizer:
     __slots__: typing.Sequence[str] = ("_band", "_gain")
@@ -81,6 +120,18 @@ class Equalizer:
     @property
     def gain(self) -> float:
         return self._gain
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Equalizer):
+            return False
+
+        if self.band != other.band:
+            return False
+
+        if self.gain != other.gain:
+            return False
+
+        return True
 
 
 class Karaoke:
@@ -107,6 +158,24 @@ class Karaoke:
     def filter_width(self) -> float | None:
         return self._filter_width
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Karaoke):
+            return False
+
+        if self.level != other.level:
+            return False
+
+        if self.mono_level != other.mono_level:
+            return False
+
+        if self.filter_band != other.filter_band:
+            return False
+
+        if self.filter_width != other.filter_width:
+            return False
+
+        return True
+
 
 class Timescale:
     __slots__: typing.Sequence[str] = ("_speed", "_pitch", "_rate")
@@ -123,6 +192,21 @@ class Timescale:
     def rate(self) -> float | None:
         return self._rate
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Timescale):
+            return False
+
+        if self.speed != other.speed:
+            return False
+
+        if self.pitch != other.pitch:
+            return False
+
+        if self.rate != other.rate:
+            return False
+
+        return True
+
 
 class Tremolo:
     __slots__: typing.Sequence[str] = (
@@ -137,6 +221,18 @@ class Tremolo:
     @property
     def depth(self) -> float | None:
         return self._depth
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Tremolo):
+            return False
+
+        if self.frequency != other.frequency:
+            return False
+
+        if self.depth != other.depth:
+            return False
+
+        return True
 
 
 class Vibrato:
@@ -153,6 +249,18 @@ class Vibrato:
     def depth(self) -> float | None:
         return self._depth
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Vibrato):
+            return False
+
+        if self.frequency != other.frequency:
+            return False
+
+        if self.depth != other.depth:
+            return False
+
+        return True
+
 
 class Rotation:
     __slots__: typing.Sequence[str] = "_rotation_hz"
@@ -160,6 +268,15 @@ class Rotation:
     @property
     def rotation_hz(self) -> float | None:
         return self._rotation_hz
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Rotation):
+            return False
+
+        if self.rotation_hz != other.rotation_hz:
+            return False
+
+        return True
 
 
 class Distortion:
@@ -206,6 +323,36 @@ class Distortion:
     def scale(self) -> float | None:
         return self._scale
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Distortion):
+            return False
+
+        if self.sin_offset != other.sin_offset:
+            return False
+
+        if self.sin_scale != other.sin_scale:
+            return False
+
+        if self.cos_offset != other.cos_offset:
+            return False
+
+        if self.cos_scale != other.cos_scale:
+            return False
+
+        if self.tan_offset != other.tan_offset:
+            return False
+
+        if self.tan_scale != other.tan_scale:
+            return False
+
+        if self.offset != other.offset:
+            return False
+
+        if self.scale != other.scale:
+            return False
+
+        return True
+
 
 class ChannelMix:
     __slots__: typing.Sequence[str] = (
@@ -231,6 +378,24 @@ class ChannelMix:
     def right_to_right(self) -> float | None:
         return self._right_to_right
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ChannelMix):
+            return False
+
+        if self.left_to_left != other.left_to_left:
+            return False
+
+        if self.left_to_right != other.left_to_right:
+            return False
+
+        if self.right_to_left != other.right_to_left:
+            return False
+
+        if self.right_to_right != other.right_to_right:
+            return False
+
+        return True
+
 
 class LowPass:
     __slots__: typing.Sequence[str] = ("_smoothing",)
@@ -238,6 +403,15 @@ class LowPass:
     @property
     def smoothing(self) -> float | None:
         return self._smoothing
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, LowPass):
+            return False
+
+        if self.smoothing != other.smoothing:
+            return False
+
+        return True
 
 
 class BandType(enum.IntEnum):
