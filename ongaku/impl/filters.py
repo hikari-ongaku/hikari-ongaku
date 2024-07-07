@@ -38,10 +38,7 @@ class Filters(filters_.Filters):
         self._plugin_filters = plugin_filters
 
     @classmethod
-    def from_filter(
-        cls,
-        filters: filters_.Filters
-    ) -> Filters:
+    def from_filter(cls, filters: filters_.Filters) -> Filters:
         return cls(
             volume=filters.volume,
             equalizer=filters.equalizer,
@@ -52,7 +49,7 @@ class Filters(filters_.Filters):
             rotation=filters.rotation,
             distortion=filters.distortion,
             channel_mix=filters.channel_mix,
-            low_pass=filters.low_pass
+            low_pass=filters.low_pass,
         )
 
     # Equalizer
@@ -301,8 +298,6 @@ class Equalizer(filters_.Equalizer):
         band: filters_.BandType,
         gain: float,
     ) -> None:
-
-
         if gain > 1:
             raise ValueError("Gain must be at or below 1.")
         if gain < -0.25:
@@ -320,17 +315,16 @@ class Karaoke(filters_.Karaoke):
         filter_band: float | None,
         filter_width: float | None,
     ) -> None:
-        
         if level is not None:
             if level > 1:
                 raise ValueError("Level must be at or below 1.")
-            if level < 0: 
+            if level < 0:
                 raise ValueError("Level must be at or above 0.")
-            
+
         if mono_level is not None:
             if mono_level > 1:
                 raise ValueError("MonoLevel must be at or below 1.")
-            if mono_level < 0: 
+            if mono_level < 0:
                 raise ValueError("MonoLevel must be at or above 0.")
 
         self._level = level
@@ -359,13 +353,13 @@ class Tremolo(filters_.Tremolo):
     def __init__(self, frequency: float | None, depth: float | None) -> None:
         if frequency is not None and frequency < 0:
             raise ValueError("Frequency must be at or above 0.")
-        
+
         if depth is not None:
             if depth > 1:
                 raise ValueError("Depth must be at or below 1.")
-            if depth < 0: 
+            if depth < 0:
                 raise ValueError("Depth must be at or above 0.")
-        
+
         self._frequency = frequency
         self._depth = depth
 
@@ -416,7 +410,7 @@ class Distortion(filters_.Distortion):
 
 
 class ChannelMix(filters_.ChannelMix):
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         left_to_left: float | None,
         left_to_right: float | None,
@@ -426,21 +420,21 @@ class ChannelMix(filters_.ChannelMix):
         if left_to_left is not None:
             if left_to_left > 1:
                 raise ValueError("Left to Left must be at or below 1.")
-            if left_to_left < 0: 
+            if left_to_left < 0:
                 raise ValueError("Left to Left must be at or above 0.")
-        
+
         if left_to_right is not None:
             if left_to_right > 1:
                 raise ValueError("Left to Right must be at or below 1.")
-            if left_to_right < 0: 
+            if left_to_right < 0:
                 raise ValueError("Left to Right must be at or above 0.")
-        
+
         if right_to_left is not None:
             if right_to_left > 1:
                 raise ValueError("Right to Left must be at or below 1.")
-            if right_to_left < 0: 
+            if right_to_left < 0:
                 raise ValueError("Right to Left must be at or above 0.")
-        
+
         if right_to_right is not None:
             if right_to_right > 1:
                 raise ValueError("Right to Left must be at or below 1.")
