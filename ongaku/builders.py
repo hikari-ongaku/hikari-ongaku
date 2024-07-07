@@ -835,7 +835,7 @@ class EntityBuilder:
             data["paused"],
             self.build_player_state(data["state"]),
             self.build_player_voice(data["voice"]),
-            self.build_filters(data["filters"]) if data.get("filters", None) else None,
+            self.build_filters(data["filters"]) if data.get("filters", False) else None,
         )
 
     def build_player_state(self, payload: types.PayloadMappingT) -> player_.State:
