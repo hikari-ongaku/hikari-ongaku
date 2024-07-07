@@ -53,7 +53,7 @@ def ongaku_player(ongaku_session: Session) -> Player:
 
 
 @pytest.fixture
-def track_info() -> TrackInfo:
+def ongaku_track_info() -> TrackInfo:
     return TrackInfo(
         "identifier",
         False,
@@ -70,23 +70,23 @@ def track_info() -> TrackInfo:
 
 
 @pytest.fixture
-def track(track_info: TrackInfo) -> Track:
-    return Track(ENCODED_TRACK, track_info, {}, {}, None)
+def ongaku_track(ongaku_track_info: TrackInfo) -> Track:
+    return Track(ENCODED_TRACK, ongaku_track_info, {}, {}, None)
 
 
 @pytest.fixture
-def filters() -> filters_.Filters:
+def ongaku_filters() -> filters_.Filters:
     return filters_.Filters(
         volume=1.2,
-        equalizer=[filters_.Equalizer(BandType.HZ100, 3.4), filters_.Equalizer(BandType.HZ63, 6.6)],
-        karaoke=filters_.Karaoke(1, 2.3, 4.5, 6),
+        equalizer=[filters_.Equalizer(BandType.HZ100, 0.95)],
+        karaoke=filters_.Karaoke(1, 0.5, 4.5, 6),
         timescale=filters_.Timescale(1.2, 2.3, 4),
-        tremolo=filters_.Tremolo(1.2, 4),
-        vibrato=filters_.Vibrato(3, 6.8),
+        tremolo=filters_.Tremolo(1.2, 1),
+        vibrato=filters_.Vibrato(3, 0.5),
         rotation=filters_.Rotation(6),
         distortion=filters_.Distortion(2.1, 3, 6.9, 7.2, 9.4, 2, 4.1, 8),
-        channel_mix=filters_.ChannelMix(1.2, 3, 6, 4.1),
-        low_pass=filters_.LowPass(3.8)
+        channel_mix=filters_.ChannelMix(0, 1, 0.5, 0.63),
+        low_pass=filters_.LowPass(3.8),
     )
 
 
