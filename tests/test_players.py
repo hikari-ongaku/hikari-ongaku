@@ -761,6 +761,24 @@ class TestPlayer:
             await new_player.set_position(1000000000000000000000000)
 
     @pytest.mark.asyncio
+    async def test_set_loop(self, ongaku_session: Session):
+        new_player = Player(ongaku_session, Snowflake(1234567890))
+
+        assert new_player.loop is False
+
+        new_player.set_loop()
+
+        assert new_player.loop is True
+
+        new_player.set_loop(True)
+
+        assert new_player.loop is True
+
+        new_player.set_loop(False)
+
+        assert new_player.loop is False
+
+    @pytest.mark.asyncio
     async def test_transfer(
         self, ongaku_client: Client, ongaku_session: Session, track: Track
     ):
@@ -924,6 +942,82 @@ class TestPlayerTrackEndEvent:
             await new_player._track_end_event(event)
 
             patched_dispatch.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_loop_with_multiple_tracks(
+        self, ongaku_session: Session, track: Track
+    ):
+        new_player = Player(ongaku_session, Snowflake(1234567890))
+
+        new_player.set_loop(True)
+
+        new_player.add([track, mock.Mock(encoded="track")])
+
+        event = events.TrackEndEvent.from_session(
+            ongaku_session,
+            Snowflake(1234567890),
+            track=track,
+            reason=TrackEndReasonType.FINISHED,
+        )
+
+        assert len(new_player.queue) == 2
+
+        with (
+            mock.patch.object(
+                ongaku_session, "_get_session_id", return_value="session_id"
+            ),
+            mock.patch("ongaku.player.Player.play") as patched_play,
+            mock.patch.object(
+                ongaku_session.client.app.event_manager,
+                "dispatch",
+                new_callable=mock.AsyncMock,
+            ) as patched_dispatch,
+        ):
+            await new_player._track_end_event(event)
+
+            assert len(new_player.queue) == 2
+
+            patched_dispatch.assert_called_once()
+
+            patched_play.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_loop_with_singular_track(
+        self, ongaku_session: Session, track: Track
+    ):
+        new_player = Player(ongaku_session, Snowflake(1234567890))
+
+        new_player.set_loop(True)
+
+        new_player.add(track)
+
+        event = events.TrackEndEvent.from_session(
+            ongaku_session,
+            Snowflake(1234567890),
+            track=track,
+            reason=TrackEndReasonType.FINISHED,
+        )
+
+        assert len(new_player.queue) == 1
+
+        with (
+            mock.patch.object(
+                ongaku_session, "_get_session_id", return_value="session_id"
+            ),
+            mock.patch("ongaku.player.Player.play") as patched_play,
+            mock.patch.object(
+                ongaku_session.client.app.event_manager,
+                "dispatch",
+                new_callable=mock.AsyncMock,
+            ) as patched_dispatch,
+        ):
+            await new_player._track_end_event(event)
+
+            assert len(new_player.queue) == 1
+
+            patched_dispatch.assert_called_once()
+
+            patched_play.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_invalid_track_end_types(self, ongaku_session: Session):
