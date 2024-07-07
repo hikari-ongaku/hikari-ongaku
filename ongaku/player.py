@@ -907,9 +907,16 @@ class Player:
             f"Successfully set position ({value}) to track in {self.guild_id}",
         )
 
-    async def set_filters(self, filters: Filters | None) -> None:
-        # FIXME: Docs need doing
+    async def set_filters(self, filters: Filters | None = None) -> None:
+        """Set Filters.
 
+        Set a new filter for the player.
+
+        Parameters
+        ----------
+        filters
+            The filter to set the player with.
+        """
         session = self.session._get_session_id()
 
         player = await self.session.client.rest.update_player(

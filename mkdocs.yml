@@ -107,7 +107,7 @@ nav:
     - Client as State: gs/client.md
     - Player: gs/player.md
     - Session: gs/session.md
-    - Filters: gs/filter.md
+    - Filters: gs/filters.md
     - Injection: gs/injection.md
     - Plugins: gs/plugins.md
   - API Reference:
@@ -123,6 +123,7 @@ nav:
     - ABC:
       - Errors: api/abc/errors.md
       - Events: api/abc/events.md
+      - Filters: api/abc/filters.md
       - Handler: api/abc/handler.md
       - Info: api/abc/info.md
       - Player: api/abc/player.md
@@ -132,6 +133,7 @@ nav:
       - Statistics: api/abc/statistics.md
       - Track: api/abc/track.md
     - Impl:
+      - Filters: api/impl/filters.md
       - Handlers: api/impl/handlers.md
       - Info: api/impl/info.md
       - Player: api/impl/player.md

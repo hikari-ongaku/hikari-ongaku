@@ -3,13 +3,13 @@ from __future__ import annotations
 import enum
 import typing
 
-# FIXME: Docs need to be done for everything.
-
 
 class Filters:
     """Filters.
 
-    The base class for controlling filters.
+    The base class for filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#filters)
     """
 
     __slots__: typing.Sequence[str] = (
@@ -28,49 +28,93 @@ class Filters:
 
     @property
     def volume(self) -> float | None:
+        """Volume.
+
+        The volume of the player.
+        """
         return self._volume
 
     @property
     def equalizer(self) -> typing.Sequence[Equalizer]:
+        """Equalizer.
+
+        15 bands with different gains.
+        """
         return self._equalizer
 
     @property
     def karaoke(self) -> Karaoke | None:
+        """Karaoke.
+
+        Eliminates part of a band, usually targeting vocals.
+        """
         return self._karaoke
 
     @property
     def timescale(self) -> Timescale | None:
+        """Timescale.
+
+        The speed, pitch, and rate.
+        """
         return self._timescale
 
     @property
     def tremolo(self) -> Tremolo | None:
+        """Tremolo.
+
+        Creates a shuddering effect, where the volume quickly oscillates.
+        """
         return self._tremolo
 
     @property
     def vibrato(self) -> Vibrato | None:
+        """Vibrato.
+
+        Creates a shuddering effect, where the pitch quickly oscillates.
+        """
         return self._vibrato
 
     @property
     def rotation(self) -> Rotation | None:
+        """Rotation.
+
+        Rotates the audio around the stereo channels/user headphones (aka Audio Panning).
+        """
         return self._rotation
 
     @property
     def distortion(self) -> Distortion | None:
+        """Distortion.
+
+        Distorts the audio.
+        """
         return self._distortion
 
     @property
     def channel_mix(self) -> ChannelMix | None:
+        """Channel Mix.
+
+        Mixes both channels (left and right).
+        """
         return self._channel_mix
 
     @property
     def low_pass(self) -> LowPass | None:
+        """Low Pass.
+
+        Filters higher frequencies.
+        """
         return self._low_pass
 
     @property
     def plugin_filters(self) -> typing.Mapping[str, typing.Any]:
+        """Plugin Filters.
+
+        Filter plugin configurations.
+        """
         return self._plugin_filters
 
-    def __eq__(self, other: object) -> bool: # noqa: C901
+    def __eq__(self, other: object) -> bool:  # noqa: C901
         if not isinstance(other, Filters):
             return False
 
@@ -111,14 +155,27 @@ class Filters:
 
 
 class Equalizer:
+    """Equalizer.
+
+    There are 15 bands (0-14) that can be changed.
+    "gain" is the multiplier for the given band.
+    The default value is 0. Valid values range from -0.25 to 1.0,
+    where -0.25 means the given band is completely muted, and 0.25 means it is doubled.
+    Modifying the gain could also change the volume of the output.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#equalizer)
+    """
+
     __slots__: typing.Sequence[str] = ("_band", "_gain")
 
     @property
     def band(self) -> BandType:
+        """The band (0 to 14)."""
         return self._band
 
     @property
     def gain(self) -> float:
+        """The gain (-0.25 to 1.0)."""
         return self._gain
 
     def __eq__(self, other: object) -> bool:
@@ -135,6 +192,13 @@ class Equalizer:
 
 
 class Karaoke:
+    """Karaoke.
+
+    Uses equalization to eliminate part of a band, usually targeting vocals.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#karaoke)
+    """
+
     __slots__: typing.Sequence[str] = (
         "_level",
         "_mono_level",
@@ -144,18 +208,22 @@ class Karaoke:
 
     @property
     def level(self) -> float | None:
+        """The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
         return self._level
 
     @property
     def mono_level(self) -> float | None:
+        """The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect)."""
         return self._mono_level
 
     @property
     def filter_band(self) -> float | None:
+        """The filter band (in Hz)."""
         return self._filter_band
 
     @property
     def filter_width(self) -> float | None:
+        """The filter width."""
         return self._filter_width
 
     def __eq__(self, other: object) -> bool:
@@ -178,18 +246,28 @@ class Karaoke:
 
 
 class Timescale:
+    """Timescale.
+
+    Changes the speed, pitch, and rate. All default to 1.0.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#timescale)
+    """
+
     __slots__: typing.Sequence[str] = ("_speed", "_pitch", "_rate")
 
     @property
     def speed(self) -> float | None:
+        """The playback speed 0.0 ≤ x."""
         return self._speed
 
     @property
     def pitch(self) -> float | None:
+        """The pitch 0.0 ≤ x."""
         return self._pitch
 
     @property
     def rate(self) -> float | None:
+        """The rate 0.0 ≤ x."""
         return self._rate
 
     def __eq__(self, other: object) -> bool:
@@ -209,6 +287,13 @@ class Timescale:
 
 
 class Tremolo:
+    """Tremolo.
+
+    Uses amplification to create a shuddering effect, where the volume quickly oscillates.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#tremolo)
+    """
+
     __slots__: typing.Sequence[str] = (
         "_frequency",
         "_depth",
@@ -216,10 +301,12 @@ class Tremolo:
 
     @property
     def frequency(self) -> float | None:
+        """The frequency 0.0 < x."""
         return self._frequency
 
     @property
     def depth(self) -> float | None:
+        """The tremolo depth 0.0 < x ≤ 1.0."""
         return self._depth
 
     def __eq__(self, other: object) -> bool:
@@ -236,6 +323,13 @@ class Tremolo:
 
 
 class Vibrato:
+    """Vibrato.
+
+    Similar to tremolo. While tremolo oscillates the volume, vibrato oscillates the pitch.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#vibrato)
+    """
+
     __slots__: typing.Sequence[str] = (
         "_frequency",
         "_depth",
@@ -243,10 +337,12 @@ class Vibrato:
 
     @property
     def frequency(self) -> float | None:
+        """The frequency 0.0 < x ≤ 14.0."""
         return self._frequency
 
     @property
     def depth(self) -> float | None:
+        """The vibrato depth 0.0 < x ≤ 1.0."""
         return self._depth
 
     def __eq__(self, other: object) -> bool:
@@ -263,10 +359,18 @@ class Vibrato:
 
 
 class Rotation:
+    """Rotation.
+
+    Rotates the sound around the stereo channels/user headphones (aka Audio Panning).
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#rotation)
+    """
+
     __slots__: typing.Sequence[str] = "_rotation_hz"
 
     @property
     def rotation_hz(self) -> float | None:
+        """The frequency of the audio rotating around the listener in Hz."""
         return self._rotation_hz
 
     def __eq__(self, other: object) -> bool:
@@ -280,6 +384,13 @@ class Rotation:
 
 
 class Distortion:
+    """Distortion.
+
+    Distortion effect. It can generate some pretty unique audio effects.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#distortion)
+    """
+
     __slots__: typing.Sequence[str] = (
         "_sin_offset",
         "_sin_scale",
@@ -293,34 +404,42 @@ class Distortion:
 
     @property
     def sin_offset(self) -> float | None:
+        """The sin offset."""
         return self._sin_offset
 
     @property
     def sin_scale(self) -> float | None:
+        """The sin scale."""
         return self._sin_scale
 
     @property
     def cos_offset(self) -> float | None:
+        """The cos offset."""
         return self._cos_offset
 
     @property
     def cos_scale(self) -> float | None:
+        """The cos scale."""
         return self._cos_scale
 
     @property
     def tan_offset(self) -> float | None:
+        """The tan offset."""
         return self._tan_offset
 
     @property
     def tan_scale(self) -> float | None:
+        """The tan scale."""
         return self._tan_scale
 
     @property
     def offset(self) -> float | None:
+        """The offset."""
         return self._offset
 
     @property
     def scale(self) -> float | None:
+        """The scale."""
         return self._scale
 
     def __eq__(self, other: object) -> bool:
@@ -355,6 +474,14 @@ class Distortion:
 
 
 class ChannelMix:
+    """Channel Mix.
+
+    Mixes both channels (left and right), with a configurable factor on how much each channel affects the other.
+    With the defaults, both channels are kept independent of each other. Setting all factors to 0.5 means both channels get the same audio.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#channel-mix)
+    """
+
     __slots__: typing.Sequence[str] = (
         "_left_to_left",
         "_left_to_right",
@@ -364,18 +491,22 @@ class ChannelMix:
 
     @property
     def left_to_left(self) -> float | None:
+        """The left to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
         return self._left_to_left
 
     @property
     def left_to_right(self) -> float | None:
+        """The left to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
         return self._left_to_right
 
     @property
     def right_to_left(self) -> float | None:
+        """The right to left channel mix factor (0.0 ≤ x ≤ 1.0)."""
         return self._right_to_left
 
     @property
     def right_to_right(self) -> float | None:
+        """The right to right channel mix factor (0.0 ≤ x ≤ 1.0)."""
         return self._right_to_right
 
     def __eq__(self, other: object) -> bool:
@@ -398,10 +529,19 @@ class ChannelMix:
 
 
 class LowPass:
+    """Low Pass.
+
+    Higher frequencies get suppressed, while lower frequencies pass through this filter, thus the name low pass.
+    Any smoothing values equal to or less than 1.0 will disable the filter.
+
+    ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#low-pass)
+    """
+
     __slots__: typing.Sequence[str] = ("_smoothing",)
 
     @property
     def smoothing(self) -> float | None:
+        """The smoothing factor (1.0 < x)."""
         return self._smoothing
 
     def __eq__(self, other: object) -> bool:
@@ -415,6 +555,11 @@ class LowPass:
 
 
 class BandType(enum.IntEnum):
+    """Band Type.
+
+    All the available band types.
+    """
+
     HZ25 = 0
     """25 Hz"""
     HZ40 = 1

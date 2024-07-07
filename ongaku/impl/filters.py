@@ -6,10 +6,39 @@ import hikari
 
 from ongaku.abc import filters as filters_
 
-# FIXME: Docs need to be done for everything.
-
 
 class Filters(filters_.Filters):
+    """Filters.
+
+    An empty filter object.
+
+    Parameters
+    ----------
+    volume
+        Volume of the player.
+    equalizer
+        A sequence of equalizer objects.
+    karaoke
+        A karaoke object.
+    timescale
+        A timescale object.
+    tremolo
+        A tremolo object.
+    vibrato
+        A vibrato object.
+    rotation
+        A rotation object.
+    distortion
+        A distortion object.
+    channel_mix
+        A channel mix object.
+    low_pass
+        A low pass object.
+    plugin_filters
+        A dict of plugin filters.
+
+    """
+
     def __init__(
         self,
         *,
@@ -39,6 +68,18 @@ class Filters(filters_.Filters):
 
     @classmethod
     def from_filter(cls, filters: filters_.Filters) -> Filters:
+        """From Filter.
+
+        Convert a immutable filter, into a mutable filter.
+
+        !!! note
+            The purpose of this is so that you can modify a players filter object, without directly modifying it.
+
+        Parameters
+        ----------
+        filters
+            The filter to pull data from.
+        """
         return cls(
             volume=filters.volume,
             equalizer=filters.equalizer,
@@ -52,6 +93,14 @@ class Filters(filters_.Filters):
             low_pass=filters.low_pass,
         )
 
+    def set_volume(self, volume: float) -> Filters:
+        """FIXME: Docs need doing."""
+        if volume <= 0:
+            raise ValueError("Volume must be at or above 0.")
+        self._volume = volume
+
+        return self
+
     # Equalizer
 
     def add_equalizer(
@@ -59,18 +108,43 @@ class Filters(filters_.Filters):
         band: filters_.BandType,
         gain: float,
     ) -> Filters:
+        """Add Equalizer.
+
+        Add a new equalizer band, with appropriate gain.
+
+        Parameters
+        ----------
+        band
+            The [BandType][ongaku.abc.filters.BandType].
+        gain
+            The gain of the band. (-0.25 to 1.0)
+        """
         self._equalizer.append(Equalizer(band, gain))
 
         return self
 
     def remove_equalizer(self, band: filters_.BandType) -> Filters:
+        """Remove Equalizer.
+
+        Remove a equalizer via its band.
+
+        Parameters
+        ----------
+        band
+            The [BandType][ongaku.abc.filters.BandType].
+        """
         for equalizer in self.equalizer:
             if equalizer.band == band:
                 self._equalizer.remove(equalizer)
+                return self
 
-        return self
+        raise IndexError("No values found.")
 
     def clear_equalizer(self) -> Filters:
+        """Clear Equalizer.
+
+        Clear all equalizer bands from the filter.
+        """
         self._equalizer.clear()
 
         return self
@@ -85,6 +159,21 @@ class Filters(filters_.Filters):
         filter_band: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
         filter_width: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Karaoke.
+
+        Set karaoke values.
+
+        Parameters
+        ----------
+        level
+            The level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect).
+        mono_level
+            The mono level (0 to 1.0 where 0.0 is no effect and 1.0 is full effect).
+        filter_band
+            The filter band (in Hz).
+        filter_width
+            The filter width.
+        """
         if self._karaoke is None:
             self._karaoke = Karaoke(None, None, None, None)
 
@@ -102,6 +191,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_karaoke(self) -> Filters:
+        """Clear Karaoke.
+
+        Clear all karaoke values from the filter.
+        """
         self._karaoke = None
         return self
 
@@ -114,6 +207,19 @@ class Filters(filters_.Filters):
         pitch: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
         rate: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Timescale.
+
+        Set timescale values.
+
+        Parameters
+        ----------
+        speed
+            The playback speed 0.0 ≤ x.
+        pitch
+            The pitch 0.0 ≤ x.
+        rate
+            The rate 0.0 ≤ x.
+        """
         if self._timescale is None:
             self._timescale = Timescale(None, None, None)
 
@@ -126,6 +232,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_timescale(self) -> Filters:
+        """Clear Timescale.
+
+        Clear all timescale values from the filter.
+        """
         self._timescale = None
         return self
 
@@ -137,6 +247,17 @@ class Filters(filters_.Filters):
         frequency: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
         depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Tremolo.
+
+        Set tremolo values.
+
+        Parameters
+        ----------
+        frequency
+            The frequency 0.0 < x.
+        depth
+            The tremolo depth 0.0 < x ≤ 1.0.
+        """
         if self._tremolo is None:
             self._tremolo = Tremolo(None, None)
 
@@ -148,6 +269,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_tremolo(self) -> Filters:
+        """Clear Tremolo.
+
+        Clear all tremolo values from the filter.
+        """
         self._tremolo = None
         return self
 
@@ -159,6 +284,18 @@ class Filters(filters_.Filters):
         frequency: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
         depth: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Vibrato.
+
+        Set vibrato values.
+
+        Parameters
+        ----------
+        frequency
+            The frequency 0.0 < x ≤ 14.0.
+        depth
+            The vibrato depth 0.0 < x ≤ 1.0.
+
+        """
         if self._vibrato is None:
             self._vibrato = Vibrato(None, None)
 
@@ -170,6 +307,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_vibrato(self) -> Filters:
+        """Clear Vibrato.
+
+        Clear all vibrato values from the filter.
+        """
         self._vibrato = None
         return self
 
@@ -180,6 +321,15 @@ class Filters(filters_.Filters):
         *,
         rotation_hz: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Rotation.
+
+        Set rotation values.
+
+        Parameters
+        ----------
+        rotation_hz
+            The frequency of the audio rotating around the listener in Hz.
+        """
         if self._rotation is None:
             self._rotation = Rotation(None)
 
@@ -192,6 +342,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_rotation(self) -> Filters:
+        """Clear Rotation.
+
+        Clear all rotation values from the filter.
+        """
         self._rotation = None
         return self
 
@@ -209,6 +363,29 @@ class Filters(filters_.Filters):
         offset: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
         scale: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Distortion.
+
+        Set distortion values.
+
+        Parameters
+        ----------
+        sin_offset
+            The sin offset.
+        sin_scale
+            The sin scale.
+        cos_offset
+            The cos offset.
+        cos_scale
+            The cos scale.
+        tan_offset
+            The tan offset.
+        tan_scale
+            The tan scale.
+        offset
+            The offset.
+        scale
+            The scale.
+        """
         if self._distortion is None:
             self._distortion = Distortion(
                 None, None, None, None, None, None, None, None
@@ -234,6 +411,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_distortion(self) -> Filters:
+        """Clear Distortion.
+
+        Clear all distortion values from the filter.
+        """
         self._distortion = None
         return self
 
@@ -247,6 +428,22 @@ class Filters(filters_.Filters):
         right_to_left: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
         right_to_right: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Channel Mix.
+
+        Set tremolo values.
+
+        Parameters
+        ----------
+        left_to_left
+            The left to left channel mix factor (0.0 ≤ x ≤ 1.0).
+        left_to_right
+            The left to right channel mix factor (0.0 ≤ x ≤ 1.0).
+        right_to_left
+            The right to left channel mix factor (0.0 ≤ x ≤ 1.0).
+        right_to_right
+            The right to right channel mix factor (0.0 ≤ x ≤ 1.0).
+
+        """
         if self._channel_mix is None:
             self._channel_mix = ChannelMix(None, None, None, None)
 
@@ -268,6 +465,10 @@ class Filters(filters_.Filters):
         return self
 
     def clear_channel_mix(self) -> Filters:
+        """Clear Channel Mix.
+
+        Clear all channel mix values from the filter.
+        """
         self._channel_mix = None
         return self
 
@@ -278,6 +479,15 @@ class Filters(filters_.Filters):
         *,
         smoothing: hikari.UndefinedNoneOr[float] = hikari.UNDEFINED,
     ) -> Filters:
+        """Set Low Pass.
+
+        Set low pass values.
+
+        Parameters
+        ----------
+        smoothing
+            The smoothing factor (1.0 < x).
+        """
         if self._low_pass is None:
             self._low_pass = LowPass(None)
 
@@ -288,7 +498,20 @@ class Filters(filters_.Filters):
         return self
 
     def clear_low_pass(self) -> Filters:
+        """Clear Low Pass.
+
+        Clear all low pass values from the filter.
+        """
         self._low_pass = None
+        return self
+
+    # Plugin filters
+
+    def set_plugin_filters(
+        self, plugin_filters: typing.Mapping[str, typing.Any] = {}
+    ) -> Filters:
+        """FIXME: Docs need doing."""
+        self._plugin_filters = plugin_filters
         return self
 
 

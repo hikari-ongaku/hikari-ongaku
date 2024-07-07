@@ -51,7 +51,7 @@ pip install hikari-ongaku
 
     All the filter options, and how to use them.
 
-    [:material-arrow-right: Learn more](./filter.md)
+    [:material-arrow-right: Learn more](./filters.md)
 
  -  Injection
 

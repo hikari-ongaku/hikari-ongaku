@@ -425,6 +425,29 @@ This function allows for you to set the position of the track. This is in millis
 await player.set_position(40000)
 ```
 
+### Filters
+
+This allows you to set or clear the current filter.
+
+=== "Change/Set"
+
+    This allows you to change the current filter, or set a new one.
+
+    ```py
+    await player.set_filters(filters)
+    ```
+
+=== "Clear"
+
+    This allows you to completely clear the current filter.
+
+    ```py
+    await player.set_filters()
+    ```
+
+    !!! tip
+        Learn more about filters [here](./filters.md)
+
 This function, will put the track at 40 seconds.
 
 !!! warning
