@@ -361,6 +361,35 @@ Autoplay allows for playing the next track in the queue when the previous one en
     player.set_autoplay()
     ```
 
+### Loop
+
+Pausing, allows for you to play/pause the current track playing on the bot.
+There is a few options for pausing the tracks.
+
+=== "Force looping"
+
+    The following method will force loop the player, whether it is looping or not.
+
+    ```py
+    player.set_loop(False)
+    ```
+
+=== "Force disable looping"
+
+    The following method will force loop the player, whether it is looping or not.
+
+    ```py
+    player.set_loop(True)
+    ```
+
+=== "Toggling"
+
+    The following method will change it from its current state, to the opposite state.
+
+    ```py
+    player.set_loop()
+    ```
+
 ### Volume
 
 This allows you to change the volume of the player.

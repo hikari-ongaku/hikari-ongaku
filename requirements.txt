@@ -1,3 +1,2 @@
-hikari ~= 2.0.0.dev125
+hikari ~= 2.0.0.dev126
 aiohttp ~= 3.9
-msgspec ~= 0.18.6
