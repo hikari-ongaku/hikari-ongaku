@@ -166,38 +166,38 @@ class TestTrackStartEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.TrackStartEvent(
             gateway_bot,
             ongaku_client,
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
+            ongaku_track,
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
 
     def test_from_session(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.TrackStartEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), track
+            ongaku_session, hikari.Snowflake(1234567890), ongaku_track
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
 
 
 class TestTrackEndEvent:
@@ -206,14 +206,14 @@ class TestTrackEndEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.TrackEndEvent(
             gateway_bot,
             ongaku_client,
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
+            ongaku_track,
             TrackEndReasonType.FINISHED,
         )
 
@@ -221,7 +221,7 @@ class TestTrackEndEvent:
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
         assert event.reason == TrackEndReasonType.FINISHED
 
     def test_from_session(
@@ -229,12 +229,12 @@ class TestTrackEndEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.TrackEndEvent.from_session(
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
+            ongaku_track,
             TrackEndReasonType.FINISHED,
         )
 
@@ -242,7 +242,7 @@ class TestTrackEndEvent:
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
         assert event.reason == TrackEndReasonType.FINISHED
 
 
@@ -261,7 +261,7 @@ class TestTrackExceptionEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         exception = events.TrackException("message", SeverityType.COMMON, "cause")
         event = events.TrackExceptionEvent(
@@ -269,7 +269,7 @@ class TestTrackExceptionEvent:
             ongaku_client,
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
+            ongaku_track,
             exception,
         )
 
@@ -277,7 +277,7 @@ class TestTrackExceptionEvent:
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
         assert event.exception == exception
 
     def test_from_session(
@@ -285,18 +285,18 @@ class TestTrackExceptionEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         exception = events.TrackException("message", SeverityType.COMMON, "cause")
         event = events.TrackExceptionEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), track, exception
+            ongaku_session, hikari.Snowflake(1234567890), ongaku_track, exception
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
         assert event.exception == exception
 
 
@@ -306,14 +306,14 @@ class TestTrackStuckEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.TrackStuckEvent(
             gateway_bot,
             ongaku_client,
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
+            ongaku_track,
             1,
         )
 
@@ -321,7 +321,7 @@ class TestTrackStuckEvent:
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
         assert event.threshold_ms == 1
 
     def test_from_session(
@@ -329,17 +329,17 @@ class TestTrackStuckEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.TrackStuckEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), track, 1
+            ongaku_session, hikari.Snowflake(1234567890), ongaku_track, 1
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.track == track
+        assert event.track == ongaku_track
         assert event.threshold_ms == 1
 
 
@@ -349,38 +349,38 @@ class TestQueueEmptyEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.QueueEmptyEvent(
             gateway_bot,
             ongaku_client,
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
+            ongaku_track,
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.old_track == track
+        assert event.old_track == ongaku_track
 
     def test_from_session(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.QueueEmptyEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), track
+            ongaku_session, hikari.Snowflake(1234567890), ongaku_track
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.old_track == track
+        assert event.old_track == ongaku_track
 
 
 class TestQueueNextEvent:
@@ -389,38 +389,38 @@ class TestQueueNextEvent:
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.QueueNextEvent(
             gateway_bot,
             ongaku_client,
             ongaku_session,
             hikari.Snowflake(1234567890),
-            track,
-            track,
+            ongaku_track,
+            ongaku_track,
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.old_track == track
-        assert event.track == track
+        assert event.old_track == ongaku_track
+        assert event.track == ongaku_track
 
     def test_from_session(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
-        track: Track,
+        ongaku_track: Track,
     ):
         event = events.QueueNextEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), track, track
+            ongaku_session, hikari.Snowflake(1234567890), ongaku_track, ongaku_track
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
         assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.old_track == track
-        assert event.track == track
+        assert event.old_track == ongaku_track
+        assert event.track == ongaku_track

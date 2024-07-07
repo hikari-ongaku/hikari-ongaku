@@ -718,10 +718,7 @@ class TestRestPlayer:
 
     @pytest.mark.asyncio
     async def test_update_player(
-        self,
-        ongaku_client: Client,
-        ongaku_session: Session,
-        filters: Filters
+        self, ongaku_client: Client, ongaku_session: Session, ongaku_filters: Filters
     ):
         rest = RESTClient(ongaku_client)
 
@@ -747,7 +744,7 @@ class TestRestPlayer:
                 end_time=2,
                 volume=3,
                 paused=False,
-                filters=filters,
+                filters=ongaku_filters,
                 voice=player.Voice("token", "endpoint", "session_id"),
                 no_replace=False,
             )
@@ -765,11 +762,8 @@ class TestRestPlayer:
                     "endTime": 2,
                     "volume": 3,
                     "paused": False,
-                    "voice": {
-                        "token": "token",
-                        "endpoint": "endpoint",
-                        "sessionId": "session_id",
-                    },
+                    "filters": payloads.FILTERS_PAYLOAD,
+                    "voice": payloads.PLAYER_VOICE_PAYLOAD,
                 },
                 params={"noReplace": "false"},
             )
