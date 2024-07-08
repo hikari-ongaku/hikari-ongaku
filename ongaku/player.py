@@ -289,7 +289,7 @@ class Player:
         )
 
         self._is_alive = True
-
+        self._connected = True
         _logger.log(
             TRACE_LEVEL,
             f"Successfully connected, and sent data to lavalink for channel: {self.channel_id} in guild: {self.guild_id}",
@@ -341,14 +341,15 @@ class Player:
         )
 
         self._is_alive = False
-
+        
         _logger.log(
             TRACE_LEVEL,
             f"Updating voice state for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         await self.app.update_voice_state(self.guild_id, None)
-
+        self._connected = False
+        
         _logger.log(
             TRACE_LEVEL,
             f"Successfully updated voice state for channel: {self.channel_id} in guild: {self.guild_id}",
