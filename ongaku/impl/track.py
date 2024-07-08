@@ -19,6 +19,7 @@ __all__ = ("Track", "TrackInfo")
 class Track(track_.Track):
     def __init__(
         self,
+        *,
         encoded: str,
         info: track_.TrackInfo,
         plugin_info: typing.Mapping[str, typing.Any],
@@ -35,6 +36,7 @@ class Track(track_.Track):
 class TrackInfo(track_.TrackInfo):
     def __init__(
         self,
+        *,
         identifier: str,
         is_seekable: bool,
         author: str,

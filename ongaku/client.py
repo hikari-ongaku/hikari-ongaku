@@ -73,6 +73,7 @@ class Client:
 
     def __init__(
         self,
+        /,
         app: hikari.GatewayBotAware,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
@@ -89,7 +90,7 @@ class Client:
 
         self._is_alive = False
 
-        self._session_handler = session_handler(self)
+        self._session_handler = session_handler(client=self)
 
         self._entity_builder = EntityBuilder()
 
@@ -99,6 +100,7 @@ class Client:
     @classmethod
     def from_arc(
         cls,
+        /,
         client: arc.GatewayClient,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
@@ -141,6 +143,7 @@ class Client:
     @classmethod
     def from_tanjun(
         cls,
+        /,
         client: tanjun.abc.Client,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
@@ -263,6 +266,8 @@ class Client:
     def create_session(
         self,
         name: str,
+        /,
+        *,
         ssl: bool = False,
         host: str = "127.0.0.1",
         port: int = 2333,
@@ -309,17 +314,17 @@ class Client:
         """
         new_session = Session(
             self,
-            name,
-            ssl,
-            host,
-            port,
-            password,
-            self._attempts,
+            name=name,
+            ssl=ssl,
+            host=host,
+            port=port,
+            password=password,
+            attempts=self._attempts,
         )
 
-        return self.session_handler.add_session(new_session)
+        return self.session_handler.add_session(session=new_session)
 
-    def fetch_session(self, name: str) -> Session:
+    def fetch_session(self, name: str, /) -> Session:
         """Fetch a session.
 
         Fetch a session from the session handler.
@@ -339,9 +344,9 @@ class Client:
         SessionMissingError
             Raised when the session does not exist.
         """
-        return self.session_handler.fetch_session(name)
+        return self.session_handler.fetch_session(name=name)
 
-    async def delete_session(self, name: str) -> None:
+    async def delete_session(self, name: str, /) -> None:
         """Delete a session.
 
         Delete a session from the session handler.
@@ -356,9 +361,9 @@ class Client:
         SessionMissingError
             Raised when the session does not exist.
         """
-        await self.session_handler.delete_session(name)
+        await self.session_handler.delete_session(name=name)
 
-    def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild], /) -> Player:
         """
         Create a player.
 
@@ -400,9 +405,9 @@ class Client:
 
         new_player = Player(session, hikari.Snowflake(guild))
 
-        return self.session_handler.add_player(new_player)
+        return self.session_handler.add_player(player=new_player)
 
-    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild], /) -> Player:
         """
         Fetch a player.
 
@@ -427,9 +432,11 @@ class Client:
         PlayerMissingError
             Raised when the player for the specified guild does not exist.
         """
-        return self.session_handler.fetch_player(guild)
+        return self.session_handler.fetch_player(guild=guild)
 
-    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+    async def delete_player(
+        self, guild: hikari.SnowflakeishOr[hikari.Guild], /
+    ) -> None:
         """
         Delete a player.
 
@@ -452,7 +459,7 @@ class Client:
         PlayerMissingError
             Raised when the player for the specified guild does not exist.
         """
-        await self.session_handler.delete_player(guild)
+        await self.session_handler.delete_player(guild=guild)
 
 
 # MIT License

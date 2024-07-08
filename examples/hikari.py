@@ -15,7 +15,7 @@ bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikar
 ongaku_client = ongaku.Client(bot)
 
 ongaku_client.create_session(
-    name="hikari-session",
+    "hikari-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )

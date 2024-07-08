@@ -68,11 +68,7 @@ class Player:
         "_loop",
     )
 
-    def __init__(
-        self,
-        session: Session,
-        guild: hikari.SnowflakeishOr[hikari.Guild],
-    ):
+    def __init__(self, session: Session, guild: hikari.SnowflakeishOr[hikari.Guild], /):
         self._session = session
         self._guild_id = hikari.Snowflake(guild)
         self._channel_id = None
@@ -188,6 +184,7 @@ class Player:
     async def connect(
         self,
         channel: hikari.SnowflakeishOr[hikari.GuildVoiceChannel],
+        /,
         *,
         mute: bool = False,
         deaf: bool = True,
@@ -356,7 +353,11 @@ class Player:
         )
 
     async def play(
-        self, track: track_.Track | None = None, requestor: RequestorT | None = None
+        self,
+        track: track_.Track | None = None,
+        /,
+        *,
+        requestor: RequestorT | None = None,
     ) -> None:
         """Play.
 
@@ -419,6 +420,8 @@ class Player:
     def add(
         self,
         tracks: t.Sequence[track_.Track] | playlist_.Playlist | track_.Track,
+        /,
+        *,
         requestor: RequestorT | None = None,
     ) -> None:
         """
@@ -470,7 +473,7 @@ class Player:
             TRACE_LEVEL, f"Successfully added {track_count} track(s) to {self.guild_id}"
         )
 
-    async def pause(self, value: bool | None = None) -> None:
+    async def pause(self, value: bool | None = None, /) -> None:
         """
         Pause the player.
 
@@ -593,7 +596,7 @@ class Player:
             TRACE_LEVEL, f"Successfully shuffled queue in guild {self.guild_id}"
         )
 
-    async def skip(self, amount: int = 1) -> None:
+    async def skip(self, amount: int = 1, /) -> None:
         """
         Skip songs.
 
@@ -670,7 +673,7 @@ class Player:
 
         _logger.log(TRACE_LEVEL, f"Successfully skipped track in {self.guild_id}")
 
-    def remove(self, value: track_.Track | int) -> None:
+    def remove(self, value: track_.Track | int, /) -> None:
         """
         Remove track.
 
@@ -763,7 +766,7 @@ class Player:
 
         _logger.log(TRACE_LEVEL, f"Successfully cleared queue in {self.guild_id}")
 
-    def set_autoplay(self, enable: bool | None = None) -> bool:
+    def set_autoplay(self, enable: bool | None = None, /) -> bool:
         """
         Set autoplay.
 
@@ -788,7 +791,7 @@ class Player:
 
         return self._autoplay
 
-    async def set_volume(self, volume: int = 100) -> None:
+    async def set_volume(self, volume: int = 100, /) -> None:
         """
         Set the volume.
 
@@ -845,7 +848,7 @@ class Player:
             TRACE_LEVEL, f"Successfully set volume to {volume} in {self.guild_id}"
         )
 
-    async def set_position(self, value: int) -> None:
+    async def set_position(self, value: int, /) -> None:
         """
         Set the position.
 
@@ -907,7 +910,7 @@ class Player:
             f"Successfully set position ({value}) to track in {self.guild_id}",
         )
 
-    async def set_filters(self, filters: Filters | None = None) -> None:
+    async def set_filters(self, filters: Filters | None = None, /) -> None:
         """Set Filters.
 
         Set a new filter for the player.
@@ -930,7 +933,7 @@ class Player:
 
         self._update(player)
 
-    def set_loop(self, enable: bool | None = None) -> bool:
+    def set_loop(self, enable: bool | None = None, /) -> bool:
         """
         Set loop.
 
@@ -955,7 +958,7 @@ class Player:
 
         return self._loop
 
-    async def transfer(self, session: Session) -> Player:
+    async def transfer(self, *, session: Session) -> Player:
         """Transfer.
 
         Transfer this player to another session.
@@ -997,7 +1000,7 @@ class Player:
 
         return new_player
 
-    def _update(self, player: player_.Player) -> None:
+    def _update(self, player: player_.Player, /) -> None:
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
@@ -1039,7 +1042,7 @@ class Player:
 
         if len(self.queue) == 1:
             new_event = events.QueueEmptyEvent.from_session(
-                self.session, self.guild_id, self.queue[0]
+                self.session, guild_id=self.guild_id, old_track=self.queue[0]
             )
 
             if not self._loop:
@@ -1065,7 +1068,10 @@ class Player:
 
         await self.app.event_manager.dispatch(
             events.QueueNextEvent.from_session(
-                self.session, self.guild_id, self._queue[0], event.track
+                self.session,
+                guild_id=self.guild_id,
+                track=self._queue[0],
+                old_track=event.track,
             )
         )
 

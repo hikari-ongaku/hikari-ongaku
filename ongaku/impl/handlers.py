@@ -41,7 +41,7 @@ class BasicSessionHandler(handler_.SessionHandler):
         "_players",
     )
 
-    def __init__(self, client: Client) -> None:
+    def __init__(self, *, client: Client) -> None:
         self._client = client
         self._is_alive = False
         self._current_session: Session | None = None
@@ -78,7 +78,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         self._is_alive = False
 
-    def add_session(self, session: Session) -> Session:
+    def add_session(self, *, session: Session) -> Session:
         """Add a session."""
         if self.is_alive:
             asyncio.create_task(session.start())  # noqa: RUF006
@@ -89,7 +89,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.UniqueError(f"The name {session.name} is not unique.")
 
-    def fetch_session(self, name: str | None = None) -> Session:
+    def fetch_session(self, *, name: str | None = None) -> Session:
         if name is not None:
             try:
                 return self._sessions[name]
@@ -106,7 +106,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.NoSessionsError
 
-    async def delete_session(self, name: str) -> None:
+    async def delete_session(self, *, name: str) -> None:
         try:
             session = self._sessions.pop(name)
         except KeyError:
@@ -114,10 +114,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         await session.stop()
 
-    def add_player(
-        self,
-        player: Player,
-    ) -> Player:
+    def add_player(self, *, player: Player) -> Player:
         if self._players.get(player.guild_id, None) is not None:
             raise errors.UniqueError(
                 f"A player with the guild id {player.guild_id} has already been made."
@@ -127,7 +124,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         return player
 
-    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, *, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         player = self._players.get(hikari.Snowflake(guild))
 
         if player:
@@ -135,7 +132,9 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.PlayerMissingError
 
-    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+    async def delete_player(
+        self, *, guild: hikari.SnowflakeishOr[hikari.Guild]
+    ) -> None:
         try:
             player = self._players.pop(hikari.Snowflake(guild))
         except KeyError:

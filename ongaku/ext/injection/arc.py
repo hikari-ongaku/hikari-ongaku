@@ -15,7 +15,7 @@ except ImportError:
     raise ImportError("Arc is required for you to use arc_ensure_player.")
 
 
-async def arc_ensure_player(ctx: arc.GatewayContext):
+async def arc_ensure_player(ctx: arc.GatewayContext, /):
     """
     Arc ensure player.
 

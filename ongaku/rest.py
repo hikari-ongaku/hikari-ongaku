@@ -52,7 +52,7 @@ class RESTClient:
         self._client = client
 
     async def load_track(  # noqa: C901
-        self, query: str, *, session: Session | None = None
+        self, query: str, /, *, session: Session | None = None
     ) -> Playlist | typing.Sequence[Track] | Track | None:
         """
         Load tracks.
@@ -164,7 +164,7 @@ class RESTClient:
         return build
 
     async def decode_track(
-        self, track: str, *, session: Session | None = None
+        self, track: str, /, *, session: Session | None = None
     ) -> Track:
         """
         Decode a track.
@@ -230,7 +230,7 @@ class RESTClient:
             raise errors.BuildError(e)
 
     async def decode_tracks(
-        self, tracks: typing.Sequence[str], *, session: Session | None = None
+        self, tracks: typing.Sequence[str], /, *, session: Session | None = None
     ) -> typing.Sequence[Track]:
         """
         Decode tracks.
@@ -305,7 +305,7 @@ class RESTClient:
         return new_tracks
 
     async def fetch_players(
-        self, session_id: str, *, session: Session | None = None
+        self, session_id: str, /, *, session: Session | None = None
     ) -> typing.Sequence[Player]:
         """
         Fetch all players.
@@ -379,6 +379,7 @@ class RESTClient:
         self,
         session_id: str,
         guild: hikari.SnowflakeishOr[hikari.Guild],
+        /,
         *,
         session: Session | None = None,
     ) -> Player:
@@ -450,6 +451,7 @@ class RESTClient:
         self,
         session_id: str,
         guild: hikari.SnowflakeishOr[hikari.Guild],
+        /,
         *,
         track: hikari.UndefinedNoneOr[Track] = hikari.UNDEFINED,
         position: hikari.UndefinedOr[int] = hikari.UNDEFINED,
@@ -762,6 +764,8 @@ class RESTClient:
         self,
         session_id: str,
         guild: hikari.SnowflakeishOr[hikari.Guild],
+        /,
+        *,
         session: Session | None = None,
     ) -> None:
         """
@@ -817,6 +821,7 @@ class RESTClient:
     async def update_session(
         self,
         session_id: str,
+        /,
         *,
         resuming: bool | None = None,
         timeout: int | None = None,
@@ -1146,7 +1151,7 @@ class RESTClient:
         return self._client.entity_builder.build_routeplanner_status(response)
 
     async def update_routeplanner_address(
-        self, address: str, *, session: Session | None = None
+        self, address: str, /, *, session: Session | None = None
     ) -> None:
         """
         Free routeplanner address.

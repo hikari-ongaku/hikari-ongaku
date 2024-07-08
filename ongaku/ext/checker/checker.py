@@ -12,7 +12,7 @@ from .abc import Checked
 from .abc import CheckedType
 
 
-async def check(query: str) -> Checked:
+async def check(query: str, /) -> Checked:
     """
     Check a string.
 

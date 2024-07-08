@@ -26,7 +26,7 @@ bot = hikari.GatewayBot("...")
 ongaku_client = ongaku.Client(bot)
 
 ongaku_client.create_session(
-    name="crescent-session",
+    "crescent-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )

@@ -53,7 +53,7 @@ class TestBuilderErrors:
 class TestBuilderEvents:
     def test_build_ready_event(self, ongaku_session: Session, builder: EntityBuilder):
         parsed_result = builder.build_ready_event(
-            payloads.READY_PAYLOAD, ongaku_session
+            payloads.READY_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session
@@ -66,7 +66,7 @@ class TestBuilderEvents:
         self, ongaku_session: Session, builder: EntityBuilder
     ):
         parsed_result = builder.build_player_update_event(
-            payloads.PLAYER_UPDATE_PAYLOAD, ongaku_session
+            payloads.PLAYER_UPDATE_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session
@@ -82,7 +82,7 @@ class TestBuilderEvents:
         self, ongaku_session: Session, builder: EntityBuilder
     ):
         parsed_result = builder.build_websocket_closed_event(
-            payloads.WEBSOCKET_CLOSED_PAYLOAD, ongaku_session
+            payloads.WEBSOCKET_CLOSED_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session
@@ -98,7 +98,7 @@ class TestBuilderEvents:
         self, ongaku_session: Session, builder: EntityBuilder
     ):
         parsed_result = builder.build_track_start_event(
-            payloads.TRACK_START_PAYLOAD, ongaku_session
+            payloads.TRACK_START_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session
@@ -112,7 +112,7 @@ class TestBuilderEvents:
         self, ongaku_session: Session, builder: EntityBuilder
     ):
         parsed_result = builder.build_track_end_event(
-            payloads.TRACK_END_PAYLOAD, ongaku_session
+            payloads.TRACK_END_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session
@@ -127,7 +127,7 @@ class TestBuilderEvents:
         self, ongaku_session: Session, builder: EntityBuilder
     ):
         parsed_result = builder.build_track_exception_event(
-            payloads.TRACK_EXCEPTION_PAYLOAD, ongaku_session
+            payloads.TRACK_EXCEPTION_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session
@@ -144,7 +144,7 @@ class TestBuilderEvents:
         self, ongaku_session: Session, builder: EntityBuilder
     ):
         parsed_result = builder.build_track_stuck_event(
-            payloads.TRACK_STUCK_PAYLOAD, ongaku_session
+            payloads.TRACK_STUCK_PAYLOAD, session=ongaku_session
         )
 
         assert parsed_result.session == ongaku_session

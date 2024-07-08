@@ -53,7 +53,7 @@ class RestStatusError(RestError):
 
     __slots__: typing.Sequence[str] = ("_status", "_reason")
 
-    def __init__(self, status: int, reason: str | None) -> None:
+    def __init__(self, status: int, reason: str | None, /) -> None:
         self._status = status
         self._reason = reason
 
@@ -88,6 +88,7 @@ class RestRequestError(RestError):
         message: str,
         path: str,
         trace: str | None,
+        /,
     ) -> None:
         self._timestamp = timestamp
         self._status = status
@@ -136,12 +137,7 @@ class RestExceptionError(RestError, errors_.ExceptionError):
 
     __slots__: typing.Sequence[str] = ()
 
-    def __init__(
-        self,
-        message: str | None,
-        severity: SeverityType,
-        cause: str,
-    ):
+    def __init__(self, message: str | None, severity: SeverityType, cause: str, /):
         self._message = message
         self._severity = severity
         self._cause = cause
@@ -175,7 +171,7 @@ class ClientAliveError(ClientError):
 
     __slots__: typing.Sequence[str] = ("_reason",)
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, /) -> None:
         self._reason = reason
 
     @property
@@ -222,7 +218,7 @@ class PlayerConnectError(PlayerError):
 
     __slots__: typing.Sequence[str] = "_reason"
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, /) -> None:
         self._reason = reason
 
     @property
@@ -236,7 +232,7 @@ class PlayerQueueError(PlayerError):
 
     __slots__: typing.Sequence[str] = "_reason"
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, /) -> None:
         self._reason = reason
 
     @property
@@ -257,7 +253,9 @@ class BuildError(OngakuError):
 
     __slots__: typing.Sequence[str] = ("_exception", "_reason")
 
-    def __init__(self, exception: Exception | None, reason: str | None = None) -> None:
+    def __init__(
+        self, exception: Exception | None, reason: str | None = None, /
+    ) -> None:
         self._exception = exception
         self._reason = reason
 
@@ -281,7 +279,7 @@ class UniqueError(OngakuError):
 
     __slots__: typing.Sequence[str] = "_reason"
 
-    def __init__(self, reason: str | None) -> None:
+    def __init__(self, reason: str | None, /) -> None:
         self._reason = reason
 
     @property

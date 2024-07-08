@@ -210,7 +210,7 @@ class FrameStatistics(abc.ABC):
         if self.nulled != other.nulled:
             return False
 
-        return  self.deficit == other.deficit
+        return self.deficit == other.deficit
 
 
 # MIT License

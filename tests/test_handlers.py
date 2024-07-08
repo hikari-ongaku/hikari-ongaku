@@ -17,7 +17,7 @@ from ongaku.session import Session
 class TestBasicSessionHandler:
     @pytest.mark.asyncio
     async def test_properties(self, ongaku_client: Client):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         assert isinstance(handler.players, typing.Sequence)
         assert handler.players == ()
@@ -29,19 +29,31 @@ class TestBasicSessionHandler:
 
     @pytest.mark.asyncio
     async def test_start(self, ongaku_client: Client):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         assert handler.is_alive is False
 
         session_1 = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
         session_2 = Session(
-            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="session_2",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
 
-        handler.add_session(session_1)
-        handler.add_session(session_2)
+        handler.add_session(session=session_1)
+        handler.add_session(session=session_2)
 
         assert len(handler.sessions) == 2
 
@@ -56,19 +68,31 @@ class TestBasicSessionHandler:
 
     @pytest.mark.asyncio
     async def test_stop(self, ongaku_client: Client):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         assert handler.is_alive is False
 
         session_1 = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
-        handler.add_session(session_1)
+        handler.add_session(session=session_1)
 
         session_2 = Session(
-            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="session_2",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
-        handler.add_session(session_2)
+        handler.add_session(session=session_2)
 
         # Start the session up.
 
@@ -92,7 +116,7 @@ class TestBasicSessionHandler:
 
     @pytest.mark.asyncio
     async def test_fetch_session(self, ongaku_client: Client, ongaku_session: Session):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         with mock.patch.object(handler, "_current_session", ongaku_session):
             # Test with current session
@@ -102,14 +126,26 @@ class TestBasicSessionHandler:
             assert session == ongaku_session
 
         session_1 = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
-        handler.add_session(session_1)
+        handler.add_session(session=session_1)
 
         session_2 = Session(
-            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="session_2",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
-        handler.add_session(session_2)
+        handler.add_session(session=session_2)
 
         assert len(handler.sessions) == 2
 
@@ -135,7 +171,7 @@ class TestBasicSessionHandler:
 
         # Test with name set
 
-        session = handler.fetch_session("session_1")
+        session = handler.fetch_session(name="session_1")
 
         assert session == session_1
 
@@ -144,57 +180,63 @@ class TestBasicSessionHandler:
         handler._sessions.clear()
 
         with pytest.raises(errors.SessionMissingError):
-            handler.fetch_session("session_1")
+            handler.fetch_session(name="session_1")
 
     @pytest.mark.asyncio
     async def test_delete_session(self, ongaku_client: Client, ongaku_session: Session):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         handler._sessions = {"test_session": ongaku_session}
 
         with mock.patch.object(
             ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
         ) as patched_stop:
-            await handler.delete_session("test_session")
+            await handler.delete_session(name="test_session")
 
             patched_stop.assert_called_once()
 
         # Delete an existing session
 
         with pytest.raises(errors.SessionMissingError):
-            await handler.delete_session("test_session")
+            await handler.delete_session(name="test_session")
 
             patched_stop.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_add_session(self, ongaku_client: Client):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         assert len(handler.sessions) == 0
 
-        session = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+        session_1 = Session(
+            ongaku_client,
+            name="session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+            attempts=3,
         )
-        handler.add_session(session)
+        handler.add_session(session=session_1)
 
         assert len(handler.sessions) == 1
 
     @pytest.mark.asyncio
     async def test_add_player(self, ongaku_client: Client, ongaku_player: Player):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         assert len(handler.players) == 0
 
-        handler.add_player(ongaku_player)
+        handler.add_player(player=ongaku_player)
 
         assert len(handler.players) == 1
 
         with pytest.raises(errors.UniqueError):
-            handler.add_player(ongaku_player)
+            handler.add_player(player=ongaku_player)
 
     @pytest.mark.asyncio
     async def test_fetch_player(self, ongaku_client: Client, ongaku_session: Session):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         # Create a player
 
@@ -204,7 +246,7 @@ class TestBasicSessionHandler:
             handler, "_current_session", return_value=ongaku_session
         ):
             original_player = handler.add_player(
-                Player(ongaku_session, Snowflake(1234567890))
+                player=Player(ongaku_session, Snowflake(1234567890))
             )
 
             assert len(handler.players) == 1
@@ -214,7 +256,7 @@ class TestBasicSessionHandler:
             assert original_player.guild_id == Snowflake(1234567890)
             assert original_player.session == ongaku_session
 
-        new_player = handler.fetch_player(Snowflake(1234567890))
+        new_player = handler.fetch_player(guild=Snowflake(1234567890))
 
         assert len(handler.players) == 1
 
@@ -227,7 +269,7 @@ class TestBasicSessionHandler:
 
     @pytest.mark.asyncio
     async def test_delete_player(self, ongaku_client: Client, ongaku_session: Session):
-        handler = BasicSessionHandler(ongaku_client)
+        handler = BasicSessionHandler(client=ongaku_client)
 
         # Create a player
 
@@ -237,7 +279,7 @@ class TestBasicSessionHandler:
             handler, "_current_session", return_value=ongaku_session
         ):
             original_player = handler.add_player(
-                Player(ongaku_session, Snowflake(1234567890))
+                player=Player(ongaku_session, Snowflake(1234567890))
             )
 
             assert len(handler.players) == 1
@@ -252,7 +294,7 @@ class TestBasicSessionHandler:
         with mock.patch(
             "ongaku.player.Player.disconnect", return_value=None
         ) as patched_player:
-            await handler.delete_player(Snowflake(1234567890))
+            await handler.delete_player(guild=Snowflake(1234567890))
 
             assert len(handler.players) == 0
 

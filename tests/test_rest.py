@@ -689,7 +689,9 @@ class TestRestPlayer:
                 end_time=2,
                 volume=3,
                 paused=False,
-                voice=player.Voice("token", "endpoint", "session_id"),
+                voice=player.Voice(
+                    token="token", endpoint="endpoint", session_id="session_id"
+                ),
                 no_replace=False,
                 session=ongaku_session,
             )
@@ -745,7 +747,9 @@ class TestRestPlayer:
                 volume=3,
                 paused=False,
                 filters=ongaku_filters,
-                voice=player.Voice("token", "endpoint", "session_id"),
+                voice=player.Voice(
+                    token="token", endpoint="endpoint", session_id="session_id"
+                ),
                 no_replace=False,
             )
 

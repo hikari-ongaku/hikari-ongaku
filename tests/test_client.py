@@ -73,7 +73,7 @@ class TestClient:
                 return_value=ongaku_session,
             ) as patched_add_session,
         ):
-            client.create_session("test_session", False, host="127.0.0.1")
+            client.create_session("test_session", ssl=False, host="127.0.0.1")
 
             patched_add_session.assert_called_once()
 
@@ -140,7 +140,7 @@ class TestClient:
     ):
         client = Client(gateway_bot)
 
-        client.session_handler.add_player(ongaku_player)
+        client.session_handler.add_player(player=ongaku_player)
 
         player = client.fetch_player(1234567890)
 
@@ -149,17 +149,17 @@ class TestClient:
         with mock.patch.object(
             ongaku_player, "disconnect", new_callable=mock.AsyncMock, return_value=None
         ):
-            await client.session_handler.delete_player(Snowflake(1234567890))
+            await client.session_handler.delete_player(guild=Snowflake(1234567890))
 
         with pytest.raises(errors.PlayerMissingError):
             client.fetch_player(1234567890)
 
     @pytest.mark.asyncio
-    async def test_player_delete(self, gateway_bot: gateway_bot_.GatewayBot):
+    async def test_player_delete(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session):
         client = Client(gateway_bot)
 
         with (
-            mock.patch.object(client, "_session_handler"),
+            mock.patch.object(client, "_session_handler", return_value=ongaku_session),
             mock.patch.object(
                 client.session_handler,
                 "delete_player",
@@ -167,6 +167,6 @@ class TestClient:
                 return_value=None,
             ) as patched_delete_player,
         ):
-            await client.session_handler.delete_player(Snowflake(1234567890))
+            await client.delete_player(Snowflake(1234567890))
 
-            patched_delete_player.assert_called_once_with(Snowflake(1234567890))
+            patched_delete_player.assert_called_once_with(guild=Snowflake(1234567890))

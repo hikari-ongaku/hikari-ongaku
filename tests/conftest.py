@@ -55,38 +55,57 @@ def ongaku_player(ongaku_session: Session) -> Player:
 @pytest.fixture
 def ongaku_track_info() -> TrackInfo:
     return TrackInfo(
-        "identifier",
-        False,
-        "author",
-        100,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
+        identifier="identifier",
+        is_seekable=False,
+        author="author",
+        length=100,
+        is_stream=True,
+        position=2,
+        title="title",
+        source_name="source_name",
+        uri="uri",
+        artwork_url="artwork_url",
+        isrc="isrc",
     )
 
 
 @pytest.fixture
 def ongaku_track(ongaku_track_info: TrackInfo) -> Track:
-    return Track(ENCODED_TRACK, ongaku_track_info, {}, {}, None)
+    return Track(
+        encoded=ENCODED_TRACK,
+        info=ongaku_track_info,
+        plugin_info={},
+        user_data={},
+        requestor=None,
+    )
 
 
 @pytest.fixture
 def ongaku_filters() -> filters_.Filters:
     return filters_.Filters(
         volume=1.2,
-        equalizer=[filters_.Equalizer(BandType.HZ100, 0.95)],
-        karaoke=filters_.Karaoke(1, 0.5, 4.5, 6),
-        timescale=filters_.Timescale(1.2, 2.3, 4),
-        tremolo=filters_.Tremolo(1.2, 1),
-        vibrato=filters_.Vibrato(3, 0.5),
-        rotation=filters_.Rotation(6),
-        distortion=filters_.Distortion(2.1, 3, 6.9, 7.2, 9.4, 2, 4.1, 8),
-        channel_mix=filters_.ChannelMix(0, 1, 0.5, 0.63),
-        low_pass=filters_.LowPass(3.8),
+        equalizer=[filters_.Equalizer(band=BandType.HZ100, gain=0.95)],
+        karaoke=filters_.Karaoke(
+            level=1, mono_level=0.5, filter_band=4.5, filter_width=6
+        ),
+        timescale=filters_.Timescale(speed=1.2, pitch=2.3, rate=4),
+        tremolo=filters_.Tremolo(frequency=1.2, depth=1),
+        vibrato=filters_.Vibrato(frequency=3, depth=0.5),
+        rotation=filters_.Rotation(rotation_hz=6),
+        distortion=filters_.Distortion(
+            sin_offset=2.1,
+            sin_scale=3,
+            cos_offset=6.9,
+            cos_scale=7.2,
+            tan_offset=9.4,
+            tan_scale=2,
+            offset=4.1,
+            scale=8,
+        ),
+        channel_mix=filters_.ChannelMix(
+            left_to_left=0, left_to_right=1, right_to_left=0.5, right_to_right=0.63
+        ),
+        low_pass=filters_.LowPass(smoothing=3.8),
     )
 
 

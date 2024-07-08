@@ -23,6 +23,7 @@ __all__ = ("Player", "State", "Voice")
 class Player(player_.Player):
     def __init__(
         self,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track | None,
         volume: int,
@@ -42,7 +43,7 @@ class Player(player_.Player):
 
 class State(player_.State):
     def __init__(
-        self, time: datetime.datetime, position: int, connected: bool, ping: int
+        self, *, time: datetime.datetime, position: int, connected: bool, ping: int
     ) -> None:
         self._time = time
         self._position = position
@@ -51,7 +52,7 @@ class State(player_.State):
 
 
 class Voice(player_.Voice):
-    def __init__(self, token: str, endpoint: str, session_id: str) -> None:
+    def __init__(self, *, token: str, endpoint: str, session_id: str) -> None:
         self._token = token
         self._endpoint = endpoint
         self._session_id = session_id

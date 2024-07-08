@@ -77,6 +77,8 @@ class Session:
     def __init__(
         self,
         client: Client,
+        /,
+        *,
         name: str,
         ssl: bool,
         host: str,
@@ -167,6 +169,7 @@ class Session:
         method: str,
         path: str,
         return_type: typing.Type[types.RequestT] | None,
+        /,
         *,
         headers: typing.Mapping[str, typing.Any] = {},
         json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
@@ -272,7 +275,7 @@ class Session:
 
         return return_type(json_payload)
 
-    def _handle_op_code(self, data: str) -> hikari.Event:
+    def _handle_op_code(self, data: str, /) -> hikari.Event:
         mapped_data = json_loads(data)
 
         if isinstance(mapped_data, typing.Sequence):
@@ -284,52 +287,56 @@ class Session:
         op_code = session_.WebsocketOPCode(mapped_data["op"])
 
         if op_code == session_.WebsocketOPCode.READY:
-            event = self.client.entity_builder.build_ready_event(mapped_data, self)
+            event = self.client.entity_builder.build_ready_event(
+                mapped_data, session=self
+            )
 
             self._session_id = event.session_id
 
         elif op_code == session_.WebsocketOPCode.PLAYER_UPDATE:
             event = self.client.entity_builder.build_player_update_event(
-                mapped_data, self
+                mapped_data, session=self
             )
 
         elif op_code == session_.WebsocketOPCode.STATS:
-            event = self.client.entity_builder.build_statistics_event(mapped_data, self)
+            event = self.client.entity_builder.build_statistics_event(
+                mapped_data, session=self
+            )
 
         else:
             event_type = session_.WebsocketEvent(mapped_data["type"])
 
             if event_type == session_.WebsocketEvent.TRACK_START_EVENT:
                 event = self.client.entity_builder.build_track_start_event(
-                    mapped_data, self
+                    mapped_data, session=self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_END_EVENT:
                 event = self.client.entity_builder.build_track_end_event(
-                    mapped_data, self
+                    mapped_data, session=self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
                 event = self.client.entity_builder.build_track_exception_event(
-                    mapped_data, self
+                    mapped_data, session=self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
                 event = self.client.entity_builder.build_track_stuck_event(
-                    mapped_data, self
+                    mapped_data, session=self
                 )
 
             else:
                 event = self.client.entity_builder.build_websocket_closed_event(
-                    mapped_data, self
+                    mapped_data, session=self
                 )
 
         return event
 
-    async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> bool:
+    async def _handle_ws_message(self, msg: aiohttp.WSMessage, /) -> bool:
         """Returns false if failure or closure, true otherwise."""
         if msg.type == aiohttp.WSMsgType.TEXT:
-            payload_event = events.PayloadEvent.from_session(self, msg.data)
+            payload_event = events.PayloadEvent.from_session(self, payload=msg.data)
             event = self._handle_op_code(msg.data)
 
             await self.app.event_manager.dispatch(payload_event)
@@ -421,7 +428,7 @@ class Session:
 
         raise errors.SessionStartError
 
-    async def transfer(self, session_handler: handler_.SessionHandler) -> None:
+    async def transfer(self, session_handler: handler_.SessionHandler, /) -> None:
         """
         Transfer.
 
@@ -443,9 +450,9 @@ class Session:
         )
 
         for player in self._players.values():
-            player = await player.transfer(session)
+            player = await player.transfer(session=session)
 
-            session_handler.add_player(player)
+            session_handler.add_player(player=player)
 
         await self.stop()
 

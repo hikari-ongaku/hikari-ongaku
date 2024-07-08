@@ -21,7 +21,7 @@ client = tanjun.Client.from_gateway_bot(bot)
 ongaku_client = ongaku.Client.from_tanjun(client)
 
 ongaku_client.create_session(
-    name="tanjun-session",
+    "tanjun-session",
     host="127.0.0.1",
     password="youshallnotpass"
 )
