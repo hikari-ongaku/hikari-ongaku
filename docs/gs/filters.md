@@ -7,7 +7,7 @@ description: Usage and setup of filters.
 
 Below will show you how to control the filter object, both making a new one, or modifying an existing one.
 
-Setting a players filter can be found [here](./player.md#filters)
+Setting a players filter can be found [here](./player.md#filters).
 
 ## Getting a filter.
 

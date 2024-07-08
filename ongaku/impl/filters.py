@@ -94,7 +94,15 @@ class Filters(filters_.Filters):
         )
 
     def set_volume(self, volume: float) -> Filters:
-        """FIXME: Docs need doing."""
+        """Set Volume.
+        
+        Set the volume of the filter.
+
+        Parameters
+        ----------
+        volume
+            The volume of the player. (Must be greater than 0.)
+        """
         if volume <= 0:
             raise ValueError("Volume must be at or above 0.")
         self._volume = volume
@@ -510,7 +518,15 @@ class Filters(filters_.Filters):
     def set_plugin_filters(
         self, plugin_filters: typing.Mapping[str, typing.Any] = {}
     ) -> Filters:
-        """FIXME: Docs need doing."""
+        """Set Plugin Filters.
+        
+        Set the filters for plugins.
+
+        Parameters
+        ----------
+        plugin_filters
+            The plugin filters you wish to set.
+        """
         self._plugin_filters = plugin_filters
         return self
 
