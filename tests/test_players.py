@@ -14,6 +14,7 @@ from hikari.snowflakes import Snowflake
 from ongaku import errors
 from ongaku import events
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.filters import Filters
 from ongaku.client import Client
 from ongaku.impl import player as player_
 from ongaku.impl import playlist
@@ -871,7 +872,7 @@ class TestPlayer:
             )
 
     @pytest.mark.asyncio
-    async def test_update(self, ongaku_session: Session):
+    async def test_update(self, ongaku_session: Session, ongaku_filters: Filters):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
         assert new_player.volume == -1
@@ -883,9 +884,8 @@ class TestPlayer:
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         voice = player_.Voice("token", "endpoint", "session_id")
-        filters = mock.Mock()
         replacement_player = player_.Player(
-            Snowflake(1234567890), None, 10, False, state, voice, filters
+            Snowflake(1234567890), None, 10, False, state, voice, ongaku_filters
         )
 
         new_player._update(replacement_player)
@@ -894,7 +894,7 @@ class TestPlayer:
         assert new_player.is_paused is False
         assert new_player.state == state
         assert new_player.voice == voice
-        assert new_player.filters == filters
+        assert new_player.filters == ongaku_filters
         assert new_player.connected is True
 
     @pytest.mark.asyncio
