@@ -1008,6 +1008,7 @@ class Player:
         self._state = player.state
         self._voice = player.voice
         self._filters = player.filters
+        self._connected = player.state.connected
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
@@ -1091,6 +1092,7 @@ class Player:
         )
 
         self._state = event.state
+        self._connected = event.state.connected
 
 
 # MIT License
