@@ -877,6 +877,7 @@ class TestPlayer:
         assert new_player.state is None
         assert new_player.voice is None
         assert new_player.filters == {}
+        assert new_player.connected is False
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         voice = player_.Voice("token", "endpoint", "session_id")
@@ -892,12 +893,14 @@ class TestPlayer:
         assert new_player.state == state
         assert new_player.voice == voice
         assert new_player.filters == filters
+        assert new_player.connected is True
 
     @pytest.mark.asyncio
     async def test_player_update_event(self, ongaku_session: Session):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
         assert new_player.state is None
+        assert new_player.connected is False
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         event = events.PlayerUpdateEvent.from_session(
@@ -907,6 +910,7 @@ class TestPlayer:
         await new_player._player_update_event(event)
 
         assert new_player.state == state
+        assert new_player.connected is True
 
 
 class TestPlayerTrackEndEvent:
