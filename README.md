@@ -27,6 +27,8 @@ Ongaku tries to make everything as simple as possible for new users, but still h
    - Seeking/Reversing the tracks position.
    - Volume control
    - Setting requestors (users who requested the song.)
+   - Looping (loops the same song over and over.)
+   - Filters (allows for changing the way audio plays and sounds.)
 - Events
    - Ready Event (when a session is online.)
    - Player Update Event (when a player gets updated.)

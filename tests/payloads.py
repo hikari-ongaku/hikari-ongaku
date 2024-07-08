@@ -5,6 +5,17 @@ PayloadT: typing.TypeAlias = typing.Final[typing.Mapping[str, typing.Any]]
 __all__ = (
     # guild id
     "GUILD_ID",
+    # filter payloads
+    "FILTERS_PAYLOAD",
+    "FILTERS_EQUALIZER_PAYLOAD",
+    "FILTERS_KARAOKE_PAYLOAD",
+    "FILTERS_TIMESCALE_PAYLOAD",
+    "FILTERS_TREMOLO_PAYLOAD",
+    "FILTERS_VIBRATO_PAYLOAD",
+    "FILTERS_ROTATION_PAYLOAD",
+    "FILTERS_DISTORTION_PAYLOAD",
+    "FILTERS_CHANNEL_MIX_PAYLOAD",
+    "FILTERS_LOW_PASS_PAYLOAD",
     # track payloads
     "TRACK_INFO_PAYLOAD",
     "TRACK_PAYLOAD",
@@ -46,6 +57,56 @@ __all__ = (
 )
 
 GUILD_ID: typing.Final[str] = "1234567890"
+
+FILTERS_EQUALIZER_PAYLOAD: PayloadT = {"band": 3, "gain": 0.95}
+
+FILTERS_KARAOKE_PAYLOAD: PayloadT = {
+    "level": 1,
+    "monoLevel": 0.5,
+    "filterBand": 4.5,
+    "filterWidth": 6,
+}
+
+FILTERS_TIMESCALE_PAYLOAD: PayloadT = {"speed": 1.2, "pitch": 2.3, "rate": 4}
+
+FILTERS_TREMOLO_PAYLOAD: PayloadT = {"frequency": 1.2, "depth": 1}
+
+FILTERS_VIBRATO_PAYLOAD: PayloadT = {"frequency": 3, "depth": 0.5}
+
+FILTERS_ROTATION_PAYLOAD: PayloadT = {"rotationHz": 6}
+
+FILTERS_DISTORTION_PAYLOAD: PayloadT = {
+    "sinOffset": 2.1,
+    "sinScale": 3,
+    "cosOffset": 6.9,
+    "cosScale": 7.2,
+    "tanOffset": 9.4,
+    "tanScale": 2,
+    "offset": 4.1,
+    "scale": 8,
+}
+
+FILTERS_CHANNEL_MIX_PAYLOAD: PayloadT = {
+    "leftToLeft": 0,
+    "leftToRight": 1,
+    "rightToLeft": 0.5,
+    "rightToRight": 0.63,
+}
+
+FILTERS_LOW_PASS_PAYLOAD: PayloadT = {"smoothing": 3.8}
+
+FILTERS_PAYLOAD: PayloadT = {
+    "volume": 1.2,
+    "equalizer": [FILTERS_EQUALIZER_PAYLOAD],
+    "karaoke": FILTERS_KARAOKE_PAYLOAD,
+    "timescale": FILTERS_TIMESCALE_PAYLOAD,
+    "tremolo": FILTERS_TREMOLO_PAYLOAD,
+    "vibrato": FILTERS_VIBRATO_PAYLOAD,
+    "rotation": FILTERS_ROTATION_PAYLOAD,
+    "distortion": FILTERS_DISTORTION_PAYLOAD,
+    "channelMix": FILTERS_CHANNEL_MIX_PAYLOAD,
+    "lowPass": FILTERS_LOW_PASS_PAYLOAD,
+}
 
 TRACK_INFO_PAYLOAD: PayloadT = {
     "identifier": "identifier",

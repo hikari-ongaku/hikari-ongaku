@@ -11,6 +11,7 @@ from ongaku import errors
 from ongaku.abc.track import Track
 from ongaku.client import Client
 from ongaku.impl import player as player
+from ongaku.impl.filters import Filters
 from ongaku.rest import RESTClient
 from ongaku.session import Session
 from tests import payloads
@@ -717,9 +718,7 @@ class TestRestPlayer:
 
     @pytest.mark.asyncio
     async def test_update_player(
-        self,
-        ongaku_client: Client,
-        ongaku_session: Session,
+        self, ongaku_client: Client, ongaku_session: Session, ongaku_filters: Filters
     ):
         rest = RESTClient(ongaku_client)
 
@@ -745,6 +744,7 @@ class TestRestPlayer:
                 end_time=2,
                 volume=3,
                 paused=False,
+                filters=ongaku_filters,
                 voice=player.Voice("token", "endpoint", "session_id"),
                 no_replace=False,
             )
@@ -762,11 +762,8 @@ class TestRestPlayer:
                     "endTime": 2,
                     "volume": 3,
                     "paused": False,
-                    "voice": {
-                        "token": "token",
-                        "endpoint": "endpoint",
-                        "sessionId": "session_id",
-                    },
+                    "filters": payloads.FILTERS_PAYLOAD,
+                    "voice": payloads.PLAYER_VOICE_PAYLOAD,
                 },
                 params={"noReplace": "false"},
             )

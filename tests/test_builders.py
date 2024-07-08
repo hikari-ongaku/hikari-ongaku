@@ -9,6 +9,7 @@ import pytest
 
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.filters import BandType
 from ongaku.abc.routeplanner import IPBlockType
 from ongaku.abc.routeplanner import RoutePlannerType
 from ongaku.builders import EntityBuilder
@@ -155,6 +156,115 @@ class TestBuilderEvents:
         assert parsed_result.threshold_ms == 1
 
 
+class TestBuildFilters:
+    def test_build_filters(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters(payloads.FILTERS_PAYLOAD)
+
+        assert parsed_result.volume == 1.2
+        assert parsed_result.equalizer == [
+            builder.build_filters_equalizer(payloads.FILTERS_EQUALIZER_PAYLOAD)
+        ]
+        assert parsed_result.karaoke == builder.build_filters_karaoke(
+            payloads.FILTERS_KARAOKE_PAYLOAD
+        )
+        assert parsed_result.timescale == builder.build_filters_timescale(
+            payloads.FILTERS_TIMESCALE_PAYLOAD
+        )
+        assert parsed_result.tremolo == builder.build_filters_tremolo(
+            payloads.FILTERS_TREMOLO_PAYLOAD
+        )
+        assert parsed_result.vibrato == builder.build_filters_vibrato(
+            payloads.FILTERS_VIBRATO_PAYLOAD
+        )
+        assert parsed_result.rotation == builder.build_filters_rotation(
+            payloads.FILTERS_ROTATION_PAYLOAD
+        )
+        assert parsed_result.distortion == builder.build_filters_distortion(
+            payloads.FILTERS_DISTORTION_PAYLOAD
+        )
+        assert parsed_result.channel_mix == builder.build_filters_channel_mix(
+            payloads.FILTERS_CHANNEL_MIX_PAYLOAD
+        )
+        assert parsed_result.low_pass == builder.build_filters_low_pass(
+            payloads.FILTERS_LOW_PASS_PAYLOAD
+        )
+
+    def test_build_filters_equalizer(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_equalizer(
+            payloads.FILTERS_EQUALIZER_PAYLOAD
+        )
+
+        assert parsed_result.band == BandType.HZ100
+        assert parsed_result.gain == 0.95
+
+    def test_build_filters_karaoke(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_karaoke(payloads.FILTERS_KARAOKE_PAYLOAD)
+
+        assert parsed_result.level == 1
+        assert parsed_result.mono_level == 0.5
+        assert parsed_result.filter_band == 4.5
+        assert parsed_result.filter_width == 6
+
+    def test_build_filters_timescale(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_timescale(
+            payloads.FILTERS_TIMESCALE_PAYLOAD
+        )
+
+        assert parsed_result.speed == 1.2
+        assert parsed_result.pitch == 2.3
+        assert parsed_result.rate == 4
+
+    def test_build_filters_tremolo(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_tremolo(payloads.FILTERS_TREMOLO_PAYLOAD)
+
+        assert parsed_result.frequency == 1.2
+        assert parsed_result.depth == 1
+
+    def test_build_filters_vibrato(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_vibrato(payloads.FILTERS_VIBRATO_PAYLOAD)
+
+        assert parsed_result.frequency == 3
+        assert parsed_result.depth == 0.5
+
+    def test_build_filters_rotation(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_rotation(
+            payloads.FILTERS_ROTATION_PAYLOAD
+        )
+
+        assert parsed_result.rotation_hz == 6
+
+    def test_build_filters_distortion(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_distortion(
+            payloads.FILTERS_DISTORTION_PAYLOAD
+        )
+
+        assert parsed_result.sin_offset == 2.1
+        assert parsed_result.sin_scale == 3
+        assert parsed_result.cos_offset == 6.9
+        assert parsed_result.cos_scale == 7.2
+        assert parsed_result.tan_offset == 9.4
+        assert parsed_result.tan_scale == 2
+        assert parsed_result.offset == 4.1
+        assert parsed_result.scale == 8
+
+    def test_build_filters_channel_mix(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_channel_mix(
+            payloads.FILTERS_CHANNEL_MIX_PAYLOAD
+        )
+
+        assert parsed_result.left_to_left == 0
+        assert parsed_result.left_to_right == 1
+        assert parsed_result.right_to_left == 0.5
+        assert parsed_result.right_to_right == 0.63
+
+    def test_build_filters_low_pass(self, builder: EntityBuilder):
+        parsed_result = builder.build_filters_low_pass(
+            payloads.FILTERS_LOW_PASS_PAYLOAD
+        )
+
+        assert parsed_result.smoothing == 3.8
+
+
 class TestBuilderInfo:
     def test_build_info(self, builder: EntityBuilder):
         parsed_result = builder.build_info(payloads.INFO_PAYLOAD)
@@ -215,7 +325,7 @@ class TestBuilderPlayer:
         assert parsed_result.voice == builder.build_player_voice(
             payloads.PLAYER_VOICE_PAYLOAD
         )
-        assert parsed_result.filters == {}
+        assert parsed_result.filters is None
 
     def test_build_player_state(self, builder: EntityBuilder):
         parsed_result = builder.build_player_state(payloads.PLAYER_STATE_PAYLOAD)

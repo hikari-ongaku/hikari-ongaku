@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import typing
 
+from ongaku.abc import filters as filters_
 from ongaku.abc import player as player_
 from ongaku.abc import track as track_
 
@@ -28,7 +29,7 @@ class Player(player_.Player):
         is_paused: bool,
         state: player_.State,
         voice: player_.Voice,
-        filters: typing.Mapping[str, typing.Any],
+        filters: filters_.Filters | None,
     ) -> None:
         self._guild_id = guild_id
         self._track = track

@@ -8,7 +8,9 @@ from hikari.impl.event_manager import EventManagerImpl
 from hikari.intents import Intents
 from hikari.snowflakes import Snowflake
 
+from ongaku.abc.filters import BandType
 from ongaku.client import Client
+from ongaku.impl import filters as filters_
 from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 from ongaku.player import Player
@@ -51,7 +53,7 @@ def ongaku_player(ongaku_session: Session) -> Player:
 
 
 @pytest.fixture
-def track_info() -> TrackInfo:
+def ongaku_track_info() -> TrackInfo:
     return TrackInfo(
         "identifier",
         False,
@@ -68,8 +70,24 @@ def track_info() -> TrackInfo:
 
 
 @pytest.fixture
-def track(track_info: TrackInfo) -> Track:
-    return Track(ENCODED_TRACK, track_info, {}, {}, None)
+def ongaku_track(ongaku_track_info: TrackInfo) -> Track:
+    return Track(ENCODED_TRACK, ongaku_track_info, {}, {}, None)
+
+
+@pytest.fixture
+def ongaku_filters() -> filters_.Filters:
+    return filters_.Filters(
+        volume=1.2,
+        equalizer=[filters_.Equalizer(BandType.HZ100, 0.95)],
+        karaoke=filters_.Karaoke(1, 0.5, 4.5, 6),
+        timescale=filters_.Timescale(1.2, 2.3, 4),
+        tremolo=filters_.Tremolo(1.2, 1),
+        vibrato=filters_.Vibrato(3, 0.5),
+        rotation=filters_.Rotation(6),
+        distortion=filters_.Distortion(2.1, 3, 6.9, 7.2, 9.4, 2, 4.1, 8),
+        channel_mix=filters_.ChannelMix(0, 1, 0.5, 0.63),
+        low_pass=filters_.LowPass(3.8),
+    )
 
 
 @pytest.fixture

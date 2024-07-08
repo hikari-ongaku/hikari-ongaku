@@ -13,6 +13,7 @@ import hikari
 from ongaku import events
 from ongaku.abc import errors as errors_
 from ongaku.abc import events as events_
+from ongaku.abc import filters as filters_
 from ongaku.abc import info as info_
 from ongaku.abc import player as player_
 from ongaku.abc import playlist as playlist_
@@ -22,6 +23,7 @@ from ongaku.abc import statistics as statistics_
 from ongaku.abc import track as track_
 from ongaku.errors import RestExceptionError
 from ongaku.errors import RestRequestError
+from ongaku.impl import filters
 from ongaku.impl import info
 from ongaku.impl import player
 from ongaku.impl import playlist
@@ -492,6 +494,157 @@ class EntityBuilder:
             data["byRemote"],
         )
 
+    # Filters
+
+    def build_filters(self, payload: types.PayloadMappingT) -> filters_.Filters:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters")
+
+        equalizer: list[filters_.Equalizer] = []
+
+        if data.get("equalizer", None) is not None:
+            for eq in data["equalizer"]:
+                equalizer.append(self.build_filters_equalizer(eq))
+
+        return filters.Filters(
+            volume=data.get("volume", None),
+            equalizer=equalizer,
+            karaoke=self.build_filters_karaoke(data["karaoke"])
+            if data.get("karaoke", None)
+            else None,
+            timescale=self.build_filters_timescale(data["timescale"])
+            if data.get("timescale", None)
+            else None,
+            tremolo=self.build_filters_tremolo(data["tremolo"])
+            if data.get("tremolo", None)
+            else None,
+            vibrato=self.build_filters_vibrato(data["vibrato"])
+            if data.get("vibrato", None)
+            else None,
+            rotation=self.build_filters_rotation(data["rotation"])
+            if data.get("rotation", None)
+            else None,
+            distortion=self.build_filters_distortion(data["distortion"])
+            if data.get("distortion", None)
+            else None,
+            channel_mix=self.build_filters_channel_mix(data["channelMix"])
+            if data.get("channelMix", None)
+            else None,
+            low_pass=self.build_filters_low_pass(data["lowPass"])
+            if data.get("lowPass", None)
+            else None,
+            plugin_filters=data.get("pluginFilters", None),
+        )
+
+    def build_filters_equalizer(
+        self, payload: types.PayloadMappingT
+    ) -> filters_.Equalizer:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Equalizer")
+
+        return filters.Equalizer(filters_.BandType(data["band"]), data["gain"])
+
+    def build_filters_karaoke(self, payload: types.PayloadMappingT) -> filters_.Karaoke:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Karaoke")
+
+        return filters.Karaoke(
+            data.get("level", None),
+            data.get("monoLevel", None),
+            data.get("filterBand", None),
+            data.get("filterWidth", None),
+        )
+
+    def build_filters_timescale(
+        self, payload: types.PayloadMappingT
+    ) -> filters_.Timescale:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Timescale")
+
+        return filters.Timescale(
+            data.get("speed", None),
+            data.get("pitch", None),
+            data.get("rate", None),
+        )
+
+    def build_filters_tremolo(self, payload: types.PayloadMappingT) -> filters_.Tremolo:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Tremolo")
+
+        return filters.Tremolo(
+            data.get("frequency", None),
+            data.get("depth", None),
+        )
+
+    def build_filters_vibrato(self, payload: types.PayloadMappingT) -> filters_.Vibrato:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Vibrato")
+
+        return filters.Vibrato(
+            data.get("frequency", None),
+            data.get("depth", None),
+        )
+
+    def build_filters_rotation(
+        self, payload: types.PayloadMappingT
+    ) -> filters_.Rotation:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Rotation")
+
+        return filters.Rotation(
+            data.get("rotationHz", None),
+        )
+
+    def build_filters_distortion(
+        self, payload: types.PayloadMappingT
+    ) -> filters_.Distortion:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Distortion")
+
+        return filters.Distortion(
+            data.get("sinOffset", None),
+            data.get("sinScale", None),
+            data.get("cosOffset", None),
+            data.get("cosScale", None),
+            data.get("tanOffset", None),
+            data.get("tanScale", None),
+            data.get("offset", None),
+            data.get("scale", None),
+        )
+
+    def build_filters_channel_mix(
+        self, payload: types.PayloadMappingT
+    ) -> filters_.ChannelMix:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters ChannelMix")
+
+        return filters.ChannelMix(
+            data.get("leftToLeft", None),
+            data.get("leftToRight", None),
+            data.get("rightToLeft", None),
+            data.get("rightToRight", None),
+        )
+
+    def build_filters_low_pass(
+        self, payload: types.PayloadMappingT
+    ) -> filters_.LowPass:
+        data = self._ensure_mapping(payload)
+
+        _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters LowPass")
+
+        return filters.LowPass(
+            data.get("smoothing", None),
+        )
+
     # info
 
     def build_info(self, payload: types.PayloadMappingT) -> info_.Info:
@@ -682,7 +835,7 @@ class EntityBuilder:
             data["paused"],
             self.build_player_state(data["state"]),
             self.build_player_voice(data["voice"]),
-            data["filters"],
+            self.build_filters(data["filters"]) if data.get("filters", False) else None,
         )
 
     def build_player_state(self, payload: types.PayloadMappingT) -> player_.State:

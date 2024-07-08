@@ -13,6 +13,7 @@ import logging
 
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.filters import BandType
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.routeplanner import IPBlockType
 from ongaku.abc.routeplanner import RoutePlannerType
@@ -48,6 +49,7 @@ from ongaku.events import TrackExceptionEvent
 from ongaku.events import TrackStartEvent
 from ongaku.events import TrackStuckEvent
 from ongaku.events import WebsocketClosedEvent
+from ongaku.impl.filters import Filters
 from ongaku.internal.about import __author__
 from ongaku.internal.about import __author_email__
 from ongaku.internal.about import __license__
@@ -112,6 +114,9 @@ __all__ = (
     "TrackStuckEvent",
     "QueueEmptyEvent",
     "QueueNextEvent",
+    # .filters
+    "Filters",
+    "BandType",
     # .track
     "Track",
     # .playlist
