@@ -105,10 +105,7 @@ class Info(abc.ABC):
         if self.filters != other.filters:
             return False
 
-        if self.plugins != other.plugins:
-            return False
-
-        return True
+        return self.plugins == other.plugins
 
 
 class Version(abc.ABC):
@@ -178,10 +175,7 @@ class Version(abc.ABC):
         if self.pre_release != other.pre_release:
             return False
 
-        if self.build != other.build:
-            return False
-
-        return True
+        return self.build == other.build
 
 
 class Git(abc.ABC):
@@ -224,10 +218,7 @@ class Git(abc.ABC):
         if self.commit != other.commit:
             return False
 
-        if self.commit_time != other.commit_time:
-            return False
-
-        return True
+        return self.commit_time == other.commit_time
 
 
 class Plugin(abc.ABC):
@@ -258,10 +249,7 @@ class Plugin(abc.ABC):
         if self.name != other.name:
             return False
 
-        if self.version != other.version:
-            return False
-
-        return True
+        return self.version == other.version
 
 
 # MIT License

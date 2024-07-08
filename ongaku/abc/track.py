@@ -76,10 +76,7 @@ class Track(abc.ABC):
         if self.user_data != other.user_data:
             return False
 
-        if self.requestor != other.requestor:
-            return False
-
-        return True
+        return self.requestor == other.requestor
 
 
 class TrackInfo(abc.ABC):
@@ -194,10 +191,7 @@ class TrackInfo(abc.ABC):
         if self.artwork_url != other.artwork_url:
             return False
 
-        if self.isrc != other.isrc:
-            return False
-
-        return True
+        return self.isrc == other.isrc
 
 
 # MIT License

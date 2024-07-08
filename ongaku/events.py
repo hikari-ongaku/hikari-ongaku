@@ -65,10 +65,7 @@ class PayloadEvent(events_.OngakuEvent):
         if not isinstance(other, PayloadEvent):
             return False
 
-        if self.payload != other.payload:
-            return False
-
-        return True
+        return self.payload == other.payload
 
 
 class ReadyEvent(events_.OngakuEvent):
@@ -120,10 +117,7 @@ class ReadyEvent(events_.OngakuEvent):
         if self.resumed != other.resumed:
             return False
 
-        if self.session_id != other.session_id:
-            return False
-
-        return True
+        return self.session_id == other.session_id
 
 
 class PlayerUpdateEvent(events_.OngakuEvent):
@@ -175,10 +169,7 @@ class PlayerUpdateEvent(events_.OngakuEvent):
         if self.guild_id != other.guild_id:
             return False
 
-        if self.state != other.state:
-            return False
-
-        return True
+        return self.state == other.state
 
 
 class StatisticsEvent(events_.OngakuEvent):
@@ -325,10 +316,7 @@ class TrackStartEvent(events_.OngakuEvent):
         if self.guild_id != other.guild_id:
             return False
 
-        if self.track != other.track:
-            return False
-
-        return True
+        return  self.track == other.track
 
 
 class TrackEndEvent(events_.OngakuEvent):
@@ -394,10 +382,7 @@ class TrackEndEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.reason != other.reason:
-            return False
-
-        return True
+        return self.reason == other.reason
 
 
 class TrackException(errors_.ExceptionError):
@@ -489,10 +474,7 @@ class TrackExceptionEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.exception != other.exception:
-            return False
-
-        return True
+        return self.exception == other.exception
 
 
 class TrackStuckEvent(events_.OngakuEvent):
@@ -562,10 +544,7 @@ class TrackStuckEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.threshold_ms != other.threshold_ms:
-            return False
-
-        return True
+        return self.threshold_ms != other.threshold_ms
 
 
 class WebsocketClosedEvent(events_.OngakuEvent):
@@ -649,10 +628,7 @@ class WebsocketClosedEvent(events_.OngakuEvent):
         if self.reason != other.reason:
             return False
 
-        if self.by_remote != other.by_remote:
-            return False
-
-        return True
+        return self.by_remote == other.by_remote
 
 
 class QueueEmptyEvent(events_.OngakuEvent):
@@ -702,10 +678,7 @@ class QueueEmptyEvent(events_.OngakuEvent):
         if self.guild_id != other.guild_id:
             return False
 
-        if self.old_track != other.old_track:
-            return False
-
-        return True
+        return self.old_track == other.old_track
 
 
 class QueueNextEvent(events_.OngakuEvent):
@@ -769,10 +742,7 @@ class QueueNextEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.old_track != other.old_track:
-            return False
-
-        return True
+        return self.old_track == other.old_track
 
 
 # MIT License

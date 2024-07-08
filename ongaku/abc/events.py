@@ -51,10 +51,7 @@ class OngakuEvent(hikari.Event, abc.ABC):
         if self.client != other.client:
             return False
 
-        if self.session != other.session:
-            return False
-
-        return True
+        return self.session == other.session
 
 
 class TrackEndReasonType(str, enum.Enum):

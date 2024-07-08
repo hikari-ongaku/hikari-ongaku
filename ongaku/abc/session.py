@@ -44,10 +44,7 @@ class Session(abc.ABC):
         if self.resuming != other.resuming:
             return False
 
-        if self.timeout != other.timeout:
-            return False
-
-        return True
+        return self.timeout == other.timeout
 
 
 class SessionStatus(int, enum.Enum):

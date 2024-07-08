@@ -76,10 +76,7 @@ class Statistics(abc.ABC):
         if self.cpu != other.cpu:
             return False
 
-        if self.frame_stats != other.frame_stats:
-            return False
-
-        return True
+        return self.frame_stats == other.frame_stats
 
 
 class Memory(abc.ABC):
@@ -131,10 +128,7 @@ class Memory(abc.ABC):
         if self.allocated != other.allocated:
             return False
 
-        if self.reservable != other.reservable:
-            return False
-
-        return True
+        return self.reservable == other.reservable
 
 
 class Cpu(abc.ABC):
@@ -177,10 +171,7 @@ class Cpu(abc.ABC):
         if self.system_load != other.system_load:
             return False
 
-        if self.lavalink_load != other.lavalink_load:
-            return False
-
-        return True
+        return self.lavalink_load == other.lavalink_load
 
 
 class FrameStatistics(abc.ABC):
@@ -219,10 +210,7 @@ class FrameStatistics(abc.ABC):
         if self.nulled != other.nulled:
             return False
 
-        if self.deficit != other.deficit:
-            return False
-
-        return True
+        return  self.deficit == other.deficit
 
 
 # MIT License
