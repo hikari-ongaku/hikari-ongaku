@@ -29,6 +29,22 @@ def test_track():
     assert track.requestor is None
 
 
+def test_set_user_data_track(ongaku_track_info: TrackInfo):
+    track = Track(
+        encoded="encoded",
+        info=ongaku_track_info,
+        plugin_info={},
+        user_data={},
+        requestor=None,
+    )
+
+    assert track.user_data == {}
+
+    track.user_data = {"beanos": "beanos"}
+
+    assert track.user_data == {"beanos": "beanos"}
+
+
 def test_track_info():
     track_info = TrackInfo(
         identifier="identifier",

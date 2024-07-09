@@ -55,6 +55,11 @@ class Track(abc.ABC):
         """Additional track data."""
         return self._user_data
 
+    @user_data.setter
+    def user_data(self, value: typing.Mapping[str, typing.Any]) -> None:
+        """Set user data."""
+        self._user_data = value
+
     @property
     def requestor(self) -> hikari.Snowflake | None:
         """The person who requested this track."""
