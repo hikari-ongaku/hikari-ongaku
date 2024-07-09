@@ -128,7 +128,9 @@ class RESTClient:
             _logger.log(TRACE_LEVEL, "loadType caused an error.")
 
             raise errors.RestExceptionError.from_error(
-                self._client.entity_builder.build_exception_error(response["data"])
+                self._client.entity_builder.deserialize_exception_error(
+                    response["data"]
+                )
             )
 
         elif load_type == "search":
@@ -136,7 +138,7 @@ class RESTClient:
             tracks: typing.Sequence[Track] = []
             for track in response["data"]:
                 try:
-                    tracks.append(self._client.entity_builder.build_track(track))
+                    tracks.append(self._client.entity_builder.deserialize_track(track))
                 except Exception as e:
                     raise errors.BuildError(e)
 
@@ -145,14 +147,16 @@ class RESTClient:
         elif load_type == "track":
             _logger.log(TRACE_LEVEL, "loadType was a track link.")
             try:
-                build = self._client.entity_builder.build_track(response["data"])
+                build = self._client.entity_builder.deserialize_track(response["data"])
             except Exception as e:
                 raise errors.BuildError(e)
 
         elif load_type == "playlist":
             _logger.log(TRACE_LEVEL, "loadType was a playlist link.")
             try:
-                build = self._client.entity_builder.build_playlist(response["data"])
+                build = self._client.entity_builder.deserialize_playlist(
+                    response["data"]
+                )
             except Exception as e:
                 raise errors.BuildError(e)
 
@@ -225,7 +229,7 @@ class RESTClient:
             raise ValueError("Response is required for this request.")
 
         try:
-            return self._client.entity_builder.build_track(response)
+            return self._client.entity_builder.deserialize_track(response)
         except Exception as e:
             raise errors.BuildError(e)
 
@@ -298,7 +302,7 @@ class RESTClient:
 
         for track in response:
             try:
-                new_tracks.append(self._client.entity_builder.build_track(track))
+                new_tracks.append(self._client.entity_builder.deserialize_track(track))
             except Exception as e:
                 raise errors.BuildError(e)
 
@@ -371,7 +375,7 @@ class RESTClient:
         players: list[Player] = []
 
         for player in response:
-            players.append(self._client.entity_builder.build_player(player))
+            players.append(self._client.entity_builder.deserialize_player(player))
 
         return players
 
@@ -445,7 +449,7 @@ class RESTClient:
         if response is None:
             raise ValueError("Response is required for this request.")
 
-        return self._client.entity_builder.build_player(response)
+        return self._client.entity_builder.deserialize_player(response)
 
     async def update_player(  # noqa: C901
         self,
@@ -579,161 +583,13 @@ class RESTClient:
             if filters is None:
                 patch_data.update({"filters": None})
             else:
-                filters_payload: typing.MutableMapping[str, typing.Any] = {}
-
-                print(filters.plugin_filters)
-                if len(filters.plugin_filters.items()) > 0:
-                    filters_payload.update({"pluginFilters": filters.plugin_filters})
-
-                if filters.volume is not None:
-                    filters_payload.update({"volume": filters.volume})
-
-                if filters.equalizer and len(filters.equalizer) > 0:
-                    equalizer_list: typing.MutableSequence[typing.Any] = []
-                    for eq in filters.equalizer:
-                        equalizer_list.append({"band": eq.band.value, "gain": eq.gain})
-
-                    filters_payload.update({"equalizer": equalizer_list})
-
-                if filters.karaoke:
-                    karaoke_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.karaoke.level:
-                        karaoke_payload.update({"level": filters.karaoke.level})
-                    if filters.karaoke.mono_level is not None:
-                        karaoke_payload.update(
-                            {"monoLevel": filters.karaoke.mono_level}
-                        )
-                    if filters.karaoke.filter_band is not None:
-                        karaoke_payload.update(
-                            {"filterBand": filters.karaoke.filter_band}
-                        )
-                    if filters.karaoke.filter_width is not None:
-                        karaoke_payload.update(
-                            {"filterWidth": filters.karaoke.filter_width}
-                        )
-
-                    if len(karaoke_payload.items()) > 0:
-                        filters_payload.update({"karaoke": karaoke_payload})
-
-                if filters.timescale:
-                    timescale_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.timescale.speed is not None:
-                        timescale_payload.update({"speed": filters.timescale.speed})
-                    if filters.timescale.pitch is not None:
-                        timescale_payload.update({"pitch": filters.timescale.pitch})
-                    if filters.timescale.rate is not None:
-                        timescale_payload.update({"rate": filters.timescale.rate})
-
-                    if len(timescale_payload.items()) > 0:
-                        filters_payload.update({"timescale": timescale_payload})
-
-                if filters.tremolo:
-                    tremolo_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.tremolo.frequency is not None:
-                        tremolo_payload.update({"frequency": filters.tremolo.frequency})
-                    if filters.tremolo.depth is not None:
-                        tremolo_payload.update({"depth": filters.tremolo.depth})
-
-                    if len(tremolo_payload.items()) > 0:
-                        filters_payload.update({"tremolo": tremolo_payload})
-
-                if filters.vibrato:
-                    vibrato_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.vibrato.frequency is not None:
-                        vibrato_payload.update({"frequency": filters.vibrato.frequency})
-                    if filters.vibrato.depth is not None:
-                        vibrato_payload.update({"depth": filters.vibrato.depth})
-
-                    if len(vibrato_payload.items()) > 0:
-                        filters_payload.update({"vibrato": vibrato_payload})
-
-                if filters.rotation:
-                    rotation_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.rotation.rotation_hz is not None:
-                        rotation_payload.update(
-                            {"rotationHz": filters.rotation.rotation_hz}
-                        )
-
-                    if len(rotation_payload.items()) > 0:
-                        filters_payload.update({"rotation": rotation_payload})
-
-                if filters.distortion:
-                    distortion_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.distortion.sin_offset is not None:
-                        distortion_payload.update(
-                            {"sinOffset": filters.distortion.sin_offset}
-                        )
-                    if filters.distortion.sin_scale is not None:
-                        distortion_payload.update(
-                            {"sinScale": filters.distortion.sin_scale}
-                        )
-                    if filters.distortion.cos_offset is not None:
-                        distortion_payload.update(
-                            {"cosOffset": filters.distortion.cos_offset}
-                        )
-                    if filters.distortion.cos_scale is not None:
-                        distortion_payload.update(
-                            {"cosScale": filters.distortion.cos_scale}
-                        )
-                    if filters.distortion.tan_offset is not None:
-                        distortion_payload.update(
-                            {"tanOffset": filters.distortion.tan_offset}
-                        )
-                    if filters.distortion.tan_scale is not None:
-                        distortion_payload.update(
-                            {"tanScale": filters.distortion.tan_scale}
-                        )
-                    if filters.distortion.offset is not None:
-                        distortion_payload.update({"offset": filters.distortion.offset})
-                    if filters.distortion.scale is not None:
-                        distortion_payload.update({"scale": filters.distortion.scale})
-
-                    if len(distortion_payload.items()) > 0:
-                        filters_payload.update({"distortion": distortion_payload})
-
-                if filters.channel_mix:
-                    channel_mix_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.channel_mix.left_to_left is not None:
-                        channel_mix_payload.update(
-                            {"leftToLeft": filters.channel_mix.left_to_left}
-                        )
-                    if filters.channel_mix.left_to_right is not None:
-                        channel_mix_payload.update(
-                            {"leftToRight": filters.channel_mix.left_to_right}
-                        )
-                    if filters.channel_mix.right_to_left is not None:
-                        channel_mix_payload.update(
-                            {"rightToLeft": filters.channel_mix.right_to_left}
-                        )
-                    if filters.channel_mix.right_to_right is not None:
-                        channel_mix_payload.update(
-                            {"rightToRight": filters.channel_mix.right_to_right}
-                        )
-
-                    if len(channel_mix_payload.items()) > 0:
-                        filters_payload.update({"channelMix": channel_mix_payload})
-
-                if filters.low_pass:
-                    low_pass_payload: typing.MutableMapping[str, typing.Any] = {}
-                    if filters.low_pass.smoothing is not None:
-                        low_pass_payload.update(
-                            {"smoothing": filters.low_pass.smoothing}
-                        )
-
-                    if len(low_pass_payload.items()) > 0:
-                        filters_payload.update({"lowPass": low_pass_payload})
-
-                patch_data.update({"filters": filters_payload})
+                patch_data.update(
+                    {"filters": self._client.entity_builder.serialize_filters(filters)}
+                )
 
         if voice != hikari.UNDEFINED:
             patch_data.update(
-                {
-                    "voice": {
-                        "token": voice.token,
-                        "endpoint": voice.endpoint,
-                        "sessionId": voice.session_id,
-                    }
-                }
+                {"voice": self._client.entity_builder.serialize_player_voice(voice)}
             )
 
         route = routes.PATCH_PLAYER_UPDATE
@@ -758,7 +614,7 @@ class RESTClient:
         if response is None:
             raise ValueError("Response is required for this request.")
 
-        return self._client.entity_builder.build_player(response)
+        return self._client.entity_builder.deserialize_player(response)
 
     async def delete_player(
         self,
@@ -899,7 +755,7 @@ class RESTClient:
         if response is None:
             raise ValueError("Response is required for this request.")
 
-        return self._client.entity_builder.build_session(response)
+        return self._client.entity_builder.deserialize_session(response)
 
     async def fetch_info(self, *, session: Session | None = None) -> Info:
         """
@@ -960,7 +816,7 @@ class RESTClient:
         if response is None:
             raise ValueError("Response is required for this request.")
 
-        return self._client.entity_builder.build_info(response)
+        return self._client.entity_builder.deserialize_info(response)
 
     async def fetch_version(self, *, session: Session | None = None) -> str:
         """
@@ -1079,7 +935,7 @@ class RESTClient:
         if response is None:
             raise ValueError("Response is required for this request.")
 
-        return self._client.entity_builder.build_statistics(response)
+        return self._client.entity_builder.deserialize_statistics(response)
 
     async def fetch_routeplanner_status(
         self, *, session: Session | None = None
@@ -1148,7 +1004,7 @@ class RESTClient:
         if response is None:
             return
 
-        return self._client.entity_builder.build_routeplanner_status(response)
+        return self._client.entity_builder.deserialize_routeplanner_status(response)
 
     async def update_routeplanner_address(
         self, address: str, /, *, session: Session | None = None

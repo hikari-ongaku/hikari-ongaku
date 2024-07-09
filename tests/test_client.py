@@ -155,7 +155,9 @@ class TestClient:
             client.fetch_player(1234567890)
 
     @pytest.mark.asyncio
-    async def test_player_delete(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session):
+    async def test_player_delete(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session
+    ):
         client = Client(gateway_bot)
 
         with (

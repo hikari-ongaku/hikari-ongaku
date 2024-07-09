@@ -255,7 +255,7 @@ class Session:
                 raise errors.RestStatusError(response.status, response.reason)
 
             try:
-                rest_error = self.client.entity_builder.build_rest_error(payload)
+                rest_error = self.client.entity_builder.deserialize_rest_error(payload)
             except Exception:
                 raise errors.RestStatusError(response.status, response.reason)
             raise rest_error
@@ -287,19 +287,19 @@ class Session:
         op_code = session_.WebsocketOPCode(mapped_data["op"])
 
         if op_code == session_.WebsocketOPCode.READY:
-            event = self.client.entity_builder.build_ready_event(
+            event = self.client.entity_builder.deserialize_ready_event(
                 mapped_data, session=self
             )
 
             self._session_id = event.session_id
 
         elif op_code == session_.WebsocketOPCode.PLAYER_UPDATE:
-            event = self.client.entity_builder.build_player_update_event(
+            event = self.client.entity_builder.deserialize_player_update_event(
                 mapped_data, session=self
             )
 
         elif op_code == session_.WebsocketOPCode.STATS:
-            event = self.client.entity_builder.build_statistics_event(
+            event = self.client.entity_builder.deserialize_statistics_event(
                 mapped_data, session=self
             )
 
@@ -307,27 +307,27 @@ class Session:
             event_type = session_.WebsocketEvent(mapped_data["type"])
 
             if event_type == session_.WebsocketEvent.TRACK_START_EVENT:
-                event = self.client.entity_builder.build_track_start_event(
+                event = self.client.entity_builder.deserialize_track_start_event(
                     mapped_data, session=self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_END_EVENT:
-                event = self.client.entity_builder.build_track_end_event(
+                event = self.client.entity_builder.deserialize_track_end_event(
                     mapped_data, session=self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
-                event = self.client.entity_builder.build_track_exception_event(
+                event = self.client.entity_builder.deserialize_track_exception_event(
                     mapped_data, session=self
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
-                event = self.client.entity_builder.build_track_stuck_event(
+                event = self.client.entity_builder.deserialize_track_stuck_event(
                     mapped_data, session=self
                 )
 
             else:
-                event = self.client.entity_builder.build_websocket_closed_event(
+                event = self.client.entity_builder.deserialize_websocket_closed_event(
                     mapped_data, session=self
                 )
 

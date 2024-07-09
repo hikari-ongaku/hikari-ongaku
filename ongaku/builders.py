@@ -1,6 +1,6 @@
 """Builder.
 
-The builder, to convert most abstract classes from a payload.
+The builder, to deserialize and destruct payloads.
 """
 
 from __future__ import annotations
@@ -42,13 +42,13 @@ if typing.TYPE_CHECKING:
     from ongaku.internal import types
     from ongaku.session import Session
 
-_logger = logger.getChild("builders")
+_logger = logger.getChild("builder")
 
 
 class EntityBuilder:
     """Entity Builder.
 
-    The class that allows for converting payloads (str, sequence, mapping, etc) into their respective classes.
+    The class that allows for converting payloads (str, sequence, mapping, etc) into their respective classes and vise versa.
 
     Parameters
     ----------
@@ -94,12 +94,20 @@ class EntityBuilder:
 
         return payload
 
+    #####################
+    #                   #
+    #     deserialize     #
+    #                   #
+    #####################
+
     # errors
 
-    def build_rest_error(self, payload: types.PayloadMappingT, /) -> RestRequestError:
-        """Build Rest Request Error.
+    def deserialize_rest_error(
+        self, payload: types.PayloadMappingT, /
+    ) -> RestRequestError:
+        """Deserialize Rest Request Error.
 
-        Builds a [`RestRequestError`][ongaku.errors.RestRequestError] object, from a payload.
+        Deserializes a [`RestRequestError`][ongaku.errors.RestRequestError] object, from a payload.
 
         Parameters
         ----------
@@ -133,12 +141,12 @@ class EntityBuilder:
             data.get("trace", None),
         )
 
-    def build_exception_error(
+    def deserialize_exception_error(
         self, payload: types.PayloadMappingT, /
     ) -> RestExceptionError:
-        """Build Rest Exception Error.
+        """Deserialize Rest Exception Error.
 
-        Builds a [`RestExceptionError`][ongaku.errors.RestExceptionError] object, from a payload.
+        Deserializes a [`RestExceptionError`][ongaku.errors.RestExceptionError] object, from a payload.
 
         Parameters
         ----------
@@ -169,12 +177,12 @@ class EntityBuilder:
 
     # Events
 
-    def build_ready_event(
+    def deserialize_ready_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.ReadyEvent:
-        """Build Ready Event.
+        """Deserialize Ready Event.
 
-        Builds a [`Ready`][ongaku.events.ReadyEvent] object, from a payload.
+        Deserializes a [`Ready`][ongaku.events.ReadyEvent] object, from a payload.
 
         Parameters
         ----------
@@ -203,12 +211,12 @@ class EntityBuilder:
             session, resumed=data["resumed"], session_id=data["sessionId"]
         )
 
-    def build_player_update_event(
+    def deserialize_player_update_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.PlayerUpdateEvent:
-        """Build Player Update Event.
+        """Deserialize Player Update Event.
 
-        Builds a [`PlayerUpdateEvent`][ongaku.events.PlayerUpdateEvent] object, from a payload.
+        Deserializes a [`PlayerUpdateEvent`][ongaku.events.PlayerUpdateEvent] object, from a payload.
 
         Parameters
         ----------
@@ -236,15 +244,15 @@ class EntityBuilder:
         return events.PlayerUpdateEvent.from_session(
             session,
             guild_id=hikari.Snowflake(int(data["guildId"])),
-            state=self.build_player_state(data["state"]),
+            state=self.deserialize_player_state(data["state"]),
         )
 
-    def build_statistics_event(
+    def deserialize_statistics_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.StatisticsEvent:
-        """Build Statistics Event.
+        """Deserialize Statistics Event.
 
-        Builds a [`StatisticsEvent`][ongaku.events.StatisticsEvent] object, from a payload.
+        Deserializes a [`StatisticsEvent`][ongaku.events.StatisticsEvent] object, from a payload.
 
         Parameters
         ----------
@@ -265,7 +273,7 @@ class EntityBuilder:
         KeyError
             Raised when a value was not found in the payload.
         """
-        statistics = self.build_statistics(payload)
+        statistics = self.deserialize_statistics(payload)
 
         return events.StatisticsEvent.from_session(
             session,
@@ -277,12 +285,12 @@ class EntityBuilder:
             frame_statistics=statistics.frame_stats,
         )
 
-    def build_track_start_event(
+    def deserialize_track_start_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.TrackStartEvent:
-        """Build Track Start Event.
+        """Deserialize Track Start Event.
 
-        Builds a [`TrackStartEvent`][ongaku.events.TrackStartEvent] object, from a payload.
+        Deserializes a [`TrackStartEvent`][ongaku.events.TrackStartEvent] object, from a payload.
 
         Parameters
         ----------
@@ -310,15 +318,15 @@ class EntityBuilder:
         return events.TrackStartEvent.from_session(
             session,
             guild_id=hikari.Snowflake(int(data["guildId"])),
-            track=self.build_track(data["track"]),
+            track=self.deserialize_track(data["track"]),
         )
 
-    def build_track_end_event(
+    def deserialize_track_end_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.TrackEndEvent:
-        """Build Track End Event.
+        """Deserialize Track End Event.
 
-        Builds a [`TrackEndEvent`][ongaku.events.TrackEndEvent] object, from a payload.
+        Deserializes a [`TrackEndEvent`][ongaku.events.TrackEndEvent] object, from a payload.
 
         Parameters
         ----------
@@ -346,16 +354,16 @@ class EntityBuilder:
         return events.TrackEndEvent.from_session(
             session,
             guild_id=hikari.Snowflake(int(data["guildId"])),
-            track=self.build_track(data["track"]),
+            track=self.deserialize_track(data["track"]),
             reason=events_.TrackEndReasonType(data["reason"]),
         )
 
-    def build_track_exception(
+    def deserialize_track_exception(
         self, payload: types.PayloadMappingT, /
     ) -> events.TrackException:
-        """Build Track Exception.
+        """Deserialize Track Exception.
 
-        Builds a [`TrackException`][ongaku.events.TrackException] object, from a payload.
+        Deserializes a [`TrackException`][ongaku.events.TrackException] object, from a payload.
 
         Parameters
         ----------
@@ -382,12 +390,12 @@ class EntityBuilder:
             cause=data["cause"],
         )
 
-    def build_track_exception_event(
+    def deserialize_track_exception_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.TrackExceptionEvent:
-        """Build Track Exception Event.
+        """Deserialize Track Exception Event.
 
-        Builds a [`TrackExceptionEvent`][ongaku.events.TrackExceptionEvent] object, from a payload.
+        Deserializes a [`TrackExceptionEvent`][ongaku.events.TrackExceptionEvent] object, from a payload.
 
         Parameters
         ----------
@@ -415,16 +423,16 @@ class EntityBuilder:
         return events.TrackExceptionEvent.from_session(
             session,
             guild_id=hikari.Snowflake(int(data["guildId"])),
-            track=self.build_track(data["track"]),
-            exception=self.build_track_exception(data["exception"]),
+            track=self.deserialize_track(data["track"]),
+            exception=self.deserialize_track_exception(data["exception"]),
         )
 
-    def build_track_stuck_event(
+    def deserialize_track_stuck_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.TrackStuckEvent:
-        """Build Track Stuck Event.
+        """Deserialize Track Stuck Event.
 
-        Builds a [`TrackStuckEvent`][ongaku.events.TrackStuckEvent] object, from a payload.
+        Deserializes a [`TrackStuckEvent`][ongaku.events.TrackStuckEvent] object, from a payload.
 
         Parameters
         ----------
@@ -452,16 +460,16 @@ class EntityBuilder:
         return events.TrackStuckEvent.from_session(
             session,
             guild_id=hikari.Snowflake(int(data["guildId"])),
-            track=self.build_track(data["track"]),
+            track=self.deserialize_track(data["track"]),
             threshold_ms=data["thresholdMs"],
         )
 
-    def build_websocket_closed_event(
+    def deserialize_websocket_closed_event(
         self, payload: types.PayloadMappingT, /, *, session: Session
     ) -> events.WebsocketClosedEvent:
-        """Build Websocket Closed Event.
+        """Deserialize Websocket Closed Event.
 
-        Builds a [`WebsocketClosedEvent`][ongaku.events.WebsocketClosedEvent] object, from a payload.
+        Deserializes a [`WebsocketClosedEvent`][ongaku.events.WebsocketClosedEvent] object, from a payload.
 
         Parameters
         ----------
@@ -494,9 +502,32 @@ class EntityBuilder:
             by_remote=data["byRemote"],
         )
 
-    # Filters
+    # filters
 
-    def build_filters(self, payload: types.PayloadMappingT, /) -> filters_.Filters:
+    def deserialize_filters(
+        self, payload: types.PayloadMappingT, /
+    ) -> filters_.Filters:
+        """Deserialize Filters.
+
+        Deserializes a [`Filters`][ongaku.abc.filters.Filters] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Filters
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters")
@@ -505,41 +536,62 @@ class EntityBuilder:
 
         if data.get("equalizer", None) is not None:
             for eq in data["equalizer"]:
-                equalizer.append(self.build_filters_equalizer(eq))
+                equalizer.append(self.deserialize_filters_equalizer(eq))
 
         return filters.Filters(
             volume=data.get("volume", None),
             equalizer=equalizer,
-            karaoke=self.build_filters_karaoke(data["karaoke"])
+            karaoke=self.deserialize_filters_karaoke(data["karaoke"])
             if data.get("karaoke", None)
             else None,
-            timescale=self.build_filters_timescale(data["timescale"])
+            timescale=self.deserialize_filters_timescale(data["timescale"])
             if data.get("timescale", None)
             else None,
-            tremolo=self.build_filters_tremolo(data["tremolo"])
+            tremolo=self.deserialize_filters_tremolo(data["tremolo"])
             if data.get("tremolo", None)
             else None,
-            vibrato=self.build_filters_vibrato(data["vibrato"])
+            vibrato=self.deserialize_filters_vibrato(data["vibrato"])
             if data.get("vibrato", None)
             else None,
-            rotation=self.build_filters_rotation(data["rotation"])
+            rotation=self.deserialize_filters_rotation(data["rotation"])
             if data.get("rotation", None)
             else None,
-            distortion=self.build_filters_distortion(data["distortion"])
+            distortion=self.deserialize_filters_distortion(data["distortion"])
             if data.get("distortion", None)
             else None,
-            channel_mix=self.build_filters_channel_mix(data["channelMix"])
+            channel_mix=self.deserialize_filters_channel_mix(data["channelMix"])
             if data.get("channelMix", None)
             else None,
-            low_pass=self.build_filters_low_pass(data["lowPass"])
+            low_pass=self.deserialize_filters_low_pass(data["lowPass"])
             if data.get("lowPass", None)
             else None,
             plugin_filters=data.get("pluginFilters", None),
         )
 
-    def build_filters_equalizer(
+    def deserialize_filters_equalizer(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Equalizer:
+        """Deserialize Filters Equalizer.
+
+        Deserializes a [`Equalizer`][ongaku.abc.filters.Equalizer] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Equalizer
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Equalizer")
@@ -548,9 +600,30 @@ class EntityBuilder:
             band=filters_.BandType(data["band"]), gain=data["gain"]
         )
 
-    def build_filters_karaoke(
+    def deserialize_filters_karaoke(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Karaoke:
+        """Deserialize Filters Karaoke.
+
+        Deserializes a [`Karaoke`][ongaku.abc.filters.Karaoke] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Karaoke
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Karaoke")
@@ -562,9 +635,30 @@ class EntityBuilder:
             filter_width=data.get("filterWidth", None),
         )
 
-    def build_filters_timescale(
+    def deserialize_filters_timescale(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Timescale:
+        """Deserialize Filters Timescale.
+
+        Deserializes a [`Timescale`][ongaku.abc.filters.Timescale] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Timescale
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Timescale")
@@ -575,9 +669,30 @@ class EntityBuilder:
             rate=data.get("rate", None),
         )
 
-    def build_filters_tremolo(
+    def deserialize_filters_tremolo(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Tremolo:
+        """Deserialize Filters Tremolo.
+
+        Deserializes a [`Tremolo`][ongaku.abc.filters.Tremolo] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Tremolo
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Tremolo")
@@ -587,9 +702,30 @@ class EntityBuilder:
             depth=data.get("depth", None),
         )
 
-    def build_filters_vibrato(
+    def deserialize_filters_vibrato(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Vibrato:
+        """Deserialize Filters Vibrato.
+
+        Deserializes a [`Vibrato`][ongaku.abc.filters.Vibrato] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Vibrato
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Vibrato")
@@ -599,9 +735,30 @@ class EntityBuilder:
             depth=data.get("depth", None),
         )
 
-    def build_filters_rotation(
+    def deserialize_filters_rotation(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Rotation:
+        """Deserialize Filters Rotation.
+
+        Deserializes a [`Rotation`][ongaku.abc.filters.Rotation] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Rotation
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Rotation")
@@ -610,9 +767,30 @@ class EntityBuilder:
             rotation_hz=data.get("rotationHz", None),
         )
 
-    def build_filters_distortion(
+    def deserialize_filters_distortion(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.Distortion:
+        """Deserialize Filters Distortion.
+
+        Deserializes a [`Distortion`][ongaku.abc.filters.Distortion] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.Distortion
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters Distortion")
@@ -628,9 +806,30 @@ class EntityBuilder:
             scale=data.get("scale", None),
         )
 
-    def build_filters_channel_mix(
+    def deserialize_filters_channel_mix(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.ChannelMix:
+        """Deserialize Filters Channel Mix.
+
+        Deserializes a [`ChannelMix`][ongaku.abc.filters.ChannelMix] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.ChannelMix
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters ChannelMix")
@@ -642,9 +841,30 @@ class EntityBuilder:
             right_to_right=data.get("rightToRight", None),
         )
 
-    def build_filters_low_pass(
+    def deserialize_filters_low_pass(
         self, payload: types.PayloadMappingT, /
     ) -> filters_.LowPass:
+        """Deserialize Filters Low Pass.
+
+        Deserializes a [`LowPass`][ongaku.abc.filters.LowPass] object, from a payload.
+
+        Parameters
+        ----------
+        payload
+            The payload you provide.
+
+        Returns
+        -------
+        filters_.LowPass
+            The object from the payload.
+
+        Raises
+        ------
+        TypeError
+            Raised when the payload could not be turned into a mapping.
+        KeyError
+            Raised when a value was not found in the payload.
+        """
         data = self._ensure_mapping(payload)
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Filters LowPass")
@@ -655,10 +875,10 @@ class EntityBuilder:
 
     # info
 
-    def build_info(self, payload: types.PayloadMappingT, /) -> info_.Info:
-        """Build Information.
+    def deserialize_info(self, payload: types.PayloadMappingT, /) -> info_.Info:
+        """deserialize Information.
 
-        Builds a [`Information`][ongaku.abc.info.Info] object, from a payload.
+        deserializes a [`Information`][ongaku.abc.info.Info] object, from a payload.
 
         Parameters
         ----------
@@ -694,14 +914,14 @@ class EntityBuilder:
         plugins: list[info_.Plugin] = []
 
         for plugin in data["plugins"]:
-            plugins.append(self.build_info_plugin(plugin))
+            plugins.append(self.deserialize_info_plugin(plugin))
 
         return info.Info(
-            version=self.build_info_version(data["version"]),
+            version=self.deserialize_info_version(data["version"]),
             build_time=datetime.datetime.fromtimestamp(
                 int(data["buildTime"]) / 1000, datetime.timezone.utc
             ),
-            git=self.build_info_git(data["git"]),
+            git=self.deserialize_info_git(data["git"]),
             jvm=data["jvm"],
             lavaplayer=data["lavaplayer"],
             source_managers=source_managers,
@@ -709,10 +929,12 @@ class EntityBuilder:
             plugins=plugins,
         )
 
-    def build_info_version(self, payload: types.PayloadMappingT, /) -> info_.Version:
-        """Build Version Information.
+    def deserialize_info_version(
+        self, payload: types.PayloadMappingT, /
+    ) -> info_.Version:
+        """deserialize Version Information.
 
-        Builds a [`Version`][ongaku.abc.info.Version] object, from a payload.
+        deserializes a [`Version`][ongaku.abc.info.Version] object, from a payload.
 
         Parameters
         ----------
@@ -746,10 +968,10 @@ class EntityBuilder:
             build=data.get("build", None),
         )
 
-    def build_info_git(self, payload: types.PayloadMappingT, /) -> info_.Git:
-        """Build Git Information.
+    def deserialize_info_git(self, payload: types.PayloadMappingT, /) -> info_.Git:
+        """deserialize Git Information.
 
-        Builds a [`Git`][ongaku.abc.info.Git] object, from a payload.
+        deserializes a [`Git`][ongaku.abc.info.Git] object, from a payload.
 
         Parameters
         ----------
@@ -780,10 +1002,12 @@ class EntityBuilder:
             ),
         )
 
-    def build_info_plugin(self, payload: types.PayloadMappingT, /) -> info_.Plugin:
-        """Build Plugin Information.
+    def deserialize_info_plugin(
+        self, payload: types.PayloadMappingT, /
+    ) -> info_.Plugin:
+        """deserialize Plugin Information.
 
-        Builds a [`Plugin`][ongaku.abc.info.Plugin] object, from a payload.
+        deserializes a [`Plugin`][ongaku.abc.info.Plugin] object, from a payload.
 
         Parameters
         ----------
@@ -808,12 +1032,12 @@ class EntityBuilder:
 
         return info.Plugin(name=data["name"], version=data["version"])
 
-    # Player
+    # player
 
-    def build_player(self, payload: types.PayloadMappingT, /) -> player_.Player:
-        """Build Player.
+    def deserialize_player(self, payload: types.PayloadMappingT, /) -> player_.Player:
+        """deserialize Player.
 
-        Builds a [`Player`][ongaku.abc.player.Player] object, from a payload.
+        deserializes a [`Player`][ongaku.abc.player.Player] object, from a payload.
 
         Parameters
         ----------
@@ -838,20 +1062,24 @@ class EntityBuilder:
 
         return player.Player(
             guild_id=hikari.Snowflake(int(data["guildId"])),
-            track=self.build_track(data["track"]) if data.get("track", None) else None,
+            track=self.deserialize_track(data["track"])
+            if data.get("track", None)
+            else None,
             volume=data["volume"],
             is_paused=data["paused"],
-            state=self.build_player_state(data["state"]),
-            voice=self.build_player_voice(data["voice"]),
-            filters=self.build_filters(data["filters"])
+            state=self.deserialize_player_state(data["state"]),
+            voice=self.deserialize_player_voice(data["voice"]),
+            filters=self.deserialize_filters(data["filters"])
             if data.get("filters", False)
             else None,
         )
 
-    def build_player_state(self, payload: types.PayloadMappingT, /) -> player_.State:
-        """Build Player State.
+    def deserialize_player_state(
+        self, payload: types.PayloadMappingT, /
+    ) -> player_.State:
+        """deserialize Player State.
 
-        Builds a [`State`][ongaku.abc.player.State] object, from a payload.
+        deserializes a [`State`][ongaku.abc.player.State] object, from a payload.
 
         Parameters
         ----------
@@ -883,10 +1111,12 @@ class EntityBuilder:
             ping=data["ping"],
         )
 
-    def build_player_voice(self, payload: types.PayloadMappingT, /) -> player_.Voice:
-        """Build Player Voice.
+    def deserialize_player_voice(
+        self, payload: types.PayloadMappingT, /
+    ) -> player_.Voice:
+        """deserialize Player Voice.
 
-        Builds a [`Voice`][ongaku.abc.player.Voice] object, from a payload.
+        deserializes a [`Voice`][ongaku.abc.player.Voice] object, from a payload.
 
         Parameters
         ----------
@@ -915,10 +1145,12 @@ class EntityBuilder:
 
     # playlist
 
-    def build_playlist(self, payload: types.PayloadMappingT, /) -> playlist_.Playlist:
-        """Build Playlist.
+    def deserialize_playlist(
+        self, payload: types.PayloadMappingT, /
+    ) -> playlist_.Playlist:
+        """deserialize Playlist.
 
-        Builds a [`Playlist`][ongaku.abc.playlist.Playlist] object, from a payload.
+        deserializes a [`Playlist`][ongaku.abc.playlist.Playlist] object, from a payload.
 
         Parameters
         ----------
@@ -944,20 +1176,20 @@ class EntityBuilder:
         tracks: list[track_.Track] = []
 
         for track_payload in data["tracks"]:
-            tracks.append(self.build_track(track_payload))
+            tracks.append(self.deserialize_track(track_payload))
 
         return playlist.Playlist(
-            info=self.build_playlist_info(data["info"]),
+            info=self.deserialize_playlist_info(data["info"]),
             tracks=tracks,
             plugin_info=data["pluginInfo"],
         )
 
-    def build_playlist_info(
+    def deserialize_playlist_info(
         self, payload: types.PayloadMappingT, /
     ) -> playlist_.PlaylistInfo:
-        """Build Playlist Info.
+        """deserialize Playlist Info.
 
-        Builds a [`PlaylistInfo`][ongaku.abc.playlist.PlaylistInfo] object, from a payload.
+        deserializes a [`PlaylistInfo`][ongaku.abc.playlist.PlaylistInfo] object, from a payload.
 
         Parameters
         ----------
@@ -986,12 +1218,12 @@ class EntityBuilder:
 
     # route planner
 
-    def build_routeplanner_status(
+    def deserialize_routeplanner_status(
         self, payload: types.PayloadMappingT, /
     ) -> routeplanner_.RoutePlannerStatus:
-        """Build Route Planner Status.
+        """deserialize Route Planner Status.
 
-        Builds a [`RoutePlannerStatus`][ongaku.abc.routeplanner.RoutePlannerStatus] object, from a payload.
+        deserializes a [`RoutePlannerStatus`][ongaku.abc.routeplanner.RoutePlannerStatus] object, from a payload.
 
         Parameters
         ----------
@@ -1016,15 +1248,15 @@ class EntityBuilder:
 
         return routeplanner.RoutePlannerStatus(
             cls=routeplanner_.RoutePlannerType(data["class"]),
-            details=self.build_routeplanner_details(data["details"]),
+            details=self.deserialize_routeplanner_details(data["details"]),
         )
 
-    def build_routeplanner_details(
+    def deserialize_routeplanner_details(
         self, payload: types.PayloadMappingT, /
     ) -> routeplanner_.RoutePlannerDetails:
-        """Build Route Planner Details.
+        """deserialize Route Planner Details.
 
-        Builds a [`RoutePlannerDetails`][ongaku.abc.routeplanner.RoutePlannerDetails] object, from a payload.
+        deserializes a [`RoutePlannerDetails`][ongaku.abc.routeplanner.RoutePlannerDetails] object, from a payload.
 
         Parameters
         ----------
@@ -1053,11 +1285,11 @@ class EntityBuilder:
 
         for failing_address in data["failingAddresses"]:
             failing_addresses.append(
-                self.build_routeplanner_failing_address(failing_address)
+                self.deserialize_routeplanner_failing_address(failing_address)
             )
 
         return routeplanner.RoutePlannerDetails(
-            ip_block=self.build_routeplanner_ipblock(data["ipBlock"]),
+            ip_block=self.deserialize_routeplanner_ipblock(data["ipBlock"]),
             failing_addresses=failing_addresses,
             rotate_index=data.get("rotateIndex", None),
             ip_index=data.get("ipIndex", None),
@@ -1066,12 +1298,12 @@ class EntityBuilder:
             block_index=data.get("blockIndex", None),
         )
 
-    def build_routeplanner_ipblock(
+    def deserialize_routeplanner_ipblock(
         self, payload: types.PayloadMappingT, /
     ) -> routeplanner_.IPBlock:
-        """Build Route Planner IP Block.
+        """deserialize Route Planner IP Block.
 
-        Builds a [`IPBlock`][ongaku.abc.routeplanner.IPBlock] object, from a payload.
+        deserializes a [`IPBlock`][ongaku.abc.routeplanner.IPBlock] object, from a payload.
 
         Parameters
         ----------
@@ -1098,12 +1330,12 @@ class EntityBuilder:
             type=routeplanner_.IPBlockType(data["type"]), size=data["size"]
         )
 
-    def build_routeplanner_failing_address(
+    def deserialize_routeplanner_failing_address(
         self, payload: types.PayloadMappingT, /
     ) -> routeplanner_.FailingAddress:
-        """Build Route Planner Details.
+        """deserialize Route Planner Details.
 
-        Builds a [`RoutePlannerDetails`][ongaku.abc.routeplanner.RoutePlannerDetails] object, from a payload.
+        deserializes a [`RoutePlannerDetails`][ongaku.abc.routeplanner.RoutePlannerDetails] object, from a payload.
 
         Parameters
         ----------
@@ -1136,10 +1368,12 @@ class EntityBuilder:
 
     # session
 
-    def build_session(self, payload: types.PayloadMappingT, /) -> session_.Session:
-        """Build Session.
+    def deserialize_session(
+        self, payload: types.PayloadMappingT, /
+    ) -> session_.Session:
+        """deserialize Session.
 
-        Builds a [`Session`][ongaku.abc.session.Session] object, from a payload.
+        deserializes a [`Session`][ongaku.abc.session.Session] object, from a payload.
 
         Parameters
         ----------
@@ -1166,12 +1400,12 @@ class EntityBuilder:
 
     # statistics
 
-    def build_statistics(
+    def deserialize_statistics(
         self, payload: types.PayloadMappingT, /
     ) -> statistics_.Statistics:
-        """Build Statistics.
+        """deserialize Statistics.
 
-        Builds a [`Statistics`][ongaku.abc.statistics.Statistics] object, from a payload.
+        deserializes a [`Statistics`][ongaku.abc.statistics.Statistics] object, from a payload.
 
         Parameters
         ----------
@@ -1198,19 +1432,21 @@ class EntityBuilder:
             players=data["players"],
             playing_players=data["playingPlayers"],
             uptime=data["uptime"],
-            memory=self.build_statistics_memory(data["memory"]),
-            cpu=self.build_statistics_cpu(data["cpu"]),
-            frame_statistics=self.build_statistics_frame_statistics(data["frameStats"])
+            memory=self.deserialize_statistics_memory(data["memory"]),
+            cpu=self.deserialize_statistics_cpu(data["cpu"]),
+            frame_statistics=self.deserialize_statistics_frame_statistics(
+                data["frameStats"]
+            )
             if data.get("frameStats", None) is not None
             else None,
         )
 
-    def build_statistics_memory(
+    def deserialize_statistics_memory(
         self, payload: types.PayloadMappingT, /
     ) -> statistics_.Memory:
-        """Build Memory Statistics.
+        """deserialize Memory Statistics.
 
-        Builds a [`Memory`][ongaku.abc.statistics.Memory] object, from a payload.
+        deserializes a [`Memory`][ongaku.abc.statistics.Memory] object, from a payload.
 
         Parameters
         ----------
@@ -1240,12 +1476,12 @@ class EntityBuilder:
             reservable=data["reservable"],
         )
 
-    def build_statistics_cpu(
+    def deserialize_statistics_cpu(
         self, payload: types.PayloadMappingT, /
     ) -> statistics_.Cpu:
-        """Build Cpu Statistics.
+        """deserialize Cpu Statistics.
 
-        Builds a [`Cpu`][ongaku.abc.statistics.Cpu] object, from a payload.
+        deserializes a [`Cpu`][ongaku.abc.statistics.Cpu] object, from a payload.
 
         Parameters
         ----------
@@ -1274,12 +1510,12 @@ class EntityBuilder:
             lavalink_load=data["lavalinkLoad"],
         )
 
-    def build_statistics_frame_statistics(
+    def deserialize_statistics_frame_statistics(
         self, payload: types.PayloadMappingT, /
     ) -> statistics_.FrameStatistics:
-        """Build Frame Statistics.
+        """deserialize Frame Statistics.
 
-        Builds a [`Statistics`][ongaku.abc.statistics.Statistics] object, from a payload.
+        deserializes a [`Statistics`][ongaku.abc.statistics.Statistics] object, from a payload.
 
         Parameters
         ----------
@@ -1310,10 +1546,10 @@ class EntityBuilder:
 
     # track
 
-    def build_track(self, payload: types.PayloadMappingT, /) -> track_.Track:
-        """Build Track.
+    def deserialize_track(self, payload: types.PayloadMappingT, /) -> track_.Track:
+        """deserialize Track.
 
-        Builds a [`Track`][ongaku.abc.track.Track] object, from a payload.
+        deserializes a [`Track`][ongaku.abc.track.Track] object, from a payload.
 
         Parameters
         ----------
@@ -1338,16 +1574,18 @@ class EntityBuilder:
 
         return track.Track(
             encoded=data["encoded"],
-            info=self.build_track_info(data["info"]),
+            info=self.deserialize_track_info(data["info"]),
             plugin_info=data["pluginInfo"],
             user_data=data["userData"] if data.get("userData", None) else {},
             requestor=None,
         )
 
-    def build_track_info(self, payload: types.PayloadMappingT, /) -> track_.TrackInfo:
-        """Build Track Information.
+    def deserialize_track_info(
+        self, payload: types.PayloadMappingT, /
+    ) -> track_.TrackInfo:
+        """deserialize Track Information.
 
-        Builds a [`TrackInformation`][ongaku.abc.track.TrackInfo] object, from a payload.
+        deserializes a [`TrackInformation`][ongaku.abc.track.TrackInfo] object, from a payload.
 
         Parameters
         ----------
@@ -1383,6 +1621,344 @@ class EntityBuilder:
             artwork_url=data.get("artworkUrl", None),
             isrc=data.get("isrc", None),
         )
+
+    #####################
+    #                   #
+    #     serialize     #
+    #                   #
+    #####################
+
+    # filters
+
+    def serialize_filters(
+        self, filters: filters_.Filters
+    ) -> typing.Mapping[str, typing.Any]:
+        """Serialize Filters.
+
+        Serializes a [`Filters`][ongaku.abc.filters.Filters] object, into a payload.
+
+        Parameters
+        ----------
+        filters
+            The [`Filters`][ongaku.abc.filters.Filters] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        """
+        equalizers = [self.serialize_filters_equalizer(eq) for eq in filters.equalizer]
+        payload: typing.Mapping[str, typing.Any] = {"volume": filters.volume}
+
+        if equalizers:
+            payload.update({"equalizer": equalizers})
+
+        filter_mappings = {
+            "karaoke": self.serialize_filters_karaoke,
+            "timescale": self.serialize_filters_timescale,
+            "tremolo": self.serialize_filters_tremolo,
+            "vibrato": self.serialize_filters_vibrato,
+            "rotation": self.serialize_filters_rotation,
+            "distortion": self.serialize_filters_distortion,
+        }
+
+        for key, serializer in filter_mappings.items():
+            filter_value = getattr(filters, key)
+            if filter_value:
+                serialized_filter = serializer(filter_value)
+                if serialized_filter:
+                    payload.update({key: serialized_filter})
+
+        if filters.channel_mix and (
+            serialized_filter := self.serialize_filters_channel_mix(filters.channel_mix)
+        ):
+            payload.update({"channelMix": serialized_filter})
+
+        if filters.low_pass and (
+            serialized_filter := self.serialize_filters_low_pass(filters.low_pass)
+        ):
+            payload.update({"lowPass": serialized_filter})
+
+        if filters.plugin_filters:
+            payload.update({"pluginFilters": filters.plugin_filters})
+
+        return payload
+
+    def serialize_filters_equalizer(
+        self, equalizer: filters_.Equalizer, /
+    ) -> typing.Mapping[str, typing.Any]:
+        """Serialize Filters Equalizer.
+
+        Serializes a [`Equalizer`][ongaku.abc.filters.Equalizer] object, into a payload.
+
+        Parameters
+        ----------
+        equalizer
+            The [`Equalizer`][ongaku.abc.filters.Equalizer] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        return {"band": equalizer.band.value, "gain": equalizer.gain}
+
+    def serialize_filters_karaoke(
+        self, karaoke: filters_.Karaoke, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Karaoke.
+
+        Serializes a [`Karaoke`][ongaku.abc.filters.Karaoke] object, into a payload.
+
+        Parameters
+        ----------
+        karaoke
+            The [`Karaoke`][ongaku.abc.filters.Karaoke] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if (
+            karaoke.level is None
+            and karaoke.mono_level is None
+            and karaoke.filter_band is None
+            and karaoke.filter_width is None
+        ):
+            return None
+        return {
+            "level": karaoke.level,
+            "monoLevel": karaoke.mono_level,
+            "filterBand": karaoke.filter_band,
+            "filterWidth": karaoke.filter_width,
+        }
+
+    def serialize_filters_timescale(
+        self, timescale: filters_.Timescale, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Timescale.
+
+        Serializes a [`Timescale`][ongaku.abc.filters.Timescale] object, into a payload.
+
+        Parameters
+        ----------
+        timescale
+            The [`Timescale`][ongaku.abc.filters.Timescale] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if (
+            timescale.speed is None
+            and timescale.pitch is None
+            and timescale.rate is None
+        ):
+            return None
+        return {
+            "speed": timescale.speed,
+            "pitch": timescale.pitch,
+            "rate": timescale.rate,
+        }
+
+    def serialize_filters_tremolo(
+        self, tremolo: filters_.Tremolo, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Tremolo.
+
+        Serializes a [`Tremolo`][ongaku.abc.filters.Tremolo] object, into a payload.
+
+        Parameters
+        ----------
+        tremolo
+            The [`Tremolo`][ongaku.abc.filters.Tremolo] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if tremolo.frequency is None and tremolo.depth is None:
+            return None
+        return {"frequency": tremolo.frequency, "depth": tremolo.depth}
+
+    def serialize_filters_vibrato(
+        self, vibrato: filters_.Vibrato, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Vibrato.
+
+        Serializes a [`Vibrato`][ongaku.abc.filters.Vibrato] object, into a payload.
+
+        Parameters
+        ----------
+        vibrato
+            The [`Vibrato`][ongaku.abc.filters.Vibrato] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if vibrato.frequency is None and vibrato.depth is None:
+            return None
+        return {"frequency": vibrato.frequency, "depth": vibrato.depth}
+
+    def serialize_filters_rotation(
+        self, rotation: filters_.Rotation, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Rotation.
+
+        Serializes a [`Rotation`][ongaku.abc.filters.Rotation] object, into a payload.
+
+        Parameters
+        ----------
+        rotation
+            The [`Rotation`][ongaku.abc.filters.Rotation] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if rotation.rotation_hz is None:
+            return None
+        return {"rotationHz": rotation.rotation_hz}
+
+    def serialize_filters_distortion(
+        self, distortion: filters_.Distortion, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Distortion.
+
+        Serializes a [`Distortion`][ongaku.abc.filters.Distortion] object, into a payload.
+
+        Parameters
+        ----------
+        distortion
+            The [`Distortion`][ongaku.abc.filters.Distortion] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if (
+            distortion.sin_offset is None
+            and distortion.sin_scale is None
+            and distortion.cos_offset is None
+            and distortion.cos_scale is None
+            and distortion.tan_offset is None
+            and distortion.tan_scale is None
+            and distortion.offset is None
+            and distortion.scale is None
+        ):
+            return None
+        return {
+            "sinOffset": distortion.sin_offset,
+            "sinScale": distortion.sin_scale,
+            "cosOffset": distortion.cos_offset,
+            "cosScale": distortion.cos_scale,
+            "tanOffset": distortion.tan_offset,
+            "tanScale": distortion.tan_scale,
+            "offset": distortion.offset,
+            "scale": distortion.scale,
+        }
+
+    def serialize_filters_channel_mix(
+        self, channel_mix: filters_.ChannelMix, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Channel Mix.
+
+        Serializes a [`ChannelMix`][ongaku.abc.filters.ChannelMix] object, into a payload.
+
+        Parameters
+        ----------
+        channel_mix
+            The [`ChannelMix`][ongaku.abc.filters.ChannelMix] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if (
+            channel_mix.left_to_left is None
+            and channel_mix.left_to_right is None
+            and channel_mix.right_to_left is None
+            and channel_mix.right_to_right is None
+        ):
+            return None
+        return {
+            "leftToLeft": channel_mix.left_to_left,
+            "leftToRight": channel_mix.left_to_right,
+            "rightToLeft": channel_mix.right_to_left,
+            "rightToRight": channel_mix.right_to_right,
+        }
+
+    def serialize_filters_low_pass(
+        self, low_pass: filters_.LowPass, /
+    ) -> typing.Mapping[str, typing.Any] | None:
+        """Serialize Filters Low Pass.
+
+        Serializes a [`LowPass`][ongaku.abc.filters.LowPass] object, into a payload.
+
+        Parameters
+        ----------
+        low_pass
+            The [`LowPass`][ongaku.abc.filters.LowPass] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        None
+            No values parsed.
+        """
+        if low_pass.smoothing is None:
+            return None
+        return {"smoothing": low_pass.smoothing}
+
+    # player
+
+    def serialize_player_voice(
+        self, voice: player_.Voice
+    ) -> typing.Mapping[str, typing.Any]:
+        """Serialize Player Voice.
+
+        Serializes a [`Voice`][ongaku.abc.player.Voice] object, into a payload.
+
+        Parameters
+        ----------
+        voice
+            The [`Voice`][ongaku.abc.player.Voice] object you provide.
+
+        Returns
+        -------
+        typing.Mapping[str, typing.Any]
+            The mapping built from the payload.
+        """
+        return {
+            "token": voice.token,
+            "endpoint": voice.endpoint,
+            "sessionId": voice.session_id,
+        }
 
 
 # MIT License
