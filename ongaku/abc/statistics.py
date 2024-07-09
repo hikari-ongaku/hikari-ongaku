@@ -21,38 +21,41 @@ class Statistics(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#stats-object)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_players",
+        "_playing_players",
+        "_uptime",
+        "_memory",
+        "_cpu",
+        "_frame_statistics"
+    )
+
     @property
-    @abc.abstractmethod
     def players(self) -> int:
         """The amount of players connected to the session."""
         ...
 
     @property
-    @abc.abstractmethod
     def playing_players(self) -> int:
         """The amount of players playing a track."""
         ...
 
     @property
-    @abc.abstractmethod
     def uptime(self) -> int:
         """The uptime of the session in milliseconds."""
         ...
 
     @property
-    @abc.abstractmethod
     def memory(self) -> Memory:
         """The memory stats of the session."""
         ...
 
     @property
-    @abc.abstractmethod
     def cpu(self) -> Cpu:
         """The CPU stats of the session."""
         ...
 
     @property
-    @abc.abstractmethod
     def frame_stats(self) -> FrameStatistics | None:
         """The frame statistics of the session."""
         ...
