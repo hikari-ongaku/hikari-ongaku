@@ -114,6 +114,7 @@ nav:
     - api/index.md
     - Client: api/client.md
     - Session: api/session.md
+    - Handlers: api/handlers.md
     - Player: api/player.md
     - Events: api/events.md
     - Rest: api/rest.md
@@ -132,16 +133,6 @@ nav:
       - Session: api/abc/session.md
       - Statistics: api/abc/statistics.md
       - Track: api/abc/track.md
-    - Impl:
-      - Filters: api/impl/filters.md
-      - Handlers: api/impl/handlers.md
-      - Info: api/impl/info.md
-      - Player: api/impl/player.md
-      - Playlist: api/impl/playlist.md
-      - Route Planner: api/impl/routeplanner.md
-      - Session: api/impl/session.md
-      - Statistics: api/impl/statistics.md
-      - Track: api/impl/track.md
   - Extensions:
     - ext/index.md
     - Creation: ext/creation.md
