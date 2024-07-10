@@ -6,7 +6,6 @@ The session abstract classes and hikari events.
 
 from __future__ import annotations
 
-import abc
 import enum
 import typing
 
@@ -22,7 +21,7 @@ __all__ = (
 )
 
 
-class OngakuEvent(hikari.Event, abc.ABC):
+class OngakuEvent(hikari.Event):
     """Ongaku Event.
 
     The base ongaku event, that adds the client and session to all events.
