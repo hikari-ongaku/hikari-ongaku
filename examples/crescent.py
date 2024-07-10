@@ -126,16 +126,10 @@ class Play:
             )
             return
 
-        checked_query = await checker.check(self.query)
-
-        if checked_query.type == checker.CheckedType.QUERY:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                f"ytsearch:{checked_query.value}"
-            )
+        if checker.check(self.query):
+            result = await ongaku_client.rest.load_track(self.query)
         else:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                checked_query.value
-            )
+            result = await ongaku_client.rest.load_track(f"ytsearch:{self.query}")
 
         if result is None:
             await ctx.respond(
@@ -203,16 +197,10 @@ class Add:
             )
             return
 
-        checked_query = await checker.check(self.query)
-
-        if checked_query.type == checker.CheckedType.QUERY:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                f"ytsearch:{checked_query.value}"
-            )
+        if checker.check(self.query):
+            result = await ongaku_client.rest.load_track(self.query)
         else:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                checked_query.value
-            )
+            result = await ongaku_client.rest.load_track(f"ytsearch:{self.query}")
 
         if result is None:
             await ctx.respond(

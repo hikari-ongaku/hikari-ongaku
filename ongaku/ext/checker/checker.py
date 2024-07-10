@@ -8,11 +8,8 @@ from __future__ import annotations
 
 import urllib.parse as urlparse
 
-from .abc import Checked
-from .abc import CheckedType
 
-
-async def check(query: str, /) -> Checked:
+def check(query: str, /) -> bool:
     """
     Check a string.
 
@@ -26,18 +23,20 @@ async def check(query: str, /) -> Checked:
     ```py
     from ongaku.ext import checker
 
-    response = checker.check(query)
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        print(f"Query: {checked_query.value}")
+    if checker.check(query):
+        print("This is a video/playlist!")
     else:
-        print(f"Link: {checked_query.value}")
+        print("This is a query.")
     ```
 
     Parameters
     ----------
     query : str
         The query you wish to check.
+
+    Returns
+    bool
+        If True, then it is a video/playlist, otherwise its just a query.
     """
     url = urlparse.urlparse(query)
 
@@ -50,19 +49,13 @@ async def check(query: str, /) -> Checked:
             url_query_split = url_query.split("=")
             queries.update({url_query_split[0]: url_query_split[1]})
 
-    if url.netloc in [
+    return url.netloc in [
         "www.youtube.com",
         "youtube.com",
         "www.youtu.be",
         "youtu.be",
         "music.youtube.com",
-    ]:
-        if url.path == "/playlist":
-            return Checked(queries["list"], CheckedType.PLAYLIST)
-        elif url.path == "/watch":
-            return Checked(queries["v"], CheckedType.TRACK)
-
-    return Checked(query, CheckedType.QUERY)
+    ]
 
 
 # MIT License

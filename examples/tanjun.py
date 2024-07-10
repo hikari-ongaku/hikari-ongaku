@@ -115,12 +115,10 @@ async def play_command(
         )
         return
 
-    checked_query = await checker.check(query)
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    if checker.check(query):
+        result = await ongaku_client.rest.load_track(query)
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await ongaku_client.rest.load_track(f"ytsearch:{query}")
 
     if result is None:
         await ctx.create_initial_response(
@@ -187,12 +185,10 @@ async def add_command(
         )
         return
 
-    checked_query = await checker.check(query)
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    if checker.check(query):
+        result = await ongaku_client.rest.load_track(query)
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await ongaku_client.rest.load_track(f"ytsearch:{query}")
 
     if result is None:
         await ctx.create_initial_response(

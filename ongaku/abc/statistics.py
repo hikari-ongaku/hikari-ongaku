@@ -27,7 +27,7 @@ class Statistics(abc.ABC):
         "_uptime",
         "_memory",
         "_cpu",
-        "_frame_statistics"
+        "_frame_statistics",
     )
 
     @property

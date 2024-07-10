@@ -113,12 +113,10 @@ async def play_command(
         )
         return
     
-    checked_query = await checker.check(args[0])
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    if checker.check(args[0]):
+        result = await ongaku_client.rest.load_track(args[0])
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await ongaku_client.rest.load_track(f"ytsearch:{args[0]}")
 
     if result is None:
         await bot.rest.create_message(
@@ -189,12 +187,10 @@ async def add_command(
         )
         return
 
-    checked_query = await checker.check(args[0])
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    if checker.check(args[0]):
+        result = await ongaku_client.rest.load_track(args[0])
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await ongaku_client.rest.load_track(f"ytsearch:{args[0]}")
 
     if result is None:
         await bot.rest.create_message(
