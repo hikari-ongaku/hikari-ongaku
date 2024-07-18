@@ -58,7 +58,21 @@ class TestClient:
     async def test_get_client_session(self, gateway_bot: gateway_bot_.GatewayBot):
         client = Client(gateway_bot)
 
-        assert isinstance(client._get_client_session(), ClientSession)
+        with (
+            mock.patch(
+                "ongaku.impl.handlers.BasicSessionHandler.start"
+            ) as patched_start,
+            mock.patch(
+                "ongaku.impl.handlers.BasicSessionHandler._is_alive", return_value=True
+            ),
+        ):
+            await client._start_event(mock.Mock())
+
+            assert client.is_alive is True
+
+            patched_start.assert_called_once()
+
+            assert isinstance(client._get_client_session(), ClientSession)
 
     @pytest.mark.asyncio
     async def test_start_event(
@@ -209,9 +223,7 @@ class TestClient:
 class TestArcPlayerInjector:
     @pytest.mark.asyncio
     async def test_working(
-        self,
-        gateway_bot: gateway_bot_.GatewayBot,
-        ongaku_player: Player
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_player: Player
     ):
         client = Client(gateway_bot)
 
@@ -220,8 +232,12 @@ class TestArcPlayerInjector:
         inj_context: arc.InjectorOverridingContext = mock.Mock()
 
         with (
-            mock.patch("ongaku.client.Client.fetch_player", return_value=ongaku_player) as patched_fetch_player,
-            mock.patch.object(inj_context, "set_type_dependency") as patched_set_type_dependency
+            mock.patch(
+                "ongaku.client.Client.fetch_player", return_value=ongaku_player
+            ) as patched_fetch_player,
+            mock.patch.object(
+                inj_context, "set_type_dependency"
+            ) as patched_set_type_dependency,
         ):
             await client._arc_player_injector(context, inj_context)
 
@@ -230,17 +246,16 @@ class TestArcPlayerInjector:
             patched_set_type_dependency.assert_called_once_with(Player, ongaku_player)
 
     @pytest.mark.asyncio
-    async def test_missing_guild_id(
-        self,
-        gateway_bot: gateway_bot_.GatewayBot
-    ):
+    async def test_missing_guild_id(self, gateway_bot: gateway_bot_.GatewayBot):
         client = Client(gateway_bot)
 
         arc_client = ArcGatewayClient(gateway_bot)
 
         context: arc.GatewayContext = mock.Mock(guild_id=None)
 
-        inj_context: arc.InjectorOverridingContext = arc.InjectorOverridingContext(arc_client.injector.make_context())
+        inj_context: arc.InjectorOverridingContext = arc.InjectorOverridingContext(
+            arc_client.injector.make_context()
+        )
 
         with pytest.raises(KeyError):
             await client._arc_player_injector(context, inj_context)
@@ -249,9 +264,7 @@ class TestArcPlayerInjector:
 
     @pytest.mark.asyncio
     async def test_missing_player(
-        self,
-        gateway_bot: gateway_bot_.GatewayBot,
-        ongaku_player: Player
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_player: Player
     ):
         client = Client(gateway_bot)
 
@@ -260,8 +273,13 @@ class TestArcPlayerInjector:
         inj_context: arc.InjectorOverridingContext = mock.Mock()
 
         with (
-            mock.patch("ongaku.client.Client.fetch_player", side_effect=errors.PlayerMissingError) as patched_fetch_player,
-            mock.patch.object(inj_context, "set_type_dependency") as patched_set_type_dependency
+            mock.patch(
+                "ongaku.client.Client.fetch_player",
+                side_effect=errors.PlayerMissingError,
+            ) as patched_fetch_player,
+            mock.patch.object(
+                inj_context, "set_type_dependency"
+            ) as patched_set_type_dependency,
         ):
             await client._arc_player_injector(context, inj_context)
 

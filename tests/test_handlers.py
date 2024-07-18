@@ -40,7 +40,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         session_2 = Session(
             ongaku_client,
@@ -49,7 +48,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         handler.add_session(session=session_1)
@@ -79,7 +77,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         handler.add_session(session=session_1)
 
@@ -90,7 +87,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         handler.add_session(session=session_2)
 
@@ -132,7 +128,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         handler.add_session(session=session_1)
 
@@ -143,7 +138,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         handler.add_session(session=session_2)
 
@@ -215,7 +209,6 @@ class TestBasicSessionHandler:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         handler.add_session(session=session_1)
 

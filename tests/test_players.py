@@ -783,7 +783,6 @@ class TestPlayer:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         # Test not connected

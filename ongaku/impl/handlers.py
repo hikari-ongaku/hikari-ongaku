@@ -66,9 +66,7 @@ class BasicSessionHandler(handler_.SessionHandler):
     async def start(self) -> None:
         self._is_alive = True
 
-        for _, session in self._sessions.items():
-            if session.status == session_.SessionStatus.NOT_CONNECTED:
-                await session.start()
+        await asyncio.gather(*[i.start() for i in self.sessions])
 
     async def stop(self) -> None:
         for session in self.sessions:

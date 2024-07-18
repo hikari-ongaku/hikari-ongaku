@@ -63,8 +63,6 @@ class Session:
         "_host",
         "_port",
         "_password",
-        "_attempts",
-        "_remaining_attempts",
         "_base_uri",
         "_session_id",
         "_session_task",
@@ -84,7 +82,6 @@ class Session:
         host: str,
         port: int,
         password: str,
-        attempts: int,
     ) -> None:
         self._client = client
         self._name = name
@@ -92,8 +89,6 @@ class Session:
         self._host = host
         self._port = port
         self._password = password
-        self._attempts = attempts
-        self._remaining_attempts = attempts
         self._base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
         self._session_id: str | None = None
         self._session_task: asyncio.Task[None] | None = None
@@ -363,14 +358,7 @@ class Session:
         )
 
         if not bot:
-            if self._remaining_attempts > 0:
-                self._status = session_.SessionStatus.NOT_CONNECTED
-
-                _logger.warning(
-                    "Attempted fetching the bot, but failed as it does not exist."
-                )
-            else:
-                self._status = session_.SessionStatus.FAILURE
+            self._status = session_.SessionStatus.NOT_CONNECTED
 
             _logger.warning(
                 "Attempted fetching the bot, but failed as it does not exist."
@@ -388,11 +376,8 @@ class Session:
         new_headers.update(self._websocket_headers)
 
         new_headers.update(self.auth_headers)
-        while self._remaining_attempts >= 1:
-            if self._remaining_attempts != self._attempts:
-                await asyncio.sleep(2.5)
 
-            self._remaining_attempts -= 1
+        while True:
             try:
                 session = self.client._get_client_session()
                 async with session.ws_connect(
@@ -416,11 +401,7 @@ class Session:
             except Exception as e:
                 _logger.warning(f"Websocket connection failure: {e}")
                 self._status = session_.SessionStatus.NOT_CONNECTED
-                break
-
-        else:
-            _logger.warning(f"Session {self.name} has no more attempts.")
-            self._status = session_.SessionStatus.NOT_CONNECTED
+                await asyncio.sleep(60)
 
     def _get_session_id(self) -> str:
         if self.session_id:

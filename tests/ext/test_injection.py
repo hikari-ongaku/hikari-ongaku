@@ -71,4 +71,3 @@ class TestArcEnsurePlayer:
             patched_get_type_dependency.assert_called_once_with(Client)
 
             patched_fetch_player.assert_called_once_with(context.guild_id)
-

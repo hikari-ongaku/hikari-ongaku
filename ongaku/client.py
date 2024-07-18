@@ -62,7 +62,6 @@ class Client:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_attempts",
         "_app",
         "_client_session",
         "_rest_client",
@@ -78,11 +77,9 @@ class Client:
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
-        attempts: int = 3,
     ) -> None:
         _logger.setLevel(logs)
 
-        self._attempts = attempts
         self._app = app
         self._client_session: aiohttp.ClientSession | None = None
 
@@ -105,7 +102,6 @@ class Client:
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
-        attempts: int = 3,
     ) -> Client:
         """From Arc.
 
@@ -130,9 +126,7 @@ class Client:
         attempts
             The amount of attempts a session will try to connect to the server.
         """
-        cls = cls(
-            client.app, session_handler=session_handler, logs=logs, attempts=attempts
-        )
+        cls = cls(client.app, session_handler=session_handler, logs=logs)
 
         client.set_type_dependency(Client, cls)
 
@@ -148,7 +142,6 @@ class Client:
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
-        attempts: int = 3,
     ) -> Client:
         """From Tanjun.
 
@@ -178,7 +171,7 @@ class Client:
         except KeyError:
             raise Exception("The gateway bot requested was not found.")
 
-        cls = cls(app, session_handler=session_handler, logs=logs, attempts=attempts)
+        cls = cls(app, session_handler=session_handler, logs=logs)
 
         client.set_type_dependency(Client, cls)
 
@@ -202,7 +195,7 @@ class Client:
         !!! note
             If the `hikari.StartedEvent` has occurred, and this is False, ongaku is no longer running and has crashed. Check your logs.
         """
-        return self.session_handler.is_alive
+        return self._is_alive
 
     @property
     def entity_builder(self) -> EntityBuilder:
@@ -222,24 +215,27 @@ class Client:
         return self._session_handler
 
     def _get_client_session(self) -> aiohttp.ClientSession:
-        if not self._client_session:
-            self._client_session = aiohttp.ClientSession()
+        if self._client_session:
+            return self._client_session
 
-        if self._client_session.closed:
-            self._client_session = aiohttp.ClientSession()
+        raise errors.ClientAliveError("Client Session does not exist.")
 
-        return self._client_session
-
-    async def _start_event(self, event: hikari.StartedEvent) -> None:
-        _logger.log(TRACE_LEVEL, "Starting up ongaku.")
+    async def _start_event(self, _: hikari.StartedEvent) -> None:
+        _logger.log(TRACE_LEVEL, "Creating client session.")
+        self._client_session = aiohttp.ClientSession()
+        _logger.log(TRACE_LEVEL, "Starting up session handler.")
         await self.session_handler.start()
+
+        if self.session_handler.is_alive and not self._client_session.closed:
+            self._is_alive = True
         _logger.log(TRACE_LEVEL, "Successfully started ongaku.")
 
-    async def _stop_event(self, event: hikari.StoppingEvent) -> None:
-        _logger.log(TRACE_LEVEL, "Shutting down ongaku.")
+    async def _stop_event(self, _: hikari.StoppingEvent) -> None:
+        _logger.log(TRACE_LEVEL, "Shutting down session handler.")
         await self.session_handler.stop()
 
         if self._client_session:
+            _logger.log(TRACE_LEVEL, "Shutting down client session.")
             await self._client_session.close()
 
         _logger.log(TRACE_LEVEL, "Successfully shut down ongaku.")
@@ -319,7 +315,6 @@ class Client:
             host=host,
             port=port,
             password=password,
-            attempts=self._attempts,
         )
 
         return self.session_handler.add_session(session=new_session)

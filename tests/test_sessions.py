@@ -32,7 +32,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         assert session.client == ongaku_client
@@ -67,7 +66,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         with mock.patch(
@@ -91,7 +89,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         handler = mock.Mock()
@@ -106,7 +103,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
         session._players = {
             player_1.guild_id: player_1,
@@ -169,7 +165,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="password",
-            attempts=3,
         )
 
         app = web.Application()
@@ -220,7 +215,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         with mock.patch(
@@ -241,7 +235,6 @@ class TestSession:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         with mock.patch(
@@ -268,7 +261,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -307,7 +299,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -347,7 +338,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -387,7 +377,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -427,7 +416,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -472,7 +460,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -517,7 +504,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -562,7 +548,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -601,7 +586,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -680,7 +664,6 @@ class TestRequest:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         cs = aiohttp.ClientSession()
@@ -807,7 +790,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(orjson.dumps(payloads.READY_PAYLOAD).decode())
@@ -823,7 +805,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(
@@ -841,7 +822,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         payload = dict(payloads.STATISTICS_PAYLOAD)
@@ -861,7 +841,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(
@@ -879,7 +858,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(
@@ -897,7 +875,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(
@@ -915,7 +892,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(
@@ -933,7 +909,6 @@ class TestHandleOPCode:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         event = session._handle_op_code(
@@ -953,7 +928,6 @@ class TestHandleWSMessage:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         message = aiohttp.WSMessage(
@@ -999,7 +973,6 @@ class TestHandleWSMessage:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         message = aiohttp.WSMessage(aiohttp.WSMsgType.ERROR, "", None)
@@ -1015,7 +988,6 @@ class TestHandleWSMessage:
             host="127.0.0.1",
             port=2333,
             password="youshallnotpass",
-            attempts=3,
         )
 
         message = aiohttp.WSMessage(
