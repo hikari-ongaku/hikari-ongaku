@@ -6,17 +6,17 @@ from ongaku.ext.checker import checker
 
 
 @pytest.mark.parametrize(
-    "query", 
+    "query",
     [
         "a query.",
-    ]
+    ],
 )
 def test_checker_query(query: str):
     assert checker.check(query) is False
 
 
 @pytest.mark.parametrize(
-    "url", 
+    "url",
     [
         # youtube video links
         "https://www.youtube.com/watch?v=test_video",
@@ -30,9 +30,7 @@ def test_checker_query(query: str):
         "https://www.youtu.be/playlist?list=test_playlist",
         "https://youtu.be/playlist?list=test_playlist",
         "https://music.youtube.com/playlist?list=test_playlist",
-    ]
+    ],
 )
 def test_checker_links(url: str):
     assert checker.check(url) is True
-
-    
