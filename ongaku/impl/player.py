@@ -6,6 +6,7 @@ The info implemented classes.
 
 from __future__ import annotations
 
+import datetime
 import typing
 
 from ongaku.abc import filters as filters_
@@ -13,14 +14,18 @@ from ongaku.abc import player as player_
 from ongaku.abc import track as track_
 
 if typing.TYPE_CHECKING:
-    import datetime
-
     import hikari
 
 __all__ = ("Player", "State", "Voice")
 
 
 class Player(player_.Player):
+
+    __slots__: typing.Sequence[str] = (
+        "_state",
+        "_voice"
+    )
+
     def __init__(
         self,
         *,
@@ -50,12 +55,29 @@ class State(player_.State):
         self._connected = connected
         self._ping = ping
 
+    @classmethod
+    def empty(cls) -> player_.State:
+        return cls(
+            time=datetime.datetime.fromtimestamp(0),
+            position=0,
+            connected=False,
+            ping=-1
+        )
+
 
 class Voice(player_.Voice):
     def __init__(self, *, token: str, endpoint: str, session_id: str) -> None:
         self._token = token
         self._endpoint = endpoint
         self._session_id = session_id
+
+    @classmethod
+    def empty(cls) -> player_.Voice:
+        return cls(
+            token="",
+            endpoint="",
+            session_id=""
+        )
 
 
 # MIT License

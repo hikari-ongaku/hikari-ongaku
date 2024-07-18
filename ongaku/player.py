@@ -16,17 +16,18 @@ import hikari
 
 from ongaku import errors
 from ongaku import events
+from ongaku.abc import player as player_
 from ongaku.abc import playlist as playlist_
 from ongaku.abc import track as track_
 from ongaku.abc.events import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
+from ongaku.impl.player import State
 from ongaku.impl.player import Voice
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
-    from ongaku.abc import player as player_
     from ongaku.abc.filters import Filters
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
@@ -36,7 +37,7 @@ _logger = logger.getChild("player")
 __all__ = ("Player",)
 
 
-class Player:
+class Player(player_.Player):
     """
     Base player.
 
@@ -52,17 +53,13 @@ class Player:
 
     __slots__: typing.Sequence[str] = (
         "_session",
-        "_guild_id",
         "_channel_id",
         "_is_alive",
-        "_is_paused",
-        "_voice",
-        "_state",
         "_queue",
-        "_filters",
+        "_state",
+        "_voice",
         "_connected",
         "_session_id",
-        "_volume",
         "_autoplay",
         "_position",
         "_loop",
@@ -74,8 +71,8 @@ class Player:
         self._channel_id = None
         self._is_alive = False
         self._is_paused = True
-        self._voice: player_.Voice | None = None
-        self._state: player_.State | None = None
+        self._voice: player_.Voice = Voice.empty()
+        self._state: player_.State = State.empty()
         self._queue: typing.MutableSequence[track_.Track] = []
         self._filters: Filters | None = None
         self._connected: bool = False
@@ -84,6 +81,7 @@ class Player:
         self._autoplay: bool = True
         self._position: int = 0
         self._loop = False
+        self._track = None
 
         self.app.event_manager.subscribe(TrackEndEvent, self._track_end_event)
         self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update_event)
@@ -128,19 +126,6 @@ class Player:
         return self._position
 
     @property
-    def volume(self) -> int:
-        """The volume of the player.
-
-        If `-1` the player has not been connected to lavalink and updated.
-        """
-        return self._volume
-
-    @property
-    def is_paused(self) -> bool:
-        """Whether the player is currently paused."""
-        return self._is_paused
-
-    @property
     def autoplay(self) -> bool:
         """Autoplay.
 
@@ -167,13 +152,11 @@ class Player:
         return self._queue
 
     @property
-    def voice(self) -> player_.Voice | None:
-        """The player's voice state."""
+    def voice(self) -> player_.Voice:
         return self._voice
 
     @property
-    def state(self) -> player_.State | None:
-        """The player's player state."""
+    def state(self) -> player_.State:
         return self._state
 
     @property
@@ -1012,6 +995,7 @@ class Player:
         self._voice = player.voice
         self._filters = player.filters
         self._connected = player.state.connected
+        self._track = player.track
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
@@ -1099,7 +1083,6 @@ class Player:
 
         self._state = event.state
         self._connected = event.state.connected
-
 
 # MIT License
 

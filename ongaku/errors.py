@@ -30,6 +30,7 @@ __all__ = (
     "NoSessionsError",
     "PlayerError",
     "PlayerConnectError",
+    "PlayerNotConnectedError",
     "PlayerQueueError",
     "PlayerMissingError",
     "BuildError",
@@ -225,6 +226,10 @@ class PlayerConnectError(PlayerError):
     def reason(self) -> str:
         """The reason for failure of connection."""
         return self._reason
+
+
+class PlayerNotConnectedError(PlayerError):
+    """Raised when the player is not connected to a voice channel."""
 
 
 class PlayerQueueError(PlayerError):

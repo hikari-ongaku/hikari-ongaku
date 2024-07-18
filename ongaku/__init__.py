@@ -28,6 +28,7 @@ from ongaku.errors import OngakuError
 from ongaku.errors import PlayerConnectError
 from ongaku.errors import PlayerError
 from ongaku.errors import PlayerMissingError
+from ongaku.errors import PlayerNotConnectedError
 from ongaku.errors import PlayerQueueError
 from ongaku.errors import RestEmptyError
 from ongaku.errors import RestError
@@ -98,6 +99,7 @@ __all__ = (
     "NoSessionsError",
     "PlayerError",
     "PlayerConnectError",
+    "PlayerNotConnectedError",
     "PlayerQueueError",
     "PlayerMissingError",
     "BuildError",

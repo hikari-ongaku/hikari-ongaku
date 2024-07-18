@@ -18,6 +18,7 @@ from ongaku.abc.filters import Filters
 from ongaku.client import Client
 from ongaku.impl import player as player_
 from ongaku.impl import playlist
+from ongaku.impl.player import State
 from ongaku.impl.player import Voice
 from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
@@ -89,12 +90,14 @@ class TestPlayer:
 
         assert new_player.connected is False
 
+        assert new_player.track is None
+
         assert isinstance(new_player.queue, typing.Sequence)
         assert new_player.queue == []
 
-        assert new_player.voice is None
+        assert new_player.voice == Voice.empty()
 
-        assert new_player.state is None
+        assert new_player.state == State.empty()
 
         assert new_player.filters is None
 
@@ -872,15 +875,16 @@ class TestPlayer:
             )
 
     @pytest.mark.asyncio
-    async def test_update(self, ongaku_session: Session, ongaku_filters: Filters):
+    async def test_update(self, ongaku_session: Session, ongaku_track: Track, ongaku_filters: Filters):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
         assert new_player.volume == -1
         assert new_player.is_paused is True
-        assert new_player.state is None
-        assert new_player.voice is None
+        assert new_player.state == State.empty()
+        assert new_player.voice  == Voice.empty()
         assert new_player.filters is None
         assert new_player.connected is False
+        assert new_player.track is None
 
         state = player_.State(
             time=datetime.datetime.now(), position=1, connected=True, ping=2
@@ -890,7 +894,7 @@ class TestPlayer:
         )
         replacement_player = player_.Player(
             guild_id=Snowflake(1234567890),
-            track=None,
+            track=ongaku_track,
             volume=10,
             is_paused=False,
             state=state,
@@ -906,12 +910,13 @@ class TestPlayer:
         assert new_player.voice == voice
         assert new_player.filters == ongaku_filters
         assert new_player.connected is True
+        assert new_player.track == ongaku_track
 
     @pytest.mark.asyncio
     async def test_player_update_event(self, ongaku_session: Session):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
-        assert new_player.state is None
+        assert new_player.state == State.empty()
         assert new_player.connected is False
 
         state = player_.State(
