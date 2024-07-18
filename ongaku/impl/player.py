@@ -20,12 +20,6 @@ __all__ = ("Player", "State", "Voice")
 
 
 class Player(player_.Player):
-
-    __slots__: typing.Sequence[str] = (
-        "_state",
-        "_voice"
-    )
-
     def __init__(
         self,
         *,
@@ -61,7 +55,7 @@ class State(player_.State):
             time=datetime.datetime.fromtimestamp(0),
             position=0,
             connected=False,
-            ping=-1
+            ping=-1,
         )
 
 
@@ -73,11 +67,7 @@ class Voice(player_.Voice):
 
     @classmethod
     def empty(cls) -> player_.Voice:
-        return cls(
-            token="",
-            endpoint="",
-            session_id=""
-        )
+        return cls(token="", endpoint="", session_id="")
 
 
 # MIT License

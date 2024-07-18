@@ -1084,6 +1084,7 @@ class Player(player_.Player):
         self._state = event.state
         self._connected = event.state.connected
 
+
 # MIT License
 
 # Copyright (c) 2023-present MPlatypus

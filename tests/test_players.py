@@ -875,13 +875,15 @@ class TestPlayer:
             )
 
     @pytest.mark.asyncio
-    async def test_update(self, ongaku_session: Session, ongaku_track: Track, ongaku_filters: Filters):
+    async def test_update(
+        self, ongaku_session: Session, ongaku_track: Track, ongaku_filters: Filters
+    ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
         assert new_player.volume == -1
         assert new_player.is_paused is True
         assert new_player.state == State.empty()
-        assert new_player.voice  == Voice.empty()
+        assert new_player.voice == Voice.empty()
         assert new_player.filters is None
         assert new_player.connected is False
         assert new_player.track is None

@@ -43,6 +43,7 @@ def test_player_state():
     assert player_state.connected is True
     assert player_state.ping == 3
 
+
 def test_player_state_from_empty():
     player_state = State.empty()
 
@@ -58,6 +59,7 @@ def test_player_voice():
     assert player_voice.token == "token"
     assert player_voice.endpoint == "endpoint"
     assert player_voice.session_id == "session_id"
+
 
 def test_player_voice_from_empty():
     player_voice = Voice.empty()
