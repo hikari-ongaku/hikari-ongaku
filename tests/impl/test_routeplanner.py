@@ -74,7 +74,7 @@ def test_failing_address():
     time = datetime.datetime.now()
     failing_address = FailingAddress(
         address="failing_address",
-        timestamp=datetime.datetime.now(),
+        timestamp=time,
         time="failing_time",
     )
 
