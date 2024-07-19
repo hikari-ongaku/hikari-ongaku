@@ -52,8 +52,6 @@ class Session:
         The port of the lavalink server.
     password
         The password of the lavalink server.
-    attempts
-        The attempts that the session is allowed to use, before completely shutting down.
     """
 
     __slots__: typing.Sequence[str] = (

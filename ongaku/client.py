@@ -57,8 +57,6 @@ class Client:
         The session handler to use for the current client.
     logs
         The log level for ongaku.
-    attempts
-        The amount of attempts a session will try to connect to the server.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -123,8 +121,6 @@ class Client:
             The session handler to use for the current client.
         logs
             The log level for ongaku.
-        attempts
-            The amount of attempts a session will try to connect to the server.
         """
         cls = cls(client.app, session_handler=session_handler, logs=logs)
 
@@ -163,8 +159,6 @@ class Client:
             The session handler to use for the current client.
         logs
             The log level for ongaku.
-        attempts
-            The amount of attempts a session will try to connect to the server.
         """
         try:
             app = client.get_type_dependency(hikari.GatewayBotAware)
