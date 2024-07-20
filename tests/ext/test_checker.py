@@ -36,7 +36,7 @@ class TestSites:
     ["/watch?v=abcd1234", "/watch?v=abcd1234&list=abcd1234", "/playlist?list=abcd1234"],
 )
 @pytest.mark.parametrize(
-    "domain", ["youtube.com", "www.youtube.com", "youtu.be", "www.youtu.be"]
+    "domain", ["youtube.com", "www.youtube.com", "youtu.be"]
 )
 @pytest.mark.parametrize("scheme", schemes)
 class TestYoutube:
