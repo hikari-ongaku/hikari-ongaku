@@ -6,17 +6,153 @@ The extension, that allows you to check if a link is a url, or a video/playlist!
 
 from __future__ import annotations
 
-import urllib.parse as urlparse
+import enum
+import logging
+import re
+import typing
+
+__all__ = (
+    "Sites",
+    "check",
+)
 
 
-def check(query: str, /) -> bool:
+class Sites(enum.IntFlag):
+    """Sites.
+
+    All the available sites for lavalink.
+
+    all sites are checked for `http` and `https`.
+
+    !!! warning
+        Some sites are only useable with plugins.
+    """
+
+    YOUTUBE = 1 << 0
+    """Youtube.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+    """
+    YOUTUBE_MUSIC = 1 << 1
+    """Youtube Music.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+    """
+    BANDCAMP = 1 << 2
+    """Bandcamp.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+    """
+    SOUNDCLOUD = 1 << 3
+    """Soundcloud.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+    """
+    TWITCH = 1 << 4
+    """Twitch.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+    """
+    VIMEO = 1 << 5
+    """Vimeo.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+    """
+    NICO = 1 << 6
+    """Nico.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+
+    """
+    SPOTIFY = 1 << 7
+    """Spotify.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: add url's.
+
+    """
+    APPLE = 1 << 8
+    """Apple.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: Add url's.
+    """
+    DEEZER = 1 << 9
+    """Deezer.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: Add url's.
+    """
+    YANDEX = 1 << 10
+    """Yandex.
+    
+    ??? tip "Checked URL's"
+
+        - FIXME: Add url's.
+    """
+
+    @classmethod
+    def all(cls) -> Sites:
+        """All possible sources."""
+        return (
+            Sites.YOUTUBE
+            | Sites.YOUTUBE_MUSIC
+            | Sites.BANDCAMP
+            | Sites.SOUNDCLOUD
+            | Sites.TWITCH
+            | Sites.VIMEO
+            | Sites.NICO
+            | Sites.SPOTIFY
+            | Sites.APPLE
+            | Sites.DEEZER
+            | Sites.YANDEX
+        )
+
+    @classmethod
+    def default(cls) -> Sites:
+        """All possible sources without plugins."""
+        return (
+            Sites.YOUTUBE
+            | Sites.YOUTUBE_MUSIC
+            | Sites.BANDCAMP
+            | Sites.SOUNDCLOUD
+            | Sites.TWITCH
+            | Sites.VIMEO
+            | Sites.NICO
+        )
+
+    def has(self, site: Sites, /) -> bool:
+        """Check if the specified value is in the current value."""
+        return (site & self) == site
+
+
+def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
     """
     Check a string.
 
     Allows for the user to check a current string, and see what type it is.
 
     !!! warning
-        Currently the checker only supports youtube url's.
+        Just because a value got rejected, does not mean it is not a url.
+
+        **only** Lavalink/LavaSrc url regex's are supported.
 
     Example
     -------
@@ -24,38 +160,64 @@ def check(query: str, /) -> bool:
     from ongaku.ext import checker
 
     if checker.check(query):
-        print("This is a video/playlist!")
+        print("This is a video/playlist/album!")
     else:
         print("This is a query.")
     ```
 
     Parameters
     ----------
-    query : str
+    query
         The query you wish to check.
+    sites
+        The site(s) you wish to check against.
+
+        By default, this will check against all default lavalink sources.
 
     Returns
+    -------
     bool
         If True, then it is a video/playlist, otherwise its just a query.
     """
-    url = urlparse.urlparse(query)
+    site_patterns: typing.Mapping[Sites, str | typing.Sequence[str]] = {
+        Sites.YOUTUBE: [
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|m\.|)youtube\.com\/.*",
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|)youtu\.be\/.*",
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|m\.|)youtube\.com\/embed\/.*",
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|m\.|)youtube\.com\/shorts\/.*",
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|m\.|)youtube\.com\/live\/.*",
+        ],
+        Sites.YOUTUBE_MUSIC: r"^(?:http:\/\/|https:\/\/|)music\.youtube\.com\/.*",
+        Sites.BANDCAMP: r"^(https?:\/\/(?:[^.]+\.)?bandcamp\.com)\/(track|album)\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
+        Sites.SOUNDCLOUD: [
+            r"^(?:http:\/\/|https:\/\/|)soundcloud\.app\.goo\.gl\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
+            r"(?:http:\/\/|https:\/\/|)(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
+            r"^(?:http:\/\/|https:\/\/|)on\.soundcloud\.com\/[a-zA-Z0-9-_]+\/?(?:\?.*|)$",
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)\/s-([a-zA-Z0-9-_]+)(?:\?.*|)$",
+            r"^(?:http:\/\/|https:\/\/|)(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/likes\/?(?:\?.*|)$",
+        ],
+        Sites.TWITCH: r"^https:\/\/(?:www\.|go\.|m\.)?twitch\.tv\/([^\/]+)$",
+        Sites.VIMEO: r"^https:\/\/vimeo\.com\/[0-9]+(?:\?.*|)$",
+        Sites.NICO: r"^(?:https?:\/\/)?(?:www\.)?nicovideo\.jp\/watch\/(.{2}\d+)(?:\?.*)?$",
+        Sites.SPOTIFY: r"^(https?:\/\/)(www\.)?open\.spotify\.com(?:\/([a-zA-Z-]+))?(?:\/user\/([a-zA-Z0-9-_]+))?\/(track|album|playlist|artist)\/([a-zA-Z0-9-_]+)$",
+        Sites.APPLE: r"^(https?:\/\/)?(www\.)?music\.apple\.com\/((?:[a-zA-Z]{2})\/)?(?:album|playlist|artist|song)(\/[a-zA-Z\\p{L}\d\\-]+)?\/(?:[a-zA-Z\d\-.]+)(\?i=(?:\d+))?$",
+        Sites.DEEZER: r"^(https?:\/\/)?(www\.)?deezer\.com\/(?:[a-zA-Z]{2}\/)?(?:track|album|playlist|artist)\/(?:[0-9]+)$",
+        Sites.YANDEX: r"^(https?:\/\/)?music\.yandex\.(?:ru|com|kz|by)\/(?:artist|album|track)\/(?:[0-9]+)(\/(?:track)\/(?:[0-9]+))?\/?$",
+    }
 
-    queries: dict[str, str] = {}
+    regex_patterns: typing.Sequence[str] = []
 
-    if url.query.strip() != "":
-        url_queries = url.query.split("&")
+    for site, pattern in site_patterns.items():
+        if sites.has(site):
+            if isinstance(pattern, str):
+                regex_patterns.append(pattern)
+            else:
+                regex_patterns.extend(pattern)
 
-        for url_query in url_queries:
-            url_query_split = url_query.split("=")
-            queries.update({url_query_split[0]: url_query_split[1]})
+    logging.warning(regex_patterns)
+    logging.warning(query)
 
-    return url.netloc in [
-        "www.youtube.com",
-        "youtube.com",
-        "www.youtu.be",
-        "youtu.be",
-        "music.youtube.com",
-    ]
+    return any(re.compile(i).match(query) is not None for i in regex_patterns)
 
 
 # MIT License
