@@ -22,7 +22,7 @@ class Sites(enum.IntFlag):
 
     All the available sites for lavalink.
 
-    all sites are checked for `http` and `https`.
+    all sites are checked for `http` and `https`, except for twitch and vimeo, which are only `https`.
 
     !!! warning
         Some sites are only useable with plugins.
@@ -33,49 +33,76 @@ class Sites(enum.IntFlag):
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `youtube.com/watch`
+        - `youtube.com/playlist`
+        - `www.youtube.com/watch`
+        - `www.youtube.com/playlist`
+        - `youtu.be/watch`
+        - `youtu.be/playlist`
     """
     YOUTUBE_MUSIC = 1 << 1
     """Youtube Music.
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - music.youtube.com/watch
+        - music.youtube.com/playlist
     """
     BANDCAMP = 1 << 2
     """Bandcamp.
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `bandcamp.com/track/`
+        - `bandcamp.com/album/`
+        - `www.bandcamp.com/track/`
+        - `www.bandcamp.com/album/`
+        - `xxxx.bandcamp.com/track/`
+        - `xxxx.bandcamp.com/album/`
+
+        Please note that `xxxx` can be anything.
     """
     SOUNDCLOUD = 1 << 3
     """Soundcloud.
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `soundcloud.com/user/song`
+        - `www.soundcloud.com/band/`
+        - `m.soundcloud.com/dj/`
+        - `on.soundcloud.com/`
+        - `soundcloud.com/user/song/`
+        - `www.soundcloud.com/band/album/`
+        - `m.soundcloud.com/dj/super-mix/`
+        - `soundcloud.com/user123/likes`
+        - `soundcloud.com/artist/likes`
+        - `www.soundcloud.com/band/likes`
+        - `m.soundcloud.com/dj/likes`
     """
     TWITCH = 1 << 4
     """Twitch.
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `twitch.tv/`
+        - `www.twitch.tv/`
+        - `go.twitch.tv/`
+        - `m.twitch.tv/`
     """
     VIMEO = 1 << 5
     """Vimeo.
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `vimeo.com/1234567890`
     """
     NICO = 1 << 6
     """Nico.
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `nicovideo.jp/watch/`
+        - `www.nicovideo.jp/watch/`
 
     """
     SPOTIFY = 1 << 7
@@ -83,7 +110,18 @@ class Sites(enum.IntFlag):
     
     ??? tip "Checked URL's"
 
-        - FIXME: add url's.
+        - `www.open.spotify.com/track/`
+        - `www.open.spotify.com/playlist/`
+        - `www.open.spotify.com/album/`
+        - `www.open.spotify.com/user/spotify/playlist/`
+        - `www.open.spotify.com/artist/`
+        - `www.open.spotify.com/us/user/spotify/track/`
+        - `open.spotify.com/track/`
+        - `open.spotify.com/playlist/`
+        - `open.spotify.com/album/`
+        - `open.spotify.com/user/spotify/playlist/`
+        - `open.spotify.com/artist/`
+        - `open.spotify.com/us/user/spotify/track/`
 
     """
     APPLE = 1 << 8
@@ -91,21 +129,50 @@ class Sites(enum.IntFlag):
     
     ??? tip "Checked URL's"
 
-        - FIXME: Add url's.
+        - `www.music.apple.com/song/`
+        - `www.music.apple.com/playlist/`
+        - `www.music.apple.com/artist/`
+        - `www.music.apple.com/album/`
+        - `www.music.apple.com/us/album/`
+        - `music.apple.com/song/`
+        - `music.apple.com/playlist/`
+        - `music.apple.com/artist/`
+        - `music.apple.com/album/`
+        - `music.apple.com/us/album/`
     """
     DEEZER = 1 << 9
     """Deezer.
     
     ??? tip "Checked URL's"
 
-        - FIXME: Add url's.
+        - `www.deezer.com/track/`
+        - `www.deezer.com/album/`
+        - `www.deezer.com/playlist/`
+        - `www.deezer.com/artist/`
+        - `www.deezer.com/us/track/`
+        - `deezer.com/track/`
+        - `deezer.com/album/`
+        - `deezer.com/playlist/`
+        - `deezer.com/artist/`
+        - `deezer.com/us/track/`
     """
     YANDEX = 1 << 10
     """Yandex.
     
     ??? tip "Checked URL's"
 
-        - FIXME: Add url's.
+        - `music.yandex.ru/artist/`
+        - `music.yandex.ru/album/`
+        - `music.yandex.ru/track/`
+        - `music.yandex.com/artist/`
+        - `music.yandex.com/album/`
+        - `music.yandex.com/track/`
+        - `music.yandex.kz/artist/`
+        - `music.yandex.kz/album/`
+        - `music.yandex.kz/track/`
+        - `music.yandex.by/artist/`
+        - `music.yandex.by/album/`
+        - `music.yandex.by/track/`
     """
 
     @classmethod
@@ -163,6 +230,17 @@ def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
         print("This is a video/playlist/album!")
     else:
         print("This is a query.")
+    ```
+
+    Example
+    -------
+    ```py
+    from ongaku.ext import checker
+
+    if checker.check(query, sites=checker.Sites.SPOTIFY):
+        print("This is a spotify link!")
+    else:
+        print("This is not a spotify link.")
     ```
 
     Parameters
