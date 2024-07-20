@@ -5,6 +5,8 @@ import pytest
 from ongaku.ext.checker import Sites
 from ongaku.ext.checker import checker
 
+schemes = ["http://", "https://"]
+
 
 @pytest.mark.parametrize(
     "query",
@@ -36,7 +38,7 @@ class TestSites:
 @pytest.mark.parametrize(
     "domain", ["youtube.com", "www.youtube.com", "youtu.be", "www.youtu.be"]
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestYoutube:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.YOUTUBE) is True
@@ -58,7 +60,7 @@ class TestYoutube:
         "music.youtube.com",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestYoutubeMusic:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.YOUTUBE_MUSIC) is True
@@ -89,7 +91,7 @@ class TestYoutubeMusic:
         "test.bandcamp.com",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestBandcamp:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.BANDCAMP) is True
@@ -119,7 +121,7 @@ class TestBandcamp:
         "m.soundcloud.com/dj/likes?abcd=1234",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestSoundcloud:
     def test_working(self, scheme: str, url: str):
         assert checker.check(scheme + url, sites=Sites.SOUNDCLOUD) is True
@@ -176,7 +178,7 @@ class TestVimeo:
         "www.nicovideo.jp",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestNico:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.NICO) is True
@@ -206,7 +208,7 @@ class TestNico:
         "open.spotify.com",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestSpotify:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.SPOTIFY) is True
@@ -237,7 +239,7 @@ class TestSpotify:
         "music.apple.com",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestApple:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.APPLE) is True
@@ -260,7 +262,7 @@ class TestApple:
         "deezer.com",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestDeezer:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.DEEZER) is True
@@ -291,7 +293,7 @@ class TestDeezer:
         "music.yandex.by",
     ],
 )
-@pytest.mark.parametrize("scheme", ["http://", "https://"])
+@pytest.mark.parametrize("scheme", schemes)
 class TestYandex:
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path, sites=Sites.YANDEX) is True
