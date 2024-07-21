@@ -22,10 +22,10 @@ from ongaku.session import Session
 
 if typing.TYPE_CHECKING:
     import arc
+    import lightbulb
     import tanjun
 
     from ongaku.abc.handler import SessionHandler
-
 
 _logger = logger.getChild("client")
 
@@ -181,6 +181,48 @@ class Client:
 
         return cls
 
+    @classmethod
+    def from_lightbulb(
+        cls,
+        client: lightbulb.GatewayEnabledClient,
+        *,
+        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        logs: str | int = "INFO",
+        attempts: int = 3,
+    ) -> Client:
+        """From Lightbulb.
+
+        This supports `client` and `player` [injection](../gs/injection.md) for [Lightbulb](https://github.com/tandemdude/hikari-lightbulb)
+
+        Example
+        -------
+        ```py
+        bot = hikari.GatewayBot(...)
+        client = lightbulb.Client(bot)
+        ongaku_client = ongaku.Client.from_arc(client)
+        ```
+
+        Parameters
+        ----------
+        client
+            Your Gateway client for lightbulb.
+        session_handler
+            The session handler to use for the current client.
+        logs
+            The log level for ongaku.
+        attempts
+            The amount of attempts a session will try to connect to the server.
+        """
+        cls = cls(
+            client._app, session_handler=session_handler, logs=logs, attempts=attempts
+        )
+
+        client.di.register_for(lightbulb.di.Contexts.DEFAULT).register_value(Client, cls)
+
+        client.di.register_for(lightbulb.di.Contexts.COMMAND).register_factory(Player, cls._lightbulb_player_injector)
+
+        return cls
+
     @property
     def app(self) -> hikari.GatewayBotAware:
         """The application this client is included in."""
@@ -259,6 +301,25 @@ class Client:
         _logger.log(TRACE_LEVEL, "Successfully injected player into context.")
 
         inj_ctx.set_type_dependency(Player, player)
+
+    async def _lightbulb_player_injector(
+        self, ctx: lightbulb.Context
+    ) -> Player:
+        _logger.log(TRACE_LEVEL, "Attempting to inject player.")
+
+        if ctx.guild_id is None:
+            _logger.log(TRACE_LEVEL, "Player missing, not in guild.")
+            raise errors.PlayerMissingError
+
+        try:
+            player = self.fetch_player(ctx.guild_id)
+        except errors.PlayerMissingError:
+            _logger.log(TRACE_LEVEL, "Player missing, does not exist.")
+            raise errors.PlayerMissingError
+
+        _logger.log(TRACE_LEVEL, "Successfully returned player.")
+
+        return player
 
     def create_session(
         self,
