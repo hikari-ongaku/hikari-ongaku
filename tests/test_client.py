@@ -29,6 +29,19 @@ class TestClient:
 
         assert isinstance(client.rest, RESTClient)
 
+        assert command_client.get_type_dependency(Client) == client
+
+        # check that from_arc method, adds the player hook.
+
+        command_client = ArcGatewayClient(gateway_bot)
+
+        with mock.patch(
+            "arc.client.Client.add_injection_hook"
+        ) as patched_injection_hook:
+            client = Client.from_arc(command_client)
+
+            patched_injection_hook.assert_called_once_with(client._arc_player_injector)
+
     def test_from_tanjun(self, gateway_bot: gateway_bot_.GatewayBot):
         command_client = TanjunClient.from_gateway_bot(gateway_bot)
 
