@@ -194,13 +194,15 @@ class Client:
 
         This supports `client` and `player` [injection](../gs/injection.md) for [Lightbulb](https://github.com/tandemdude/hikari-lightbulb)
 
+        !!! warning
+            You must use lightbulb V3 for this to work.
+
         Example
         -------
         ```py
         bot = hikari.GatewayBot(...)
         client = lightbulb.Client(bot)
         ongaku_client = ongaku.Client.from_lightbulb(client)
-
         ```
 
         Parameters
@@ -214,13 +216,25 @@ class Client:
         attempts
             The amount of attempts a session will try to connect to the server.
         """
+        try:
+            import lightbulb
+        except ImportError:
+            raise errors.ClientError("You must have lightbulb installed.")
+
+        if not isinstance(client.app, hikari.GatewayBotAware):
+            raise errors.ClientError("You must have a GatewayBot connection.")
+
         cls = cls(
             client.app, session_handler=session_handler, logs=logs, attempts=attempts
         )
 
-        client.di.register_for(lightbulb.di.Contexts.DEFAULT).register_value(Client, cls)
+        client.di.registry_for(lightbulb.di.Contexts.DEFAULT).register_value(
+            Client, cls
+        )
 
-        client.di.register_for(lightbulb.di.Contexts.COMMAND).register_factory(Player, cls._lightbulb_player_injector)
+        client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
+            Player, cls._lightbulb_player_injector
+        )
 
         return cls
 
@@ -303,9 +317,7 @@ class Client:
 
         inj_ctx.set_type_dependency(Player, player)
 
-    async def _lightbulb_player_injector(
-        self, ctx: lightbulb.Context
-    ) -> Player:
+    async def _lightbulb_player_injector(self, ctx: lightbulb.Context) -> Player:
         _logger.log(TRACE_LEVEL, "Attempting to inject player.")
 
         if ctx.guild_id is None:
