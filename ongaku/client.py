@@ -215,7 +215,7 @@ class Client:
             The amount of attempts a session will try to connect to the server.
         """
         cls = cls(
-            client._app, session_handler=session_handler, logs=logs, attempts=attempts
+            client.app, session_handler=session_handler, logs=logs, attempts=attempts
         )
 
         client.di.register_for(lightbulb.di.Contexts.DEFAULT).register_value(Client, cls)
