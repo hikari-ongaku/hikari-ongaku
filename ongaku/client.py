@@ -199,7 +199,8 @@ class Client:
         ```py
         bot = hikari.GatewayBot(...)
         client = lightbulb.Client(bot)
-        ongaku_client = ongaku.Client.from_arc(client)
+        ongaku_client = ongaku.Client.from_lightbulb(client)
+
         ```
 
         Parameters
