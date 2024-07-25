@@ -7,7 +7,6 @@ The extension, that allows you to check if a link is a url, or a video/playlist!
 from __future__ import annotations
 
 import enum
-import logging
 import re
 import typing
 
@@ -291,9 +290,6 @@ def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
                 regex_patterns.append(pattern)
             else:
                 regex_patterns.extend(pattern)
-
-    logging.warning(regex_patterns)
-    logging.warning(query)
 
     return any(re.compile(i).match(query) is not None for i in regex_patterns)
 
