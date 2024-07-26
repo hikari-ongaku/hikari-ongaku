@@ -24,6 +24,7 @@ if typing.TYPE_CHECKING:
     import arc
     import tanjun
 
+    from ongaku.abc.extension import Extension
     from ongaku.abc.handler import SessionHandler
 
 
@@ -31,6 +32,9 @@ _logger = logger.getChild("client")
 
 
 __all__ = ("Client",)
+
+
+ExtensionT = typing.TypeVar("ExtensionT", bound="Extension")
 
 
 class Client:
@@ -66,6 +70,7 @@ class Client:
         "_is_alive",
         "_session_handler",
         "_entity_builder",
+        "_extensions",
     )
 
     def __init__(
@@ -76,7 +81,7 @@ class Client:
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
     ) -> None:
-        _logger.setLevel(logs)
+        logger.setLevel(logs)
 
         self._app = app
         self._client_session: aiohttp.ClientSession | None = None
@@ -88,6 +93,8 @@ class Client:
         self._session_handler = session_handler(client=self)
 
         self._entity_builder = EntityBuilder()
+
+        self._extensions: typing.MutableMapping[typing.Type[Extension], Extension] = {}
 
         app.event_manager.subscribe(hikari.StartedEvent, self._start_event)
         app.event_manager.subscribe(hikari.StoppingEvent, self._stop_event)
@@ -449,6 +456,61 @@ class Client:
             Raised when the player for the specified guild does not exist.
         """
         await self.session_handler.delete_player(guild=guild)
+
+    def add_extension(
+        self, extension_type: typing.Type[Extension], extension: Extension, /
+    ) -> None:
+        """Add Extension.
+
+        Add a new extension to ongaku.
+
+        Parameters
+        ----------
+        extension_type
+            The type of the extension.
+        extension
+            The extension to add.
+        """
+        self._extensions.update({extension_type: extension})
+
+    def get_extension(self, extension: typing.Type[ExtensionT], /) -> ExtensionT:
+        """Get Extension.
+
+        Get an extension from the client.
+
+        Parameters
+        ----------
+        extension
+            The extension type to receive.
+
+        Raises
+        ------
+        KeyError
+            Raised when the extension requested could not be found.
+
+        Returns
+        -------
+        ExtensionT
+            The extension you requested.
+        """
+        ext = self._extensions.get(extension, None)
+
+        if ext and isinstance(ext, extension):
+            return ext
+
+        raise KeyError("Could not find extension.")
+
+    def delete_extension(self, extension: typing.Type[Extension]) -> None:
+        """Delete Extension.
+
+        Deletes an extension previously added.
+
+        Parameters
+        ----------
+        extension
+            The extension to remove.
+        """
+        del self._extensions[extension]
 
 
 # MIT License

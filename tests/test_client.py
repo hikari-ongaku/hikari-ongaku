@@ -5,6 +5,7 @@ import mock
 import pytest
 from aiohttp import ClientSession
 from arc.client import GatewayClient as ArcGatewayClient
+from hikari.events.base_events import Event as Event
 from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 from tanjun.clients import Client as TanjunClient
@@ -16,6 +17,7 @@ from ongaku.client import Client
 from ongaku.player import Player
 from ongaku.rest import RESTClient
 from ongaku.session import Session
+from tests.conftest import OngakuExtension
 
 
 class TestClient:
@@ -218,6 +220,31 @@ class TestClient:
             await client.delete_player(Snowflake(1234567890))
 
             patched_delete_player.assert_called_once_with(guild=Snowflake(1234567890))
+
+    def test_add_extension(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension):
+        client = Client(gateway_bot)
+
+        assert client._extensions == {}
+
+        client.add_extension(OngakuExtension, ongaku_extension)
+
+        assert client._extensions == {OngakuExtension: ongaku_extension}
+
+    def test_get_extension(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension):
+        client = Client(gateway_bot)
+
+        client._extensions = {OngakuExtension: ongaku_extension}
+
+        assert client.get_extension(OngakuExtension) == ongaku_extension
+
+    def test_delete_extension(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension):
+        client = Client(gateway_bot)
+
+        client._extensions = {OngakuExtension: ongaku_extension}
+
+        client.delete_extension(OngakuExtension)
+
+        assert client._extensions == {}
 
 
 class TestArcPlayerInjector:

@@ -62,21 +62,6 @@ class SessionStatus(int, enum.Enum):
     """A failure occurred connecting to the lavalink server."""
 
 
-class WebsocketOPCode(str, enum.Enum):
-    READY = "ready"
-    PLAYER_UPDATE = "playerUpdate"
-    STATS = "stats"
-    EVENT = "event"
-
-
-class WebsocketEvent(str, enum.Enum):
-    TRACK_START_EVENT = "TrackStartEvent"
-    TRACK_END_EVENT = "TrackEndEvent"
-    TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
-    TRACK_STUCK_EVENT = "TrackStuckEvent"
-    WEBSOCKET_CLOSED_EVENT = "WebSocketClosedEvent"
-
-
 # MIT License
 
 # Copyright (c) 2023-present MPlatypus

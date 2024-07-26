@@ -124,6 +124,7 @@ nav:
     - ABC:
       - Errors: api/abc/errors.md
       - Events: api/abc/events.md
+      - Extension: api/abc/extension.md
       - Filters: api/abc/filters.md
       - Handler: api/abc/handler.md
       - Info: api/abc/info.md
@@ -138,6 +139,7 @@ nav:
     - Creation: ext/creation.md
     - Checker: ext/checker.md
     - Injection: ext/injection.md
+    - Other: ext/other.md
   - Changelog: changelog.md
 
 

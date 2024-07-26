@@ -21,6 +21,8 @@ from ongaku.client import Client
 from ongaku.player import Player
 from ongaku.session import Session
 from tests import payloads
+from tests.conftest import FakeEvent
+from tests.conftest import OngakuExtension
 
 
 class TestSession:
@@ -916,6 +918,67 @@ class TestHandleOPCode:
         )
 
         assert isinstance(event, events.WebsocketClosedEvent)
+
+    @pytest.mark.asyncio
+    async def test_unknown_op(self, ongaku_client: Client):
+        session = Session(
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        event = session._handle_op_code(
+            orjson.dumps({
+                "op": "banana",
+            }).decode()
+        )
+
+        assert event is None
+
+    @pytest.mark.asyncio
+    async def test_unknown_event(self, ongaku_client: Client):
+        session = Session(
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        event = session._handle_op_code(
+            orjson.dumps({
+                "op": "event",
+                "type": "banana"
+            }).decode()
+        )
+
+        assert event is None
+
+    @pytest.mark.asyncio
+    async def test_extension_event(self, ongaku_client: Client, ongaku_extension: OngakuExtension):
+        ongaku_client._extensions = {OngakuExtension:ongaku_extension}
+
+        session = Session(
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        event = session._handle_op_code(
+            orjson.dumps({
+                "op": "event",
+                "type": "banana"
+            }).decode()
+        )
+
+        assert isinstance(event, FakeEvent)
 
 
 class TestHandleWSMessage:
