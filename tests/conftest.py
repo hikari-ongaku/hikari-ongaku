@@ -129,7 +129,8 @@ class OngakuExtension(Extension):
 
         if mapped_payload["op"] == "event" and mapped_payload["type"] == "banana":
             return FakeEvent(self.client.app)
-        
+
+
 @pytest.fixture
 def ongaku_extension(ongaku_client: Client) -> OngakuExtension:
     return OngakuExtension(ongaku_client)

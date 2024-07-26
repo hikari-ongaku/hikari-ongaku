@@ -221,7 +221,9 @@ class TestClient:
 
             patched_delete_player.assert_called_once_with(guild=Snowflake(1234567890))
 
-    def test_add_extension(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension):
+    def test_add_extension(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
+    ):
         client = Client(gateway_bot)
 
         assert client._extensions == {}
@@ -230,14 +232,18 @@ class TestClient:
 
         assert client._extensions == {OngakuExtension: ongaku_extension}
 
-    def test_get_extension(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension):
+    def test_get_extension(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
+    ):
         client = Client(gateway_bot)
 
         client._extensions = {OngakuExtension: ongaku_extension}
 
         assert client.get_extension(OngakuExtension) == ongaku_extension
 
-    def test_delete_extension(self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension):
+    def test_delete_extension(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
+    ):
         client = Client(gateway_bot)
 
         client._extensions = {OngakuExtension: ongaku_extension}

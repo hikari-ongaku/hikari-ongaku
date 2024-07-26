@@ -274,7 +274,7 @@ class Session:
 
         return return_type(json_payload)
 
-    def _handle_op_code(self, data: str, /) -> hikari.Event | None:
+    def _handle_op_code(self, data: str, /) -> hikari.Event | None:  # noqa: C901
         mapped_data = json_loads(data)
 
         if isinstance(mapped_data, typing.Sequence):
@@ -312,17 +312,17 @@ class Session:
                     mapped_data, session=self
                 )
 
-            elif event_type ==  "TrackEndEvent":
+            elif event_type == "TrackEndEvent":
                 event = self.client.entity_builder.deserialize_track_end_event(
                     mapped_data, session=self
                 )
 
-            elif event_type ==  "TrackExceptionEvent":
+            elif event_type == "TrackExceptionEvent":
                 event = self.client.entity_builder.deserialize_track_exception_event(
                     mapped_data, session=self
                 )
 
-            elif event_type ==  "TrackStuckEvent":
+            elif event_type == "TrackStuckEvent":
                 event = self.client.entity_builder.deserialize_track_stuck_event(
                     mapped_data, session=self
                 )

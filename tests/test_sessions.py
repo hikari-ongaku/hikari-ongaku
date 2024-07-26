@@ -931,9 +931,11 @@ class TestHandleOPCode:
         )
 
         event = session._handle_op_code(
-            orjson.dumps({
-                "op": "banana",
-            }).decode()
+            orjson.dumps(
+                {
+                    "op": "banana",
+                }
+            ).decode()
         )
 
         assert event is None
@@ -950,17 +952,16 @@ class TestHandleOPCode:
         )
 
         event = session._handle_op_code(
-            orjson.dumps({
-                "op": "event",
-                "type": "banana"
-            }).decode()
+            orjson.dumps({"op": "event", "type": "banana"}).decode()
         )
 
         assert event is None
 
     @pytest.mark.asyncio
-    async def test_extension_event(self, ongaku_client: Client, ongaku_extension: OngakuExtension):
-        ongaku_client._extensions = {OngakuExtension:ongaku_extension}
+    async def test_extension_event(
+        self, ongaku_client: Client, ongaku_extension: OngakuExtension
+    ):
+        ongaku_client._extensions = {OngakuExtension: ongaku_extension}
 
         session = Session(
             ongaku_client,
@@ -972,10 +973,7 @@ class TestHandleOPCode:
         )
 
         event = session._handle_op_code(
-            orjson.dumps({
-                "op": "event",
-                "type": "banana"
-            }).decode()
+            orjson.dumps({"op": "event", "type": "banana"}).decode()
         )
 
         assert isinstance(event, FakeEvent)
