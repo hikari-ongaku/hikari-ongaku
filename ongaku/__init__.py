@@ -2,7 +2,7 @@
 A voice handling library for hikari.
 
 GitHub:
-https://github.com/MPlatypus/hikari-ongaku
+https://github.com/hikari-ongaku/hikari-ongaku
 Docs:
 https://ongaku.mplaty.com
 """
