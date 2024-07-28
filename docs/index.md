@@ -34,7 +34,7 @@ Welcome to the documentation for **hikari-ongaku**, a library that allows you to
 
     Here are some basic examples for ongaku.
 
-    [:material-arrow-right: Learn more](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples/)
+    [:material-arrow-right: Learn more](https://github.com/hikari-ongaku/hikari-ongaku/tree/main/examples/)
 
 </div>
 
