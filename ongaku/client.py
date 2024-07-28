@@ -464,8 +464,6 @@ class Client:
 
         Parameters
         ----------
-        extension_type
-            The type of the extension.
         extension
             The extension to add.
         """
