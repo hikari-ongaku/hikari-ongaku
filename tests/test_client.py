@@ -228,7 +228,7 @@ class TestClient:
 
         assert client._extensions == {}
 
-        client.add_extension(OngakuExtension, ongaku_extension)
+        client.add_extension(ongaku_extension)
 
         assert client._extensions == {OngakuExtension: ongaku_extension}
 
