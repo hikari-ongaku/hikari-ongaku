@@ -2,7 +2,6 @@ import typing
 
 import hikari
 import mock
-import orjson
 import pytest
 from hikari import OwnUser
 from hikari.impl import gateway_bot as gateway_bot_
@@ -10,6 +9,7 @@ from hikari.impl.event_manager import EventManagerImpl
 from hikari.intents import Intents
 from hikari.snowflakes import Snowflake
 
+from ongaku.abc.events import OngakuEvent
 from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
 from ongaku.client import Client
@@ -112,9 +112,11 @@ def ongaku_filters() -> filters_.Filters:
     )
 
 
-class FakeEvent(hikari.Event):
-    def __init__(self, app: hikari.RESTAware) -> None:
-        self._app = mock.Mock()
+class FakeEvent(OngakuEvent):
+    def __init__(self, session: Session) -> None:
+        self._app = session.app
+        self._client = session.client
+        self._session = session
 
     @property
     def app(self) -> hikari.RESTAware:
@@ -122,13 +124,11 @@ class FakeEvent(hikari.Event):
 
 
 class OngakuExtension(Extension):
-    def event_handler(self, payload: str) -> hikari.Event | None:
-        mapped_payload = orjson.loads(payload)
-
-        assert isinstance(mapped_payload, typing.Mapping)
-
-        if mapped_payload["op"] == "event" and mapped_payload["type"] == "banana":
-            return FakeEvent(self.client.app)
+    def event_handler(
+        self, payload: typing.Mapping[str, typing.Any], session: Session
+    ) -> OngakuEvent | None:
+        if payload["op"] == "event" and payload["type"] == "banana":
+            return FakeEvent(session)
 
 
 @pytest.fixture

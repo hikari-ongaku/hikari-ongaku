@@ -333,7 +333,7 @@ class Session:
                 )
 
         for ext in self.client._extensions.values():
-            e = ext.event_handler(data)
+            e = ext.event_handler(mapped_data, self)
 
             if e:
                 return e

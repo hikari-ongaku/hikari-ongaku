@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 
 from ongaku.abc.errors import SeverityType
+from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
 from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
@@ -106,6 +107,7 @@ __all__ = (
     "BuildError",
     "TimeoutError",
     # .events
+    "OngakuEvent",
     "PayloadEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",

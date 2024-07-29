@@ -4,9 +4,9 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    import hikari
-
+    from ongaku.abc import events
     from ongaku.client import Client
+    from ongaku.session import Session
 
 __all__ = ("Extension",)
 
@@ -33,14 +33,29 @@ class Extension(abc.ABC):
         return self._client
 
     @abc.abstractmethod
-    def event_handler(self, payload: str) -> hikari.Event | None:
+    def event_handler(
+        self, payload: typing.Mapping[str, typing.Any], session: Session
+    ) -> events.OngakuEvent | None:
         """The event handler.
 
         This allows for you to hook into the event handler, and dispatch your own event(s).
 
-        Please make sure to return an event. If nothing is found, then return that event.
+        !!! warning
+            Do not dispatch your own events here. You will break how ongaku works.
 
-        Do not dispatch your own events. You will break how ongaku works.
+        Parameters
+        ----------
+        payload
+            The payload of the event.
+        session
+            The session connected to this payload.
+
+        Returns
+        -------
+        events.OngakuEvent
+            The ongaku event to be dispatched.
+        None
+            No event was found for dispatching.
         """
         ...
 
