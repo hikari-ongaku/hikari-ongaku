@@ -137,10 +137,10 @@ Ongaku has two extension built-in:
 
 ### Issues and support
 
-For general usage help or questions, see the `#ongaku` channel in the [hikari discord](https://discord.gg/hikari), if you have found a bug or have a feature request, feel free to [open an issue](https://github.com/MPlatypus/hikari-ongaku/issues/new).
+For general usage help or questions, see the `#ongaku` channel in the [hikari discord](https://discord.gg/hikari), if you have found a bug or have a feature request, feel free to [open an issue](https://github.com/hikari-ongaku/hikari-ongaku/issues/new).
 
 ### Links
 
 - [**Documentation**](https://ongaku.mplaty.com)
-- [**Examples**](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples)
-- [**License**](https://github.com/MPlatypus/hikari-ongaku/blob/main/LICENSE)
+- [**Examples**](https://github.com/hikari-ongaku/hikari-ongaku/tree/main/examples)
+- [**License**](https://github.com/hikari-ongaku/hikari-ongaku/blob/main/LICENSE)
