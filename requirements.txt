@@ -1,2 +1,2 @@
 hikari ~= 2.0.0.dev126
-aiohttp ~= 3.9
+aiohttp ~= 3.10
