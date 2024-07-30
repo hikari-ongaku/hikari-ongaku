@@ -559,13 +559,18 @@ class RESTClient:
                     }
                 )
             else:
-                patch_data.update(
-                    {
-                        "track": {
-                            "encoded": track.encoded,
-                        }
-                    }
-                )
+                track_data: typing.MutableMapping[str, typing.Any] = {
+                    "encoded": track.encoded
+                }
+
+                user_data = dict(track.user_data)
+
+                if track.requestor:
+                    user_data.update({"ongaku_requestor": str(track.requestor)})
+
+                track_data.update({"userData": user_data})
+
+                patch_data.update({"track": track_data})
 
         if position != hikari.UNDEFINED:
             patch_data.update({"position": position})
