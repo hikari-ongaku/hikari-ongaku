@@ -52,7 +52,11 @@ class Track(abc.ABC):
 
     @property
     def user_data(self) -> typing.Mapping[str, typing.Any]:
-        """Additional track data."""
+        """Additional track data.
+
+        !!! warning
+            If you store a value of any type under the name `ongaku_requestor` it will be overridden.
+        """
         return self._user_data
 
     @property

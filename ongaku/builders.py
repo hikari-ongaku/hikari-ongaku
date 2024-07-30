@@ -1309,12 +1309,18 @@ class EntityBuilder:
 
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Track")
 
+        user_data: typing.MutableMapping[str, typing.Any] = (
+            data["userData"] if data.get("userData", None) else {}
+        )
+
+        requestor = user_data.pop("ongaku_requestor", None)
+
         return track.Track(
             data["encoded"],
             self.build_track_info(data["info"]),
             data["pluginInfo"],
-            data["userData"] if data.get("userData", None) else {},
-            None,
+            user_data,
+            hikari.Snowflake(requestor) if requestor else None,
         )
 
     def build_track_info(self, payload: types.PayloadMappingT) -> track_.TrackInfo:

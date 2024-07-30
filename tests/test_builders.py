@@ -480,6 +480,20 @@ class TestBuilderTrack:
         assert parsed_result.user_data == {}
         assert parsed_result.requestor is None
 
+    def test_track_with_requestor(self, builder: EntityBuilder):
+        payload = dict(payloads.TRACK_PAYLOAD)
+
+        payload["userData"] = {"ongaku_requestor": "1234"}
+        parsed_result = builder.build_track(payload)
+
+        assert parsed_result.encoded == "encoded"
+        assert parsed_result.info == builder.build_track_info(
+            payloads.TRACK_INFO_PAYLOAD
+        )
+        assert parsed_result.plugin_info == {}
+        assert parsed_result.user_data == {}
+        assert parsed_result.requestor == hikari.Snowflake(1234)
+
     def test_build_track_info(self, builder: EntityBuilder):
         parsed_result = builder.build_track_info(payloads.TRACK_INFO_PAYLOAD)
 
