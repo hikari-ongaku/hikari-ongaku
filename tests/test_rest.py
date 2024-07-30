@@ -684,7 +684,9 @@ class TestRestPlayer:
             await rest.update_player(
                 "session_id",
                 Snowflake(1234567890),
-                track=mock.Mock(encoded="encoded"),
+                track=mock.Mock(
+                    encoded="encoded", user_data={}, requestor=Snowflake(1234)
+                ),
                 position=1,
                 end_time=2,
                 volume=3,
@@ -702,7 +704,10 @@ class TestRestPlayer:
                 dict,
                 headers={"Content-Type": "application/json"},
                 json={
-                    "track": {"encoded": "encoded"},
+                    "track": {
+                        "encoded": "encoded",
+                        "userData": {"ongaku_requestor": "1234"},
+                    },
                     "position": 1,
                     "endTime": 2,
                     "volume": 3,
@@ -739,7 +744,9 @@ class TestRestPlayer:
             await rest.update_player(
                 "session_id",
                 Snowflake(1234567890),
-                track=mock.Mock(encoded="encoded"),
+                track=mock.Mock(
+                    encoded="encoded", user_data={}, requestor=Snowflake(1234)
+                ),
                 position=1,
                 end_time=2,
                 volume=3,
@@ -757,7 +764,10 @@ class TestRestPlayer:
                 dict,
                 headers={"Content-Type": "application/json"},
                 json={
-                    "track": {"encoded": "encoded"},
+                    "track": {
+                        "encoded": "encoded",
+                        "userData": {"ongaku_requestor": "1234"},
+                    },
                     "position": 1,
                     "endTime": 2,
                     "volume": 3,
