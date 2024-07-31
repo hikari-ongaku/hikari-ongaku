@@ -266,8 +266,8 @@ async def queue_command(ctx: lightbulb.Context) -> None:
                 break
 
             embed.add_field(
-                player.queue[0].info.title,
-                f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+                player.queue[i].info.title,
+                f"Length: {player.queue[i].info.length / 1000}s\nArtist: {player.queue[i].info.author}",
             )
 
     await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
