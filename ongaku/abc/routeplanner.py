@@ -51,10 +51,7 @@ class RoutePlannerStatus(abc.ABC):
         if self.cls != other.cls:
             return False
 
-        if self.details != other.details:
-            return False
-
-        return True
+        return self.details == other.details
 
 
 class RoutePlannerDetails(abc.ABC):
@@ -133,10 +130,7 @@ class RoutePlannerDetails(abc.ABC):
         if self.current_address_index != other.current_address_index:
             return False
 
-        if self.block_index != other.block_index:
-            return False
-
-        return True
+        return self.block_index == other.block_index
 
 
 class IPBlock(abc.ABC):
@@ -167,10 +161,7 @@ class IPBlock(abc.ABC):
         if self.type != other.type:
             return False
 
-        if self.size != other.size:
-            return False
-
-        return True
+        return self.size == other.size
 
 
 class FailingAddress(abc.ABC):
@@ -211,10 +202,7 @@ class FailingAddress(abc.ABC):
         if self.timestamp != other.timestamp:
             return False
 
-        if self.time != other.time:
-            return False
-
-        return True
+        return self.time == other.time
 
 
 class RoutePlannerType(str, enum.Enum):

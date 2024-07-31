@@ -59,6 +59,11 @@ class Track(abc.ABC):
         """
         return self._user_data
 
+    @user_data.setter
+    def user_data(self, value: typing.Mapping[str, typing.Any]) -> None:
+        """Set user data."""
+        self._user_data = value
+
     @property
     def requestor(self) -> hikari.Snowflake | None:
         """The person who requested this track."""
@@ -80,10 +85,7 @@ class Track(abc.ABC):
         if self.user_data != other.user_data:
             return False
 
-        if self.requestor != other.requestor:
-            return False
-
-        return True
+        return self.requestor == other.requestor
 
 
 class TrackInfo(abc.ABC):
@@ -198,10 +200,7 @@ class TrackInfo(abc.ABC):
         if self.artwork_url != other.artwork_url:
             return False
 
-        if self.isrc != other.isrc:
-            return False
-
-        return True
+        return self.isrc == other.isrc
 
 
 # MIT License

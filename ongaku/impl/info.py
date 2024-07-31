@@ -19,6 +19,7 @@ __all__ = ("Info", "Version", "Git", "Plugin")
 class Info(info_.Info):
     def __init__(
         self,
+        *,
         version: info_.Version,
         build_time: datetime.datetime,
         git: info_.Git,
@@ -41,6 +42,7 @@ class Info(info_.Info):
 class Version(info_.Version):
     def __init__(
         self,
+        *,
         semver: str,
         major: int,
         minor: int,
@@ -58,7 +60,7 @@ class Version(info_.Version):
 
 class Git(info_.Git):
     def __init__(
-        self, branch: str, commit: str, commit_time: datetime.datetime
+        self, *, branch: str, commit: str, commit_time: datetime.datetime
     ) -> None:
         self._branch = branch
         self._commit = commit
@@ -66,7 +68,7 @@ class Git(info_.Git):
 
 
 class Plugin(info_.Plugin):
-    def __init__(self, name: str, version: str) -> None:
+    def __init__(self, *, name: str, version: str) -> None:
         self._name = name
         self._version = version
 

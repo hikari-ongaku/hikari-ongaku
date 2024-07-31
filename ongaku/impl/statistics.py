@@ -25,6 +25,7 @@ class Statistics(statistics_.Statistics):
 
     def __init__(
         self,
+        *,
         players: int,
         playing_players: int,
         uptime: int,
@@ -71,7 +72,9 @@ class Statistics(statistics_.Statistics):
 
 
 class Memory(statistics_.Memory):
-    def __init__(self, free: int, used: int, allocated: int, reservable: int) -> None:
+    def __init__(
+        self, *, free: int, used: int, allocated: int, reservable: int
+    ) -> None:
         self._free = free
         self._used = used
         self._allocated = allocated
@@ -79,14 +82,14 @@ class Memory(statistics_.Memory):
 
 
 class Cpu(statistics_.Cpu):
-    def __init__(self, cores: int, system_load: float, lavalink_load: float) -> None:
+    def __init__(self, *, cores: int, system_load: float, lavalink_load: float) -> None:
         self._cores = cores
         self._system_load = system_load
         self._lavalink_load = lavalink_load
 
 
 class FrameStatistics(statistics_.FrameStatistics):
-    def __init__(self, sent: int, nulled: int, deficit: int) -> None:
+    def __init__(self, *, sent: int, nulled: int, deficit: int) -> None:
         self._sent = sent
         self._nulled = nulled
         self._deficit = deficit

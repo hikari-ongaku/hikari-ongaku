@@ -7,10 +7,17 @@ from ongaku.impl.statistics import Statistics
 
 
 def test_statistics():
-    memory = Memory(1, 2, 3, 4)
-    cpu = Cpu(1, 2.3, 4.5)
-    frame_statistics = FrameStatistics(1, 2, 3)
-    statistics = Statistics(1, 2, 3, memory, cpu, frame_statistics)
+    memory = Memory(free=1, used=2, allocated=3, reservable=4)
+    cpu = Cpu(cores=1, system_load=2.3, lavalink_load=4.5)
+    frame_statistics = FrameStatistics(sent=1, nulled=2, deficit=3)
+    statistics = Statistics(
+        players=1,
+        playing_players=2,
+        uptime=3,
+        memory=memory,
+        cpu=cpu,
+        frame_statistics=frame_statistics,
+    )
 
     assert statistics.players == 1
     assert statistics.playing_players == 2
@@ -21,7 +28,7 @@ def test_statistics():
 
 
 def test_statistics_memory():
-    stats_memory = Memory(1, 2, 3, 4)
+    stats_memory = Memory(free=1, used=2, allocated=3, reservable=4)
 
     assert stats_memory.free == 1
     assert stats_memory.used == 2
@@ -30,7 +37,7 @@ def test_statistics_memory():
 
 
 def test_statistics_cpu():
-    stats_cpu = Cpu(1, 2.3, 4.5)
+    stats_cpu = Cpu(cores=1, system_load=2.3, lavalink_load=4.5)
 
     assert stats_cpu.cores == 1
     assert stats_cpu.system_load == 2.3
@@ -38,7 +45,7 @@ def test_statistics_cpu():
 
 
 def test_statistics_frame_stats():
-    stats_frame_statistics = FrameStatistics(1, 2, 3)
+    stats_frame_statistics = FrameStatistics(sent=1, nulled=2, deficit=3)
 
     assert stats_frame_statistics.sent == 1
     assert stats_frame_statistics.nulled == 2
