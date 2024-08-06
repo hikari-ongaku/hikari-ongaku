@@ -7,7 +7,7 @@ mkdocstrings == 0.25.2
 mkdocstrings-python == 1.10.7
 Pygments == 2.18.0
 pymdown-extensions == 10.9
-PyYAML == 6.0.1
+PyYAML == 6.0.2
 pyyaml_env_tag == 0.1
 Markdown == 3.6
 MarkupSafe == 2.1.5
