@@ -79,7 +79,7 @@ class Client:
         logs: str | int = "INFO",
         attempts: int = 3,
     ) -> None:
-        _logger.setLevel(logs)
+        logger.setLevel(logs)
 
         self._attempts = attempts
         self._app = app
