@@ -95,7 +95,7 @@ class Filters(filters_.Filters):
 
     def set_volume(self, volume: float) -> Filters:
         """Set Volume.
-        
+
         Set the volume of the filter.
 
         Parameters
@@ -519,7 +519,7 @@ class Filters(filters_.Filters):
         self, plugin_filters: typing.Mapping[str, typing.Any] = {}
     ) -> Filters:
         """Set Plugin Filters.
-        
+
         Set the filters for plugins.
 
         Parameters

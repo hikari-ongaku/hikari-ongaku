@@ -24,9 +24,11 @@ Ongaku tries to make everything as simple as possible for new users, but still h
       - Skipping a song or multiple.
       - Deleting via position, or a track object.
       - Clearing the queue.
+   - Requestors
+      - Setting the requestor of a track.
+      - Viewing requestor in events.
    - Seeking/Reversing the tracks position.
    - Volume control
-   - Setting requestors (users who requested the song.)
    - Looping (loops the same song over and over.)
    - Filters (allows for changing the way audio plays and sounds.)
 - Events
@@ -49,7 +51,6 @@ Ongaku tries to make everything as simple as possible for new users, but still h
 
 - More session handlers: so there is more methods to use the sessions you have provided.
 - Cache: a method to store information, and fetch it later, from events and rest actions.
-- Filters: support for filters, to change the audio you receive.
 - Changing channels: support for moving to different channels, without leaving and rejoining.
 - Session failures: More control, like seeing why a session failed and allow for reconnecting, or resetting attempts.
 
@@ -71,7 +72,7 @@ py -m ongaku
 
 ## Getting Started
 
-for more about how to get started see the [docs](https://ongaku.mplaty.com/gs/)
+for more about how to get started see the [docs](https://ongaku.mplaty.com/gs/).
 
 ```py
 import typing
@@ -137,10 +138,10 @@ Ongaku has two extension built-in:
 
 ### Issues and support
 
-For general usage help or questions, see the `#ongaku` channel in the [hikari discord](https://discord.gg/hikari), if you have found a bug or have a feature request, feel free to [open an issue](https://github.com/MPlatypus/hikari-ongaku/issues/new).
+For general usage help or questions, see the `#ongaku` channel in the [hikari discord](https://discord.gg/hikari), if you have found a bug or have a feature request, feel free to [open an issue](https://github.com/hikari-ongaku/hikari-ongaku/issues/new).
 
 ### Links
 
 - [**Documentation**](https://ongaku.mplaty.com)
-- [**Examples**](https://github.com/MPlatypus/hikari-ongaku/tree/main/examples)
-- [**License**](https://github.com/MPlatypus/hikari-ongaku/blob/main/LICENSE)
+- [**Examples**](https://github.com/hikari-ongaku/hikari-ongaku/tree/main/examples)
+- [**License**](https://github.com/hikari-ongaku/hikari-ongaku/blob/main/LICENSE)
