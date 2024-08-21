@@ -13,6 +13,7 @@ async def fetch_youtube(session: Session, /) -> str | None:
     Get Youtube.
 
     Gets the current Youtube Refresh Token.
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://github.com/lavalink-devs/youtube-source?tab=readme-ov-file#get-youtube)
 
     Example
     -------
