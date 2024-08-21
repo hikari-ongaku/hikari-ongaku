@@ -7,7 +7,7 @@ __author_email__: typing.Final[str] = "contact@mplaty.com"
 __maintainer__: typing.Final[str] = "MPlaty"
 __license__: typing.Final[str] = "MIT"
 __url__: typing.Final[str] = "https://github.com/hikari-ongaku/hikari-ongaku"
-__version__: typing.Final[str] = "1.0.2"
+__version__: typing.Final[str] = "1.0.3"
 
 # MIT License
 

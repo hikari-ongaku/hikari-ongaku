@@ -10,6 +10,19 @@ hide:
 
 All the changelogs for `hikari-ongaku`.
 
+## **v1.0.3**
+* Youtube extension: Youtube now has an extension, for setting and getting the access tokens.
+* Fix logger: Logging now works properly.
+
+## **v1.0.2**
+* Setting session: All rest methods allow you to specify a session to use to call said method.
+* `__slots__`: All Classes now use slots, which should improve performance.
+* Filters: Proper filter support has now been added! check them out [here](https://ongaku.mplaty.com/gs/filters/).
+* Loop: You can now loop a song via the `.set_loop()` method.
+* Requestor: The requestor is now stored within the `user_data`, which means that if you set a requestor for a track, it should show up in the events.
+* Build error gives a optional exception (if one was raised) and an optional reason.
+* Tests have been added to extensions.
+
 ## **v1.0.1**
 
 - Import issue: Moved back to `setup.py` as its much more stable, and does not have weird errors.
