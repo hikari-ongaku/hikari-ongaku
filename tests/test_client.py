@@ -1,5 +1,7 @@
 # ruff: noqa: D100, D101, D102, D103
 
+import hikari
+import lightbulb
 import mock
 import pytest
 from aiohttp import ClientSession
@@ -52,6 +54,37 @@ class TestClient:
         assert client.is_alive is False
 
         assert isinstance(client.rest, RESTClient)
+
+    def test_from_lightbulb(self, gateway_bot: gateway_bot_.GatewayBot):
+        command_client = lightbulb.client_from_app(gateway_bot)
+
+        client = Client.from_lightbulb(command_client)
+
+        assert client.app == gateway_bot
+
+        assert client.is_alive is False
+
+        assert isinstance(client.rest, RESTClient)
+
+        # check from_lightbulb method, adds the player hook.
+
+        command_client = lightbulb.client_from_app(gateway_bot)
+
+        with (
+            mock.patch(
+                "lightbulb.di.registry.Registry.register_value"
+            ) as patched_register_value,
+            mock.patch(
+                "lightbulb.di.registry.Registry.register_factory"
+            ) as patched_register_factory,
+        ):
+            client = Client.from_lightbulb(command_client)
+
+            patched_register_value.assert_called_once_with(Client, client)
+
+            patched_register_factory.assert_called_once_with(
+                Player, client._lightbulb_player_injector
+            )
 
     def test_properties(self, gateway_bot: gateway_bot_.GatewayBot):
         client = Client(gateway_bot)
@@ -183,3 +216,50 @@ class TestClient:
             await client.session_handler.delete_player(Snowflake(1234567890))
 
             patched_delete_player.assert_called_once_with(Snowflake(1234567890))
+
+
+class TestLightbulbPlayerInjector:
+    @pytest.mark.asyncio
+    async def test_working(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_player: Player
+    ):
+        client = Client(gateway_bot)
+
+        context = mock.Mock(guild_id=hikari.Snowflake(1234))
+
+        with mock.patch(
+            "ongaku.client.Client.fetch_player", return_value=ongaku_player
+        ) as patched_fetch_player:
+            player = await client._lightbulb_player_injector(context)
+
+            assert player == ongaku_player
+
+            patched_fetch_player.assert_called_once_with(hikari.Snowflake(1234))
+
+    @pytest.mark.asyncio
+    async def test_missing_guild_id(self, gateway_bot: gateway_bot_.GatewayBot):
+        client = Client(gateway_bot)
+
+        context = mock.Mock(guild_id=None)
+
+        with pytest.raises(errors.PlayerMissingError):
+            await client._lightbulb_player_injector(context)
+
+    @pytest.mark.asyncio
+    async def test_missing_player(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_player: Player
+    ):
+        client = Client(gateway_bot)
+
+        context = mock.Mock(guild_id=hikari.Snowflake(1234))
+
+        with (
+            mock.patch(
+                "ongaku.client.Client.fetch_player",
+                side_effect=errors.PlayerMissingError,
+            ) as patched_fetch_player,
+            pytest.raises(errors.PlayerMissingError),
+        ):
+            await client._lightbulb_player_injector(context)
+
+        patched_fetch_player.assert_called_once_with(hikari.Snowflake(1234))
