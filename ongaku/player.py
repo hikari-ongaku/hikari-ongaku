@@ -1000,6 +1000,11 @@ class Player(player_.Player):
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
 
+        if event.guild_id != self.guild_id:
+            return
+
+        self._track = None
+
         if not self.autoplay:
             return
 
@@ -1012,13 +1017,6 @@ class Player(player_.Player):
         _logger.log(
             TRACE_LEVEL,
             f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
-        )
-
-        if event.guild_id != self.guild_id:
-            return
-        _logger.log(
-            TRACE_LEVEL,
-            f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
         if len(self.queue) == 0:
