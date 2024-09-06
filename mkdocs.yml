@@ -139,11 +139,8 @@ nav:
     - Creation: ext/creation.md
     - Checker: ext/checker.md
     - Injection: ext/injection.md
-<<<<<<< HEAD
-    - Other: ext/other.md
-=======
     - Youtube: ext/youtube.md
->>>>>>> main
+    - Other: ext/other.md
   - Changelog: changelog.md
 
 
