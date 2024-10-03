@@ -10,6 +10,7 @@ from ongaku.abc.errors import ExceptionError
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
 from ongaku.abc.filters import ChannelMix
 from ongaku.abc.filters import Distortion
@@ -53,6 +54,8 @@ __all__ = (
     # .events
     "OngakuEvent",
     "TrackEndReasonType",
+    # .extensions
+    "Extension",
     # .filters
     "Filters",
     "Equalizer",

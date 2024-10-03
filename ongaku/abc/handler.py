@@ -40,7 +40,7 @@ class SessionHandler(abc.ABC):
     )
 
     @abc.abstractmethod
-    def __init__(self, client: Client): ...
+    def __init__(self, *, client: Client): ...
 
     @property
     @abc.abstractmethod
@@ -76,7 +76,7 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def add_session(self, session: Session) -> Session:
+    def add_session(self, *, session: Session) -> Session:
         """Add a session.
 
         Add a new session to the session handler.
@@ -93,7 +93,7 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fetch_session(self, name: str | None = None) -> Session:
+    def fetch_session(self, *, name: str | None = None) -> Session:
         """Fetch a session.
 
         Returns a valid session.
@@ -121,7 +121,7 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_session(self, name: str) -> None:
+    async def delete_session(self, *, name: str) -> None:
         """Delete a session.
 
         Delete a session from the session handler.
@@ -143,7 +143,7 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def add_player(self, player: Player) -> Player:
+    def add_player(self, *, player: Player) -> Player:
         """Add a player.
 
         Add a new player to the session handler.
@@ -161,7 +161,7 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, *, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         """
         Fetch a player.
 
@@ -180,7 +180,9 @@ class SessionHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+    async def delete_player(
+        self, *, guild: hikari.SnowflakeishOr[hikari.Guild]
+    ) -> None:
         """
         Delete a player.
 

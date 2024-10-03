@@ -44,10 +44,7 @@ class Session(abc.ABC):
         if self.resuming != other.resuming:
             return False
 
-        if self.timeout != other.timeout:
-            return False
-
-        return True
+        return self.timeout == other.timeout
 
 
 class SessionStatus(int, enum.Enum):
@@ -63,21 +60,6 @@ class SessionStatus(int, enum.Enum):
     """Successfully connected to the lavalink server."""
     FAILURE = 2
     """A failure occurred connecting to the lavalink server."""
-
-
-class WebsocketOPCode(str, enum.Enum):
-    READY = "ready"
-    PLAYER_UPDATE = "playerUpdate"
-    STATS = "stats"
-    EVENT = "event"
-
-
-class WebsocketEvent(str, enum.Enum):
-    TRACK_START_EVENT = "TrackStartEvent"
-    TRACK_END_EVENT = "TrackEndEvent"
-    TRACK_EXCEPTION_EVENT = "TrackExceptionEvent"
-    TRACK_STUCK_EVENT = "TrackStuckEvent"
-    WEBSOCKET_CLOSED_EVENT = "WebSocketClosedEvent"
 
 
 # MIT License

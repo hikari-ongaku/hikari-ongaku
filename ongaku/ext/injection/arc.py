@@ -8,14 +8,19 @@ from __future__ import annotations
 
 from ongaku import errors
 from ongaku.client import Client
+from ongaku.internal.logger import logger
+
+_logger = logger.getChild("ext.injection")
 
 try:
     import arc
 except ImportError:
     raise ImportError("Arc is required for you to use arc_ensure_player.")
 
+__all__ = ("arc_ensure_player",)
 
-async def arc_ensure_player(ctx: arc.GatewayContext):
+
+async def arc_ensure_player(ctx: arc.GatewayContext, /):
     """
     Arc ensure player.
 
@@ -38,7 +43,6 @@ async def arc_ensure_player(ctx: arc.GatewayContext):
     async def example_command(ctx: arc.GatewayContext, player: ongaku.Player) -> None:
         await player.pause()
     ```
-
 
     Parameters
     ----------

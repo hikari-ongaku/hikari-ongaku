@@ -6,11 +6,13 @@ Allows for you to check if a string is a link or a query.
 
 from __future__ import annotations
 
-from .abc import Checked
-from .abc import CheckedType
-from .checker import check
+from ongaku.ext.checker.checker import Sites
+from ongaku.ext.checker.checker import check
 
-__all__ = ("check", "Checked", "CheckedType")
+__all__ = (
+    "Sites",
+    "check",
+)
 
 
 # MIT License

@@ -12,8 +12,8 @@ import arc
 import hikari
 
 import ongaku
-from ongaku.ext import injection
 from ongaku.ext import checker
+from ongaku.ext import injection
 
 bot = hikari.GatewayBot("...")
 
@@ -22,9 +22,7 @@ client = arc.GatewayClient(bot)
 ongaku_client = ongaku.Client.from_arc(client)
 
 ongaku_client.create_session(
-    name="arc-session",
-    host="127.0.0.1",
-    password="youshallnotpass"
+    "arc-session", host="127.0.0.1", password="youshallnotpass"
 )
 
 
@@ -95,11 +93,17 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
 @client.set_error_handler()
 async def error_handler(ctx: arc.GatewayContext, exc: Exception):
     if isinstance(exc, arc.GuildOnlyError):
-        await ctx.respond("You must be in a guild to use this command.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "You must be in a guild to use this command.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
-    
+
     elif isinstance(exc, ongaku.PlayerMissingError):
-        await ctx.respond("There is no player playing in this guild.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "There is no player playing in this guild.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
 
@@ -109,17 +113,16 @@ async def error_handler(ctx: arc.GatewayContext, exc: Exception):
 
 
 @client.include
-@arc.slash_command("play", "Play a song.")
+@arc.slash_command(
+    "play", "Play a song or playlist.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
 async def play_command(
     ctx: arc.GatewayContext,
-    query: arc.Option[str, arc.StrParams("The song you wish to play.")],
+    query: arc.Option[str, arc.StrParams("The name, or link of the song to play.")],
     music: ongaku.Client = arc.inject(),
 ) -> None:
     if ctx.guild_id is None:
-        await ctx.respond(
-            "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
-        )
-        return
+        raise arc.GuildOnlyError
 
     voice_state = bot.cache.get_voice_state(ctx.guild_id, ctx.author.id)
     if not voice_state or not voice_state.channel_id:
@@ -128,12 +131,10 @@ async def play_command(
         )
         return
 
-    checked_query = await checker.check(query)
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    if checker.check(query):
+        result = await music.rest.load_track(query)
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await music.rest.load_track(f"ytsearch:{query}")
 
     if result is None:
         await ctx.respond(
@@ -141,8 +142,6 @@ async def play_command(
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
-
-    track: ongaku.Track
 
     if isinstance(result, ongaku.Playlist):
         track = result.tracks[0]
@@ -158,18 +157,12 @@ async def play_command(
         description=f"made by: {track.info.author}",
     )
 
-    try:
-        player = ongaku_client.fetch_player(ctx.guild_id)
-    except ongaku.PlayerMissingError:
-        player = ongaku_client.create_player(ctx.guild_id)
+    player = music.create_player(ctx.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
 
-    try:
-        await player.play(track)
-    except Exception as e:
-        raise e
+    await player.play(track)
 
     await ctx.respond(
         embed=embed,
@@ -179,19 +172,18 @@ async def play_command(
 
 @client.include
 @arc.with_hook(injection.arc_ensure_player)
-@arc.slash_command("add", "Add a song (or songs!).")
+@arc.slash_command(
+    "add", "Add more songs or a playlist.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
 async def add_command(
     ctx: arc.GatewayContext,
-    query: arc.Option[str, arc.StrParams("The song you wish to add.")],
+    query: arc.Option[str, arc.StrParams("The name, or link of the song to add.")],
     player: ongaku.Player = arc.inject(),
 ) -> None:
-
-    checked_query = await checker.check(query)
-
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await player.session.client.rest.load_track(f"ytsearch:{checked_query.value}")
+    if checker.check(query):
+        result = await player.session.client.rest.load_track(query)
     else:
-        result = await player.session.client.rest.load_track(checked_query.value)
+        result = await player.session.client.rest.load_track(f"ytsearch:{query}")
 
     if result is None:
         await ctx.respond(
@@ -200,16 +192,14 @@ async def add_command(
         )
         return
 
-    tracks: list[ongaku.Track] = []
-
     if isinstance(result, ongaku.Playlist):
-        tracks.extend(result.tracks)
+        tracks = result.tracks
 
     elif isinstance(result, ongaku.Track):
-        tracks.append(result)
+        tracks = [result]
 
     else:
-        tracks.extend(result)
+        tracks = [result[0]]
 
     player.add(tracks)
 
@@ -223,12 +213,52 @@ async def add_command(
             break
         embed.add_field(track.info.title, track.info.author)
 
-    await ctx.respond(embed=embed)
+    await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
 
 
 @client.include
 @arc.with_hook(injection.arc_ensure_player)
-@arc.slash_command("pause", "pause or unpause the currently playing song.")
+@arc.slash_command(
+    "queue", "View the current queue.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
+async def queue_command(
+    ctx: arc.GatewayContext,
+    player: ongaku.Player = arc.inject(),
+) -> None:
+    if len(player.queue) == 0:
+        await ctx.respond(
+            "There is no songs in the queue.", flags=hikari.MessageFlag.EPHEMERAL
+        )
+        return
+
+    embed = hikari.Embed(
+        title="Queue",
+        description=f"There is currently {len(player.queue)} song{'s' if len(player.queue) > 1 else ''} in the queue.",
+    )
+
+    embed.add_field(
+        f"▶️ {player.queue[0].info.title}",
+        f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+    )
+
+    if len(player.queue) > 1:
+        for i in range(1, 24):
+            if i > len(player.queue):
+                break
+
+            embed.add_field(
+                player.queue[i].info.title,
+                f"Length: {player.queue[i].info.length / 1000}s\nArtist: {player.queue[i].info.author}",
+            )
+
+    await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
+
+
+@client.include
+@arc.with_hook(injection.arc_ensure_player)
+@arc.slash_command(
+    "pause", "Pause or play the current song.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
 async def pause_command(
     ctx: arc.GatewayContext,
     player: ongaku.Player = arc.inject(),
@@ -236,91 +266,164 @@ async def pause_command(
     await player.pause()
 
     if player.is_paused:
-        await ctx.respond("Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "The song has been paused.", flags=hikari.MessageFlag.EPHEMERAL
+        )
     else:
-        await ctx.respond("Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "The song has been unpaused.", flags=hikari.MessageFlag.EPHEMERAL
+        )
 
 
 @client.include
 @arc.with_hook(injection.arc_ensure_player)
-@arc.slash_command("queue", "View the queue of the player.")
-async def queue_command(
-    ctx: arc.GatewayContext,
-    player: ongaku.Player = arc.inject(),
-) -> None:
-    if len(player.queue) == 0:
-        await ctx.respond("There is not tracks in the queue currently.")
-        return
-
-    queue_embed = hikari.Embed(
-        title="Queue",
-        description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
-    )
-
-    for x in range(len(player.queue)):
-        if x == 0:
-            continue
-
-        if x >= 25:
-            break
-
-        track = player.queue[x]
-
-        queue_embed.add_field(track.info.title, track.info.author)
-
-    await ctx.respond(embed=queue_embed)
-
-
-@client.include
-@arc.with_hook(injection.arc_ensure_player)
-@arc.slash_command("volume", "change the volume of the player.")
-async def volume_command(
-    ctx: arc.GatewayContext,
-    volume: arc.Option[
-        int, arc.IntParams("The volume number you wish to set.", min=0, max=100)
-    ],
-    player: ongaku.Player = arc.inject(),
-) -> None:
-    try:
-        await player.set_volume(volume)
-    except ValueError:
-        await ctx.respond("Sorry, but you have entered an invalid number.")
-        return
-
-    await ctx.respond(f"the volume has successfully been set to {volume}/100")
-
-
-@client.include
-@arc.with_hook(injection.arc_ensure_player)
-@arc.slash_command("skip", "skip a song, or multiple")
+@arc.slash_command(
+    "skip", "Skip the currently playing song.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
 async def skip_command(
     ctx: arc.GatewayContext,
-    amount: arc.Option[
-        int, arc.IntParams("The amount of songs you wish to skip. default is 1.", min=1)
+    player: ongaku.Player = arc.inject(),
+) -> None:
+    await player.skip()
+
+    if len(player.queue) > 0:
+        embed = hikari.Embed(
+            title=player.queue[0].info.title,
+            description=f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+        )
+
+        artwork_url = player.queue[0].info.artwork_url
+
+        if artwork_url:
+            embed.set_thumbnail(hikari.files.URL(artwork_url, "artwork.png"))
+
+        await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
+
+    await ctx.respond("The queue is now empty!", flags=hikari.MessageFlag.EPHEMERAL)
+
+
+@client.include
+@arc.with_hook(injection.arc_ensure_player)
+@arc.slash_command(
+    "volume", "Set the volume of the player.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
+async def volume_command(
+    ctx: arc.GatewayContext,
+    volume: arc.Option[int, arc.IntParams("The volume to set.", min=0, max=200)],
+    player: ongaku.Player = arc.inject(),
+) -> None:
+    await player.set_volume(volume)
+
+    await ctx.respond(
+        f"The volume is now set to {volume}%", flags=hikari.MessageFlag.EPHEMERAL
+    )
+
+
+@client.include
+@arc.with_hook(injection.arc_ensure_player)
+@arc.slash_command(
+    "loop",
+    "Enable or disable the looping of the current track.",
+    autodefer=arc.AutodeferMode.EPHEMERAL,
+)
+async def loop_command(
+    ctx: arc.GatewayContext,
+    player: ongaku.Player = arc.inject(),
+) -> None:
+    player.set_loop()
+
+    if player.loop:
+        if player.track:
+            await ctx.respond(
+                f"The player is now looping.\nTrack: {player.track.info.title}",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+        else:
+            await ctx.respond(
+                "The player is now looping.", flags=hikari.MessageFlag.EPHEMERAL
+            )
+    else:
+        await ctx.respond(
+            "The player is no longer looping.", flags=hikari.MessageFlag.EPHEMERAL
+        )
+
+
+@client.include
+@arc.with_hook(injection.arc_ensure_player)
+@arc.slash_command(
+    "shuffle", "Shuffle the current queue.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
+async def shuffle_command(
+    ctx: arc.GatewayContext,
+    player: ongaku.Player = arc.inject(),
+) -> None:
+    player.shuffle()
+
+    await ctx.respond(
+        "The queue has been successfully shuffled.", flags=hikari.MessageFlag.EPHEMERAL
+    )
+
+
+@client.include
+@arc.with_hook(injection.arc_ensure_player)
+@arc.slash_command(
+    "speed",
+    "Increase the speed of the currently playing song.",
+    autodefer=arc.AutodeferMode.EPHEMERAL,
+)
+async def filter_command(
+    ctx: arc.GatewayContext,
+    speed: arc.Option[
+        float, arc.FloatParams("The speed to change the player to.", min=0, max=5)
     ] = 1,
     player: ongaku.Player = arc.inject(),
 ) -> None:
-    try:
-        await player.skip(amount)
-    except ongaku.PlayerQueueError:
-        await ctx.respond(
-            "It looks like the queue is empty, so no new songs will be played."
-        )
-        return
+    if player.filters:
+        filters = ongaku.Filters.from_filter(player.filters)
+    else:
+        filters = ongaku.Filters()
 
-    await ctx.respond(f"{amount} song(s) were successfully skipped.")
+    filters.set_timescale(speed=speed)
+
+    await player.set_filters(filters)
+
+    await ctx.respond(
+        f"The speed has now been set to {speed}", flags=hikari.MessageFlag.EPHEMERAL
+    )
 
 
 @client.include
 @arc.with_hook(injection.arc_ensure_player)
-@arc.slash_command("stop", "Stops the player, and disconnects it from the server.")
+@arc.slash_command(
+    "stop", "Stop the currently playing song.", autodefer=arc.AutodeferMode.EPHEMERAL
+)
 async def stop_command(
+    ctx: arc.GatewayContext,
+    player: ongaku.Player = arc.inject(),
+) -> None:
+    await player.stop()
+
+    await ctx.respond(
+        "The player has been stopped.", flags=hikari.MessageFlag.EPHEMERAL
+    )
+
+
+@client.include
+@arc.with_hook(injection.arc_ensure_player)
+@arc.slash_command(
+    "disconnect",
+    "Stop the currently playing song and disconnect from the VC.",
+    autodefer=arc.AutodeferMode.EPHEMERAL,
+)
+async def disconnect_command(
     ctx: arc.GatewayContext,
     player: ongaku.Player = arc.inject(),
 ) -> None:
     await player.disconnect()
 
-    await ctx.respond("Successfully stopped the player.")
+    await ctx.respond(
+        "The player has been disconnected.", flags=hikari.MessageFlag.EPHEMERAL
+    )
 
 
 if __name__ == "__main__":

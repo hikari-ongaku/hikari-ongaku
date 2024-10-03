@@ -17,6 +17,7 @@ __all__ = ("Playlist", "PlaylistInfo")
 class Playlist(playlist_.Playlist):
     def __init__(
         self,
+        *,
         info: playlist_.PlaylistInfo,
         tracks: typing.Sequence[track_.Track],
         plugin_info: typing.Mapping[str, typing.Any],
@@ -27,7 +28,7 @@ class Playlist(playlist_.Playlist):
 
 
 class PlaylistInfo(playlist_.PlaylistInfo):
-    def __init__(self, name: str, selected_track: int) -> None:
+    def __init__(self, *, name: str, selected_track: int) -> None:
         self._name = name
         self._selected_track = selected_track
 
