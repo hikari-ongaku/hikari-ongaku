@@ -10,6 +10,6 @@ pymdown-extensions == 10.11.2
 PyYAML == 6.0.2
 pyyaml_env_tag == 0.1
 Markdown == 3.7
-MarkupSafe == 3.0.0
+MarkupSafe == 3.0.1
 mergedeep == 1.3.4
 griffe-inherited-docstrings == 1.0.1
