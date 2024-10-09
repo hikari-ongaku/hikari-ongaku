@@ -14,11 +14,6 @@ async def test_fetch_youtube(ongaku_client: Client, ongaku_session: Session):
     with (
         mock.patch.object(rest._client, "_session_handler"),
         mock.patch.object(
-            rest._client.session_handler,
-            "fetch_session",
-            return_value=ongaku_session,
-        ) as patched_fetch_session,
-        mock.patch.object(
             ongaku_session,
             "request",
             new_callable=mock.AsyncMock,
@@ -26,8 +21,6 @@ async def test_fetch_youtube(ongaku_client: Client, ongaku_session: Session):
         ) as patched_request,
     ):
         assert await yt.fetch_youtube(ongaku_session) == "refresh_token"
-
-        patched_fetch_session.assert_called_once()
 
         patched_request.assert_called_once_with(
             "GET",
@@ -44,11 +37,6 @@ async def test_update_youtube(ongaku_client: Client, ongaku_session: Session):
     with (
         mock.patch.object(rest._client, "_session_handler"),
         mock.patch.object(
-            rest._client.session_handler,
-            "fetch_session",
-            return_value=ongaku_session,
-        ) as patched_fetch_session,
-        mock.patch.object(
             ongaku_session,
             "request",
             new_callable=mock.AsyncMock,
@@ -62,8 +50,6 @@ async def test_update_youtube(ongaku_client: Client, ongaku_session: Session):
             po_token="po_token",
             visitor_data="visitor_data",
         )
-
-        patched_fetch_session.assert_called_once()
 
         patched_request.assert_called_once_with(
             "POST",
