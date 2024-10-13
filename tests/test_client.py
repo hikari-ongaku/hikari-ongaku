@@ -245,6 +245,17 @@ class TestClient:
 
         assert client._extensions == {OngakuExtension: ongaku_extension}
 
+    def test_add_extension_as_type(
+        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
+    ):
+        client = Client(gateway_bot)
+
+        assert client._extensions == {}
+
+        client.add_extension(OngakuExtension)
+
+        assert isinstance(client._extensions[OngakuExtension], OngakuExtension)
+
     def test_get_extension(
         self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
     ):

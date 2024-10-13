@@ -457,7 +457,7 @@ class Client:
         """
         await self.session_handler.delete_player(guild=guild)
 
-    def add_extension(self, extension: Extension, /) -> None:
+    def add_extension(self, extension: Extension | typing.Type[Extension], /) -> None:
         """Add Extension.
 
         Add a new extension to ongaku.
@@ -467,6 +467,9 @@ class Client:
         extension
             The extension to add.
         """
+        if isinstance(extension, typing.Type):
+            extension = extension(self)
+
         self._extensions.update({type(extension): extension})
 
     def get_extension(self, extension: typing.Type[ExtensionT], /) -> ExtensionT:
