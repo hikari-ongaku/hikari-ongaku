@@ -14,15 +14,26 @@ from ongaku.impl.filters import Vibrato
 
 
 def test_filters():
-    equalizer = [Equalizer(BandType.HZ100, 0.95), Equalizer(BandType.HZ63, -0.1)]
-    karaoke = Karaoke(1, 0.5, 4.5, 6)
-    timescale = Timescale(1.2, 2.3, 4)
-    tremolo = Tremolo(1.2, 1)
-    vibrato = Vibrato(3, 0.5)
-    rotation = Rotation(6)
-    distortion = Distortion(2.1, 3, 6.9, 7.2, 9.4, 2, 4.1, 8)
-    channel_mix = ChannelMix(0, 1, 0.5, 0.63)
-    low_pass = LowPass(3.8)
+    equalizer = [Equalizer(band=BandType.HZ100, gain=0.95)]
+    karaoke = Karaoke(level=1, mono_level=0.5, filter_band=4.5, filter_width=6)
+    timescale = Timescale(speed=1.2, pitch=2.3, rate=4)
+    tremolo = Tremolo(frequency=1.2, depth=1)
+    vibrato = Vibrato(frequency=3, depth=0.5)
+    rotation = Rotation(rotation_hz=6)
+    distortion = Distortion(
+        sin_offset=2.1,
+        sin_scale=3,
+        cos_offset=6.9,
+        cos_scale=7.2,
+        tan_offset=9.4,
+        tan_scale=2,
+        offset=4.1,
+        scale=8,
+    )
+    channel_mix = ChannelMix(
+        left_to_left=0, left_to_right=1, right_to_left=0.5, right_to_right=0.63
+    )
+    low_pass = LowPass(smoothing=3.8)
     filters = Filters(
         volume=1.2,
         equalizer=equalizer,
@@ -322,49 +333,49 @@ class TestFilterFunctions:
 
 class TestEqualizer:
     def test_valid_values(self):
-        equalizer = Equalizer(BandType.HZ100, 0.5)
+        equalizer = Equalizer(band=BandType.HZ100, gain=0.95)
 
         assert equalizer.band == BandType.HZ100
-        assert equalizer.gain == 0.5
+        assert equalizer.gain == 0.95
 
     def test_invalid_positive_gain_value(self):
         with pytest.raises(ValueError):
-            Equalizer(BandType.HZ100, 1.1)
+            Equalizer(band=BandType.HZ100, gain=1.1)
 
     def test_invalid_negative_gain_value(self):
         with pytest.raises(ValueError):
-            Equalizer(BandType.HZ100, -0.26)
+            Equalizer(band=BandType.HZ100, gain=-0.26)
 
 
 class TestKaraoke:
     def test_valid_values(self):
-        karaoke = Karaoke(1, 0.65, 4.5, 6)
+        karaoke = Karaoke(level=1, mono_level=0.5, filter_band=4.5, filter_width=6)
 
         assert karaoke.level == 1
-        assert karaoke.mono_level == 0.65
+        assert karaoke.mono_level == 0.5
         assert karaoke.filter_band == 4.5
         assert karaoke.filter_width == 6
 
     def test_invalid_negative_level_value(self):
         with pytest.raises(ValueError):
-            Karaoke(-0.1, 0.65, 4.5, 6)
+            Karaoke(level=-0.1, mono_level=0.5, filter_band=4.5, filter_width=6)
 
     def test_invalid_positive_level_value(self):
         with pytest.raises(ValueError):
-            Karaoke(1.1, 0.65, 4.5, 6)
+            Karaoke(level=1.1, mono_level=0.5, filter_band=4.5, filter_width=6)
 
     def test_invalid_negative_mono_level_value(self):
         with pytest.raises(ValueError):
-            Karaoke(1, -0.1, 4.5, 6)
+            Karaoke(level=1, mono_level=-0.1, filter_band=4.5, filter_width=6)
 
     def test_invalid_positive_mono_level_value(self):
         with pytest.raises(ValueError):
-            Karaoke(1, 1.1, 4.5, 6)
+            Karaoke(level=1, mono_level=1.1, filter_band=4.5, filter_width=6)
 
 
 class TestTimescale:
     def test_valid_values(self):
-        timescale = Timescale(1.2, 2.3, 4)
+        timescale = Timescale(speed=1.2, pitch=2.3, rate=4)
 
         assert timescale.speed == 1.2
         assert timescale.pitch == 2.3
@@ -372,69 +383,78 @@ class TestTimescale:
 
     def test_invalid_negative_speed_value(self):
         with pytest.raises(ValueError):
-            Timescale(-0.1, 2.3, 4)
+            Timescale(speed=-0.1, pitch=2.3, rate=4)
 
     def test_invalid_negative_pitch_value(self):
         with pytest.raises(ValueError):
-            Timescale(1.2, -0.1, 4)
+            Timescale(speed=1.2, pitch=-0.1, rate=4)
 
     def test_invalid_negative_rate_value(self):
         with pytest.raises(ValueError):
-            Timescale(1.2, 2.3, -0.1)
+            Timescale(speed=1.2, pitch=2.3, rate=-0.1)
 
 
 class TestTremolo:
     def test_valid_values(self):
-        tremolo = Tremolo(1.2, 1)
+        tremolo = Tremolo(frequency=1.2, depth=1)
 
         assert tremolo.frequency == 1.2
         assert tremolo.depth == 1
 
     def test_invalid_negative_frequency_value(self):
         with pytest.raises(ValueError):
-            Vibrato(-0.1, 1)
+            Tremolo(frequency=-0.1, depth=1)
 
     def test_invalid_negative_depth_value(self):
         with pytest.raises(ValueError):
-            Tremolo(1.2, -0.1)
+            Tremolo(frequency=1.2, depth=-0.1)
 
     def test_invalid_positive_depth_value(self):
         with pytest.raises(ValueError):
-            Tremolo(1.2, 1.1)
+            Tremolo(frequency=1.2, depth=1.1)
 
 
 class TestVibrato:
     def test_valid_values(self):
-        vibrato = Vibrato(3, 0.5)
+        vibrato = Vibrato(frequency=3, depth=0.5)
 
         assert vibrato.frequency == 3
         assert vibrato.depth == 0.5
 
     def test_invalid_negative_frequency_value(self):
         with pytest.raises(ValueError):
-            Vibrato(-0.1, 0.5)
+            Vibrato(frequency=-0.1, depth=0.5)
 
     def test_invalid_positive_frequency_value(self):
         with pytest.raises(ValueError):
-            Vibrato(14.1, 1.1)
+            Vibrato(frequency=14.1, depth=0.5)
 
     def test_invalid_negative_depth_value(self):
         with pytest.raises(ValueError):
-            Vibrato(3, -0.1)
+            Vibrato(frequency=3, depth=-0.1)
 
     def test_invalid_positive_depth_value(self):
         with pytest.raises(ValueError):
-            Vibrato(3, 1.1)
+            Vibrato(frequency=3, depth=1.1)
 
 
 def test_rotation():
-    rotation = Rotation(6)
+    rotation = Rotation(rotation_hz=6)
 
     assert rotation.rotation_hz == 6
 
 
 def test_distortion():
-    distortion = Distortion(2.1, 3, 6.9, 7.2, 9.4, 2, 4.1, 8)
+    distortion = Distortion(
+        sin_offset=2.1,
+        sin_scale=3,
+        cos_offset=6.9,
+        cos_scale=7.2,
+        tan_offset=9.4,
+        tan_scale=2,
+        offset=4.1,
+        scale=8,
+    )
 
     assert distortion.sin_offset == 2.1
     assert distortion.sin_scale == 3
@@ -448,7 +468,9 @@ def test_distortion():
 
 class TestChannelMix:
     def test_valid_values(self):
-        channel_mix = ChannelMix(0, 1, 0.5, 0.63)
+        channel_mix = ChannelMix(
+            left_to_left=0, left_to_right=1, right_to_left=0.5, right_to_right=0.63
+        )
 
         assert channel_mix.left_to_left == 0
         assert channel_mix.left_to_right == 1
@@ -457,43 +479,71 @@ class TestChannelMix:
 
     def test_invalid_negative_left_to_left_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(-0.1, 1, 0.5, 0.63)
+            ChannelMix(
+                left_to_left=-0.1,
+                left_to_right=1,
+                right_to_left=0.5,
+                right_to_right=0.63,
+            )
 
     def test_invalid_positive_left_to_left_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(1.1, 1, 0.5, 0.63)
+            ChannelMix(
+                left_to_left=1.1,
+                left_to_right=1,
+                right_to_left=0.5,
+                right_to_right=0.63,
+            )
 
     def test_invalid_negative_left_to_right_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(0, -0.1, 0.5, 0.63)
+            ChannelMix(
+                left_to_left=0,
+                left_to_right=-0.1,
+                right_to_left=0.5,
+                right_to_right=0.63,
+            )
 
     def test_invalid_positive_left_to_right_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(0, 1.1, 0.5, 0.63)
+            ChannelMix(
+                left_to_left=0,
+                left_to_right=1.1,
+                right_to_left=0.5,
+                right_to_right=0.63,
+            )
 
     def test_invalid_negative_right_to_left_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(0, 1, -0.1, 0.63)
+            ChannelMix(
+                left_to_left=0, left_to_right=1, right_to_left=-0.1, right_to_right=0.63
+            )
 
     def test_invalid_positive_right_to_left_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(0, 1, 1.1, 0.63)
+            ChannelMix(
+                left_to_left=0, left_to_right=1, right_to_left=1.1, right_to_right=0.63
+            )
 
     def test_invalid_negative_right_to_right_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(0, 1, 0.5, -0.1)
+            ChannelMix(
+                left_to_left=0, left_to_right=1, right_to_left=0.5, right_to_right=-0.1
+            )
 
     def test_invalid_positive_right_to_right_value(self):
         with pytest.raises(ValueError):
-            ChannelMix(0, 1, 0.5, 1.1)
+            ChannelMix(
+                left_to_left=0, left_to_right=1, right_to_left=0.5, right_to_right=1.1
+            )
 
 
 class TestLowPass:
     def test_valid_values(self):
-        low_pass = LowPass(3.8)
+        low_pass = LowPass(smoothing=3.8)
 
         assert low_pass.smoothing == 3.8
 
     def test_invalid_negative_smoothing_value(self):
         with pytest.raises(ValueError):
-            LowPass(0.9)
+            LowPass(smoothing=0.9)

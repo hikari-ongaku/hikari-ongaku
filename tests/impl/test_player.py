@@ -12,10 +12,16 @@ from ongaku.impl.track import Track
 
 
 def test_player(ongaku_track: Track, ongaku_filters: Filters):
-    state = State(datetime.datetime.now(), 2, True, 3)
-    voice = Voice("token", "endpoint", "session_id")
+    state = State(time=datetime.datetime.now(), position=2, connected=True, ping=3)
+    voice = Voice(token="token", endpoint="endpoint", session_id="session_id")
     player = Player(
-        Snowflake(1234567890), ongaku_track, 1, True, state, voice, ongaku_filters
+        guild_id=Snowflake(1234567890),
+        track=ongaku_track,
+        volume=1,
+        is_paused=True,
+        state=state,
+        voice=voice,
+        filters=ongaku_filters,
     )
 
     assert isinstance(player.guild_id, Snowflake)
@@ -30,7 +36,7 @@ def test_player(ongaku_track: Track, ongaku_filters: Filters):
 
 def test_player_state():
     time = datetime.datetime.now()
-    player_state = State(time, 2, True, 3)
+    player_state = State(time=time, position=2, connected=True, ping=3)
 
     assert player_state.time == time
     assert player_state.position == 2
@@ -38,9 +44,26 @@ def test_player_state():
     assert player_state.ping == 3
 
 
+def test_player_state_from_empty():
+    player_state = State.empty()
+
+    assert player_state.time == datetime.datetime.fromtimestamp(0)
+    assert player_state.position == 0
+    assert player_state.connected is False
+    assert player_state.ping == -1
+
+
 def test_player_voice():
-    player_voice = Voice("token", "endpoint", "session_id")
+    player_voice = Voice(token="token", endpoint="endpoint", session_id="session_id")
 
     assert player_voice.token == "token"
     assert player_voice.endpoint == "endpoint"
     assert player_voice.session_id == "session_id"
+
+
+def test_player_voice_from_empty():
+    player_voice = Voice.empty()
+
+    assert player_voice.token == ""
+    assert player_voice.endpoint == ""
+    assert player_voice.session_id == ""

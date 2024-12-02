@@ -12,7 +12,9 @@ from __future__ import annotations
 import logging
 
 from ongaku.abc.errors import SeverityType
+from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.routeplanner import IPBlockType
@@ -28,6 +30,7 @@ from ongaku.errors import OngakuError
 from ongaku.errors import PlayerConnectError
 from ongaku.errors import PlayerError
 from ongaku.errors import PlayerMissingError
+from ongaku.errors import PlayerNotConnectedError
 from ongaku.errors import PlayerQueueError
 from ongaku.errors import RestEmptyError
 from ongaku.errors import RestError
@@ -98,11 +101,13 @@ __all__ = (
     "NoSessionsError",
     "PlayerError",
     "PlayerConnectError",
+    "PlayerNotConnectedError",
     "PlayerQueueError",
     "PlayerMissingError",
     "BuildError",
     "TimeoutError",
     # .events
+    "OngakuEvent",
     "PayloadEvent",
     "ReadyEvent",
     "PlayerUpdateEvent",
@@ -114,6 +119,8 @@ __all__ = (
     "TrackStuckEvent",
     "QueueEmptyEvent",
     "QueueNextEvent",
+    # .extensions
+    "Extension",
     # .filters
     "Filters",
     "BandType",

@@ -16,17 +16,18 @@ import hikari
 
 from ongaku import errors
 from ongaku import events
+from ongaku.abc import player as player_
 from ongaku.abc import playlist as playlist_
 from ongaku.abc import track as track_
 from ongaku.abc.events import TrackEndReasonType
 from ongaku.events import PlayerUpdateEvent
 from ongaku.events import TrackEndEvent
+from ongaku.impl.player import State
 from ongaku.impl.player import Voice
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import logger
 
 if t.TYPE_CHECKING:
-    from ongaku.abc import player as player_
     from ongaku.abc.filters import Filters
     from ongaku.internal.types import RequestorT
     from ongaku.session import Session
@@ -36,7 +37,7 @@ _logger = logger.getChild("player")
 __all__ = ("Player",)
 
 
-class Player:
+class Player(player_.Player):
     """
     Base player.
 
@@ -52,34 +53,26 @@ class Player:
 
     __slots__: typing.Sequence[str] = (
         "_session",
-        "_guild_id",
         "_channel_id",
         "_is_alive",
-        "_is_paused",
-        "_voice",
-        "_state",
         "_queue",
-        "_filters",
+        "_state",
+        "_voice",
         "_connected",
         "_session_id",
-        "_volume",
         "_autoplay",
         "_position",
         "_loop",
     )
 
-    def __init__(
-        self,
-        session: Session,
-        guild: hikari.SnowflakeishOr[hikari.Guild],
-    ):
+    def __init__(self, session: Session, guild: hikari.SnowflakeishOr[hikari.Guild], /):
         self._session = session
         self._guild_id = hikari.Snowflake(guild)
         self._channel_id = None
         self._is_alive = False
         self._is_paused = True
-        self._voice: player_.Voice | None = None
-        self._state: player_.State | None = None
+        self._voice: player_.Voice = Voice.empty()
+        self._state: player_.State = State.empty()
         self._queue: typing.MutableSequence[track_.Track] = []
         self._filters: Filters | None = None
         self._connected: bool = False
@@ -88,6 +81,7 @@ class Player:
         self._autoplay: bool = True
         self._position: int = 0
         self._loop = False
+        self._track = None
 
         self.app.event_manager.subscribe(TrackEndEvent, self._track_end_event)
         self.app.event_manager.subscribe(PlayerUpdateEvent, self._player_update_event)
@@ -132,19 +126,6 @@ class Player:
         return self._position
 
     @property
-    def volume(self) -> int:
-        """The volume of the player.
-
-        If `-1` the player has not been connected to lavalink and updated.
-        """
-        return self._volume
-
-    @property
-    def is_paused(self) -> bool:
-        """Whether the player is currently paused."""
-        return self._is_paused
-
-    @property
     def autoplay(self) -> bool:
         """Autoplay.
 
@@ -171,13 +152,11 @@ class Player:
         return self._queue
 
     @property
-    def voice(self) -> player_.Voice | None:
-        """The player's voice state."""
+    def voice(self) -> player_.Voice:
         return self._voice
 
     @property
-    def state(self) -> player_.State | None:
-        """The player's player state."""
+    def state(self) -> player_.State:
         return self._state
 
     @property
@@ -188,6 +167,7 @@ class Player:
     async def connect(
         self,
         channel: hikari.SnowflakeishOr[hikari.GuildVoiceChannel],
+        /,
         *,
         mute: bool = False,
         deaf: bool = True,
@@ -356,7 +336,11 @@ class Player:
         )
 
     async def play(
-        self, track: track_.Track | None = None, requestor: RequestorT | None = None
+        self,
+        track: track_.Track | None = None,
+        /,
+        *,
+        requestor: RequestorT | None = None,
     ) -> None:
         """Play.
 
@@ -419,6 +403,8 @@ class Player:
     def add(
         self,
         tracks: t.Sequence[track_.Track] | playlist_.Playlist | track_.Track,
+        /,
+        *,
         requestor: RequestorT | None = None,
     ) -> None:
         """
@@ -470,7 +456,7 @@ class Player:
             TRACE_LEVEL, f"Successfully added {track_count} track(s) to {self.guild_id}"
         )
 
-    async def pause(self, value: bool | None = None) -> None:
+    async def pause(self, value: bool | None = None, /) -> None:
         """
         Pause the player.
 
@@ -593,7 +579,7 @@ class Player:
             TRACE_LEVEL, f"Successfully shuffled queue in guild {self.guild_id}"
         )
 
-    async def skip(self, amount: int = 1) -> None:
+    async def skip(self, amount: int = 1, /) -> None:
         """
         Skip songs.
 
@@ -670,7 +656,7 @@ class Player:
 
         _logger.log(TRACE_LEVEL, f"Successfully skipped track in {self.guild_id}")
 
-    def remove(self, value: track_.Track | int) -> None:
+    def remove(self, value: track_.Track | int, /) -> None:
         """
         Remove track.
 
@@ -763,7 +749,7 @@ class Player:
 
         _logger.log(TRACE_LEVEL, f"Successfully cleared queue in {self.guild_id}")
 
-    def set_autoplay(self, enable: bool | None = None) -> bool:
+    def set_autoplay(self, enable: bool | None = None, /) -> bool:
         """
         Set autoplay.
 
@@ -788,7 +774,7 @@ class Player:
 
         return self._autoplay
 
-    async def set_volume(self, volume: int = 100) -> None:
+    async def set_volume(self, volume: int = 100, /) -> None:
         """
         Set the volume.
 
@@ -845,7 +831,7 @@ class Player:
             TRACE_LEVEL, f"Successfully set volume to {volume} in {self.guild_id}"
         )
 
-    async def set_position(self, value: int) -> None:
+    async def set_position(self, value: int, /) -> None:
         """
         Set the position.
 
@@ -907,7 +893,7 @@ class Player:
             f"Successfully set position ({value}) to track in {self.guild_id}",
         )
 
-    async def set_filters(self, filters: Filters | None = None) -> None:
+    async def set_filters(self, filters: Filters | None = None, /) -> None:
         """Set Filters.
 
         Set a new filter for the player.
@@ -930,7 +916,7 @@ class Player:
 
         self._update(player)
 
-    def set_loop(self, enable: bool | None = None) -> bool:
+    def set_loop(self, enable: bool | None = None, /) -> bool:
         """
         Set loop.
 
@@ -955,7 +941,7 @@ class Player:
 
         return self._loop
 
-    async def transfer(self, session: Session) -> Player:
+    async def transfer(self, *, session: Session) -> Player:
         """Transfer.
 
         Transfer this player to another session.
@@ -997,7 +983,7 @@ class Player:
 
         return new_player
 
-    def _update(self, player: player_.Player) -> None:
+    def _update(self, player: player_.Player, /) -> None:
         _logger.log(
             TRACE_LEVEL,
             f"Updating player for channel: {self.channel_id} in guild: {self.guild_id}",
@@ -1009,9 +995,15 @@ class Player:
         self._voice = player.voice
         self._filters = player.filters
         self._connected = player.state.connected
+        self._track = player.track
 
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
+
+        if event.guild_id != self.guild_id:
+            return
+
+        self._track = None
 
         if not self.autoplay:
             return
@@ -1027,19 +1019,12 @@ class Player:
             f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        if event.guild_id != self.guild_id:
-            return
-        _logger.log(
-            TRACE_LEVEL,
-            f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
-        )
-
         if len(self.queue) == 0:
             return
 
         if len(self.queue) == 1:
             new_event = events.QueueEmptyEvent.from_session(
-                self.session, self.guild_id, self.queue[0]
+                self.session, guild_id=self.guild_id, old_track=self.queue[0]
             )
 
             if not self._loop:
@@ -1065,7 +1050,10 @@ class Player:
 
         await self.app.event_manager.dispatch(
             events.QueueNextEvent.from_session(
-                self.session, self.guild_id, self._queue[0], event.track
+                self.session,
+                guild_id=self.guild_id,
+                track=self._queue[0],
+                old_track=event.track,
             )
         )
 
