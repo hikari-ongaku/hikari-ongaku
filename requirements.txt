@@ -1,2 +1,3 @@
 hikari ~= 2.1.0
 aiohttp ~= 3.10
+alluka ~= 0.3

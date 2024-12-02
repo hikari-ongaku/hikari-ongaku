@@ -55,10 +55,7 @@ class Playlist(abc.ABC):
         if self.tracks != other.tracks:
             return False
 
-        if self.plugin_info != other.plugin_info:
-            return False
-
-        return True
+        return self.plugin_info == other.plugin_info
 
 
 class PlaylistInfo(abc.ABC):
@@ -92,10 +89,7 @@ class PlaylistInfo(abc.ABC):
         if self.name != other.name:
             return False
 
-        if self.selected_track != other.selected_track:
-            return False
-
-        return True
+        return self.selected_track == other.selected_track
 
 
 # MIT License

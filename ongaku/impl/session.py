@@ -12,7 +12,7 @@ __all__ = ("Session",)
 
 
 class Session(session_.Session):
-    def __init__(self, resuming: bool, timeout: int) -> None:
+    def __init__(self, *, resuming: bool, timeout: int) -> None:
         self._resuming = resuming
         self._timeout = timeout
 
