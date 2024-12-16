@@ -104,10 +104,7 @@ class Player(abc.ABC):
         if self.voice != other.voice:
             return False
 
-        if self.filters != other.filters:
-            return False
-
-        return True
+        return self.filters == other.filters
 
 
 class State(abc.ABC):
@@ -159,10 +156,7 @@ class State(abc.ABC):
         if self.connected != other.connected:
             return False
 
-        if self.ping != other.ping:
-            return False
-
-        return True
+        return self.ping == other.ping
 
 
 class Voice(abc.ABC):
@@ -205,10 +199,7 @@ class Voice(abc.ABC):
         if self.endpoint != other.endpoint:
             return False
 
-        if self.session_id != other.session_id:
-            return False
-
-        return True
+        return self.session_id == other.session_id
 
 
 # MIT License

@@ -52,10 +52,7 @@ class ExceptionError(abc.ABC):
         if self.severity != other.severity:
             return False
 
-        if self.cause != other.cause:
-            return False
-
-        return True
+        return self.cause == other.cause
 
 
 class SeverityType(str, enum.Enum):

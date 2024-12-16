@@ -21,12 +21,19 @@ from ongaku.client import Client
 from ongaku.player import Player
 from ongaku.session import Session
 from tests import payloads
+from tests.conftest import FakeEvent
+from tests.conftest import OngakuExtension
 
 
 class TestSession:
     def test_properties(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            name="test_name",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         assert session.client == ongaku_client
@@ -55,7 +62,12 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_get_session_id(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_name",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         with mock.patch(
@@ -73,7 +85,12 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_transfer(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_name",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         handler = mock.Mock()
@@ -83,14 +100,12 @@ class TestSession:
 
         new_session = Session(
             ongaku_client,
-            "test_session_1",
-            False,
-            "127.0.0.1",
-            2333,
-            "youshallnotpass",
-            3,
+            name="test_session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
-
         session._players = {
             player_1.guild_id: player_1,
             player_2.guild_id: player_2,
@@ -106,7 +121,7 @@ class TestSession:
         ):
             await session.transfer(handler)
 
-            patched_player_transfer.assert_called_with(handler.fetch_session())
+            patched_player_transfer.assert_called_with(session=handler.fetch_session())
 
             assert patched_player_transfer.call_count == 2
 
@@ -146,7 +161,12 @@ class TestSession:
         ongaku_client = Client(gateway_bot)
 
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="password",
         )
 
         app = web.Application()
@@ -191,7 +211,12 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_start(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         with mock.patch(
@@ -206,7 +231,12 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_stop(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         with mock.patch(
@@ -227,7 +257,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_string(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -260,7 +295,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_integer(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -294,7 +334,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_float(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -328,7 +373,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_boolean(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -362,7 +412,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_dict(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -401,7 +456,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_list(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -440,7 +500,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_tuple(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -479,7 +544,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_none(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -512,7 +582,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_extra_args(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -585,7 +660,12 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_errors(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         cs = aiohttp.ClientSession()
@@ -706,7 +786,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_ready_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(orjson.dumps(payloads.READY_PAYLOAD).decode())
@@ -716,7 +801,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_player_update_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(
@@ -728,7 +818,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_statistics_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         payload = dict(payloads.STATISTICS_PAYLOAD)
@@ -742,7 +837,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_start_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(
@@ -754,7 +854,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_end_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(
@@ -766,7 +871,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_exception_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(
@@ -778,7 +888,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_stuck_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(
@@ -790,7 +905,12 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_websocket_closed_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         event = session._handle_op_code(
@@ -799,12 +919,76 @@ class TestHandleOPCode:
 
         assert isinstance(event, events.WebsocketClosedEvent)
 
+    @pytest.mark.asyncio
+    async def test_unknown_op(self, ongaku_client: Client):
+        session = Session(
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        event = session._handle_op_code(
+            orjson.dumps(
+                {
+                    "op": "banana",
+                }
+            ).decode()
+        )
+
+        assert event is None
+
+    @pytest.mark.asyncio
+    async def test_unknown_event(self, ongaku_client: Client):
+        session = Session(
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        event = session._handle_op_code(
+            orjson.dumps({"op": "event", "type": "banana"}).decode()
+        )
+
+        assert event is None
+
+    @pytest.mark.asyncio
+    async def test_extension_event(
+        self, ongaku_client: Client, ongaku_extension: OngakuExtension
+    ):
+        ongaku_client._extensions = {OngakuExtension: ongaku_extension}
+
+        session = Session(
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        event = session._handle_op_code(
+            orjson.dumps({"op": "event", "type": "banana"}).decode()
+        )
+
+        assert isinstance(event, FakeEvent)
+
 
 class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_text(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         message = aiohttp.WSMessage(
@@ -844,7 +1028,12 @@ class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_error(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         message = aiohttp.WSMessage(aiohttp.WSMsgType.ERROR, "", None)
@@ -854,7 +1043,12 @@ class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_closed(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            name="test_session",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
         )
 
         message = aiohttp.WSMessage(

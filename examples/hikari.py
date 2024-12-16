@@ -9,15 +9,16 @@ import hikari
 import ongaku
 from ongaku.ext import checker
 
-
-bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
+bot = hikari.GatewayBot(
+    "...",
+    suppress_optimization_warning=True,
+    intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT,
+)
 
 ongaku_client = ongaku.Client(bot)
 
 ongaku_client.create_session(
-    name="hikari-session",
-    host="127.0.0.1",
-    password="youshallnotpass"
+    "hikari-session", host="127.0.0.1", password="youshallnotpass"
 )
 
 
@@ -27,7 +28,7 @@ ongaku_client.create_session(
 
 
 @bot.listen(ongaku.ReadyEvent)
-async def ready_event(event: ongaku.ReadyEvent): 
+async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
         f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
     )
@@ -60,19 +61,39 @@ async def track_stuck_event(event: ongaku.TrackStuckEvent):
         f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
     )
 
+
 @bot.listen(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
         f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
     )
 
+
 @bot.listen(ongaku.QueueNextEvent)
 async def queue_next_event(event: ongaku.QueueNextEvent):
-    logging.info(f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}")
+    logging.info(
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
+    )
+
 
 @bot.listen(ongaku.QueueEmptyEvent)
 async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
+
+
+# ╔═══════════════╗
+# ║ Error Handler ║
+# ╚═══════════════╝
+
+
+@bot.listen()
+async def error_handler(event: hikari.ExceptionEvent[hikari.GuildMessageCreateEvent]):
+    if isinstance(event.exception, ongaku.PlayerMissingError):
+        await event.app.rest.create_message(
+            event.failed_event.channel_id,
+            "No player was found for this guild.",
+            reply=event.failed_event.message,
+        )
 
 
 # ╔══════════╗
@@ -83,52 +104,55 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
 prefix = "!"
 
 
-def handle_command(content: str, name: str) -> list[str] | None:
+def handle_command(content: str, name: str) -> list[str]:
     if content.startswith(prefix + name):
         content = content.strip(prefix + name + " ")
         return content.split(" ")
 
+    return []
+
 
 @bot.listen()
-async def play_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def play_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
     args = handle_command(event.content, "play")
 
-    if args is None:
+    if len(args) < 1:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "You need to provide a track to play.",
+            reply=event.message,
+        )
         return
 
     voice_state = bot.cache.get_voice_state(event.guild_id, event.author.id)
     if not voice_state or not voice_state.channel_id:
-        await bot.rest.create_message(
+        await event.app.rest.create_message(
             event.channel_id,
             "you are not in a voice channel.",
             reply=event.message,
         )
         return
-    
-    checked_query = await checker.check(args[0])
 
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    query = args[0]
+
+    if checker.check(query):
+        result = await ongaku_client.rest.load_track(query)
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await ongaku_client.rest.load_track(f"ytsearch:{query}")
 
     if result is None:
-        await bot.rest.create_message(
+        await event.app.rest.create_message(
             event.channel_id,
             "Sorry, no songs were found.",
             reply=event.message,
         )
         return
-
-    track: ongaku.Track
 
     if isinstance(result, ongaku.Playlist):
         track = result.tracks[0]
@@ -144,20 +168,14 @@ async def play_command(
         description=f"made by: {track.info.author}",
     )
 
-    try:
-        player = ongaku_client.fetch_player(event.guild_id)
-    except ongaku.PlayerMissingError:
-        player = ongaku_client.create_player(event.guild_id)
+    player = ongaku_client.create_player(event.guild_id)
 
     if player.connected is False:
         await player.connect(voice_state.channel_id)
 
-    try:
-        await player.play(track)
-    except Exception as e:
-        raise e
+    await player.play(track)
 
-    await bot.rest.create_message(
+    await event.app.rest.create_message(
         event.channel_id,
         embed=embed,
         reply=event.message,
@@ -165,61 +183,54 @@ async def play_command(
 
 
 @bot.listen()
-async def add_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def add_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
     args = handle_command(event.content, "add")
 
-    if args is None:
-        return
-    
-    try:
-        current_player = ongaku_client.fetch_player(event.guild_id)
-    except Exception:
-        await bot.rest.create_message(
+    if len(args) < 1:
+        await event.app.rest.create_message(
             event.channel_id,
-            "You must have a player currently running!",
+            "You need to provide a track to add.",
             reply=event.message,
         )
         return
 
-    checked_query = await checker.check(args[0])
+    player = ongaku_client.fetch_player(event.guild_id)
 
-    if checked_query.type == checker.CheckedType.QUERY:
-        result = await ongaku_client.rest.load_track(f"ytsearch:{checked_query.value}")
+    query = args[0]
+
+    if checker.check(query):
+        result = await ongaku_client.rest.load_track(query)
     else:
-        result = await ongaku_client.rest.load_track(checked_query.value)
+        result = await ongaku_client.rest.load_track(f"ytsearch:{query}")
 
     if result is None:
-        await bot.rest.create_message(
+        await event.app.rest.create_message(
             event.channel_id,
             "Sorry, no songs were found.",
             reply=event.message,
         )
         return
 
-    tracks: list[ongaku.Track] = []
-
     if isinstance(result, ongaku.Playlist):
-        tracks.extend(result.tracks)
+        tracks = result.tracks
 
     elif isinstance(result, ongaku.Track):
-        tracks.append(result)
+        tracks = [result]
 
     else:
-        tracks.extend(result)
+        tracks = [result[0]]
 
-    current_player.add(tracks)
+    player.add(tracks)
 
     embed = hikari.Embed(
         title="Tracks added",
-        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}"
+        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}",
     )
 
     for track in tracks:
@@ -227,7 +238,7 @@ async def add_command(
             break
         embed.add_field(track.info.title, track.info.author)
 
-    await bot.rest.create_message(
+    await event.app.rest.create_message(
         event.channel_id,
         embed=embed,
         reply=event.message,
@@ -235,253 +246,315 @@ async def add_command(
 
 
 @bot.listen()
-async def pause_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def queue_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
-    args = handle_command(event.content, "pause")
-
-    if args is None:
-        return
-
-    try:
-        current_player = ongaku_client.fetch_player(event.guild_id)
-    except Exception:
-        await bot.rest.create_message(
+    if len(handle_command(event.content, "queue")) > 0:
+        await event.app.rest.create_message(
             event.channel_id,
-            "You must have a player currently running!",
+            "Paused does not take any arguments.",
             reply=event.message,
         )
         return
 
-    await current_player.pause()
-
-    if current_player.is_paused:
-        await bot.rest.create_message(
-            event.channel_id,
-            "Music has been paused.",
-            reply=event.message,
-        )
-        return
-
-    await bot.rest.create_message(
-        event.channel_id,
-        "Music has been resumed.",
-        reply=event.message,
-    )
-
-
-@bot.listen()
-async def queue_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
-    if event.content is None:
-        return
-    
-    if event.is_bot:
-        return
-
-    args = handle_command(event.content, "queue")
-
-    if args is None:
-        return
-
-    try:
-        player = ongaku_client.fetch_player(event.guild_id)
-    except Exception:
-        await bot.rest.create_message(
-            event.channel_id,
-            "There is no player currently playing in this server.",
-            reply=event.message,
-        )
-        return
+    player = ongaku_client.fetch_player(event.guild_id)
 
     if len(player.queue) == 0:
-        await bot.rest.create_message(
-            event.channel_id,
-            "There is not tracks in the queue currently.",
-            reply=event.message,
+        await event.app.rest.create_message(
+            event.channel_id, "There is no songs in the queue.", reply=event.message
         )
         return
 
-    queue_embed = hikari.Embed(
+    embed = hikari.Embed(
         title="Queue",
-        description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
+        description=f"There is currently {len(player.queue)} song{'s' if len(player.queue) > 1 else ''} in the queue.",
     )
 
-    for x in range(len(player.queue)):
-        if x == 0:
-            continue
+    embed.add_field(
+        f"▶️ {player.queue[0].info.title}",
+        f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+    )
 
-        if x >= 25:
-            break
+    if len(player.queue) > 1:
+        for i in range(1, 24):
+            if i > len(player.queue):
+                break
 
-        track = player.queue[x]
+            embed.add_field(
+                player.queue[i].info.title,
+                f"Length: {player.queue[i].info.length / 1000}s\nArtist: {player.queue[i].info.author}",
+            )
 
-        queue_embed.add_field(track.info.title, track.info.author)
-
-    await bot.rest.create_message(
-        event.channel_id,
-        embed=queue_embed,
-        reply=event.message,
+    await event.app.rest.create_message(
+        event.channel_id, embed=embed, reply=event.message
     )
 
 
 @bot.listen()
-async def volume_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def pause_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
+    if event.is_bot:
+        return
+
+    if len(handle_command(event.content, "pause")) > 0:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "Paused does not take any arguments.",
+            reply=event.message,
+        )
+        return
+
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    await player.pause()
+
+    if player.is_paused:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "The song has been paused.",
+            reply=event.message,
+        )
+    else:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "The song has been unpaused.",
+            reply=event.message,
+        )
+
+
+@bot.listen()
+async def skip_command(event: hikari.GuildMessageCreateEvent) -> None:
+    if event.content is None:
+        return
+
+    if event.is_bot:
+        return
+
+    if len(handle_command(event.content, "skip")) > 0:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "Skip does not take any arguments.",
+            reply=event.message,
+        )
+        return
+
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    await player.skip()
+
+    if len(player.queue) > 0:
+        embed = hikari.Embed(
+            title=player.queue[0].info.title,
+            description=f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+        )
+
+        artwork_url = player.queue[0].info.artwork_url
+
+        if artwork_url:
+            embed.set_thumbnail(hikari.files.URL(artwork_url, "artwork.png"))
+
+        await event.app.rest.create_message(
+            event.channel_id, embed=embed, reply=event.message
+        )
+
+    await event.app.rest.create_message(
+        event.channel_id, "The queue is now empty!", reply=event.message
+    )
+
+
+@bot.listen()
+async def volume_command(event: hikari.GuildMessageCreateEvent) -> None:
+    if event.content is None:
+        return
+
     if event.is_bot:
         return
 
     args = handle_command(event.content, "volume")
 
-    if args is None:
+    if len(args) < 1:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "You need to provide a volume to set.",
+            reply=event.message,
+        )
         return
 
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    volume = args[0]
+
     try:
-        player = ongaku_client.fetch_player(event.guild_id)
+        volume = int(volume)
     except Exception:
-        await bot.rest.create_message(
+        await event.app.rest.create_message(
             event.channel_id,
-            "There is no player currently playing in this server.",
-            reply=event.message,
-        )
-        return
-    
-    try:
-        volume = int(args[0])
-    except:
-        await bot.rest.create_message(
-            event.channel_id,
-            "Volume must be an integer.",
+            "The value provided was not an integer.",
             reply=event.message,
         )
         return
 
-    if volume > 100 or volume < 0:
-        await bot.rest.create_message(
+    await player.set_volume(volume)
+
+    await event.app.rest.create_message(
+        event.channel_id, f"The volume is now set to {volume}%", reply=event.message
+    )
+
+
+@bot.listen()
+async def loop_command(event: hikari.GuildMessageCreateEvent) -> None:
+    if event.content is None:
+        return
+
+    if event.is_bot:
+        return
+
+    if len(handle_command(event.content, "loop")) > 0:
+        await event.app.rest.create_message(
             event.channel_id,
-            "Volume must be between 0 and 100.",
+            "Loop does not take any arguments.",
             reply=event.message,
         )
         return
 
-    try:
-        await player.set_volume(volume)
-    except ValueError:
-        await bot.rest.create_message(
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    player.set_loop()
+
+    if player.loop:
+        if player.track:
+            await event.app.rest.create_message(
+                event.channel_id,
+                f"The player is now looping.\nTrack: {player.track.info.title}",
+                reply=event.message,
+            )
+        else:
+            await event.app.rest.create_message(
+                event.channel_id, "The player is now looping.", reply=event.message
+            )
+    else:
+        await event.app.rest.create_message(
+            event.channel_id, "The player is no longer looping.", reply=event.message
+        )
+
+
+@bot.listen()
+async def shuffle_command(event: hikari.GuildMessageCreateEvent) -> None:
+    if event.content is None:
+        return
+
+    if event.is_bot:
+        return
+
+    if len(handle_command(event.content, "shuffle")) > 0:
+        await event.app.rest.create_message(
             event.channel_id,
-            "Sorry, but you have entered an invalid number.",
+            "Shuffle does not take any arguments.",
             reply=event.message,
         )
         return
-    await bot.rest.create_message(
+
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    player.shuffle()
+
+    await event.app.rest.create_message(
         event.channel_id,
-        f"the volume has successfully been set to {volume}/100",
+        "The queue has been successfully shuffled.",
         reply=event.message,
     )
 
 
 @bot.listen()
-async def skip_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def speed_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
-    args = handle_command(event.content, "skip")
+    args = handle_command(event.content, "speed")
 
-    if args is None:
-        return
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    speed = 0 if len(args) < 1 else args[0]
 
     try:
-        player = ongaku_client.fetch_player(event.guild_id)
+        speed = float(speed)
     except Exception:
-        await bot.rest.create_message(
+        await event.app.rest.create_message(
             event.channel_id,
-            "There is no player currently playing in this server.",
+            "The value provided was not a float.",
             reply=event.message,
         )
         return
-    
-    try:
-        amount = int(args[0])
-    except:
-        await bot.rest.create_message(
-            event.channel_id,
-            "Volume must be an integer.",
-            reply=event.message,
-        )
-        return
+    if player.filters:
+        filters = ongaku.Filters.from_filter(player.filters)
+    else:
+        filters = ongaku.Filters()
 
-    if amount < 1:
-        await bot.rest.create_message(
-            event.channel_id,
-            "Amount must be above 1.",
-            reply=event.message,
-        )
-        return
+    filters.set_timescale(speed=speed)
 
-    try:
-        await player.skip(amount)
-    except ongaku.PlayerQueueError:
-        await bot.rest.create_message(
-            event.channel_id,
-            "It looks like the queue is empty, so no new songs will be played.",
-            reply=event.message,
-        )
-        return
+    await player.set_filters(filters)
 
-    await bot.rest.create_message(
-        event.channel_id,
-        f"{amount} song(s) were successfully skipped.",
-        reply=event.message,
+    await event.app.rest.create_message(
+        event.channel_id, f"The speed has now been set to {speed}", reply=event.message
     )
 
 
 @bot.listen()
-async def stop_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def stop_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
-    args = handle_command(event.content, "stop")
-
-    if args is None:
-        return
-
-    try:
-        player = ongaku_client.fetch_player(event.guild_id)
-    except Exception:
-        await bot.rest.create_message(
+    if len(handle_command(event.content, "stop")) > 0:
+        await event.app.rest.create_message(
             event.channel_id,
-            "There is no player currently playing in this server.",
+            "Stop does not take any arguments.",
             reply=event.message,
         )
         return
+
+    player = ongaku_client.fetch_player(event.guild_id)
+
+    await player.stop()
+
+    await event.app.rest.create_message(
+        event.channel_id, "The player has been stopped.", reply=event.message
+    )
+
+
+@bot.listen()
+async def disconnect_command(event: hikari.GuildMessageCreateEvent) -> None:
+    if event.content is None:
+        return
+
+    if event.is_bot:
+        return
+
+    if len(handle_command(event.content, "disconnect")) > 0:
+        await event.app.rest.create_message(
+            event.channel_id,
+            "Disconnect does not take any arguments.",
+            reply=event.message,
+        )
+        return
+
+    player = ongaku_client.fetch_player(event.guild_id)
 
     await player.disconnect()
 
-    await bot.rest.create_message(
-        event.channel_id,
-        "Successfully stopped the player.",
-        reply=event.message,
+    await event.app.rest.create_message(
+        event.channel_id, "The player has been disconnected.", reply=event.message
     )
 
 

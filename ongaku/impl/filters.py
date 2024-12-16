@@ -67,7 +67,7 @@ class Filters(filters_.Filters):
         self._plugin_filters = plugin_filters
 
     @classmethod
-    def from_filter(cls, filters: filters_.Filters) -> Filters:
+    def from_filter(cls, filters: filters_.Filters, /) -> Filters:
         """From Filter.
 
         Convert a immutable filter, into a mutable filter.
@@ -93,7 +93,7 @@ class Filters(filters_.Filters):
             low_pass=filters.low_pass,
         )
 
-    def set_volume(self, volume: float) -> Filters:
+    def set_volume(self, volume: float, /) -> Filters:
         """Set Volume.
 
         Set the volume of the filter.
@@ -111,11 +111,7 @@ class Filters(filters_.Filters):
 
     # Equalizer
 
-    def add_equalizer(
-        self,
-        band: filters_.BandType,
-        gain: float,
-    ) -> Filters:
+    def add_equalizer(self, band: filters_.BandType, gain: float, /) -> Filters:
         """Add Equalizer.
 
         Add a new equalizer band, with appropriate gain.
@@ -127,11 +123,11 @@ class Filters(filters_.Filters):
         gain
             The gain of the band. (-0.25 to 1.0)
         """
-        self._equalizer.append(Equalizer(band, gain))
+        self._equalizer.append(Equalizer(band=band, gain=gain))
 
         return self
 
-    def remove_equalizer(self, band: filters_.BandType) -> Filters:
+    def remove_equalizer(self, band: filters_.BandType, /) -> Filters:
         """Remove Equalizer.
 
         Remove a equalizer via its band.
@@ -183,15 +179,19 @@ class Filters(filters_.Filters):
             The filter width.
         """
         if self._karaoke is None:
-            self._karaoke = Karaoke(None, None, None, None)
+            self._karaoke = Karaoke(
+                level=None, mono_level=None, filter_band=None, filter_width=None
+            )
 
         self._karaoke = Karaoke(
-            self._karaoke.level if level == hikari.UNDEFINED else level,
-            self._karaoke.mono_level if mono_level == hikari.UNDEFINED else mono_level,
-            self._karaoke.filter_band
+            level=self._karaoke.level if level == hikari.UNDEFINED else level,
+            mono_level=self._karaoke.mono_level
+            if mono_level == hikari.UNDEFINED
+            else mono_level,
+            filter_band=self._karaoke.filter_band
             if filter_band == hikari.UNDEFINED
             else filter_band,
-            self._karaoke.filter_width
+            filter_width=self._karaoke.filter_width
             if filter_width == hikari.UNDEFINED
             else filter_width,
         )
@@ -229,12 +229,12 @@ class Filters(filters_.Filters):
             The rate 0.0 ≤ x.
         """
         if self._timescale is None:
-            self._timescale = Timescale(None, None, None)
+            self._timescale = Timescale(speed=None, pitch=None, rate=None)
 
         self._timescale = Timescale(
-            self._timescale.speed if speed == hikari.UNDEFINED else speed,
-            self._timescale.pitch if pitch == hikari.UNDEFINED else pitch,
-            self._timescale.rate if rate == hikari.UNDEFINED else rate,
+            speed=self._timescale.speed if speed == hikari.UNDEFINED else speed,
+            pitch=self._timescale.pitch if pitch == hikari.UNDEFINED else pitch,
+            rate=self._timescale.rate if rate == hikari.UNDEFINED else rate,
         )
 
         return self
@@ -267,11 +267,13 @@ class Filters(filters_.Filters):
             The tremolo depth 0.0 < x ≤ 1.0.
         """
         if self._tremolo is None:
-            self._tremolo = Tremolo(None, None)
+            self._tremolo = Tremolo(frequency=None, depth=None)
 
         self._tremolo = Tremolo(
-            self._tremolo.frequency if frequency == hikari.UNDEFINED else frequency,
-            self._tremolo.depth if depth == hikari.UNDEFINED else depth,
+            frequency=self._tremolo.frequency
+            if frequency == hikari.UNDEFINED
+            else frequency,
+            depth=self._tremolo.depth if depth == hikari.UNDEFINED else depth,
         )
 
         return self
@@ -305,11 +307,13 @@ class Filters(filters_.Filters):
 
         """
         if self._vibrato is None:
-            self._vibrato = Vibrato(None, None)
+            self._vibrato = Vibrato(frequency=None, depth=None)
 
         self._vibrato = Vibrato(
-            self._vibrato.frequency if frequency == hikari.UNDEFINED else frequency,
-            self._vibrato.depth if depth == hikari.UNDEFINED else depth,
+            frequency=self._vibrato.frequency
+            if frequency == hikari.UNDEFINED
+            else frequency,
+            depth=self._vibrato.depth if depth == hikari.UNDEFINED else depth,
         )
 
         return self
@@ -339,10 +343,10 @@ class Filters(filters_.Filters):
             The frequency of the audio rotating around the listener in Hz.
         """
         if self._rotation is None:
-            self._rotation = Rotation(None)
+            self._rotation = Rotation(rotation_hz=None)
 
         self._rotation = Rotation(
-            self._rotation.rotation_hz
+            rotation_hz=self._rotation.rotation_hz
             if rotation_hz == hikari.UNDEFINED
             else rotation_hz,
         )
@@ -396,24 +400,37 @@ class Filters(filters_.Filters):
         """
         if self._distortion is None:
             self._distortion = Distortion(
-                None, None, None, None, None, None, None, None
+                sin_offset=None,
+                sin_scale=None,
+                cos_offset=None,
+                cos_scale=None,
+                tan_offset=None,
+                tan_scale=None,
+                offset=None,
+                scale=None,
             )
 
         self._distortion = Distortion(
-            self._distortion.sin_offset
+            sin_offset=self._distortion.sin_offset
             if sin_offset == hikari.UNDEFINED
             else sin_offset,
-            self._distortion.sin_scale if sin_scale == hikari.UNDEFINED else sin_scale,
-            self._distortion.cos_offset
+            sin_scale=self._distortion.sin_scale
+            if sin_scale == hikari.UNDEFINED
+            else sin_scale,
+            cos_offset=self._distortion.cos_offset
             if cos_offset == hikari.UNDEFINED
             else cos_offset,
-            self._distortion.cos_scale if cos_scale == hikari.UNDEFINED else cos_scale,
-            self._distortion.tan_offset
+            cos_scale=self._distortion.cos_scale
+            if cos_scale == hikari.UNDEFINED
+            else cos_scale,
+            tan_offset=self._distortion.tan_offset
             if tan_offset == hikari.UNDEFINED
             else tan_offset,
-            self._distortion.tan_scale if tan_scale == hikari.UNDEFINED else tan_scale,
-            self._distortion.offset if offset == hikari.UNDEFINED else offset,
-            self._distortion.scale if scale == hikari.UNDEFINED else scale,
+            tan_scale=self._distortion.tan_scale
+            if tan_scale == hikari.UNDEFINED
+            else tan_scale,
+            offset=self._distortion.offset if offset == hikari.UNDEFINED else offset,
+            scale=self._distortion.scale if scale == hikari.UNDEFINED else scale,
         )
 
         return self
@@ -453,19 +470,24 @@ class Filters(filters_.Filters):
 
         """
         if self._channel_mix is None:
-            self._channel_mix = ChannelMix(None, None, None, None)
+            self._channel_mix = ChannelMix(
+                left_to_left=None,
+                left_to_right=None,
+                right_to_left=None,
+                right_to_right=None,
+            )
 
         self._channel_mix = ChannelMix(
-            self._channel_mix.left_to_left
+            left_to_left=self._channel_mix.left_to_left
             if left_to_left == hikari.UNDEFINED
             else left_to_left,
-            self._channel_mix.left_to_right
+            left_to_right=self._channel_mix.left_to_right
             if left_to_right == hikari.UNDEFINED
             else left_to_right,
-            self._channel_mix.right_to_left
+            right_to_left=self._channel_mix.right_to_left
             if right_to_left == hikari.UNDEFINED
             else right_to_left,
-            self._channel_mix.right_to_right
+            right_to_right=self._channel_mix.right_to_right
             if right_to_right == hikari.UNDEFINED
             else right_to_right,
         )
@@ -497,10 +519,12 @@ class Filters(filters_.Filters):
             The smoothing factor (1.0 < x).
         """
         if self._low_pass is None:
-            self._low_pass = LowPass(None)
+            self._low_pass = LowPass(smoothing=None)
 
         self._low_pass = LowPass(
-            self._low_pass.smoothing if smoothing == hikari.UNDEFINED else smoothing,
+            smoothing=self._low_pass.smoothing
+            if smoothing == hikari.UNDEFINED
+            else smoothing,
         )
 
         return self
@@ -516,7 +540,7 @@ class Filters(filters_.Filters):
     # Plugin filters
 
     def set_plugin_filters(
-        self, plugin_filters: typing.Mapping[str, typing.Any] = {}
+        self, plugin_filters: typing.Mapping[str, typing.Any] = {}, /
     ) -> Filters:
         """Set Plugin Filters.
 
@@ -532,11 +556,7 @@ class Filters(filters_.Filters):
 
 
 class Equalizer(filters_.Equalizer):
-    def __init__(
-        self,
-        band: filters_.BandType,
-        gain: float,
-    ) -> None:
+    def __init__(self, *, band: filters_.BandType, gain: float) -> None:
         if gain > 1:
             raise ValueError("Gain must be at or below 1.")
         if gain < -0.25:
@@ -549,6 +569,7 @@ class Equalizer(filters_.Equalizer):
 class Karaoke(filters_.Karaoke):
     def __init__(
         self,
+        *,
         level: float | None,
         mono_level: float | None,
         filter_band: float | None,
@@ -574,7 +595,7 @@ class Karaoke(filters_.Karaoke):
 
 class Timescale(filters_.Timescale):
     def __init__(
-        self, speed: float | None, pitch: float | None, rate: float | None
+        self, *, speed: float | None, pitch: float | None, rate: float | None
     ) -> None:
         if speed is not None and speed < 0:
             raise ValueError("Speed must be at or above 0.")
@@ -589,7 +610,7 @@ class Timescale(filters_.Timescale):
 
 
 class Tremolo(filters_.Tremolo):
-    def __init__(self, frequency: float | None, depth: float | None) -> None:
+    def __init__(self, *, frequency: float | None, depth: float | None) -> None:
         if frequency is not None and frequency < 0:
             raise ValueError("Frequency must be at or above 0.")
 
@@ -604,7 +625,7 @@ class Tremolo(filters_.Tremolo):
 
 
 class Vibrato(filters_.Vibrato):
-    def __init__(self, frequency: float | None, depth: float | None) -> None:
+    def __init__(self, *, frequency: float | None, depth: float | None) -> None:
         if frequency is not None:
             if frequency > 14:
                 raise ValueError("Frequency must be at or below 1.")
@@ -622,13 +643,14 @@ class Vibrato(filters_.Vibrato):
 
 
 class Rotation(filters_.Rotation):
-    def __init__(self, rotation_hz: float | None) -> None:
+    def __init__(self, *, rotation_hz: float | None) -> None:
         self._rotation_hz = rotation_hz
 
 
 class Distortion(filters_.Distortion):
     def __init__(
         self,
+        *,
         sin_offset: float | None,
         sin_scale: float | None,
         cos_offset: float | None,
@@ -651,6 +673,7 @@ class Distortion(filters_.Distortion):
 class ChannelMix(filters_.ChannelMix):
     def __init__(  # noqa: C901
         self,
+        *,
         left_to_left: float | None,
         left_to_right: float | None,
         right_to_left: float | None,
@@ -687,10 +710,7 @@ class ChannelMix(filters_.ChannelMix):
 
 
 class LowPass(filters_.LowPass):
-    def __init__(
-        self,
-        smoothing: float | None,
-    ) -> None:
+    def __init__(self, *, smoothing: float | None) -> None:
         if smoothing is not None and smoothing < 1:
             raise ValueError("Frequency must be at or above 1.")
 
