@@ -209,7 +209,7 @@ class Sites(enum.IntFlag):
         return (site & self) == site
 
 
-def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
+def check(query: str) -> Sites | None:
     """
     Check a string.
 
@@ -282,16 +282,19 @@ def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
         Sites.YANDEX: r"^(https?:\/\/)?music\.yandex\.(?:ru|com|kz|by)\/(?:artist|album|track)\/(?:[0-9]+)(\/(?:track)\/(?:[0-9]+))?\/?$",
     }
 
-    regex_patterns: typing.Sequence[str] = []
-
     for site, pattern in site_patterns.items():
-        if sites.has(site):
-            if isinstance(pattern, str):
-                regex_patterns.append(pattern)
-            else:
-                regex_patterns.extend(pattern)
+        if isinstance(pattern, str):
+            match_found = re.compile(pattern).match(query)
 
-    return any(re.compile(i).match(query) is not None for i in regex_patterns)
+            if match_found:
+                return site
+
+        else:
+            for p in pattern:
+                match_found = re.compile(p).match(query)
+
+                if match_found:
+                    return site
 
 
 # MIT License

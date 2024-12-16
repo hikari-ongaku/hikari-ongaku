@@ -3,17 +3,9 @@ from __future__ import annotations
 import pytest
 
 from ongaku.ext.checker import Sites
-from ongaku.ext.checker import checker
+from ongaku.ext.checker import check
 
 schemes = ["http://", "https://"]
-
-
-@pytest.mark.parametrize(
-    "query",
-    ["a query.", "http://yourmom.com?banana=vegetable"],
-)
-def test_checker_query(query: str):
-    assert checker.check(query) is False
 
 
 class TestSites:
@@ -30,6 +22,14 @@ class TestSites:
 
         assert (Sites.YOUTUBE | Sites.APPLE).has(Sites.APPLE | Sites.YOUTUBE) is True
 
+    def test_bool(self):
+        assert bool(Sites.YOUTUBE) is True
+
+
+@pytest.mark.parametrize("query", ["a site", "https://ongaku.mplaty.com/"])
+def test_checker_queries(query: str):
+    assert check(query) is None
+
 
 @pytest.mark.parametrize(
     "path",
@@ -37,15 +37,8 @@ class TestSites:
 )
 @pytest.mark.parametrize("domain", ["youtube.com", "www.youtube.com", "youtu.be"])
 @pytest.mark.parametrize("scheme", schemes)
-class TestYoutube:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.YOUTUBE) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.YOUTUBE)
-            is False
-        )
+def test_youtube(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.YOUTUBE
 
 
 @pytest.mark.parametrize(
@@ -59,17 +52,8 @@ class TestYoutube:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestYoutubeMusic:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.YOUTUBE_MUSIC) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(
-                scheme + domain + path, sites=Sites.all() & ~Sites.YOUTUBE_MUSIC
-            )
-            is False
-        )
+def test_youtube_music(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.YOUTUBE_MUSIC
 
 
 @pytest.mark.parametrize(
@@ -90,15 +74,8 @@ class TestYoutubeMusic:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestBandcamp:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.BANDCAMP) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.BANDCAMP)
-            is False
-        )
+def test_bandcamp(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.BANDCAMP
 
 
 @pytest.mark.parametrize(
@@ -120,14 +97,8 @@ class TestBandcamp:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestSoundcloud:
-    def test_working(self, scheme: str, url: str):
-        assert checker.check(scheme + url, sites=Sites.SOUNDCLOUD) is True
-
-    def test_not_included(self, scheme: str, url: str):
-        assert (
-            checker.check(scheme + url, sites=Sites.all() & ~Sites.SOUNDCLOUD) is False
-        )
+def test_soundcloud(scheme: str, url: str):
+    assert check(scheme + url) == Sites.SOUNDCLOUD
 
 
 @pytest.mark.parametrize(
@@ -139,12 +110,8 @@ class TestSoundcloud:
         "https://m.twitch.tv/user1234",
     ],
 )
-class TestTwitch:
-    def test_working(self, url: str):
-        assert checker.check(url, sites=Sites.TWITCH) is True
-
-    def test_not_included(self, url: str):
-        assert checker.check(url, sites=Sites.all() & ~Sites.TWITCH) is False
+def test_twitch(url: str):
+    assert check(url) == Sites.TWITCH
 
 
 @pytest.mark.parametrize(
@@ -154,12 +121,8 @@ class TestTwitch:
         "https://vimeo.com/1234567890?abcd=1234",
     ],
 )
-class TestVimeo:
-    def test_working(self, url: str):
-        assert checker.check(url, sites=Sites.VIMEO) is True
-
-    def test_not_included(self, url: str):
-        assert checker.check(url, sites=Sites.all() & ~Sites.VIMEO) is False
+def test_vimeo(url: str):
+    assert check(url) == Sites.VIMEO
 
 
 @pytest.mark.parametrize(
@@ -177,15 +140,8 @@ class TestVimeo:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestNico:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.NICO) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.NICO)
-            is False
-        )
+def test_nico(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.NICO
 
 
 @pytest.mark.parametrize(
@@ -207,15 +163,8 @@ class TestNico:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestSpotify:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.SPOTIFY) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.SPOTIFY)
-            is False
-        )
+def test_spotify(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.SPOTIFY
 
 
 @pytest.mark.parametrize(
@@ -238,15 +187,8 @@ class TestSpotify:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestApple:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.APPLE) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.APPLE)
-            is False
-        )
+def test_apple(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.APPLE
 
 
 @pytest.mark.parametrize(
@@ -261,15 +203,8 @@ class TestApple:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestDeezer:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.DEEZER) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.DEEZER)
-            is False
-        )
+def test_deezer(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.DEEZER
 
 
 @pytest.mark.parametrize(
@@ -292,12 +227,5 @@ class TestDeezer:
     ],
 )
 @pytest.mark.parametrize("scheme", schemes)
-class TestYandex:
-    def test_working(self, scheme: str, domain: str, path: str):
-        assert checker.check(scheme + domain + path, sites=Sites.YANDEX) is True
-
-    def test_not_included(self, scheme: str, domain: str, path: str):
-        assert (
-            checker.check(scheme + domain + path, sites=Sites.all() & ~Sites.YANDEX)
-            is False
-        )
+def test_yandex(scheme: str, domain: str, path: str):
+    assert check(scheme + domain + path) == Sites.YANDEX
