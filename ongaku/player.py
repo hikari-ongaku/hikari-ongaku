@@ -1032,15 +1032,15 @@ class Player:
 
         if len(self.queue) == 0:
             _logger.log(
-            TRACE_LEVEL,
-            f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Skipping.",
+                TRACE_LEVEL,
+                f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Skipping.",
             )
             return
-        
+
         if len(self.queue) == 1 and not self.loop:
             _logger.log(
-            TRACE_LEVEL,
-            f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Dispatching last known track.",
+                TRACE_LEVEL,
+                f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Dispatching last known track.",
             )
             new_event = events.QueueEmptyEvent.from_session(
                 self.session, guild_id=self.guild_id, old_track=self.queue[0]
@@ -1051,11 +1051,11 @@ class Player:
             await self.app.event_manager.dispatch(new_event)
 
             return
-        
+
         if not self.loop:
             _logger.log(
-            TRACE_LEVEL,
-            f"Autoplay for channel: {self.channel_id} in guild: {self.guild_id}. Removing old song.",
+                TRACE_LEVEL,
+                f"Autoplay for channel: {self.channel_id} in guild: {self.guild_id}. Removing old song.",
             )
             self.remove(0)
 
