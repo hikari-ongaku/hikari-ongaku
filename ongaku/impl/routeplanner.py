@@ -13,12 +13,13 @@ from ongaku.abc import routeplanner as routeplanner_
 if typing.TYPE_CHECKING:
     import datetime
 
-__all__ = ("RoutePlannerStatus", "RoutePlannerDetails", "IPBlock", "FailingAddress")
+__all__ = ("FailingAddress", "IPBlock", "RoutePlannerDetails", "RoutePlannerStatus")
 
 
 class RoutePlannerStatus(routeplanner_.RoutePlannerStatus):
     def __init__(
         self,
+        *,
         cls: routeplanner_.RoutePlannerType,
         details: routeplanner_.RoutePlannerDetails,
     ) -> None:
@@ -29,6 +30,7 @@ class RoutePlannerStatus(routeplanner_.RoutePlannerStatus):
 class RoutePlannerDetails(routeplanner_.RoutePlannerDetails):
     def __init__(
         self,
+        *,
         ip_block: routeplanner_.IPBlock,
         failing_addresses: typing.Sequence[routeplanner_.FailingAddress],
         rotate_index: str | None,
@@ -47,13 +49,15 @@ class RoutePlannerDetails(routeplanner_.RoutePlannerDetails):
 
 
 class IPBlock(routeplanner_.IPBlock):
-    def __init__(self, type: routeplanner_.IPBlockType, size: str) -> None:
+    def __init__(self, *, type: routeplanner_.IPBlockType, size: str) -> None:
         self._type = type
         self._size = size
 
 
 class FailingAddress(routeplanner_.FailingAddress):
-    def __init__(self, address: str, timestamp: datetime.datetime, time: str) -> None:
+    def __init__(
+        self, *, address: str, timestamp: datetime.datetime, time: str
+    ) -> None:
         self._address = address
         self._timestamp = timestamp
         self._time = time

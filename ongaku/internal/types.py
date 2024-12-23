@@ -10,7 +10,7 @@ import typing
 
 import hikari
 
-__all__ = ("RequestT", "RequestorT", "PayloadMappingT", "PayloadSequenceT")
+__all__ = ("PayloadMappingT", "PayloadSequenceT", "RequestT", "RequestorT")
 
 # Type Variables.
 

@@ -6,19 +6,21 @@ from ongaku.impl.track import TrackInfo
 
 def test_track():
     track_info = TrackInfo(
-        "identifier",
-        False,
-        "author",
-        1,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
+        identifier="identifier",
+        is_seekable=False,
+        author="author",
+        length=100,
+        is_stream=True,
+        position=2,
+        title="title",
+        source_name="source_name",
+        uri="uri",
+        artwork_url="artwork_url",
+        isrc="isrc",
     )
-    track = Track("encoded", track_info, {}, {}, None)
+    track = Track(
+        encoded="encoded", info=track_info, plugin_info={}, user_data={}, requestor=None
+    )
 
     assert track.encoded == "encoded"
     assert track.info == track_info
@@ -27,25 +29,41 @@ def test_track():
     assert track.requestor is None
 
 
+def test_set_user_data_track(ongaku_track_info: TrackInfo):
+    track = Track(
+        encoded="encoded",
+        info=ongaku_track_info,
+        plugin_info={},
+        user_data={},
+        requestor=None,
+    )
+
+    assert track.user_data == {}
+
+    track.user_data = {"beanos": "beanos"}
+
+    assert track.user_data == {"beanos": "beanos"}
+
+
 def test_track_info():
     track_info = TrackInfo(
-        "identifier",
-        False,
-        "author",
-        1,
-        True,
-        2,
-        "title",
-        "source_name",
-        "uri",
-        "artwork_url",
-        "isrc",
+        identifier="identifier",
+        is_seekable=False,
+        author="author",
+        length=100,
+        is_stream=True,
+        position=2,
+        title="title",
+        source_name="source_name",
+        uri="uri",
+        artwork_url="artwork_url",
+        isrc="isrc",
     )
 
     assert track_info.identifier == "identifier"
     assert track_info.is_seekable is False
     assert track_info.author == "author"
-    assert track_info.length == 1
+    assert track_info.length == 100
     assert track_info.is_stream is True
     assert track_info.position == 2
     assert track_info.title == "title"

@@ -8,6 +8,23 @@ from __future__ import annotations
 
 import typing
 
+__all__ = (
+    "DELETE_PLAYER",
+    "GET_DECODE_TRACK",
+    "GET_INFO",
+    "GET_LOAD_TRACKS",
+    "GET_PLAYER",
+    "GET_PLAYERS",
+    "GET_ROUTEPLANNER_STATUS",
+    "GET_STATISTICS",
+    "GET_VERSION",
+    "PATCH_PLAYER_UPDATE",
+    "PATCH_SESSION_UPDATE",
+    "POST_DECODE_TRACKS",
+    "POST_ROUTEPLANNER_FREE_ADDRESS",
+    "POST_ROUTEPLANNER_FREE_ALL",
+)
+
 GET: typing.Final[str] = "GET"
 POST: typing.Final[str] = "POST"
 PATCH: typing.Final[str] = "PATCH"
@@ -20,6 +37,8 @@ class Route:
 
     The route object that has mostly been built.
     """
+
+    __slots__ = ("_include_version", "_method", "_path")
 
     def __init__(self, method: str, path: str, *, include_version: bool = True) -> None:
         self._method = method

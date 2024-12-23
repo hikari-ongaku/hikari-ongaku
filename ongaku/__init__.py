@@ -12,7 +12,9 @@ from __future__ import annotations
 import logging
 
 from ongaku.abc.errors import SeverityType
+from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
 from ongaku.abc.playlist import Playlist
 from ongaku.abc.routeplanner import IPBlockType
@@ -28,6 +30,7 @@ from ongaku.errors import OngakuError
 from ongaku.errors import PlayerConnectError
 from ongaku.errors import PlayerError
 from ongaku.errors import PlayerMissingError
+from ongaku.errors import PlayerNotConnectedError
 from ongaku.errors import PlayerQueueError
 from ongaku.errors import RestEmptyError
 from ongaku.errors import RestError
@@ -64,63 +67,56 @@ from ongaku.session import Session
 logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
 
 __all__ = (
-    # .about
-    "__author__",
-    "__author_email__",
-    "__maintainer__",
-    "__license__",
-    "__url__",
-    "__version__",
-    # .client
-    "Client",
-    # .player
-    "Player",
-    # .session
-    "Session",
-    # .enums
-    "SeverityType",
-    "TrackEndReasonType",
-    "RoutePlannerType",
-    "IPBlockType",
-    "SessionStatus",
-    # .errors
-    "OngakuError",
-    "RestError",
-    "RestStatusError",
-    "RestRequestError",
-    "RestEmptyError",
-    "RestExceptionError",
-    "ClientError",
-    "ClientAliveError",
-    "SessionError",
-    "SessionStartError",
-    "SessionHandlerError",
-    "NoSessionsError",
-    "PlayerError",
-    "PlayerConnectError",
-    "PlayerQueueError",
-    "PlayerMissingError",
+    "BandType",
     "BuildError",
-    "TimeoutError",
-    # .events
+    "Client",
+    "ClientAliveError",
+    "ClientError",
+    "Extension",
+    "Filters",
+    "IPBlockType",
+    "NoSessionsError",
+    "OngakuError",
+    "OngakuEvent",
     "PayloadEvent",
-    "ReadyEvent",
+    "Player",
+    "PlayerConnectError",
+    "PlayerError",
+    "PlayerMissingError",
+    "PlayerNotConnectedError",
+    "PlayerQueueError",
     "PlayerUpdateEvent",
-    "StatisticsEvent",
-    "WebsocketClosedEvent",
-    "TrackStartEvent",
-    "TrackEndEvent",
-    "TrackExceptionEvent",
-    "TrackStuckEvent",
+    "Playlist",
     "QueueEmptyEvent",
     "QueueNextEvent",
-    # .filters
-    "Filters",
-    "BandType",
-    # .track
+    "ReadyEvent",
+    "RestEmptyError",
+    "RestError",
+    "RestExceptionError",
+    "RestRequestError",
+    "RestStatusError",
+    "RoutePlannerType",
+    "Session",
+    "SessionError",
+    "SessionHandlerError",
+    "SessionStartError",
+    "SessionStatus",
+    "SeverityType",
+    "StatisticsEvent",
+    "TimeoutError",
     "Track",
-    # .playlist
-    "Playlist",
+    "TrackEndEvent",
+    "TrackEndReasonType",
+    "TrackExceptionEvent",
+    "TrackStartEvent",
+    "TrackStuckEvent",
+    "WebsocketClosedEvent",
+    "__author__",
+    "__author_email__",
+    "__license__",
+    "__maintainer__",
+    "__url__",
+    "__version__",
 )
 
 

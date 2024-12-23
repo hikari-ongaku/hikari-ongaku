@@ -26,7 +26,17 @@ if typing.TYPE_CHECKING:
 
 __all__ = (
     "PayloadEvent",
+    "PlayerUpdateEvent",
+    "QueueEmptyEvent",
+    "QueueNextEvent",
     "ReadyEvent",
+    "StatisticsEvent",
+    "TrackEndEvent",
+    "TrackException",
+    "TrackExceptionEvent",
+    "TrackStartEvent",
+    "TrackStuckEvent",
+    "WebsocketClosedEvent",
 )
 
 
@@ -44,6 +54,8 @@ class PayloadEvent(events_.OngakuEvent):
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         payload: str,
     ) -> None:
         self._app = app
@@ -52,9 +64,9 @@ class PayloadEvent(events_.OngakuEvent):
         self._payload = payload
 
     @classmethod
-    def from_session(cls, session: Session, payload: str) -> PayloadEvent:
+    def from_session(cls, session: Session, /, *, payload: str) -> PayloadEvent:
         """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, payload)
+        return cls(session.app, session.client, session, payload=payload)
 
     @property
     def payload(self) -> str:
@@ -65,10 +77,7 @@ class PayloadEvent(events_.OngakuEvent):
         if not isinstance(other, PayloadEvent):
             return False
 
-        if self.payload != other.payload:
-            return False
-
-        return True
+        return self.payload == other.payload
 
 
 class ReadyEvent(events_.OngakuEvent):
@@ -87,6 +96,8 @@ class ReadyEvent(events_.OngakuEvent):
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         resumed: bool,
         session_id: str,
     ) -> None:
@@ -98,10 +109,12 @@ class ReadyEvent(events_.OngakuEvent):
 
     @classmethod
     def from_session(
-        cls, session: Session, resumed: bool, session_id: str
+        cls, session: Session, /, *, resumed: bool, session_id: str
     ) -> ReadyEvent:
         """Build the [ReadyEvent][ongaku.events.ReadyEvent] with just a session."""
-        return cls(session.app, session.client, session, resumed, session_id)
+        return cls(
+            session.app, session.client, session, resumed=resumed, session_id=session_id
+        )
 
     @property
     def resumed(self) -> bool:
@@ -120,10 +133,7 @@ class ReadyEvent(events_.OngakuEvent):
         if self.resumed != other.resumed:
             return False
 
-        if self.session_id != other.session_id:
-            return False
-
-        return True
+        return self.session_id == other.session_id
 
 
 class PlayerUpdateEvent(events_.OngakuEvent):
@@ -142,6 +152,8 @@ class PlayerUpdateEvent(events_.OngakuEvent):
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         state: State,
     ) -> None:
@@ -153,10 +165,10 @@ class PlayerUpdateEvent(events_.OngakuEvent):
 
     @classmethod
     def from_session(
-        cls, session: Session, guild_id: hikari.Snowflake, state: player_.State
+        cls, session: Session, /, *, guild_id: hikari.Snowflake, state: player_.State
     ) -> PlayerUpdateEvent:
         """Build the [PlayerUpdateEvent][ongaku.events.PlayerUpdateEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, state)
+        return cls(session.app, session.client, session, guild_id=guild_id, state=state)
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -175,10 +187,7 @@ class PlayerUpdateEvent(events_.OngakuEvent):
         if self.guild_id != other.guild_id:
             return False
 
-        if self.state != other.state:
-            return False
-
-        return True
+        return self.state == other.state
 
 
 class StatisticsEvent(events_.OngakuEvent):
@@ -191,12 +200,12 @@ class StatisticsEvent(events_.OngakuEvent):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_cpu",
+        "_frame_statistics",
+        "_memory",
         "_players",
         "_playing_players",
         "_uptime",
-        "_memory",
-        "_cpu",
-        "_frame_statistics",
     )
 
     def __init__(
@@ -204,6 +213,8 @@ class StatisticsEvent(events_.OngakuEvent):
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         players: int,
         playing_players: int,
         uptime: int,
@@ -225,6 +236,8 @@ class StatisticsEvent(events_.OngakuEvent):
     def from_session(
         cls,
         session: Session,
+        /,
+        *,
         players: int,
         playing_players: int,
         uptime: int,
@@ -237,12 +250,12 @@ class StatisticsEvent(events_.OngakuEvent):
             session.app,
             session.client,
             session,
-            players,
-            playing_players,
-            uptime,
-            memory,
-            cpu,
-            frame_statistics,
+            players=players,
+            playing_players=playing_players,
+            uptime=uptime,
+            memory=memory,
+            cpu=cpu,
+            frame_statistics=frame_statistics,
         )
 
     @property
@@ -292,6 +305,8 @@ class TrackStartEvent(events_.OngakuEvent):
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
     ) -> None:
@@ -303,10 +318,10 @@ class TrackStartEvent(events_.OngakuEvent):
 
     @classmethod
     def from_session(
-        cls, session: Session, guild_id: hikari.Snowflake, track: track_.Track
+        cls, session: Session, /, *, guild_id: hikari.Snowflake, track: track_.Track
     ) -> TrackStartEvent:
         """Build the [TrackStartEvent][ongaku.events.TrackStartEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track)
+        return cls(session.app, session.client, session, guild_id=guild_id, track=track)
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -325,10 +340,7 @@ class TrackStartEvent(events_.OngakuEvent):
         if self.guild_id != other.guild_id:
             return False
 
-        if self.track != other.track:
-            return False
-
-        return True
+        return self.track == other.track
 
 
 class TrackEndEvent(events_.OngakuEvent):
@@ -340,13 +352,15 @@ class TrackEndEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
     """
 
-    __slots__: typing.Sequence[str] = ("_guild_id", "_track", "_reason")
+    __slots__: typing.Sequence[str] = ("_guild_id", "_reason", "_track")
 
     def __init__(
         self,
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         reason: events_.TrackEndReasonType,
@@ -362,12 +376,21 @@ class TrackEndEvent(events_.OngakuEvent):
     def from_session(
         cls,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         reason: events_.TrackEndReasonType,
     ) -> TrackEndEvent:
         """Build the [TrackEndEvent][ongaku.events.TrackEndEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, reason)
+        return cls(
+            session.app,
+            session.client,
+            session,
+            guild_id=guild_id,
+            track=track,
+            reason=reason,
+        )
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -394,10 +417,7 @@ class TrackEndEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.reason != other.reason:
-            return False
-
-        return True
+        return self.reason == other.reason
 
 
 class TrackException(errors_.ExceptionError):
@@ -405,6 +425,7 @@ class TrackException(errors_.ExceptionError):
 
     def __init__(
         self,
+        *,
         message: str | None,
         severity: errors_.SeverityType,
         cause: str,
@@ -435,13 +456,15 @@ class TrackExceptionEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
     """
 
-    __slots__: typing.Sequence[str] = ("_guild_id", "_track", "_exception")
+    __slots__: typing.Sequence[str] = ("_exception", "_guild_id", "_track")
 
     def __init__(
         self,
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         exception: errors_.ExceptionError,
@@ -457,12 +480,21 @@ class TrackExceptionEvent(events_.OngakuEvent):
     def from_session(
         cls,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         exception: errors_.ExceptionError,
     ) -> TrackExceptionEvent:
         """Build the [TrackExceptionEvent][ongaku.events.TrackExceptionEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, exception)
+        return cls(
+            session.app,
+            session.client,
+            session,
+            guild_id=guild_id,
+            track=track,
+            exception=exception,
+        )
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -489,10 +521,7 @@ class TrackExceptionEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.exception != other.exception:
-            return False
-
-        return True
+        return self.exception == other.exception
 
 
 class TrackStuckEvent(events_.OngakuEvent):
@@ -504,17 +533,15 @@ class TrackStuckEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_guild_id",
-        "_track",
-        "_threshold_ms",
-    )
+    __slots__: typing.Sequence[str] = ("_guild_id", "_threshold_ms", "_track")
 
     def __init__(
         self,
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         threshold_ms: int,
@@ -530,12 +557,21 @@ class TrackStuckEvent(events_.OngakuEvent):
     def from_session(
         cls,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         threshold_ms: int,
     ) -> TrackStuckEvent:
         """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, threshold_ms)
+        return cls(
+            session.app,
+            session.client,
+            session,
+            guild_id=guild_id,
+            track=track,
+            threshold_ms=threshold_ms,
+        )
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -562,10 +598,7 @@ class TrackStuckEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.threshold_ms != other.threshold_ms:
-            return False
-
-        return True
+        return self.threshold_ms != other.threshold_ms
 
 
 class WebsocketClosedEvent(events_.OngakuEvent):
@@ -577,18 +610,15 @@ class WebsocketClosedEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_guild_id",
-        "_code",
-        "_reason",
-        "_by_remote",
-    )
+    __slots__: typing.Sequence[str] = ("_by_remote", "_code", "_guild_id", "_reason")
 
     def __init__(
         self,
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         code: int,
         reason: str,
@@ -606,6 +636,8 @@ class WebsocketClosedEvent(events_.OngakuEvent):
     def from_session(
         cls,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         code: int,
         reason: str,
@@ -613,7 +645,13 @@ class WebsocketClosedEvent(events_.OngakuEvent):
     ) -> WebsocketClosedEvent:
         """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
         return cls(
-            session.app, session.client, session, guild_id, code, reason, by_remote
+            session.app,
+            session.client,
+            session,
+            guild_id=guild_id,
+            code=code,
+            reason=reason,
+            by_remote=by_remote,
         )
 
     @property
@@ -649,10 +687,7 @@ class WebsocketClosedEvent(events_.OngakuEvent):
         if self.reason != other.reason:
             return False
 
-        if self.by_remote != other.by_remote:
-            return False
-
-        return True
+        return self.by_remote == other.by_remote
 
 
 class QueueEmptyEvent(events_.OngakuEvent):
@@ -669,6 +704,8 @@ class QueueEmptyEvent(events_.OngakuEvent):
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         old_track: track_.Track,
     ) -> None:
@@ -680,10 +717,12 @@ class QueueEmptyEvent(events_.OngakuEvent):
 
     @classmethod
     def from_session(
-        cls, session: Session, guild_id: hikari.Snowflake, old_track: track_.Track
+        cls, session: Session, /, *, guild_id: hikari.Snowflake, old_track: track_.Track
     ) -> QueueEmptyEvent:
         """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, old_track)
+        return cls(
+            session.app, session.client, session, guild_id=guild_id, old_track=old_track
+        )
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -702,10 +741,7 @@ class QueueEmptyEvent(events_.OngakuEvent):
         if self.guild_id != other.guild_id:
             return False
 
-        if self.old_track != other.old_track:
-            return False
-
-        return True
+        return self.old_track == other.old_track
 
 
 class QueueNextEvent(events_.OngakuEvent):
@@ -715,13 +751,15 @@ class QueueNextEvent(events_.OngakuEvent):
     Dispatched when the player starts playing a new track.
     """
 
-    __slots__: typing.Sequence[str] = ("_guild_id", "_track", "_old_track")
+    __slots__: typing.Sequence[str] = ("_guild_id", "_old_track", "_track")
 
     def __init__(
         self,
         app: hikari.RESTAware,
         client: Client,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         old_track: track_.Track,
@@ -737,12 +775,21 @@ class QueueNextEvent(events_.OngakuEvent):
     def from_session(
         cls,
         session: Session,
+        /,
+        *,
         guild_id: hikari.Snowflake,
         track: track_.Track,
         old_track: track_.Track,
     ) -> QueueNextEvent:
         """Build the [PayloadEvent][ongaku.events.PayloadEvent] with just a session."""
-        return cls(session.app, session.client, session, guild_id, track, old_track)
+        return cls(
+            session.app,
+            session.client,
+            session,
+            guild_id=guild_id,
+            track=track,
+            old_track=old_track,
+        )
 
     @property
     def guild_id(self) -> hikari.Snowflake:
@@ -769,10 +816,7 @@ class QueueNextEvent(events_.OngakuEvent):
         if self.track != other.track:
             return False
 
-        if self.old_track != other.old_track:
-            return False
-
-        return True
+        return self.old_track == other.old_track
 
 
 # MIT License

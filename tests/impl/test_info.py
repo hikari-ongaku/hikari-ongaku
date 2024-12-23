@@ -10,13 +10,30 @@ from ongaku.impl.info import Version
 
 def test_info():
     time = datetime.datetime.now()
-    version = Version("semver", 1, 2, 3, "pre_release", "build")
-    git = Git("branch", "commit", time)
+    version = Version(
+        semver="semver",
+        major=1,
+        minor=2,
+        patch=3,
+        pre_release="pre_release",
+        build="build",
+    )
+    git = Git(branch="branch", commit="commit", commit_time=time)
     source_managers = ["source_manager_1", "source_manager_2"]
     filters = ["filter_1", "filter_2"]
-    plugins = [Plugin("name_1", "version_1"), Plugin("name_2", "version_2")]
+    plugins = [
+        Plugin(name="name_1", version="version_1"),
+        Plugin(name="name_2", version="version_2"),
+    ]
     info = Info(
-        version, time, git, "jvm", "lavaplayer", source_managers, filters, plugins
+        version=version,
+        build_time=time,
+        git=git,
+        jvm="jvm",
+        lavaplayer="lavaplayer",
+        source_managers=source_managers,
+        filters=filters,
+        plugins=plugins,
     )
 
     assert info.version == version
@@ -30,7 +47,14 @@ def test_info():
 
 
 def test_info_version():
-    info_version = Version("semver", 1, 2, 3, "pre_release", "build")
+    info_version = Version(
+        semver="semver",
+        major=1,
+        minor=2,
+        patch=3,
+        pre_release="pre_release",
+        build="build",
+    )
 
     assert info_version.semver == "semver"
     assert info_version.major == 1
@@ -42,7 +66,7 @@ def test_info_version():
 
 def test_info_git():
     time = datetime.datetime.now()
-    info_git = Git("branch", "commit", time)
+    info_git = Git(branch="branch", commit="commit", commit_time=time)
 
     assert info_git.branch == "branch"
     assert info_git.commit == "commit"
@@ -50,7 +74,7 @@ def test_info_git():
 
 
 def test_info_plugin():
-    info_plugin = Plugin("name", "version")
+    info_plugin = Plugin(name="name", version="version")
 
     assert info_plugin.name == "name"
     assert info_plugin.version == "version"

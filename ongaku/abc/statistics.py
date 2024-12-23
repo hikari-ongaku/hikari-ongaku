@@ -9,7 +9,7 @@ from __future__ import annotations
 import abc
 import typing
 
-__all__ = ("Memory", "Cpu", "FrameStatistics", "Statistics")
+__all__ = ("Cpu", "FrameStatistics", "Memory", "Statistics")
 
 
 class Statistics(abc.ABC):
@@ -21,38 +21,41 @@ class Statistics(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#stats-object)
     """
 
+    __slots__: typing.Sequence[str] = (
+        "_cpu",
+        "_frame_statistics",
+        "_memory",
+        "_players",
+        "_playing_players",
+        "_uptime",
+    )
+
     @property
-    @abc.abstractmethod
     def players(self) -> int:
         """The amount of players connected to the session."""
         ...
 
     @property
-    @abc.abstractmethod
     def playing_players(self) -> int:
         """The amount of players playing a track."""
         ...
 
     @property
-    @abc.abstractmethod
     def uptime(self) -> int:
         """The uptime of the session in milliseconds."""
         ...
 
     @property
-    @abc.abstractmethod
     def memory(self) -> Memory:
         """The memory stats of the session."""
         ...
 
     @property
-    @abc.abstractmethod
     def cpu(self) -> Cpu:
         """The CPU stats of the session."""
         ...
 
     @property
-    @abc.abstractmethod
     def frame_stats(self) -> FrameStatistics | None:
         """The frame statistics of the session."""
         ...
@@ -76,10 +79,7 @@ class Statistics(abc.ABC):
         if self.cpu != other.cpu:
             return False
 
-        if self.frame_stats != other.frame_stats:
-            return False
-
-        return True
+        return self.frame_stats == other.frame_stats
 
 
 class Memory(abc.ABC):
@@ -91,12 +91,7 @@ class Memory(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#memory)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_free",
-        "_used",
-        "_allocated",
-        "_reservable",
-    )
+    __slots__: typing.Sequence[str] = ("_allocated", "_free", "_reservable", "_used")
 
     @property
     def free(self) -> int:
@@ -131,10 +126,7 @@ class Memory(abc.ABC):
         if self.allocated != other.allocated:
             return False
 
-        if self.reservable != other.reservable:
-            return False
-
-        return True
+        return self.reservable == other.reservable
 
 
 class Cpu(abc.ABC):
@@ -146,11 +138,7 @@ class Cpu(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#cpu)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_cores",
-        "_system_load",
-        "_lavalink_load",
-    )
+    __slots__: typing.Sequence[str] = ("_cores", "_lavalink_load", "_system_load")
 
     @property
     def cores(self) -> int:
@@ -177,10 +165,7 @@ class Cpu(abc.ABC):
         if self.system_load != other.system_load:
             return False
 
-        if self.lavalink_load != other.lavalink_load:
-            return False
-
-        return True
+        return self.lavalink_load == other.lavalink_load
 
 
 class FrameStatistics(abc.ABC):
@@ -192,7 +177,7 @@ class FrameStatistics(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#frame-stats)
     """
 
-    __slots__: typing.Sequence[str] = ("_sent", "_nulled", "_deficit")
+    __slots__: typing.Sequence[str] = ("_deficit", "_nulled", "_sent")
 
     @property
     def sent(self) -> int:
@@ -219,10 +204,7 @@ class FrameStatistics(abc.ABC):
         if self.nulled != other.nulled:
             return False
 
-        if self.deficit != other.deficit:
-            return False
-
-        return True
+        return self.deficit == other.deficit
 
 
 # MIT License

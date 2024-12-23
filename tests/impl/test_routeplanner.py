@@ -12,21 +12,23 @@ from ongaku.impl.routeplanner import RoutePlannerStatus
 
 
 def test_routeplanner_status():
-    ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
+    ip_block = IPBlock(type=IPBlockType.INET_4_ADDRESS, size="size")
     failing_address = FailingAddress(
-        "failing_address", datetime.datetime.now(), "failing_time"
+        address="failing_address",
+        timestamp=datetime.datetime.now(),
+        time="failing_time",
     )
     routeplanner_details = RoutePlannerDetails(
-        ip_block,
-        [failing_address],
-        "rotate_index",
-        "ip_index",
-        "current_address",
-        "current_address_index",
-        "block_index",
+        ip_block=ip_block,
+        failing_addresses=[failing_address],
+        rotate_index="rotate_index",
+        ip_index="ip_index",
+        current_address="current_address",
+        current_address_index="current_address_index",
+        block_index="block_index",
     )
     routeplanner_status = RoutePlannerStatus(
-        RoutePlannerType.ROTATING_ROUTE_PLANNER, routeplanner_details
+        cls=RoutePlannerType.ROTATING_ROUTE_PLANNER, details=routeplanner_details
     )
 
     assert routeplanner_status.cls == RoutePlannerType.ROTATING_ROUTE_PLANNER
@@ -34,18 +36,20 @@ def test_routeplanner_status():
 
 
 def test_routeplanner_details():
-    ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
+    ip_block = IPBlock(type=IPBlockType.INET_4_ADDRESS, size="size")
     failing_address = FailingAddress(
-        "failing_address", datetime.datetime.now(), "failing_time"
+        address="failing_address",
+        timestamp=datetime.datetime.now(),
+        time="failing_time",
     )
     routeplanner_details = RoutePlannerDetails(
-        ip_block,
-        [failing_address],
-        "rotate_index",
-        "ip_index",
-        "current_address",
-        "current_address_index",
-        "block_index",
+        ip_block=ip_block,
+        failing_addresses=[failing_address],
+        rotate_index="rotate_index",
+        ip_index="ip_index",
+        current_address="current_address",
+        current_address_index="current_address_index",
+        block_index="block_index",
     )
 
     assert routeplanner_details.ip_block == ip_block
@@ -60,7 +64,7 @@ def test_routeplanner_details():
 
 
 def test_ip_block():
-    ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
+    ip_block = IPBlock(type=IPBlockType.INET_4_ADDRESS, size="size")
 
     assert ip_block.type == IPBlockType.INET_4_ADDRESS
     assert ip_block.size == "size"
@@ -68,7 +72,11 @@ def test_ip_block():
 
 def test_failing_address():
     time = datetime.datetime.now()
-    failing_address = FailingAddress("failing_address", time, "failing_time")
+    failing_address = FailingAddress(
+        address="failing_address",
+        timestamp=time,
+        time="failing_time",
+    )
 
     assert failing_address.address == "failing_address"
     assert failing_address.timestamp == time
