@@ -44,6 +44,8 @@ if typing.TYPE_CHECKING:
 
 _logger = logger.getChild("builder")
 
+__all__ = ("EntityBuilder",)
+
 
 class EntityBuilder:
     """Entity Builder.

@@ -13,10 +13,10 @@ if typing.TYPE_CHECKING:
     import datetime
 
 __all__ = (
-    "Version",
     "Git",
-    "Plugin",
     "Info",
+    "Plugin",
+    "Version",
 )
 
 
@@ -30,14 +30,14 @@ class Info(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_version",
         "_build_time",
+        "_filters",
         "_git",
         "_jvm",
         "_lavaplayer",
-        "_source_managers",
-        "_filters",
         "_plugins",
+        "_source_managers",
+        "_version",
     )
 
     @property
@@ -118,12 +118,12 @@ class Version(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_semver",
+        "_build",
         "_major",
         "_minor",
         "_patch",
         "_pre_release",
-        "_build",
+        "_semver",
     )
 
     @property

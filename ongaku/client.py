@@ -66,11 +66,11 @@ class Client:
     __slots__: typing.Sequence[str] = (
         "_app",
         "_client_session",
-        "_rest_client",
-        "_is_alive",
-        "_session_handler",
         "_entity_builder",
         "_extensions",
+        "_is_alive",
+        "_rest_client",
+        "_session_handler",
     )
 
     def __init__(

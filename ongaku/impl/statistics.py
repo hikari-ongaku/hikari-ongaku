@@ -10,17 +10,17 @@ import typing
 
 from ongaku.abc import statistics as statistics_
 
-__all__ = ("Statistics", "Memory", "Cpu", "FrameStatistics")
+__all__ = ("Cpu", "FrameStatistics", "Memory", "Statistics")
 
 
 class Statistics(statistics_.Statistics):
     __slots__: typing.Sequence[str] = (
+        "_cpu",
+        "_frame_statistics",
+        "_memory",
         "_players",
         "_playing_players",
         "_uptime",
-        "_memory",
-        "_cpu",
-        "_frame_statistics",
     )
 
     def __init__(

@@ -3,6 +3,20 @@ from __future__ import annotations
 import enum
 import typing
 
+__all__ = (
+    "BandType",
+    "ChannelMix",
+    "Distortion",
+    "Equalizer",
+    "Filters",
+    "Karaoke",
+    "LowPass",
+    "Rotation",
+    "Timescale",
+    "Tremolo",
+    "Vibrato",
+)
+
 
 class Filters:
     """Filters.
@@ -13,17 +27,17 @@ class Filters:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_volume",
+        "_channel_mix",
+        "_distortion",
         "_equalizer",
         "_karaoke",
+        "_low_pass",
+        "_plugin_filters",
+        "_rotation",
         "_timescale",
         "_tremolo",
         "_vibrato",
-        "_rotation",
-        "_distortion",
-        "_channel_mix",
-        "_low_pass",
-        "_plugin_filters",
+        "_volume",
     )
 
     @property
@@ -194,10 +208,10 @@ class Karaoke:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_level",
-        "_mono_level",
         "_filter_band",
         "_filter_width",
+        "_level",
+        "_mono_level",
     )
 
     @property
@@ -244,7 +258,7 @@ class Timescale:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#timescale)
     """
 
-    __slots__: typing.Sequence[str] = ("_speed", "_pitch", "_rate")
+    __slots__: typing.Sequence[str] = ("_pitch", "_rate", "_speed")
 
     @property
     def speed(self) -> float | None:
@@ -283,8 +297,8 @@ class Tremolo:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_frequency",
         "_depth",
+        "_frequency",
     )
 
     @property
@@ -316,8 +330,8 @@ class Vibrato:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_frequency",
         "_depth",
+        "_frequency",
     )
 
     @property
@@ -348,7 +362,7 @@ class Rotation:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#rotation)
     """
 
-    __slots__: typing.Sequence[str] = "_rotation_hz"
+    __slots__: typing.Sequence[str] = ("_rotation_hz",)
 
     @property
     def rotation_hz(self) -> float | None:
@@ -371,14 +385,14 @@ class Distortion:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_sin_offset",
-        "_sin_scale",
         "_cos_offset",
         "_cos_scale",
-        "_tan_offset",
-        "_tan_scale",
         "_offset",
         "_scale",
+        "_sin_offset",
+        "_sin_scale",
+        "_tan_offset",
+        "_tan_scale",
     )
 
     @property

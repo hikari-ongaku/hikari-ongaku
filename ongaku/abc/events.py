@@ -27,7 +27,7 @@ class OngakuEvent(hikari.Event):
     The base ongaku event, that adds the client and session to all events.
     """
 
-    __slots__: typing.Sequence[str] = ("_client", "_session", "_app")
+    __slots__: typing.Sequence[str] = ("_app", "_client", "_session")
 
     @property
     def client(self) -> Client:

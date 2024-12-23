@@ -52,17 +52,17 @@ class Player(player_.Player):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_session",
+        "_autoplay",
         "_channel_id",
+        "_connected",
         "_is_alive",
+        "_loop",
+        "_position",
         "_queue",
+        "_session",
+        "_session_id",
         "_state",
         "_voice",
-        "_connected",
-        "_session_id",
-        "_autoplay",
-        "_position",
-        "_loop",
     )
 
     def __init__(self, session: Session, guild: hikari.SnowflakeishOr[hikari.Guild], /):

@@ -2,6 +2,15 @@
 
 import typing
 
+__all__ = (
+    "__author__",
+    "__author_email__",
+    "__license__",
+    "__maintainer__",
+    "__url__",
+    "__version__",
+)
+
 __author__: typing.Final[str] = "mplaty"
 __author_email__: typing.Final[str] = "contact@mplaty.com"
 __maintainer__: typing.Final[str] = "MPlaty"

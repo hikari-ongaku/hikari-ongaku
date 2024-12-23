@@ -14,12 +14,12 @@ if typing.TYPE_CHECKING:
     import datetime
 
 __all__ = (
-    "RoutePlannerStatus",
-    "RoutePlannerDetails",
-    "IPBlock",
     "FailingAddress",
-    "RoutePlannerType",
+    "IPBlock",
     "IPBlockType",
+    "RoutePlannerDetails",
+    "RoutePlannerStatus",
+    "RoutePlannerType",
 )
 
 
@@ -64,13 +64,13 @@ class RoutePlannerDetails(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_ip_block",
-        "_failing_addresses",
-        "_rotate_index",
-        "_ip_index",
+        "_block_index",
         "_current_address",
         "_current_address_index",
-        "_block_index",
+        "_failing_addresses",
+        "_ip_block",
+        "_ip_index",
+        "_rotate_index",
     )
 
     @property
@@ -142,7 +142,7 @@ class IPBlock(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
     """
 
-    __slots__: typing.Sequence[str] = ("_type", "_size")
+    __slots__: typing.Sequence[str] = ("_size", "_type")
 
     @property
     def type(self) -> IPBlockType:
@@ -171,11 +171,7 @@ class FailingAddress(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_address",
-        "_timestamp",
-        "_time",
-    )
+    __slots__: typing.Sequence[str] = ("_address", "_time", "_timestamp")
 
     @property
     def address(self) -> str:

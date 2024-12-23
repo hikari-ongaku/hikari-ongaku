@@ -9,7 +9,7 @@ from __future__ import annotations
 import abc
 import typing
 
-__all__ = ("Memory", "Cpu", "FrameStatistics", "Statistics")
+__all__ = ("Cpu", "FrameStatistics", "Memory", "Statistics")
 
 
 class Statistics(abc.ABC):
@@ -22,12 +22,12 @@ class Statistics(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_cpu",
+        "_frame_statistics",
+        "_memory",
         "_players",
         "_playing_players",
         "_uptime",
-        "_memory",
-        "_cpu",
-        "_frame_statistics",
     )
 
     @property
@@ -91,12 +91,7 @@ class Memory(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#memory)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_free",
-        "_used",
-        "_allocated",
-        "_reservable",
-    )
+    __slots__: typing.Sequence[str] = ("_allocated", "_free", "_reservable", "_used")
 
     @property
     def free(self) -> int:
@@ -143,11 +138,7 @@ class Cpu(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#cpu)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_cores",
-        "_system_load",
-        "_lavalink_load",
-    )
+    __slots__: typing.Sequence[str] = ("_cores", "_lavalink_load", "_system_load")
 
     @property
     def cores(self) -> int:
@@ -186,7 +177,7 @@ class FrameStatistics(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#frame-stats)
     """
 
-    __slots__: typing.Sequence[str] = ("_sent", "_nulled", "_deficit")
+    __slots__: typing.Sequence[str] = ("_deficit", "_nulled", "_sent")
 
     @property
     def sent(self) -> int:

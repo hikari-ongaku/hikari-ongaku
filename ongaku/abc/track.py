@@ -13,8 +13,8 @@ if typing.TYPE_CHECKING:
     import hikari
 
 __all__ = (
-    "TrackInfo",
     "Track",
+    "TrackInfo",
 )
 
 
@@ -31,8 +31,8 @@ class Track(abc.ABC):
         "_encoded",
         "_info",
         "_plugin_info",
-        "_user_data",
         "_requestor",
+        "_user_data",
     )
 
     @property
@@ -98,17 +98,17 @@ class TrackInfo(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_artwork_url",
+        "_author",
         "_identifier",
         "_is_seekable",
-        "_author",
-        "_length",
         "_is_stream",
-        "_position",
-        "_title",
-        "_source_name",
-        "_uri",
-        "_artwork_url",
         "_isrc",
+        "_length",
+        "_position",
+        "_source_name",
+        "_title",
+        "_uri",
     )
 
     @property

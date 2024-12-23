@@ -18,9 +18,9 @@ if typing.TYPE_CHECKING:
     from ongaku.abc.track import Track
 
 __all__ = (
+    "Player",
     "State",
     "Voice",
-    "Player",
 )
 
 
@@ -34,13 +34,13 @@ class Player(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_filters",
         "_guild_id",
-        "_track",
-        "_volume",
         "_is_paused",
         "_state",
+        "_track",
         "_voice",
-        "_filters",
+        "_volume",
     )
 
     @property
@@ -117,10 +117,10 @@ class State(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_time",
-        "_position",
         "_connected",
         "_ping",
+        "_position",
+        "_time",
     )
 
     @property
@@ -169,9 +169,9 @@ class Voice(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_token",
         "_endpoint",
         "_session_id",
+        "_token",
     )
 
     @property
