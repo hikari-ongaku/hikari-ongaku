@@ -84,12 +84,9 @@ def test_bandcamp(scheme: str, domain: str, path: str):
         "soundcloud.com/user1234/song1234",
         "www.soundcloud.com/band/abcd1234",
         "m.soundcloud.com/dj/super-mix?abcd=1234",
-        "on.soundcloud.com/abcd1234",
-        "on.soundcloud.com/abcd1234?abcd=1234",
         "soundcloud.com/user1234/song1234/s-abcd1234",
         "www.soundcloud.com/band/album1234/s-abcd1234",
         "m.soundcloud.com/dj/super-mix/s-abcd1234?abcd=1234",
-        "on.soundcloud.com/abcd1234",
         "soundcloud.com/user123/likes",
         "soundcloud.com/artist/likes",
         "www.soundcloud.com/band/likes",
@@ -99,6 +96,17 @@ def test_bandcamp(scheme: str, domain: str, path: str):
 @pytest.mark.parametrize("scheme", schemes)
 def test_soundcloud(scheme: str, url: str):
     assert check(scheme + url) == Sites.SOUNDCLOUD
+
+
+@pytest.mark.parametrize(
+    "url", 
+    [
+        "https://on.soundcloud.com/abcd1234",
+        "https://on.soundcloud.com/abcd1234?abcd=1234",
+    ]
+)
+def test_soundcloud_https_only(url: str):
+    assert check(url) == Sites.SOUNDCLOUD
 
 
 @pytest.mark.parametrize(
