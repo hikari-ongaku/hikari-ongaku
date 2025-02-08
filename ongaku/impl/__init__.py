@@ -5,7 +5,6 @@ All implementations of abstract classes.
 
 from __future__ import annotations
 
-from ongaku.abc.filters import BandType
 from ongaku.impl.filters import Filters
 from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.impl.info import Git
@@ -30,38 +29,28 @@ from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 
 __all__ = (
-    # .filters
-    "BandType",
-    "Filters",
-    # .handlers
     "BasicSessionHandler",
-    # .info
-    "Info",
-    "Version",
+    "Cpu",
+    "FailingAddress",
+    "Filters",
+    "FrameStatistics",
     "Git",
-    "Plugin",
-    # .player
+    "IPBlock",
+    "Info",
+    "Memory",
     "Player",
-    "State",
-    "Voice",
-    # .playlist
     "Playlist",
     "PlaylistInfo",
-    # .routeplanner
-    "RoutePlannerStatus",
+    "Plugin",
     "RoutePlannerDetails",
-    "IPBlock",
-    "FailingAddress",
-    # .session
+    "RoutePlannerStatus",
     "Session",
-    # .statistics
+    "State",
     "Statistics",
-    "Memory",
-    "Cpu",
-    "FrameStatistics",
-    # .track
     "Track",
     "TrackInfo",
+    "Version",
+    "Voice",
 )
 
 

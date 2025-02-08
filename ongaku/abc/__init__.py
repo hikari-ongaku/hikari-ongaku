@@ -48,58 +48,46 @@ from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 
 __all__ = (
-    # .errors
-    "ExceptionError",
-    "SeverityType",
-    # .events
-    "OngakuEvent",
-    "TrackEndReasonType",
-    # .extensions
-    "Extension",
-    # .filters
-    "Filters",
-    "Equalizer",
-    "Karaoke",
-    "Timescale",
-    "Tremolo",
-    "Vibrato",
-    "Rotation",
-    "Distortion",
-    "ChannelMix",
-    "LowPass",
     "BandType",
-    # .handler
-    "SessionHandler",
-    # .info
-    "Info",
-    "Version",
-    "Git",
-    "Plugin",
-    # .player
-    "Player",
-    "State",
-    "Voice",
-    # .playlist
-    "PlaylistInfo",
-    "Playlist",
-    # .routeplanner
-    "RoutePlannerStatus",
-    "RoutePlannerDetails",
-    "IPBlock",
-    "FailingAddress",
-    "RoutePlannerType",
-    "IPBlockType",
-    # .session
-    "Session",
-    "SessionStatus",
-    # .statistics
-    "Statistics",
-    "Memory",
+    "ChannelMix",
     "Cpu",
+    "Distortion",
+    "Equalizer",
+    "ExceptionError",
+    "Extension",
+    "FailingAddress",
+    "Filters",
     "FrameStatistics",
-    # .track
-    "TrackInfo",
+    "Git",
+    "IPBlock",
+    "IPBlockType",
+    "Info",
+    "Karaoke",
+    "LowPass",
+    "Memory",
+    "OngakuEvent",
+    "Player",
+    "Playlist",
+    "PlaylistInfo",
+    "Plugin",
+    "Rotation",
+    "RoutePlannerDetails",
+    "RoutePlannerStatus",
+    "RoutePlannerType",
+    "Session",
+    "SessionHandler",
+    "SessionStatus",
+    "SeverityType",
+    "State",
+    "Statistics",
+    "Timescale",
     "Track",
+    "TrackEndReasonType",
+    "TrackInfo",
+    "Tremolo",
+    "Version",
+    "Vibrato",
+    "Voice",
 )
 
 

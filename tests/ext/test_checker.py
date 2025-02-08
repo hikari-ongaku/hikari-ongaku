@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from ongaku.ext.checker import Sites
-from ongaku.ext.checker import checker
+from ongaku.ext import checker
 
 schemes = ["http://", "https://"]
 

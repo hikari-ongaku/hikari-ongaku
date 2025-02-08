@@ -12,7 +12,7 @@ import typing
 if typing.TYPE_CHECKING:
     from ongaku.abc.track import Track
 
-__all__ = ("PlaylistInfo", "Playlist")
+__all__ = ("Playlist", "PlaylistInfo")
 
 
 class Playlist(abc.ABC):
@@ -26,8 +26,8 @@ class Playlist(abc.ABC):
 
     __slots__: typing.Sequence[str] = (
         "_info",
-        "_tracks",
         "_plugin_info",
+        "_tracks",
     )
 
     @property

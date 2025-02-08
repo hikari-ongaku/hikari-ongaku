@@ -13,7 +13,7 @@ from ongaku.abc import info as info_
 if typing.TYPE_CHECKING:
     import datetime
 
-__all__ = ("Info", "Version", "Git", "Plugin")
+__all__ = ("Git", "Info", "Plugin", "Version")
 
 
 class Info(info_.Info):

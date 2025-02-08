@@ -1035,7 +1035,7 @@ class TestPlayerTrackEndEvent:
 
             patched_dispatch.assert_called_once()
 
-            patched_play.assert_not_called()
+            patched_play.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_invalid_track_end_types(self, ongaku_session: Session):

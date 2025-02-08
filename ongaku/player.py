@@ -52,17 +52,17 @@ class Player(player_.Player):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_session",
+        "_autoplay",
         "_channel_id",
+        "_connected",
         "_is_alive",
+        "_loop",
+        "_position",
         "_queue",
+        "_session",
+        "_session_id",
         "_state",
         "_voice",
-        "_connected",
-        "_session_id",
-        "_autoplay",
-        "_position",
-        "_loop",
     )
 
     def __init__(self, session: Session, guild: hikari.SnowflakeishOr[hikari.Guild], /):
@@ -1000,6 +1000,11 @@ class Player(player_.Player):
     async def _track_end_event(self, event: TrackEndEvent) -> None:
         self.session._get_session_id()
 
+        if event.guild_id != self.guild_id:
+            return
+
+        self._track = None
+
         if not self.autoplay:
             return
 
@@ -1014,33 +1019,33 @@ class Player(player_.Player):
             f"Auto-playing track for channel: {self.channel_id} in guild: {self.guild_id}",
         )
 
-        if event.guild_id != self.guild_id:
-            return
-        _logger.log(
-            TRACE_LEVEL,
-            f"Removing current track from queue for channel: {self.channel_id} in guild: {self.guild_id}",
-        )
-
         if len(self.queue) == 0:
+            _logger.log(
+                TRACE_LEVEL,
+                f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Skipping.",
+            )
             return
 
-        if len(self.queue) == 1:
+        if len(self.queue) == 1 and not self.loop:
+            _logger.log(
+                TRACE_LEVEL,
+                f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Dispatching last known track.",
+            )
             new_event = events.QueueEmptyEvent.from_session(
                 self.session, guild_id=self.guild_id, old_track=self.queue[0]
             )
 
-            if not self._loop:
-                _logger.log(
-                    TRACE_LEVEL, f"Removing last track in guild {self.guild_id}"
-                )
-                self.remove(0)
+            self.remove(0)
 
             await self.app.event_manager.dispatch(new_event)
 
             return
 
-        if not self._loop:
-            _logger.log(TRACE_LEVEL, f"Removing first track from guild {self.guild_id}")
+        if not self.loop:
+            _logger.log(
+                TRACE_LEVEL,
+                f"Autoplay for channel: {self.channel_id} in guild: {self.guild_id}. Removing old song.",
+            )
             self.remove(0)
 
         _logger.log(

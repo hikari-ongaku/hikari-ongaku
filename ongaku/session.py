@@ -55,19 +55,19 @@ class Session:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_client",
-        "_name",
-        "_ssl",
-        "_host",
-        "_port",
-        "_password",
+        "_authorization_headers",
         "_base_uri",
+        "_client",
+        "_host",
+        "_name",
+        "_password",
+        "_players",
+        "_port",
         "_session_id",
         "_session_task",
+        "_ssl",
         "_status",
-        "_players",
         "_websocket_headers",
-        "_authorization_headers",
     )
 
     def __init__(

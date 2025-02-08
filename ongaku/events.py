@@ -26,7 +26,17 @@ if typing.TYPE_CHECKING:
 
 __all__ = (
     "PayloadEvent",
+    "PlayerUpdateEvent",
+    "QueueEmptyEvent",
+    "QueueNextEvent",
     "ReadyEvent",
+    "StatisticsEvent",
+    "TrackEndEvent",
+    "TrackException",
+    "TrackExceptionEvent",
+    "TrackStartEvent",
+    "TrackStuckEvent",
+    "WebsocketClosedEvent",
 )
 
 
@@ -190,12 +200,12 @@ class StatisticsEvent(events_.OngakuEvent):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_cpu",
+        "_frame_statistics",
+        "_memory",
         "_players",
         "_playing_players",
         "_uptime",
-        "_memory",
-        "_cpu",
-        "_frame_statistics",
     )
 
     def __init__(
@@ -342,7 +352,7 @@ class TrackEndEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackendevent)
     """
 
-    __slots__: typing.Sequence[str] = ("_guild_id", "_track", "_reason")
+    __slots__: typing.Sequence[str] = ("_guild_id", "_reason", "_track")
 
     def __init__(
         self,
@@ -446,7 +456,7 @@ class TrackExceptionEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackexceptionevent)
     """
 
-    __slots__: typing.Sequence[str] = ("_guild_id", "_track", "_exception")
+    __slots__: typing.Sequence[str] = ("_exception", "_guild_id", "_track")
 
     def __init__(
         self,
@@ -523,11 +533,7 @@ class TrackStuckEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#trackstuckevent)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_guild_id",
-        "_track",
-        "_threshold_ms",
-    )
+    __slots__: typing.Sequence[str] = ("_guild_id", "_threshold_ms", "_track")
 
     def __init__(
         self,
@@ -604,12 +610,7 @@ class WebsocketClosedEvent(events_.OngakuEvent):
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket.html#websocketclosedevent)
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_guild_id",
-        "_code",
-        "_reason",
-        "_by_remote",
-    )
+    __slots__: typing.Sequence[str] = ("_by_remote", "_code", "_guild_id", "_reason")
 
     def __init__(
         self,
@@ -750,7 +751,7 @@ class QueueNextEvent(events_.OngakuEvent):
     Dispatched when the player starts playing a new track.
     """
 
-    __slots__: typing.Sequence[str] = ("_guild_id", "_track", "_old_track")
+    __slots__: typing.Sequence[str] = ("_guild_id", "_old_track", "_track")
 
     def __init__(
         self,

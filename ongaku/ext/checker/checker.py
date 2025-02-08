@@ -7,8 +7,9 @@ The extension, that allows you to check if a link is a url, or a video/playlist!
 from __future__ import annotations
 
 import enum
-import re
 import typing
+
+import regex
 
 __all__ = (
     "Sites",
@@ -261,24 +262,25 @@ def check(query: str) -> Sites | None:
             r"^(?:http:\/\/|https:\/\/|)(?:www\.|m\.|)youtube\.com\/live\/.*",
         ],
         Sites.YOUTUBE_MUSIC: r"^(?:http:\/\/|https:\/\/|)music\.youtube\.com\/.*",
-        Sites.BANDCAMP: r"^(https?:\/\/(?:[^.]+\.)?bandcamp\.com)\/(track|album)\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
+        Sites.BANDCAMP: r"^(https?:\/\/(?:[^.]+\.|)bandcamp\.com)\/(track|album)\/([a-zA-Z0-9-_]+)\/?(?:\\?.*|)$",
         Sites.SOUNDCLOUD: [
-            r"^(?:http:\/\/|https:\/\/|)soundcloud\.app\.goo\.gl\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
-            r"(?:http:\/\/|https:\/\/|)(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
-            r"^(?:http:\/\/|https:\/\/|)on\.soundcloud\.com\/[a-zA-Z0-9-_]+\/?(?:\?.*|)$",
-            r"^(?:http:\/\/|https:\/\/|)(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)\/s-([a-zA-Z0-9-_]+)(?:\?.*|)$",
-            r"^(?:http:\/\/|https:\/\/|)(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/likes\/?(?:\?.*|)$",
+            r"^https?:\/\/soundcloud\.app\.goo\.gl\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
+            r"^https?:\/\/(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)\/?(?:\?.*|)$",
+            r"^https:\/\/on\.soundcloud\.com\/[a-zA-Z0-9-_]+\/?(?:\?.*|)$",
+            r"^https?:\/\/(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/([a-zA-Z0-9-_]+)\/s-([a-zA-Z0-9-_]+)(?:\?.*|)$",
+            r"^https?:\/\/(?:www\.|)(?:m\.|)soundcloud\.com\/([a-zA-Z0-9-_]+)\/likes\/?(?:\?.*|)$",
         ],
-        Sites.TWITCH: r"^https:\/\/(?:www\.|go\.|m\.)?twitch\.tv\/([^\/]+)$",
-        Sites.VIMEO: r"^https:\/\/vimeo\.com\/[0-9]+(?:\?.*|)$",
-        Sites.NICO: r"^(?:https?:\/\/)?(?:www\.)?nicovideo\.jp\/watch\/(.{2}\d+)(?:\?.*)?$",
-        Sites.SPOTIFY: r"^(https?:\/\/)(www\.)?open\.spotify\.com(?:\/([a-zA-Z-]+))?(?:\/user\/([a-zA-Z0-9-_]+))?\/(track|album|playlist|artist)\/([a-zA-Z0-9-_]+)$",
-        Sites.APPLE: r"^(https?:\/\/)?(www\.)?music\.apple\.com\/((?:[a-zA-Z]{2})\/)?(?:album|playlist|artist|song)(\/[a-zA-Z\\p{L}\d\\-]+)?\/(?:[a-zA-Z\d\-.]+)(\?i=(?:\d+))?$",
-        Sites.DEEZER: r"^(https?:\/\/)?(www\.)?deezer\.com\/(?:[a-zA-Z]{2}\/)?(?:track|album|playlist|artist)\/(?:[0-9]+)$",
-        Sites.YANDEX: r"^(https?:\/\/)?music\.yandex\.(?:ru|com|kz|by)\/(?:artist|album|track)\/(?:[0-9]+)(\/(?:track)\/(?:[0-9]+))?\/?$",
+        Sites.TWITCH: r"^https:\/\/(?:www\.|go\.|m\.)?twitch\.tv\/([^/]+)$",
+        Sites.VIMEO: r"^https?:\/\/vimeo\.com\/([0-9]+)(?:\?.*|)$",
+        Sites.NICO: r"^(https?:\/\/)?(?:www\.|)nicovideo\.jp\/watch\/(.{2}[0-9]+)(?:\?.*|)$",
+        Sites.SPOTIFY: r"(https?:\/\/)(www\.)?open\.spotify\.com\/(([a-zA-Z-]+)\/)?(user\/([a-zA-Z0-9-_]+)\/)?(track|album|playlist|artist)\/([a-zA-Z0-9-_]+)",
+        Sites.APPLE: r"(https?:\/\/)?(www\.)?music\.apple\.com\/(([a-zA-Z]{2})\/)?(album|playlist|artist|song)(\/[a-zA-Z\p{L}\d\-]+)?\/([a-zA-Z\d\-.]+)(\?i=(\d+))?",
+        Sites.DEEZER: r"(https?:\/\/)?(www\.)?deezer\.com\/([a-zA-Z]{2}\/)?(track|album|playlist|artist)\/([0-9]+)",
+        Sites.YANDEX: [
+            r"(https?:\/\/)?music\.yandex\.(ru|com|kz|by)\/(artist|album|track)\/([0-9]+)(\/(track)\/([0-9]+))?\/?",
+            r"(https?:\/\/)?music\.yandex\.(ru|com|kz|by)\/users\/([0-9A-Za-z@.-]+)\/playlists\/([0-9]+)\/?",
+        ],
     }
-
-    regex_patterns: typing.Sequence[str] = []
 
     for site, pattern in site_patterns.items():
         if isinstance(pattern, str):
