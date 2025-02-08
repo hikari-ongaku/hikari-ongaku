@@ -38,8 +38,6 @@ async def fetch_youtube(session: Session, /) -> str | None:
         Raised when the request required a return type, but received nothing, or a 204 response.
     RestStatusError
         Raised when a 4XX or a 5XX status is received.
-    BuildError
-        Raised when the statistics could not be built.
     RestRequestError
         Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
     RestError
