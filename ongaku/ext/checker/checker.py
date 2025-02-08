@@ -16,7 +16,7 @@ __all__ = (
 )
 
 
-class Sites(enum.IntFlag):
+class Sites(enum.IntEnum):
     """Sites.
 
     All the available sites for lavalink.
@@ -27,7 +27,7 @@ class Sites(enum.IntFlag):
         Some sites are only useable with plugins.
     """
 
-    YOUTUBE = 1 << 0
+    YOUTUBE = 1
     """Youtube.
     
     ??? tip "Checked URL's"
@@ -39,7 +39,7 @@ class Sites(enum.IntFlag):
         - `youtu.be/watch`
         - `youtu.be/playlist`
     """
-    YOUTUBE_MUSIC = 1 << 1
+    YOUTUBE_MUSIC = 2
     """Youtube Music.
     
     ??? tip "Checked URL's"
@@ -47,7 +47,7 @@ class Sites(enum.IntFlag):
         - music.youtube.com/watch
         - music.youtube.com/playlist
     """
-    BANDCAMP = 1 << 2
+    BANDCAMP = 3
     """Bandcamp.
     
     ??? tip "Checked URL's"
@@ -61,7 +61,7 @@ class Sites(enum.IntFlag):
 
         Please note that `xxxx` can be anything.
     """
-    SOUNDCLOUD = 1 << 3
+    SOUNDCLOUD = 4
     """Soundcloud.
     
     ??? tip "Checked URL's"
@@ -78,7 +78,7 @@ class Sites(enum.IntFlag):
         - `www.soundcloud.com/band/likes`
         - `m.soundcloud.com/dj/likes`
     """
-    TWITCH = 1 << 4
+    TWITCH = 5
     """Twitch.
     
     ??? tip "Checked URL's"
@@ -88,14 +88,14 @@ class Sites(enum.IntFlag):
         - `go.twitch.tv/`
         - `m.twitch.tv/`
     """
-    VIMEO = 1 << 5
+    VIMEO = 6
     """Vimeo.
     
     ??? tip "Checked URL's"
 
         - `vimeo.com/1234567890`
     """
-    NICO = 1 << 6
+    NICO = 7
     """Nico.
     
     ??? tip "Checked URL's"
@@ -104,7 +104,7 @@ class Sites(enum.IntFlag):
         - `www.nicovideo.jp/watch/`
 
     """
-    SPOTIFY = 1 << 7
+    SPOTIFY = 8
     """Spotify.
     
     ??? tip "Checked URL's"
@@ -123,7 +123,7 @@ class Sites(enum.IntFlag):
         - `open.spotify.com/us/user/spotify/track/`
 
     """
-    APPLE = 1 << 8
+    APPLE = 9
     """Apple.
     
     ??? tip "Checked URL's"
@@ -139,7 +139,7 @@ class Sites(enum.IntFlag):
         - `music.apple.com/album/`
         - `music.apple.com/us/album/`
     """
-    DEEZER = 1 << 9
+    DEEZER = 10
     """Deezer.
     
     ??? tip "Checked URL's"
@@ -155,7 +155,7 @@ class Sites(enum.IntFlag):
         - `deezer.com/artist/`
         - `deezer.com/us/track/`
     """
-    YANDEX = 1 << 10
+    YANDEX = 11
     """Yandex.
     
     ??? tip "Checked URL's"
@@ -175,41 +175,37 @@ class Sites(enum.IntFlag):
     """
 
     @classmethod
-    def all(cls) -> Sites:
+    def all(cls) -> typing.Sequence[Sites]:
         """All possible sources."""
         return (
-            Sites.YOUTUBE
-            | Sites.YOUTUBE_MUSIC
-            | Sites.BANDCAMP
-            | Sites.SOUNDCLOUD
-            | Sites.TWITCH
-            | Sites.VIMEO
-            | Sites.NICO
-            | Sites.SPOTIFY
-            | Sites.APPLE
-            | Sites.DEEZER
-            | Sites.YANDEX
+            Sites.YOUTUBE,
+            Sites.YOUTUBE_MUSIC,
+            Sites.BANDCAMP,
+            Sites.SOUNDCLOUD,
+            Sites.TWITCH,
+            Sites.VIMEO,
+            Sites.NICO,
+            Sites.SPOTIFY,
+            Sites.APPLE,
+            Sites.DEEZER,
+            Sites.YANDEX,
         )
 
     @classmethod
-    def default(cls) -> Sites:
+    def default(cls) -> typing.Sequence[Sites]:
         """All possible sources without plugins."""
         return (
-            Sites.YOUTUBE
-            | Sites.YOUTUBE_MUSIC
-            | Sites.BANDCAMP
-            | Sites.SOUNDCLOUD
-            | Sites.TWITCH
-            | Sites.VIMEO
-            | Sites.NICO
+            Sites.YOUTUBE,
+            Sites.YOUTUBE_MUSIC,
+            Sites.BANDCAMP,
+            Sites.SOUNDCLOUD,
+            Sites.TWITCH,
+            Sites.VIMEO,
+            Sites.NICO,
         )
 
-    def has(self, site: Sites, /) -> bool:
-        """Check if the specified value is in the current value."""
-        return (site & self) == site
 
-
-def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
+def check(query: str) -> Sites | None:
     """
     Check a string.
 
@@ -236,7 +232,7 @@ def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
     ```py
     from ongaku.ext import checker
 
-    if checker.check(query, sites=checker.Sites.SPOTIFY):
+    if checker.check(query) == Sites.SPOTIFY:
         print("This is a spotify link!")
     else:
         print("This is not a spotify link.")
@@ -285,13 +281,13 @@ def check(query: str, /, *, sites: Sites = Sites.default()) -> bool:
     regex_patterns: typing.Sequence[str] = []
 
     for site, pattern in site_patterns.items():
-        if sites.has(site):
-            if isinstance(pattern, str):
-                regex_patterns.append(pattern)
-            else:
-                regex_patterns.extend(pattern)
+        if isinstance(pattern, str):
+            regex_patterns.append(pattern)
+        else:
+            regex_patterns.extend(pattern)
 
-    return any(re.compile(i).match(query) is not None for i in regex_patterns)
+        if any(re.compile(regex).match(query) is not None for regex in regex_patterns):
+            return site
 
 
 # MIT License
