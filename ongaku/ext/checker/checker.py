@@ -283,12 +283,13 @@ def check(query: str) -> Sites | None:
     }
 
     for site, pattern in site_patterns.items():
+        regex_patterns: typing.MutableSequence[str] = []
         if isinstance(pattern, str):
             regex_patterns.append(pattern)
         else:
             regex_patterns.extend(pattern)
 
-        if any(re.compile(regex).match(query) is not None for regex in regex_patterns):
+        if any(regex.compile(rx).match(query) is not None for rx in regex_patterns):
             return site
 
 
