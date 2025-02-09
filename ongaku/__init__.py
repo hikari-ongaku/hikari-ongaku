@@ -11,16 +11,14 @@ from __future__ import annotations
 
 import logging
 
+from ongaku.abc import Playlist
+from ongaku.abc import Track
 from ongaku.abc.errors import SeverityType
-from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
-from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
-from ongaku.abc.playlist import Playlist
 from ongaku.abc.routeplanner import IPBlockType
 from ongaku.abc.routeplanner import RoutePlannerType
 from ongaku.abc.session import SessionStatus
-from ongaku.abc.track import Track
 from ongaku.client import Client
 from ongaku.errors import BuildError
 from ongaku.errors import ClientAliveError
@@ -39,6 +37,7 @@ from ongaku.errors import RestRequestError
 from ongaku.errors import RestStatusError
 from ongaku.errors import SessionError
 from ongaku.errors import SessionHandlerError
+from ongaku.errors import SessionMissingError
 from ongaku.errors import SessionStartError
 from ongaku.errors import TimeoutError
 from ongaku.events import PayloadEvent
@@ -52,13 +51,14 @@ from ongaku.events import TrackExceptionEvent
 from ongaku.events import TrackStartEvent
 from ongaku.events import TrackStuckEvent
 from ongaku.events import WebsocketClosedEvent
+from ongaku.impl import BasicSessionHandler
 from ongaku.impl.filters import Filters
-from ongaku.internal.about import __author__
-from ongaku.internal.about import __author_email__
-from ongaku.internal.about import __license__
-from ongaku.internal.about import __maintainer__
-from ongaku.internal.about import __url__
-from ongaku.internal.about import __version__
+from ongaku.internal import __author__
+from ongaku.internal import __author_email__
+from ongaku.internal import __license__
+from ongaku.internal import __maintainer__
+from ongaku.internal import __url__
+from ongaku.internal import __version__
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import TRACE_NAME
 from ongaku.player import Player
@@ -66,57 +66,65 @@ from ongaku.session import Session
 
 logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
 
-__all__ = (
-    "BandType",
-    "BuildError",
-    "Client",
-    "ClientAliveError",
-    "ClientError",
-    "Extension",
-    "Filters",
-    "IPBlockType",
-    "NoSessionsError",
-    "OngakuError",
-    "OngakuEvent",
-    "PayloadEvent",
-    "Player",
-    "PlayerConnectError",
-    "PlayerError",
-    "PlayerMissingError",
-    "PlayerNotConnectedError",
-    "PlayerQueueError",
-    "PlayerUpdateEvent",
-    "Playlist",
-    "QueueEmptyEvent",
-    "QueueNextEvent",
-    "ReadyEvent",
-    "RestEmptyError",
-    "RestError",
-    "RestExceptionError",
-    "RestRequestError",
-    "RestStatusError",
-    "RoutePlannerType",
-    "Session",
-    "SessionError",
-    "SessionHandlerError",
-    "SessionStartError",
-    "SessionStatus",
-    "SeverityType",
-    "StatisticsEvent",
-    "TimeoutError",
-    "Track",
-    "TrackEndEvent",
-    "TrackEndReasonType",
-    "TrackExceptionEvent",
-    "TrackStartEvent",
-    "TrackStuckEvent",
-    "WebsocketClosedEvent",
+__all__ = (  # noqa: RUF022
+    # .internal
     "__author__",
     "__author_email__",
-    "__license__",
     "__maintainer__",
+    "__license__",
     "__url__",
     "__version__",
+    # .client
+    "Client",
+    # .errors
+    "OngakuError",
+    "RestError",
+    "RestStatusError",
+    "RestRequestError",
+    "RestEmptyError",
+    "RestExceptionError",
+    "ClientError",
+    "ClientAliveError",
+    "SessionError",
+    "SessionStartError",
+    "SessionMissingError",
+    "SessionHandlerError",
+    "NoSessionsError",
+    "PlayerError",
+    "PlayerConnectError",
+    "PlayerNotConnectedError",
+    "PlayerQueueError",
+    "PlayerMissingError",
+    "BuildError",
+    "TimeoutError",
+    # .events
+    "PayloadEvent",
+    "ReadyEvent",
+    "PlayerUpdateEvent",
+    "StatisticsEvent",
+    "TrackStartEvent",
+    "TrackEndEvent",
+    "TrackExceptionEvent",
+    "TrackStuckEvent",
+    "WebsocketClosedEvent",
+    "QueueEmptyEvent",
+    "QueueNextEvent",
+    # .player
+    "Player",
+    # .session
+    "Session",
+    # .abc
+    "SeverityType",
+    "TrackEndReasonType",
+    "BandType",
+    "Playlist",
+    "RoutePlannerType",
+    "IPBlockType",
+    "SessionStatus",
+    "Track",
+    # .impl
+    "Filters",
+    "BasicSessionHandler",
 )
 
 
