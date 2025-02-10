@@ -9,6 +9,7 @@ from __future__ import annotations
 import typing
 
 import aiohttp
+import alluka
 import hikari
 
 from ongaku import errors
@@ -61,6 +62,8 @@ class Client:
         The session handler to use for the current client.
     logs
         The log level for ongaku.
+    injector
+        The injector for the client and extensions
     """
 
     __slots__: typing.Sequence[str] = (
@@ -68,6 +71,7 @@ class Client:
         "_client_session",
         "_entity_builder",
         "_extensions",
+        "_injector",
         "_is_alive",
         "_rest_client",
         "_session_handler",
@@ -80,6 +84,7 @@ class Client:
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
+        injector: alluka.abc.Client = alluka.Client(),
     ) -> None:
         logger.setLevel(logs)
 
@@ -95,6 +100,10 @@ class Client:
         self._entity_builder = EntityBuilder()
 
         self._extensions: typing.MutableMapping[typing.Type[Extension], Extension] = {}
+
+        self._injector: alluka.abc.Client = injector or alluka.Client()
+
+        self.injector.set_type_dependency(Client, self)
 
         app.event_manager.subscribe(hikari.StartedEvent, self._start_event)
         app.event_manager.subscribe(hikari.StoppingEvent, self._stop_event)
@@ -129,9 +138,12 @@ class Client:
         logs
             The log level for ongaku.
         """
-        cls = cls(client.app, session_handler=session_handler, logs=logs)
-
-        client.set_type_dependency(Client, cls)
+        cls = cls(
+            client.app,
+            session_handler=session_handler,
+            logs=logs,
+            injector=client.injector,
+        )
 
         client.add_injection_hook(cls._arc_player_injector)
 
@@ -172,9 +184,9 @@ class Client:
         except KeyError:
             raise Exception("The gateway bot requested was not found.")
 
-        cls = cls(app, session_handler=session_handler, logs=logs)
-
-        client.set_type_dependency(Client, cls)
+        cls = cls(
+            app, session_handler=session_handler, logs=logs, injector=client.injector
+        )
 
         return cls
 
@@ -214,6 +226,11 @@ class Client:
             Please use the other methods in client for anything session handler related.
         """
         return self._session_handler
+
+    @property
+    def injector(self) -> alluka.abc.Client:
+        """The dependency injector."""
+        return self._injector
 
     def _get_client_session(self) -> aiohttp.ClientSession:
         if self._client_session:
@@ -300,14 +317,15 @@ class Client:
         attempts
             The attempts that the session is allowed to use, before completely shutting down.
 
+        Raises
+        ------
+        KeyError
+            Raised when a session with the same name is created.
+
         Returns
         -------
         Session
             The session that was added to the handler.
-
-        Raises
-        ------
-        UniqueError
         """
         new_session = Session(
             self,
@@ -320,10 +338,10 @@ class Client:
 
         return self.session_handler.add_session(session=new_session)
 
-    def fetch_session(self, name: str, /) -> Session:
-        """Fetch a session.
+    def get_session(self, name: str, /) -> Session:
+        """Get a session.
 
-        Fetch a session from the session handler.
+        Get a session from the session handler.
 
         Parameters
         ----------
@@ -470,7 +488,8 @@ class Client:
         if isinstance(extension, typing.Type):
             extension = extension(self)
 
-        self._extensions.update({type(extension): extension})
+        self._extensions[type(extension)] = extension
+        self.injector.set_type_dependency(type(extension), extension)
 
     def get_extension(self, extension: typing.Type[ExtensionT], /) -> ExtensionT:
         """Get Extension.
@@ -485,19 +504,14 @@ class Client:
         Raises
         ------
         KeyError
-            Raised when the extension requested could not be found.
+            Raised when the extension could not be found.
 
         Returns
         -------
         ExtensionT
-            The extension you requested.
+            The extension.
         """
-        ext = self._extensions.get(extension, None)
-
-        if ext and isinstance(ext, extension):
-            return ext
-
-        raise KeyError("Could not find extension.")
+        return self.injector.get_type_dependency(extension)
 
     def delete_extension(self, extension: typing.Type[Extension]) -> None:
         """Delete Extension.
@@ -508,8 +522,14 @@ class Client:
         ----------
         extension
             The extension to remove.
+
+        Raises
+        ------
+        KeyError
+            Raised when the extension was not found.
         """
         del self._extensions[extension]
+        self.injector.remove_type_dependency(extension)
 
 
 # MIT License
