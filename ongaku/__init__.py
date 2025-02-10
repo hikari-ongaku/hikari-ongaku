@@ -11,14 +11,14 @@ from __future__ import annotations
 
 import logging
 
+from ongaku.abc import Playlist
+from ongaku.abc import Track
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import TrackEndReasonType
 from ongaku.abc.filters import BandType
-from ongaku.abc.playlist import Playlist
 from ongaku.abc.routeplanner import IPBlockType
 from ongaku.abc.routeplanner import RoutePlannerType
 from ongaku.abc.session import SessionStatus
-from ongaku.abc.track import Track
 from ongaku.client import Client
 from ongaku.errors import BuildError
 from ongaku.errors import ClientAliveError
@@ -28,6 +28,7 @@ from ongaku.errors import OngakuError
 from ongaku.errors import PlayerConnectError
 from ongaku.errors import PlayerError
 from ongaku.errors import PlayerMissingError
+from ongaku.errors import PlayerNotConnectedError
 from ongaku.errors import PlayerQueueError
 from ongaku.errors import RestEmptyError
 from ongaku.errors import RestError
@@ -36,6 +37,7 @@ from ongaku.errors import RestRequestError
 from ongaku.errors import RestStatusError
 from ongaku.errors import SessionError
 from ongaku.errors import SessionHandlerError
+from ongaku.errors import SessionMissingError
 from ongaku.errors import SessionStartError
 from ongaku.errors import TimeoutError
 from ongaku.events import PayloadEvent
@@ -49,13 +51,14 @@ from ongaku.events import TrackExceptionEvent
 from ongaku.events import TrackStartEvent
 from ongaku.events import TrackStuckEvent
 from ongaku.events import WebsocketClosedEvent
+from ongaku.impl import BasicSessionHandler
 from ongaku.impl.filters import Filters
-from ongaku.internal.about import __author__
-from ongaku.internal.about import __author_email__
-from ongaku.internal.about import __license__
-from ongaku.internal.about import __maintainer__
-from ongaku.internal.about import __url__
-from ongaku.internal.about import __version__
+from ongaku.internal import __author__
+from ongaku.internal import __author_email__
+from ongaku.internal import __license__
+from ongaku.internal import __maintainer__
+from ongaku.internal import __url__
+from ongaku.internal import __version__
 from ongaku.internal.logger import TRACE_LEVEL
 from ongaku.internal.logger import TRACE_NAME
 from ongaku.player import Player
@@ -63,8 +66,8 @@ from ongaku.session import Session
 
 logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
 
-__all__ = (
-    # .about
+__all__ = (  # noqa: RUF022
+    # .internal
     "__author__",
     "__author_email__",
     "__maintainer__",
@@ -73,16 +76,6 @@ __all__ = (
     "__version__",
     # .client
     "Client",
-    # .player
-    "Player",
-    # .session
-    "Session",
-    # .enums
-    "SeverityType",
-    "TrackEndReasonType",
-    "RoutePlannerType",
-    "IPBlockType",
-    "SessionStatus",
     # .errors
     "OngakuError",
     "RestError",
@@ -94,10 +87,12 @@ __all__ = (
     "ClientAliveError",
     "SessionError",
     "SessionStartError",
+    "SessionMissingError",
     "SessionHandlerError",
     "NoSessionsError",
     "PlayerError",
     "PlayerConnectError",
+    "PlayerNotConnectedError",
     "PlayerQueueError",
     "PlayerMissingError",
     "BuildError",
@@ -107,20 +102,29 @@ __all__ = (
     "ReadyEvent",
     "PlayerUpdateEvent",
     "StatisticsEvent",
-    "WebsocketClosedEvent",
     "TrackStartEvent",
     "TrackEndEvent",
     "TrackExceptionEvent",
     "TrackStuckEvent",
+    "WebsocketClosedEvent",
     "QueueEmptyEvent",
     "QueueNextEvent",
-    # .filters
-    "Filters",
+    # .player
+    "Player",
+    # .session
+    "Session",
+    # .abc
+    "SeverityType",
+    "TrackEndReasonType",
     "BandType",
-    # .track
-    "Track",
-    # .playlist
     "Playlist",
+    "RoutePlannerType",
+    "IPBlockType",
+    "SessionStatus",
+    "Track",
+    # .impl
+    "Filters",
+    "BasicSessionHandler",
 )
 
 

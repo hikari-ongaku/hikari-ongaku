@@ -10,6 +10,7 @@ from ongaku.abc.errors import ExceptionError
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import OngakuEvent
 from ongaku.abc.events import TrackEndReasonType
+from ongaku.abc.extension import Extension
 from ongaku.abc.filters import BandType
 from ongaku.abc.filters import ChannelMix
 from ongaku.abc.filters import Distortion
@@ -46,13 +47,15 @@ from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 
-__all__ = (
+__all__ = (  # noqa: RUF022
     # .errors
     "ExceptionError",
     "SeverityType",
     # .events
     "OngakuEvent",
     "TrackEndReasonType",
+    # .extensions
+    "Extension",
     # .filters
     "Filters",
     "Equalizer",

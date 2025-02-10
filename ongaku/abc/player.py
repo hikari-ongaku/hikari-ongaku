@@ -18,9 +18,9 @@ if typing.TYPE_CHECKING:
     from ongaku.abc.track import Track
 
 __all__ = (
+    "Player",
     "State",
     "Voice",
-    "Player",
 )
 
 
@@ -34,13 +34,13 @@ class Player(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_filters",
         "_guild_id",
-        "_track",
-        "_volume",
         "_is_paused",
         "_state",
+        "_track",
         "_voice",
-        "_filters",
+        "_volume",
     )
 
     @property
@@ -104,10 +104,7 @@ class Player(abc.ABC):
         if self.voice != other.voice:
             return False
 
-        if self.filters != other.filters:
-            return False
-
-        return True
+        return self.filters == other.filters
 
 
 class State(abc.ABC):
@@ -120,10 +117,10 @@ class State(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_time",
-        "_position",
         "_connected",
         "_ping",
+        "_position",
+        "_time",
     )
 
     @property
@@ -159,10 +156,7 @@ class State(abc.ABC):
         if self.connected != other.connected:
             return False
 
-        if self.ping != other.ping:
-            return False
-
-        return True
+        return self.ping == other.ping
 
 
 class Voice(abc.ABC):
@@ -175,9 +169,9 @@ class Voice(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_token",
         "_endpoint",
         "_session_id",
+        "_token",
     )
 
     @property
@@ -205,10 +199,7 @@ class Voice(abc.ABC):
         if self.endpoint != other.endpoint:
             return False
 
-        if self.session_id != other.session_id:
-            return False
-
-        return True
+        return self.session_id == other.session_id
 
 
 # MIT License

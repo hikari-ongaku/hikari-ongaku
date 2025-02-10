@@ -52,37 +52,34 @@ class Session:
         The port of the lavalink server.
     password
         The password of the lavalink server.
-    attempts
-        The attempts that the session is allowed to use, before completely shutting down.
     """
 
     __slots__: typing.Sequence[str] = (
-        "_client",
-        "_name",
-        "_ssl",
-        "_host",
-        "_port",
-        "_password",
-        "_attempts",
-        "_remaining_attempts",
+        "_authorization_headers",
         "_base_uri",
+        "_client",
+        "_host",
+        "_name",
+        "_password",
+        "_players",
+        "_port",
         "_session_id",
         "_session_task",
+        "_ssl",
         "_status",
-        "_players",
         "_websocket_headers",
-        "_authorization_headers",
     )
 
     def __init__(
         self,
         client: Client,
+        /,
+        *,
         name: str,
         ssl: bool,
         host: str,
         port: int,
         password: str,
-        attempts: int,
     ) -> None:
         self._client = client
         self._name = name
@@ -90,8 +87,6 @@ class Session:
         self._host = host
         self._port = port
         self._password = password
-        self._attempts = attempts
-        self._remaining_attempts = attempts
         self._base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
         self._session_id: str | None = None
         self._session_task: asyncio.Task[None] | None = None
@@ -162,16 +157,216 @@ class Session:
         """
         return self._session_id
 
+    def _handle_op_code(self, data: str, /) -> hikari.Event | None:  # noqa: C901
+        mapped_data = json_loads(data)
+
+        if isinstance(mapped_data, typing.Sequence):
+            raise errors.BuildError(
+                None,
+                "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'",
+            )
+
+        op_code = mapped_data["op"]
+
+        event: hikari.Event | None = None
+
+        if op_code == "ready":
+            event = self.client.entity_builder.deserialize_ready_event(
+                mapped_data, session=self
+            )
+
+            self._session_id = event.session_id
+
+        elif op_code == "playerUpdate":
+            event = self.client.entity_builder.deserialize_player_update_event(
+                mapped_data, session=self
+            )
+
+        elif op_code == "stats":
+            event = self.client.entity_builder.deserialize_statistics_event(
+                mapped_data, session=self
+            )
+
+        elif op_code == "event":
+            event_type = mapped_data["type"]
+
+            if event_type == "TrackStartEvent":
+                event = self.client.entity_builder.deserialize_track_start_event(
+                    mapped_data, session=self
+                )
+
+            elif event_type == "TrackEndEvent":
+                event = self.client.entity_builder.deserialize_track_end_event(
+                    mapped_data, session=self
+                )
+
+            elif event_type == "TrackExceptionEvent":
+                event = self.client.entity_builder.deserialize_track_exception_event(
+                    mapped_data, session=self
+                )
+
+            elif event_type == "TrackStuckEvent":
+                event = self.client.entity_builder.deserialize_track_stuck_event(
+                    mapped_data, session=self
+                )
+
+            elif event_type == "WebSocketClosedEvent":
+                event = self.client.entity_builder.deserialize_websocket_closed_event(
+                    mapped_data, session=self
+                )
+
+        for ext in self.client._extensions.values():
+            e = ext.event_handler(mapped_data, self)
+
+            if e:
+                return e
+
+        return event
+
+    async def _handle_ws_message(self, msg: aiohttp.WSMessage, /) -> bool:
+        """Returns false if failure or closure, true otherwise."""
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            payload_event = events.PayloadEvent.from_session(self, payload=msg.data)
+            event = self._handle_op_code(msg.data)
+
+            await self.app.event_manager.dispatch(payload_event)
+            if event:
+                await self.app.event_manager.dispatch(event)
+            else:
+                _logger.warning(f"Received unknown payload: {msg.data}")
+
+            return True
+
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            _logger.warning("An error occurred.")
+
+        elif msg.type == aiohttp.WSMsgType.CLOSED:
+            _logger.warning(
+                f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
+            )
+
+        return False
+
+    async def _websocket(self) -> None:
+        bot = self.app.get_me()
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Attempting to start websocket connection to session {self.name}",
+        )
+
+        if not bot:
+            self._status = session_.SessionStatus.NOT_CONNECTED
+
+            _logger.warning(
+                "Attempted fetching the bot, but failed as it does not exist."
+            )
+
+            raise errors.SessionStartError
+
+        self._websocket_headers = {
+            "User-Id": str(int(bot.id)),
+            "Client-Name": f"{bot.global_name if bot.global_name else 'unknown'}/{__version__}",
+        }
+
+        new_headers: typing.MutableMapping[str, typing.Any] = {}
+
+        new_headers.update(self._websocket_headers)
+
+        new_headers.update(self.auth_headers)
+
+        while True:
+            try:
+                session = self.client._get_client_session()
+                async with session.ws_connect(
+                    self.base_uri + "/v4/websocket",
+                    headers=new_headers,
+                    autoclose=False,
+                ) as ws:
+                    _logger.log(
+                        TRACE_LEVEL,
+                        f"Successfully made connection to session {self.name}",
+                    )
+                    self._status = session_.SessionStatus.CONNECTED
+                    while True:
+                        msg = await ws.receive()
+
+                        if await self._handle_ws_message(msg) is False:
+                            self._status = session_.SessionStatus.FAILURE
+                            await self.transfer(self.client.session_handler)
+                            return
+
+            except Exception as e:
+                _logger.warning(f"Websocket connection failure: {e}")
+                self._status = session_.SessionStatus.NOT_CONNECTED
+                await asyncio.sleep(60)
+
+    def _get_session_id(self) -> str:
+        if self.session_id:
+            return self.session_id
+
+        raise errors.SessionStartError
+
+    @typing.overload
     async def request(
         self,
         method: str,
         path: str,
-        return_type: typing.Type[types.RequestT] | None,
+        return_type: typing.Literal[None],
+        /,
         *,
         headers: typing.Mapping[str, typing.Any] = {},
         json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
         ignore_default_headers: bool = False,
+        optional: typing.Literal[False] = False,
+        version: bool = True,
+    ) -> None: ...
+
+    @typing.overload
+    async def request(
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Type[types.RequestT],
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[False] = False,
+        version: bool = True,
+    ) -> types.RequestT: ...
+
+    @typing.overload
+    async def request(
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Type[types.RequestT],
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[True] = True,
+        version: bool = True,
+    ) -> types.RequestT | None: ...
+
+    async def request(  # noqa: C901
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Type[types.RequestT] | None,
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: bool = False,
         version: bool = True,
     ) -> types.RequestT | None:
         """Request.
@@ -194,6 +389,8 @@ class Session:
             The parameters to send.
         ignore_default_headers
             Whether to ignore the default headers or not.
+        optional
+            Whether the response is optional.
         version
             Whether or not to include the version in the path.
 
@@ -224,7 +421,13 @@ class Session:
         if ignore_default_headers is False:
             new_headers.update(self.auth_headers)
 
-        new_params: typing.MutableMapping[str, typing.Any] = dict(params)
+        new_params: typing.MutableMapping[str, str] = {}
+
+        for key, value in params.items():
+            if isinstance(value, bool):
+                new_params.update({key: "true" if value else "false"})
+
+            new_params.update({key: str(value)})
 
         if _logger.isEnabledFor(TRACE_LEVEL):
             new_params.update({"trace": "true"})
@@ -242,7 +445,9 @@ class Session:
             params=new_params,
         )
 
-        if response.status == 204 and return_type is not None:
+        if response.status == 204:
+            if optional or (return_type is None):
+                return
             raise errors.RestEmptyError
 
         if response.status >= 400:
@@ -252,17 +457,18 @@ class Session:
                 raise errors.RestStatusError(response.status, response.reason)
 
             try:
-                rest_error = self.client.entity_builder.build_rest_error(payload)
+                rest_error = self.client.entity_builder.deserialize_rest_error(payload)
             except Exception:
                 raise errors.RestStatusError(response.status, response.reason)
             raise rest_error
 
+        payload = await response.text()
+
         if return_type is None:
             return
 
-        payload = await response.text()
-
         if issubclass(return_type, str | int | bool | float):
+            print("return type payload")
             return return_type(payload)
 
         try:
@@ -272,156 +478,7 @@ class Session:
 
         return return_type(json_payload)
 
-    def _handle_op_code(self, data: str) -> hikari.Event:
-        mapped_data = json_loads(data)
-
-        if isinstance(mapped_data, typing.Sequence):
-            raise errors.BuildError(
-                None,
-                "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'",
-            )
-
-        op_code = session_.WebsocketOPCode(mapped_data["op"])
-
-        if op_code == session_.WebsocketOPCode.READY:
-            event = self.client.entity_builder.build_ready_event(mapped_data, self)
-
-            self._session_id = event.session_id
-
-        elif op_code == session_.WebsocketOPCode.PLAYER_UPDATE:
-            event = self.client.entity_builder.build_player_update_event(
-                mapped_data, self
-            )
-
-        elif op_code == session_.WebsocketOPCode.STATS:
-            event = self.client.entity_builder.build_statistics_event(mapped_data, self)
-
-        else:
-            event_type = session_.WebsocketEvent(mapped_data["type"])
-
-            if event_type == session_.WebsocketEvent.TRACK_START_EVENT:
-                event = self.client.entity_builder.build_track_start_event(
-                    mapped_data, self
-                )
-
-            elif event_type == session_.WebsocketEvent.TRACK_END_EVENT:
-                event = self.client.entity_builder.build_track_end_event(
-                    mapped_data, self
-                )
-
-            elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
-                event = self.client.entity_builder.build_track_exception_event(
-                    mapped_data, self
-                )
-
-            elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
-                event = self.client.entity_builder.build_track_stuck_event(
-                    mapped_data, self
-                )
-
-            else:
-                event = self.client.entity_builder.build_websocket_closed_event(
-                    mapped_data, self
-                )
-
-        return event
-
-    async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> bool:
-        """Returns false if failure or closure, true otherwise."""
-        if msg.type == aiohttp.WSMsgType.TEXT:
-            payload_event = events.PayloadEvent.from_session(self, msg.data)
-            event = self._handle_op_code(msg.data)
-
-            await self.app.event_manager.dispatch(payload_event)
-            await self.app.event_manager.dispatch(event)
-
-            return True
-
-        elif msg.type == aiohttp.WSMsgType.ERROR:
-            _logger.warning("An error occurred.")
-
-        elif msg.type == aiohttp.WSMsgType.CLOSED:
-            _logger.warning(
-                f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
-            )
-
-        return False
-
-    async def _websocket(self) -> None:
-        bot = self.app.get_me()
-
-        _logger.log(
-            TRACE_LEVEL,
-            f"Attempting to start websocket connection to session {self.name}",
-        )
-
-        if not bot:
-            if self._remaining_attempts > 0:
-                self._status = session_.SessionStatus.NOT_CONNECTED
-
-                _logger.warning(
-                    "Attempted fetching the bot, but failed as it does not exist."
-                )
-            else:
-                self._status = session_.SessionStatus.FAILURE
-
-            _logger.warning(
-                "Attempted fetching the bot, but failed as it does not exist."
-            )
-
-            raise errors.SessionStartError
-
-        self._websocket_headers = {
-            "User-Id": str(int(bot.id)),
-            "Client-Name": f"{bot.global_name if bot.global_name else 'unknown'}/{__version__}",
-        }
-
-        new_headers: typing.MutableMapping[str, typing.Any] = {}
-
-        new_headers.update(self._websocket_headers)
-
-        new_headers.update(self.auth_headers)
-        while self._remaining_attempts >= 1:
-            if self._remaining_attempts != self._attempts:
-                await asyncio.sleep(2.5)
-
-            self._remaining_attempts -= 1
-            try:
-                session = self.client._get_client_session()
-                async with session.ws_connect(
-                    self.base_uri + "/v4/websocket",
-                    headers=new_headers,
-                    autoclose=False,
-                ) as ws:
-                    _logger.log(
-                        TRACE_LEVEL,
-                        f"Successfully made connection to session {self.name}",
-                    )
-                    self._status = session_.SessionStatus.CONNECTED
-                    while True:
-                        msg = await ws.receive()
-
-                        if await self._handle_ws_message(msg) is False:
-                            self._status = session_.SessionStatus.FAILURE
-                            await self.transfer(self.client.session_handler)
-                            return
-
-            except Exception as e:
-                _logger.warning(f"Websocket connection failure: {e}")
-                self._status = session_.SessionStatus.NOT_CONNECTED
-                break
-
-        else:
-            _logger.warning(f"Session {self.name} has no more attempts.")
-            self._status = session_.SessionStatus.NOT_CONNECTED
-
-    def _get_session_id(self) -> str:
-        if self.session_id:
-            return self.session_id
-
-        raise errors.SessionStartError
-
-    async def transfer(self, session_handler: handler_.SessionHandler) -> None:
+    async def transfer(self, session_handler: handler_.SessionHandler, /) -> None:
         """
         Transfer.
 
@@ -443,9 +500,9 @@ class Session:
         )
 
         for player in self._players.values():
-            player = await player.transfer(session)
+            player = await player.transfer(session=session)
 
-            session_handler.add_player(player)
+            session_handler.add_player(player=player)
 
         await self.stop()
 
