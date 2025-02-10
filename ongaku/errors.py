@@ -33,6 +33,7 @@ __all__ = (
     "RestStatusError",
     "SessionError",
     "SessionHandlerError",
+    "SessionMissingError",
     "SessionStartError",
     "TimeoutError",
 )
@@ -277,20 +278,6 @@ class BuildError(OngakuError):
 
 class TimeoutError(OngakuError):
     """Raised when an event times out."""
-
-
-class UniqueError(OngakuError):
-    """Raised when a value should be unique, but is not."""
-
-    __slots__: typing.Sequence[str] = "_reason"
-
-    def __init__(self, reason: str | None, /) -> None:
-        self._reason = reason
-
-    @property
-    def reason(self) -> str | None:
-        """The reason for the unique error."""
-        return self._reason
 
 
 # MIT License
