@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 import pytest
+import typing
 
 from ongaku.ext.checker import Sites
 from ongaku.ext import checker
 
-schemes = ["http://", "https://"]
+ConstantParameterT: typing.TypeAlias = typing.Final[typing.Sequence[str]]
+
+SCHEMES: typing.Final[typing.Sequence[str]] = ["http://", "https://"]
 
 
 @pytest.mark.parametrize(
     "query",
-    ["a query.", "http://yourmom.com?banana=vegetable"],
+    [
+        "a query.",
+        "http://yourmom.com?banana=vegetable",
+    ],
 )
 def test_checker_query(query: str):
     assert checker.check(query) is None
@@ -26,7 +32,7 @@ class TestYoutube:
         ],
     )
     @pytest.mark.parametrize("domain", ["youtube.com", "www.youtube.com", "youtu.be"])
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.YOUTUBE
 
@@ -50,7 +56,7 @@ class TestYoutubeMusic:
             "music.youtube.com",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.YOUTUBE_MUSIC
 
@@ -77,7 +83,7 @@ class TestBandcamp:
             "test.bandcamp.com",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.BANDCAMP
 
@@ -93,21 +99,29 @@ class TestSoundcloud:
             "soundcloud.com/user1234/song1234",
             "www.soundcloud.com/band/abcd1234",
             "m.soundcloud.com/dj/super-mix?abcd=1234",
-            "on.soundcloud.com/abcd1234",
-            "on.soundcloud.com/abcd1234?abcd=1234",
             "soundcloud.com/user1234/song1234/s-abcd1234",
             "www.soundcloud.com/band/album1234/s-abcd1234",
             "m.soundcloud.com/dj/super-mix/s-abcd1234?abcd=1234",
-            "on.soundcloud.com/abcd1234",
             "soundcloud.com/user123/likes",
             "soundcloud.com/artist/likes",
             "www.soundcloud.com/band/likes",
             "m.soundcloud.com/dj/likes?abcd=1234",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, url: str):
         assert checker.check(scheme + url) == Sites.SOUNDCLOUD
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://on.soundcloud.com/abcd1234",
+            "https://on.soundcloud.com/abcd1234?abcd=1234",
+            "https://on.soundcloud.com/abcd1234",
+        ],
+    )
+    def test_working_https_only(self, url: str):
+        assert checker.check(url) == Sites.SOUNDCLOUD
 
     @pytest.mark.skip(reason="TODO")
     def test_invalid(self):
@@ -163,7 +177,7 @@ class TestNico:
             "www.nicovideo.jp",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.NICO
 
@@ -191,7 +205,7 @@ class TestSpotify:
             "open.spotify.com",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.SPOTIFY
 
@@ -220,7 +234,7 @@ class TestApple:
             "music.apple.com",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.APPLE
 
@@ -247,7 +261,7 @@ class TestDeezer:
             "deezer.com",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.DEEZER
 
@@ -276,7 +290,7 @@ class TestYandex:
             "music.yandex.by",
         ],
     )
-    @pytest.mark.parametrize("scheme", schemes)
+    @pytest.mark.parametrize("scheme", SCHEMES)
     def test_working(self, scheme: str, domain: str, path: str):
         assert checker.check(scheme + domain + path) == Sites.YANDEX
 

@@ -51,7 +51,7 @@ class TestArcEnsurePlayer:
         ):
             await arc_ensure_player(context)
 
-            patched_get_type_dependency.assert_called_once_with(Client)
+        patched_get_type_dependency.assert_called_once_with(Client)
 
     @pytest.mark.asyncio
     async def test_missing_player(self, ongaku_client: Client):
@@ -68,6 +68,6 @@ class TestArcEnsurePlayer:
         ):
             await arc_ensure_player(context)
 
-            patched_get_type_dependency.assert_called_once_with(Client)
+        patched_get_type_dependency.assert_called_once_with(Client)
 
-            patched_fetch_player.assert_called_once_with(context.guild_id)
+        patched_fetch_player.assert_called_once_with(context.guild_id)

@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 import datetime
 
 import hikari
@@ -12,6 +10,7 @@ from ongaku.client import Client
 from ongaku.impl import player
 from ongaku.impl.track import Track
 from ongaku.session import Session
+from ongaku.impl import statistics
 
 
 class TestPayloadEvent:
@@ -126,30 +125,37 @@ class TestPlayerUpdateEvent:
         assert event.state == state
 
 
-class TestWebsocketClosedEvent:
+class TestStatisticsEvent:
     def test_event(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_client: Client,
         ongaku_session: Session,
     ):
-        event = events.WebsocketClosedEvent(
+        memory = statistics.Memory(free=1, used=2, allocated=3, reservable=4)
+        cpu = statistics.Cpu(cores=1, system_load=2.3, lavalink_load=4.5)
+        frame_statistics = statistics.FrameStatistics(sent=1, nulled=2, deficit=3)
+        event = events.StatisticsEvent(
             gateway_bot,
             ongaku_client,
             ongaku_session,
-            guild_id=hikari.Snowflake(1234567890),
-            code=1,
-            reason="reason",
-            by_remote=False,
+            players=1,
+            playing_players=2,
+            uptime=3,
+            memory=memory,
+            cpu=cpu,
+            frame_statistics=frame_statistics
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
-        assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.code == 1
-        assert event.reason == "reason"
-        assert event.by_remote is False
+        assert event.players == 1
+        assert event.playing_players == 2
+        assert event.uptime == 3
+        assert event.memory == memory
+        assert event.cpu == cpu
+        assert event.frame_stats == frame_statistics
 
     def test_from_session(
         self,
@@ -157,21 +163,28 @@ class TestWebsocketClosedEvent:
         ongaku_client: Client,
         ongaku_session: Session,
     ):
-        event = events.WebsocketClosedEvent.from_session(
+        memory = statistics.Memory(free=1, used=2, allocated=3, reservable=4)
+        cpu = statistics.Cpu(cores=1, system_load=2.3, lavalink_load=4.5)
+        frame_statistics = statistics.FrameStatistics(sent=1, nulled=2, deficit=3)
+        event = events.StatisticsEvent.from_session(
             ongaku_session,
-            guild_id=hikari.Snowflake(1234567890),
-            code=1,
-            reason="reason",
-            by_remote=False,
+            players=1,
+            playing_players=2,
+            uptime=3,
+            memory=memory,
+            cpu=cpu,
+            frame_statistics=frame_statistics
         )
 
         assert event.app == gateway_bot
         assert event.client == ongaku_client
         assert event.session == ongaku_session
-        assert event.guild_id == hikari.Snowflake(1234567890)
-        assert event.code == 1
-        assert event.reason == "reason"
-        assert event.by_remote is False
+        assert event.players == 1
+        assert event.playing_players == 2
+        assert event.uptime == 3
+        assert event.memory == memory
+        assert event.cpu == cpu
+        assert event.frame_stats == frame_statistics
 
 
 class TestTrackStartEvent:
@@ -367,6 +380,54 @@ class TestTrackStuckEvent:
         assert event.guild_id == hikari.Snowflake(1234567890)
         assert event.track == ongaku_track
         assert event.threshold_ms == 1
+
+
+class TestWebsocketClosedEvent:
+    def test_event(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        ongaku_session: Session,
+    ):
+        event = events.WebsocketClosedEvent(
+            gateway_bot,
+            ongaku_client,
+            ongaku_session,
+            guild_id=hikari.Snowflake(1234567890),
+            code=1,
+            reason="reason",
+            by_remote=False,
+        )
+
+        assert event.app == gateway_bot
+        assert event.client == ongaku_client
+        assert event.session == ongaku_session
+        assert event.guild_id == hikari.Snowflake(1234567890)
+        assert event.code == 1
+        assert event.reason == "reason"
+        assert event.by_remote is False
+
+    def test_from_session(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_client: Client,
+        ongaku_session: Session,
+    ):
+        event = events.WebsocketClosedEvent.from_session(
+            ongaku_session,
+            guild_id=hikari.Snowflake(1234567890),
+            code=1,
+            reason="reason",
+            by_remote=False,
+        )
+
+        assert event.app == gateway_bot
+        assert event.client == ongaku_client
+        assert event.session == ongaku_session
+        assert event.guild_id == hikari.Snowflake(1234567890)
+        assert event.code == 1
+        assert event.reason == "reason"
+        assert event.by_remote is False
 
 
 class TestQueueEmptyEvent:

@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 import typing
 
 import mock
@@ -15,8 +13,7 @@ from ongaku.session import Session
 
 
 class TestBasicSessionHandler:
-    @pytest.mark.asyncio
-    async def test_properties(self, ongaku_client: Client):
+    def test_properties(self, ongaku_client: Client):
         handler = BasicSessionHandler(client=ongaku_client)
 
         assert isinstance(handler.players, typing.Sequence)
@@ -90,8 +87,6 @@ class TestBasicSessionHandler:
         )
         handler.add_session(session=session_2)
 
-        # Start the session up.
-
         with mock.patch(
             "ongaku.session.Session.start", return_value=None
         ) as patched_session_start:
@@ -110,17 +105,38 @@ class TestBasicSessionHandler:
 
             assert handler.is_alive is False
 
-    @pytest.mark.asyncio
-    async def test_fetch_session(self, ongaku_client: Client, ongaku_session: Session):
+    def test_add_session(self, ongaku_client: Client):
         handler = BasicSessionHandler(client=ongaku_client)
 
-        with mock.patch.object(handler, "_current_session", ongaku_session):
-            # Test with current session
+        assert len(handler.sessions) == 0
 
+        session_1 = Session(
+            ongaku_client,
+            name="session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+        handler.add_session(session=session_1)
+
+        assert len(handler.sessions) == 1
+
+    def test_fetch_session(self, ongaku_client: Client, ongaku_session: Session):
+        handler = BasicSessionHandler(client=ongaku_client)
+
+        handler._sessions.update({"beanos": ongaku_session})
+
+        with mock.patch.object(handler, "_current_session", ongaku_session):
             session = handler.fetch_session()
 
             assert session == ongaku_session
 
+    def test_fetch_session_with_failed(self, ongaku_client: Client):
+        handler = BasicSessionHandler(client=ongaku_client)
+
+        assert len(handler.sessions) == 0
+        
         session_1 = Session(
             ongaku_client,
             name="session_1",
@@ -139,6 +155,7 @@ class TestBasicSessionHandler:
             port=2333,
             password="youshallnotpass",
         )
+
         handler.add_session(session=session_2)
 
         assert len(handler.sessions) == 2
@@ -155,53 +172,17 @@ class TestBasicSessionHandler:
                 new_callable=mock.PropertyMock(return_value=SessionStatus.CONNECTED),
             ),
         ):
-            # Test without current session, first session failed.
-
             session = handler.fetch_session()
 
             assert session == session_2
 
             assert handler._current_session == session_2
 
-        # Test with name set
-
-        session = handler.fetch_session(name="session_1")
-
-        assert session == session_1
-
-        # Test session is not found.
-
-        handler._sessions.clear()
-
-        with pytest.raises(errors.SessionMissingError):
-            handler.fetch_session(name="session_1")
-
-    @pytest.mark.asyncio
-    async def test_delete_session(self, ongaku_client: Client, ongaku_session: Session):
-        handler = BasicSessionHandler(client=ongaku_client)
-
-        handler._sessions = {"test_session": ongaku_session}
-
-        with mock.patch.object(
-            ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
-        ) as patched_stop:
-            await handler.delete_session(name="test_session")
-
-            patched_stop.assert_called_once()
-
-        # Delete an existing session
-
-        with pytest.raises(errors.SessionMissingError):
-            await handler.delete_session(name="test_session")
-
-            patched_stop.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_add_session(self, ongaku_client: Client):
+    def test_fetch_session_with_name(self, ongaku_client: Client):
         handler = BasicSessionHandler(client=ongaku_client)
 
         assert len(handler.sessions) == 0
-
+        
         session_1 = Session(
             ongaku_client,
             name="session_1",
@@ -212,10 +193,64 @@ class TestBasicSessionHandler:
         )
         handler.add_session(session=session_1)
 
-        assert len(handler.sessions) == 1
+        session = handler.fetch_session(name="session_1")
+
+        assert session == session_1
+
+    def test_fetch_session_with_invalid_name(self, ongaku_client: Client):
+        handler = BasicSessionHandler(client=ongaku_client)
+
+        assert len(handler.sessions) == 0
+        
+        session_1 = Session(
+            ongaku_client,
+            name="session_1",
+            ssl=False,
+            host="127.0.0.1",
+            port=2333,
+            password="youshallnotpass",
+        )
+
+        handler.add_session(session=session_1)
+
+        with pytest.raises(KeyError):
+            handler.fetch_session(name="beanos")
+    
+    def test_fetch_session_without_sessions(self, ongaku_client: Client):
+        handler = BasicSessionHandler(client=ongaku_client)
+
+        handler._sessions.clear()
+
+        with pytest.raises(errors.NoSessionsError):
+            handler.fetch_session()
+
+    def test_fetch_session_without_sessions_with_name(self, ongaku_client: Client):
+        handler = BasicSessionHandler(client=ongaku_client)
+
+        handler._sessions.clear()
+
+        with pytest.raises(errors.NoSessionsError):
+            handler.fetch_session(name="session_1")
 
     @pytest.mark.asyncio
-    async def test_add_player(self, ongaku_client: Client, ongaku_player: Player):
+    async def test_delete_session(self, ongaku_client: Client, ongaku_session: Session):
+        handler = BasicSessionHandler(client=ongaku_client)
+
+        handler._sessions = {"test_session": ongaku_session}
+
+        with mock.patch.object(
+            ongaku_session, "stop", new=mock.AsyncMock(return_value=None)
+        ) as patched_stop:
+            await handler.delete_session(name="test_session")
+
+            patched_stop.assert_called_once()
+
+        with pytest.raises(errors.SessionMissingError):
+            await handler.delete_session(name="test_session")
+
+        patched_stop.assert_called_once()
+
+    def test_add_player(self, ongaku_client: Client, ongaku_player: Player):
         handler = BasicSessionHandler(client=ongaku_client)
 
         assert len(handler.players) == 0
@@ -227,11 +262,8 @@ class TestBasicSessionHandler:
         with pytest.raises(KeyError):
             handler.add_player(player=ongaku_player)
 
-    @pytest.mark.asyncio
-    async def test_fetch_player(self, ongaku_client: Client, ongaku_session: Session):
+    def test_fetch_player(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(client=ongaku_client)
-
-        # Create a player
 
         assert len(handler.players) == 0
 
@@ -264,8 +296,6 @@ class TestBasicSessionHandler:
     async def test_delete_player(self, ongaku_client: Client, ongaku_session: Session):
         handler = BasicSessionHandler(client=ongaku_client)
 
-        # Create a player
-
         assert len(handler.players) == 0
 
         with mock.patch.object(
@@ -281,8 +311,6 @@ class TestBasicSessionHandler:
 
             assert original_player.guild_id == Snowflake(1234567890)
             assert original_player.session == ongaku_session
-
-        # Delete the player.
 
         with mock.patch(
             "ongaku.player.Player.disconnect", return_value=None

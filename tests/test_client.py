@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 import arc
 import mock
 import pytest
@@ -7,11 +5,11 @@ from aiohttp import ClientSession
 from arc.client import GatewayClient as ArcGatewayClient
 from hikari.events.base_events import Event as Event
 from hikari.impl import gateway_bot as gateway_bot_
+from hikari import events as hikari_events_
 from hikari.snowflakes import Snowflake
 from tanjun.clients import Client as TanjunClient
 
 from ongaku import errors
-from ongaku.abc.handler import SessionHandler
 from ongaku.builders import EntityBuilder
 from ongaku.client import Client
 from ongaku.player import Player
@@ -21,6 +19,37 @@ from tests.conftest import OngakuExtension
 
 
 class TestClient:
+    def test_properties(self, gateway_bot: gateway_bot_.GatewayBot):
+        session_handler = mock.Mock
+        injector = mock.Mock()
+
+        with (
+            mock.patch.object(injector, "set_type_dependency") as patched_set_type_dependency,
+            mock.patch.object(gateway_bot.event_manager, "subscribe") as patched_subscribe
+        ):
+            client = Client(gateway_bot, session_handler=session_handler, injector=injector)
+
+            assert client.app == gateway_bot
+
+            assert isinstance(client.rest, RESTClient)
+
+            assert client.is_alive is False
+
+            assert isinstance(client.entity_builder, EntityBuilder)
+
+            assert isinstance(client.session_handler, session_handler)
+
+            assert client.injector == injector
+
+            patched_set_type_dependency.assert_called_once_with(Client, client)
+
+            assert patched_subscribe.call_count == 2
+
+            patched_subscribe.assert_any_call(hikari_events_.StartedEvent, client._start_event)
+
+            patched_subscribe.assert_any_call(hikari_events_.StoppingEvent, client._stop_event)
+
+
     def test_from_arc(self, gateway_bot: gateway_bot_.GatewayBot):
         command_client = ArcGatewayClient(gateway_bot)
 
@@ -34,7 +63,7 @@ class TestClient:
 
         assert command_client.get_type_dependency(Client) == client
 
-        # check that from_arc method, adds the player hook.
+        assert client.injector == command_client.injector
 
         command_client = ArcGatewayClient(gateway_bot)
 
@@ -56,21 +85,12 @@ class TestClient:
 
         assert isinstance(client.rest, RESTClient)
 
-    def test_properties(self, gateway_bot: gateway_bot_.GatewayBot):
-        client = Client(gateway_bot)
+        assert command_client.get_type_dependency(Client) == client
 
-        assert client.app == gateway_bot
-
-        assert isinstance(client.rest, RESTClient)
-
-        assert client.is_alive is False
-
-        assert isinstance(client.entity_builder, EntityBuilder)
-
-        assert isinstance(client.session_handler, SessionHandler)
+        assert client.injector == command_client.injector
 
     @pytest.mark.asyncio
-    async def test_get_client_session(self, gateway_bot: gateway_bot_.GatewayBot):
+    async def test__get_client_session(self, gateway_bot: gateway_bot_.GatewayBot):
         client = Client(gateway_bot)
 
         with (
@@ -90,7 +110,7 @@ class TestClient:
             assert isinstance(client._get_client_session(), ClientSession)
 
     @pytest.mark.asyncio
-    async def test_start_event(
+    async def test__start_event(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
     ):
@@ -104,7 +124,7 @@ class TestClient:
             patched_start.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_stop_event(
+    async def test__stop_event(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
     ):
@@ -139,7 +159,41 @@ class TestClient:
             patched_add_session.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_player_create(
+    async def test_get_session(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+    ):
+        client = Client(gateway_bot)
+
+        with (
+            mock.patch.object(client, "_session_handler"),
+            mock.patch.object(client.session_handler, "fetch_session") as patched_fetch_session,
+        ):
+            client.get_session("beanos")
+
+            patched_fetch_session.assert_called_with(
+                name="beanos"
+            )
+    
+    @pytest.mark.asyncio
+    async def test_delete_session(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+    ):
+        client = Client(gateway_bot)
+
+        with (
+            mock.patch.object(client, "_session_handler"),
+            mock.patch.object(client.session_handler, "delete_session", new_callable=mock.AsyncMock) as patched_delete_session,
+        ):
+            await client.delete_session("beanos")
+
+            patched_delete_session.assert_called_with(
+                name="beanos"
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_player(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_session: Session,
@@ -147,18 +201,16 @@ class TestClient:
     ):
         client = Client(gateway_bot)
 
-        # Create a new player.
-
         with (
             mock.patch.object(client, "_session_handler"),
             mock.patch.object(
                 client.session_handler, "fetch_session", return_value=ongaku_session
-            ),
+            ) as patched_fetch_session,
             mock.patch.object(
                 client.session_handler,
                 "fetch_player",
                 side_effect=errors.PlayerMissingError,
-            ),
+            ) as patched_fetch_player,
             mock.patch.object(
                 client.session_handler,
                 "add_player",
@@ -168,19 +220,28 @@ class TestClient:
             player = client.create_player(1234567890)
 
             patched_add_player.assert_called_once()
+            patched_fetch_session.assert_called_once_with()
+            patched_fetch_player.assert_called_once_with(guild=1234567890)
 
             assert player.guild_id == Snowflake(1234567890)
 
-        # Create an existing player.
+    @pytest.mark.asyncio
+    async def test_create_player_existing(
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_session: Session,
+        ongaku_player: Player,
+    ):
+        client = Client(gateway_bot)
 
         with (
             mock.patch.object(client, "_session_handler"),
             mock.patch.object(
                 client.session_handler, "fetch_session", return_value=ongaku_session
-            ),
+            ) as patched_fetch_session,
             mock.patch.object(
                 client.session_handler, "fetch_player", return_value=ongaku_player
-            ),
+            ) as patched_fetch_player,
             mock.patch.object(
                 client.session_handler,
                 "add_player",
@@ -190,11 +251,13 @@ class TestClient:
             player = client.create_player(1234567890)
 
             assert player == ongaku_player
-
+            
+            patched_fetch_session.assert_not_called()
+            patched_fetch_player.assert_called_once_with(guild=1234567890)
             patched_add_player.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_player_fetch(
+    async def test_fetch_player(
         self,
         gateway_bot: gateway_bot_.GatewayBot,
         ongaku_player: Player,
@@ -209,14 +272,16 @@ class TestClient:
 
         with mock.patch.object(
             ongaku_player, "disconnect", new_callable=mock.AsyncMock, return_value=None
-        ):
+        ) as patched_disconnect:
             await client.session_handler.delete_player(guild=Snowflake(1234567890))
+
+            patched_disconnect.assert_called_once_with()
 
         with pytest.raises(errors.PlayerMissingError):
             client.fetch_player(1234567890)
 
     @pytest.mark.asyncio
-    async def test_player_delete(
+    async def test_delete_player(
         self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session
     ):
         client = Client(gateway_bot)
@@ -239,29 +304,52 @@ class TestClient:
     ):
         client = Client(gateway_bot)
 
-        assert client._extensions == {}
+        with (
+            mock.patch.object(client, "_injector"),
+            mock.patch.object(client.injector, "set_type_dependency") as patched_set_type_dependency
+        ):
+            assert client._extensions == {}
 
-        client.add_extension(ongaku_extension)
+            patched_set_type_dependency.assert_not_called()
 
-        assert client._extensions == {OngakuExtension: ongaku_extension}
+            client.add_extension(ongaku_extension)
+
+            patched_set_type_dependency.assert_called_once_with(
+                OngakuExtension, ongaku_extension
+            )
+
+            assert client._extensions == {OngakuExtension: ongaku_extension}
 
     def test_add_extension_as_type(
         self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
     ):
         client = Client(gateway_bot)
 
-        assert client._extensions == {}
+        with (
+            mock.patch.object(client, "_injector"),
+            mock.patch.object(client.injector, "set_type_dependency") as patched_set_type_dependency
+        ):
+            assert client._extensions == {}
 
-        client.add_extension(OngakuExtension)
+            patched_set_type_dependency.assert_not_called()
 
-        assert isinstance(client._extensions[OngakuExtension], OngakuExtension)
+            client.add_extension(OngakuExtension)
+
+            patched_set_type_dependency.assert_called_once_with(
+                OngakuExtension,
+                client._extensions[OngakuExtension]
+            )
+
+            assert OngakuExtension in client._extensions
 
     def test_get_extension(
         self, gateway_bot: gateway_bot_.GatewayBot, ongaku_extension: OngakuExtension
     ):
         client = Client(gateway_bot)
 
-        client._extensions = {OngakuExtension: ongaku_extension}
+        client.add_extension(ongaku_extension)
+
+        assert client._extensions == {OngakuExtension: ongaku_extension}
 
         assert client.get_extension(OngakuExtension) == ongaku_extension
 

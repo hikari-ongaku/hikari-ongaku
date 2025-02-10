@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 import datetime
 
 from ongaku.impl.info import Git

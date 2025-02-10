@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 from ongaku.impl.statistics import Cpu
 from ongaku.impl.statistics import FrameStatistics
 from ongaku.impl.statistics import Memory

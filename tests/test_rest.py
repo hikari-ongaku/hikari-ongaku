@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 import typing
 
 import mock
@@ -25,7 +23,7 @@ def test_properties(ongaku_client: Client):
 
 class TestRestTrack:
     @pytest.mark.asyncio
-    async def test_load_track_with_custom_session(
+    async def test_load_track_with_session(
         self, ongaku_client: Client, ongaku_session: Session
     ):
         rest = RESTClient(ongaku_client)
@@ -1025,7 +1023,7 @@ class TestRestInformation:
             )
 
     @pytest.mark.asyncio
-    async def test_fetch_stats_with_session(
+    async def test_fetch_statistics_with_session(
         self, ongaku_client: Client, ongaku_session: Session
     ):
         rest = RESTClient(ongaku_client)
@@ -1044,7 +1042,7 @@ class TestRestInformation:
                 return_value=payloads.STATISTICS_PAYLOAD,
             ) as patched_request,
         ):
-            await rest.fetch_stats(session=ongaku_session)
+            await rest.fetch_statistics(session=ongaku_session)
 
             patched_fetch_session.assert_not_called()
 
@@ -1055,7 +1053,7 @@ class TestRestInformation:
             )
 
     @pytest.mark.asyncio
-    async def test_fetch_stats(self, ongaku_client: Client, ongaku_session: Session):
+    async def test_fetch_statistics(self, ongaku_client: Client, ongaku_session: Session):
         rest = RESTClient(ongaku_client)
 
         with (
@@ -1072,7 +1070,7 @@ class TestRestInformation:
                 return_value=payloads.STATISTICS_PAYLOAD,
             ) as patched_request,
         ):
-            await rest.fetch_stats()
+            await rest.fetch_statistics()
 
             patched_fetch_session.assert_called_once()
 
@@ -1182,7 +1180,6 @@ class TestRestRoutePlanner:
     ):
         rest = RESTClient(ongaku_client)
 
-        # Test with payload
         with (
             mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(
@@ -1211,7 +1208,6 @@ class TestRestRoutePlanner:
     ):
         rest = RESTClient(ongaku_client)
 
-        # Test with payload
         with (
             mock.patch.object(rest._client, "_session_handler"),
             mock.patch.object(

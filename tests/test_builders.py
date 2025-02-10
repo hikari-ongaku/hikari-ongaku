@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D101, D102, D103
-
 import datetime
 import typing
 
@@ -29,6 +27,36 @@ def test_properties():
 
     assert builder._dumps == orjson.dumps
     assert builder._loads == orjson.loads
+
+
+class TestEnsureTypes:
+    def test__ensure_mapping(self, builder: EntityBuilder):
+        test_mapping: typing.Any = orjson.dumps({"beanos": True})
+
+        ensure_mapping = builder._ensure_mapping(test_mapping)
+
+        assert isinstance(ensure_mapping, typing.Mapping)
+        assert ensure_mapping == orjson.loads(test_mapping)
+    
+    def test__ensure_mapping_invalid(self, builder: EntityBuilder):
+        test_mapping: typing.Any = orjson.dumps(["beanos", "apple"])
+        
+        with pytest.raises(TypeError, match="Mapping is required."):
+            builder._ensure_mapping(test_mapping)
+
+    def test__ensure_sequence(self, builder: EntityBuilder):
+        test_sequence: typing.Any = orjson.dumps(["beanos", "apple"])
+
+        ensure_sequence = builder._ensure_sequence(test_sequence)
+
+        assert isinstance(ensure_sequence, typing.Sequence)
+        assert ensure_sequence == orjson.loads(test_sequence)
+    
+    def test__ensure_sequence_invalid(self, builder: EntityBuilder):
+        test_sequence: typing.Any = orjson.dumps({"beanos": True})
+
+        with pytest.raises(TypeError, match="Sequence is required."):
+            builder._ensure_sequence(test_sequence)
 
 
 class TestErrors:
@@ -84,21 +112,22 @@ class TestEvents:
             payloads.PLAYER_STATE_PAYLOAD
         )
 
-    def test_deserialize_websocket_closed_event(
-        self, ongaku_session: Session, builder: EntityBuilder
-    ):
-        parsed_result = builder.deserialize_websocket_closed_event(
-            payloads.WEBSOCKET_CLOSED_PAYLOAD, session=ongaku_session
+    def test_deserialize_statistics_event(self, ongaku_session: Session, builder: EntityBuilder):
+        parsed_result = builder.deserialize_statistics_event(
+            payloads.STATISTICS_PAYLOAD, session=ongaku_session
         )
+
+        parsed_statistics = builder.deserialize_statistics(payloads.STATISTICS_PAYLOAD)
 
         assert parsed_result.session == ongaku_session
         assert parsed_result.client == ongaku_session.client
         assert parsed_result.app == ongaku_session.app
-        assert isinstance(parsed_result.guild_id, hikari.Snowflake)
-        assert parsed_result.guild_id == hikari.Snowflake(1234567890)
-        assert parsed_result.code == 1
-        assert parsed_result.reason == "reason"
-        assert parsed_result.by_remote is False
+        assert parsed_result.players == parsed_statistics.players
+        assert parsed_result.playing_players == parsed_statistics.playing_players
+        assert parsed_result.uptime == parsed_statistics.uptime
+        assert parsed_result.memory == parsed_statistics.memory
+        assert parsed_result.cpu == parsed_statistics.cpu
+        assert parsed_result.frame_stats == parsed_statistics.frame_stats
 
     def test_deserialize_track_start_event(
         self, ongaku_session: Session, builder: EntityBuilder
@@ -128,6 +157,15 @@ class TestEvents:
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.track == builder.deserialize_track(payloads.TRACK_PAYLOAD)
         assert parsed_result.reason == TrackEndReasonType.FINISHED
+
+    def test_deserialize_track_exception(self, builder: EntityBuilder):
+        parsed_result = builder.deserialize_track_exception(
+            payloads.EXCEPTION_ERROR_PAYLOAD
+        )
+
+        assert parsed_result.message == "message"
+        assert parsed_result.severity == SeverityType.COMMON
+        assert parsed_result.cause == "cause"
 
     def test_deserialize_track_exception_event(
         self, ongaku_session: Session, builder: EntityBuilder
@@ -160,6 +198,22 @@ class TestEvents:
         assert parsed_result.guild_id == hikari.Snowflake(1234567890)
         assert parsed_result.track == builder.deserialize_track(payloads.TRACK_PAYLOAD)
         assert parsed_result.threshold_ms == 1
+
+    def test_deserialize_websocket_closed_event(
+        self, ongaku_session: Session, builder: EntityBuilder
+    ):
+        parsed_result = builder.deserialize_websocket_closed_event(
+            payloads.WEBSOCKET_CLOSED_PAYLOAD, session=ongaku_session
+        )
+
+        assert parsed_result.session == ongaku_session
+        assert parsed_result.client == ongaku_session.client
+        assert parsed_result.app == ongaku_session.app
+        assert isinstance(parsed_result.guild_id, hikari.Snowflake)
+        assert parsed_result.guild_id == hikari.Snowflake(1234567890)
+        assert parsed_result.code == 1
+        assert parsed_result.reason == "reason"
+        assert parsed_result.by_remote is False
 
 
 class TestFilters:
@@ -517,7 +571,7 @@ class TestRoutePlanner:
         assert parsed_result.type == IPBlockType.INET_4_ADDRESS
         assert parsed_result.size == "size"
 
-    def test_deserialize_failing_address(self, builder: EntityBuilder):
+    def test_deserialize_routeplanner_failing_address(self, builder: EntityBuilder):
         parsed_result = builder.deserialize_routeplanner_failing_address(
             payloads.ROUTEPLANNER_FAILING_ADDRESS_PAYLOAD
         )
@@ -576,7 +630,7 @@ class TestStatistics:
         assert parsed_result.system_load == 2.3
         assert parsed_result.lavalink_load == 4.5
 
-    def test_deserialize_statistics_frame_stats(self, builder: EntityBuilder):
+    def test_deserialize_statistics_frame_statistics(self, builder: EntityBuilder):
         parsed_result = builder.deserialize_statistics_frame_statistics(
             payloads.STATISTICS_FRAME_STATS_PAYLOAD
         )
@@ -587,7 +641,7 @@ class TestStatistics:
 
 
 class TestTrack:
-    def test_track(self, builder: EntityBuilder):
+    def test_deserialize_track(self, builder: EntityBuilder):
         parsed_result = builder.deserialize_track(payloads.TRACK_PAYLOAD)
 
         assert parsed_result.encoded == "encoded"
@@ -597,8 +651,8 @@ class TestTrack:
         assert parsed_result.plugin_info == {}
         assert parsed_result.user_data == {}
         assert parsed_result.requestor is None
-
-    def test_track_with_requestor(self, builder: EntityBuilder):
+    
+    def test_deserialize_track_with_requestor(self, builder: EntityBuilder):
         payload = dict(payloads.TRACK_PAYLOAD)
 
         payload["userData"] = {"ongaku_requestor": "1234"}
@@ -611,8 +665,8 @@ class TestTrack:
         assert parsed_result.plugin_info == {}
         assert parsed_result.user_data == {}
         assert parsed_result.requestor == hikari.Snowflake(1234)
-
-    def test_build_track_info(self, builder: EntityBuilder):
+    
+    def test_deserialize_track_info(self, builder: EntityBuilder):
         parsed_result = builder.deserialize_track_info(payloads.TRACK_INFO_PAYLOAD)
 
         assert parsed_result.identifier == "identifier"

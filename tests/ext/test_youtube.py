@@ -26,6 +26,7 @@ async def test_fetch_youtube(ongaku_client: Client, ongaku_session: Session):
             "GET",
             "/youtube",
             str,
+            optional=True
         )
 
 
@@ -33,7 +34,6 @@ async def test_fetch_youtube(ongaku_client: Client, ongaku_session: Session):
 async def test_update_youtube(ongaku_client: Client, ongaku_session: Session):
     rest = RESTClient(ongaku_client)
 
-    # Test with payload
     with (
         mock.patch.object(rest._client, "_session_handler"),
         mock.patch.object(
