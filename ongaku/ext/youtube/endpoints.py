@@ -50,14 +50,7 @@ async def fetch_youtube(session: Session, /) -> str | None:
     None
         Returned when youtube is disabled.
     """
-    response = await session.request(
-        "GET",
-        "/youtube",
-        str,
-    )
-
-    if response is None:
-        raise ValueError("Response is required for this request.")
+    response = await session.request("GET", "/youtube", str, optional=True)
 
     return response
 
