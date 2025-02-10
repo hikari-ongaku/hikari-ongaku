@@ -89,7 +89,6 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         if name is not None:
             return self._sessions[name]
-            
 
         if self._current_session:
             return self._current_session
