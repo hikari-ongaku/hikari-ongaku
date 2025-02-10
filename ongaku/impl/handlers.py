@@ -81,14 +81,15 @@ class BasicSessionHandler(handler_.SessionHandler):
             self._sessions.update({session.name: session})
             return session
 
-        raise errors.UniqueError(f"The name {session.name} is not unique.")
+        raise KeyError(f"The name {session.name} is not unique.")
 
     def fetch_session(self, *, name: str | None = None) -> Session:
+        if len(self._sessions) < 1:
+            raise errors.NoSessionsError
+
         if name is not None:
-            try:
-                return self._sessions[name]
-            except KeyError:
-                raise errors.SessionMissingError
+            return self._sessions[name]
+            
 
         if self._current_session:
             return self._current_session
@@ -110,7 +111,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
     def add_player(self, *, player: Player) -> Player:
         if self._players.get(player.guild_id, None) is not None:
-            raise errors.UniqueError(
+            raise KeyError(
                 f"A player with the guild id {player.guild_id} has already been made."
             )
 
