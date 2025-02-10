@@ -37,7 +37,7 @@ from ongaku.impl.statistics import Statistics
 from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
 
-__all__ = ( # noqa: RUF022
+__all__ = (  # noqa: RUF022
     # .filters
     "Filters",
     "Equalizer",
