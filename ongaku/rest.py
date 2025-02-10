@@ -115,9 +115,6 @@ class RESTClient:
             route.method, route.path, dict, params={"identifier": query}
         )
 
-        if response is None:
-            raise ValueError("Response is required for this request.")
-
         load_type: str = response["loadType"]
 
         if load_type == "empty":
@@ -222,11 +219,11 @@ class RESTClient:
             session = self._client.session_handler.fetch_session()
 
         response = await session.request(
-            route.method, route.path, dict, params={"encodedTrack": track}
+            route.method,
+            route.path,
+            dict,
+            params={"encodedTrack": track},
         )
-
-        if response is None:
-            raise ValueError("Response is required for this request.")
 
         try:
             return self._client.entity_builder.deserialize_track(response)
@@ -295,9 +292,6 @@ class RESTClient:
             json=tracks,
         )
 
-        if response is None:
-            raise ValueError("Response is required for this request.")
-
         new_tracks: list[Track] = []
 
         for track in response:
@@ -364,13 +358,8 @@ class RESTClient:
             session = self._client.session_handler.fetch_session()
 
         response = await session.request(
-            route.method,
-            route.path.format(session_id=session_id),
-            list,
+            route.method, route.path.format(session_id=session_id), list
         )
-
-        if response is None:
-            raise ValueError("Response is required for this request.")
 
         players: list[Player] = []
 
@@ -445,9 +434,6 @@ class RESTClient:
             route.path.format(session_id=session_id, guild_id=hikari.Snowflake(guild)),
             dict,
         )
-
-        if response is None:
-            raise ValueError("Response is required for this request.")
 
         return self._client.entity_builder.deserialize_player(response)
 
@@ -616,9 +602,6 @@ class RESTClient:
             params={"noReplace": "true" if no_replace else "false"},
         )
 
-        if response is None:
-            raise ValueError("Response is required for this request.")
-
         return self._client.entity_builder.deserialize_player(response)
 
     async def delete_player(
@@ -757,9 +740,6 @@ class RESTClient:
             json=data,
         )
 
-        if response is None:
-            raise ValueError("Response is required for this request.")
-
         return self._client.entity_builder.deserialize_session(response)
 
     async def fetch_info(self, *, session: Session | None = None) -> Info:
@@ -812,14 +792,7 @@ class RESTClient:
         if not session:
             session = self._client.session_handler.fetch_session()
 
-        response = await session.request(
-            route.method,
-            route.path,
-            dict,
-        )
-
-        if response is None:
-            raise ValueError("Response is required for this request.")
+        response = await session.request(route.method, route.path, dict)
 
         return self._client.entity_builder.deserialize_info(response)
 
@@ -873,12 +846,9 @@ class RESTClient:
 
         response = await session.request(route.method, route.path, str, version=False)
 
-        if response is None:
-            raise ValueError("Response is required for this request.")
-
         return response
 
-    async def fetch_stats(self, *, session: Session | None = None) -> Statistics:
+    async def fetch_statistics(self, *, session: Session | None = None) -> Statistics:
         """
         Get statistics.
 
@@ -931,14 +901,7 @@ class RESTClient:
         if not session:
             session = self._client.session_handler.fetch_session()
 
-        response = await session.request(
-            route.method,
-            route.path,
-            dict,
-        )
-
-        if response is None:
-            raise ValueError("Response is required for this request.")
+        response = await session.request(route.method, route.path, dict)
 
         return self._client.entity_builder.deserialize_statistics(response)
 
@@ -998,11 +961,7 @@ class RESTClient:
             session = self._client.session_handler.fetch_session()
 
         try:
-            response = await session.request(
-                route.method,
-                route.path,
-                dict,
-            )
+            response = await session.request(route.method, route.path, dict)
         except errors.RestEmptyError:
             response = None
 

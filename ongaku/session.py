@@ -157,123 +157,6 @@ class Session:
         """
         return self._session_id
 
-    async def request(  # noqa: C901
-        self,
-        method: str,
-        path: str,
-        return_type: typing.Type[types.RequestT] | None,
-        /,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, str | int | float | bool] = {},
-        ignore_default_headers: bool = False,
-        version: bool = True,
-    ) -> types.RequestT | None:
-        """Request.
-
-        Make a http(s) request to the current session
-
-        Parameters
-        ----------
-        method
-            The method to send the request as. `GET`, `POST`, `PATCH`, `DELETE`, `PUT`
-        path
-            The path to the url. e.g. `/v4/info`
-        return_type
-            The response type you expect.
-        headers
-            The headers to send.
-        json
-            The json data to send.
-        params
-            The parameters to send.
-        ignore_default_headers
-            Whether to ignore the default headers or not.
-        version
-            Whether or not to include the version in the path.
-
-        Returns
-        -------
-        types.RequestT | None
-            Your requested type of data.
-
-        Raises
-        ------
-        TimeoutError
-            Raised when the request takes too long to respond.
-        RestEmptyError
-            Raised when the request required a return type, but received nothing, or a 204 response.
-        RestStatusError
-            Raised when a 4XX or a 5XX status is received.
-        BuildError
-            Raised when the mapping or sequence could not be built.
-        RestRequestError
-            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
-        RestError
-            Raised when an unknown error is caught.
-        """
-        session = self.client._get_client_session()
-
-        new_headers: typing.MutableMapping[str, typing.Any] = dict(headers)
-
-        if ignore_default_headers is False:
-            new_headers.update(self.auth_headers)
-
-        new_params: typing.MutableMapping[str, str] = {}
-
-        for key, value in params.items():
-            if isinstance(value, bool):
-                new_params.update({key: "true" if value else "false"})
-
-            new_params.update({key: str(value)})
-
-        if _logger.isEnabledFor(TRACE_LEVEL):
-            new_params.update({"trace": "true"})
-
-        _logger.log(
-            TRACE_LEVEL,
-            f"Making request to {self.base_uri}{'/v4' if version else ''}{path} with headers: {new_headers} and json: {json} and params: {new_params}",
-        )
-
-        response = await session.request(
-            method,
-            f"{self.base_uri}{'/v4' if version else ''}{path}",
-            headers=new_headers,
-            json=json,
-            params=new_params,
-        )
-
-        if response.status == 204 and return_type is not None:
-            raise errors.RestEmptyError
-
-        if response.status >= 400:
-            payload = await response.text()
-
-            if len(payload) == 0:
-                raise errors.RestStatusError(response.status, response.reason)
-
-            try:
-                rest_error = self.client.entity_builder.deserialize_rest_error(payload)
-            except Exception:
-                raise errors.RestStatusError(response.status, response.reason)
-            raise rest_error
-
-        if return_type is None:
-            return
-
-        payload = await response.text()
-
-        if issubclass(return_type, str | int | bool | float):
-            return return_type(payload)
-
-        try:
-            json_payload = json_loads(payload)
-        except Exception as e:
-            raise errors.BuildError(e)
-
-        return return_type(json_payload)
-
     def _handle_op_code(self, data: str, /) -> hikari.Event | None:  # noqa: C901
         mapped_data = json_loads(data)
 
@@ -423,6 +306,177 @@ class Session:
             return self.session_id
 
         raise errors.SessionStartError
+
+    @typing.overload
+    async def request(
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Literal[None],
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[False] = False,
+        version: bool = True,
+    ) -> None: ...
+
+    @typing.overload
+    async def request(
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Type[types.RequestT],
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[False] = False,
+        version: bool = True,
+    ) -> types.RequestT: ...
+
+    @typing.overload
+    async def request(
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Type[types.RequestT],
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[True] = True,
+        version: bool = True,
+    ) -> types.RequestT | None: ...
+
+    async def request(  # noqa: C901
+        self,
+        method: str,
+        path: str,
+        return_type: typing.Type[types.RequestT] | None,
+        /,
+        *,
+        headers: typing.Mapping[str, typing.Any] = {},
+        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
+        params: typing.Mapping[str, str | int | float | bool] = {},
+        ignore_default_headers: bool = False,
+        optional: bool = False,
+        version: bool = True,
+    ) -> types.RequestT | None:
+        """Request.
+
+        Make a http(s) request to the current session
+
+        Parameters
+        ----------
+        method
+            The method to send the request as. `GET`, `POST`, `PATCH`, `DELETE`, `PUT`
+        path
+            The path to the url. e.g. `/v4/info`
+        return_type
+            The response type you expect.
+        headers
+            The headers to send.
+        json
+            The json data to send.
+        params
+            The parameters to send.
+        ignore_default_headers
+            Whether to ignore the default headers or not.
+        optional
+            Whether the response is optional.
+        version
+            Whether or not to include the version in the path.
+
+        Returns
+        -------
+        types.RequestT | None
+            Your requested type of data.
+
+        Raises
+        ------
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the request required a return type, but received nothing, or a 204 response.
+        RestStatusError
+            Raised when a 4XX or a 5XX status is received.
+        BuildError
+            Raised when the mapping or sequence could not be built.
+        RestRequestError
+            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
+        RestError
+            Raised when an unknown error is caught.
+        """
+        session = self.client._get_client_session()
+
+        new_headers: typing.MutableMapping[str, typing.Any] = dict(headers)
+
+        if ignore_default_headers is False:
+            new_headers.update(self.auth_headers)
+
+        new_params: typing.MutableMapping[str, str] = {}
+
+        for key, value in params.items():
+            if isinstance(value, bool):
+                new_params.update({key: "true" if value else "false"})
+
+            new_params.update({key: str(value)})
+
+        if _logger.isEnabledFor(TRACE_LEVEL):
+            new_params.update({"trace": "true"})
+
+        _logger.log(
+            TRACE_LEVEL,
+            f"Making request to {self.base_uri}{'/v4' if version else ''}{path} with headers: {new_headers} and json: {json} and params: {new_params}",
+        )
+
+        response = await session.request(
+            method,
+            f"{self.base_uri}{'/v4' if version else ''}{path}",
+            headers=new_headers,
+            json=json,
+            params=new_params,
+        )
+
+        if response.status == 204:
+            if optional or (return_type is None):
+                return
+            raise errors.RestEmptyError
+
+        if response.status >= 400:
+            payload = await response.text()
+
+            if len(payload) == 0:
+                raise errors.RestStatusError(response.status, response.reason)
+
+            try:
+                rest_error = self.client.entity_builder.deserialize_rest_error(payload)
+            except Exception:
+                raise errors.RestStatusError(response.status, response.reason)
+            raise rest_error
+
+        payload = await response.text()
+
+        if return_type is None:
+            return
+
+        if issubclass(return_type, str | int | bool | float):
+            print("return type payload")
+            return return_type(payload)
+
+        try:
+            json_payload = json_loads(payload)
+        except Exception as e:
+            raise errors.BuildError(e)
+
+        return return_type(json_payload)
 
     async def transfer(self, session_handler: handler_.SessionHandler, /) -> None:
         """
