@@ -77,28 +77,26 @@ class EntityBuilder:
     def _ensure_mapping(
         self, payload: types.PayloadMappingT, /
     ) -> typing.Mapping[str, typing.Any]:
-        if isinstance(payload, str | bytes):
-            data = self._loads(payload)
-            if isinstance(data, typing.Sequence):
-                raise TypeError("Mapping is required.")
-            return data
+        data = self._loads(payload) if isinstance(payload, str | bytes) else payload
 
-        return payload
+        if not isinstance(data, typing.Mapping):
+            raise TypeError("Mapping is required.")
+
+        return data
 
     def _ensure_sequence(
         self, payload: types.PayloadSequenceT
     ) -> typing.Sequence[typing.Any]:
-        if isinstance(payload, str | bytes):
-            data = self._loads(payload)
-            if isinstance(data, typing.Mapping):
-                raise TypeError("Sequence is required.")
-            return data
+        data = self._loads(payload) if isinstance(payload, str | bytes) else payload
 
-        return payload
+        if not isinstance(data, typing.Sequence):
+            raise TypeError("Sequence is required.")
+
+        return data
 
     #####################
     #                   #
-    #     deserialize     #
+    #     deserialize   #
     #                   #
     #####################
 
