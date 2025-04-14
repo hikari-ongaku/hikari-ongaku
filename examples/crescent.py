@@ -26,9 +26,7 @@ bot = hikari.GatewayBot("...")
 ongaku_client = ongaku.Client(bot)
 
 ongaku_client.create_session(
-    name="crescent-session",
-    host="127.0.0.1",
-    password="youshallnotpass"
+    "crescent-session", host="127.0.0.1", password="youshallnotpass"
 )
 
 client = crescent.Client(bot, OngakuModel(ongaku_client))
@@ -101,23 +99,49 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
     logging.info(f"Queue is empty in guild: {event.guild_id}")
 
 
+# ╔═══════════════╗
+# ║ Error Handler ║
+# ╚═══════════════╝
+
+
+class GuildOnlyError(Exception): ...
+
+
+@client.include
+@crescent.catch_command(GuildOnlyError)
+async def guild_only_error_handler(exc: GuildOnlyError, ctx: crescent.Context):
+    await ctx.respond(
+        "This command must be ran in a guild.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+
+
+@client.include
+@crescent.catch_command(ongaku.PlayerMissingError)
+async def player_missing_error_handler(
+    exc: ongaku.PlayerMissingError, ctx: crescent.Context
+):
+    await ctx.respond(
+        "No player was found for this guild.",
+        flags=hikari.MessageFlag.EPHEMERAL,
+    )
+
+
 # ╔══════════╗
 # ║ Commands ║
 # ╚══════════╝
 
 
 @client.include
-@crescent.command(name="play", description="Play a song in a voice channel.")
+@crescent.command(name="play", description="Play a song or playlist.")
 class Play:
-    query = crescent.option(str, "The song you wish to play.")
+    query = crescent.option(str, "The name, or link of the song to play.")
 
     async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
         if ctx.guild_id is None:
-            await ctx.respond(
-                "This command must be ran in a guild.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+            raise GuildOnlyError
 
         voice_state = bot.cache.get_voice_state(ctx.guild_id, ctx.user.id)
         if not voice_state or not voice_state.channel_id:
@@ -126,16 +150,10 @@ class Play:
             )
             return
 
-        checked_query = await checker.check(self.query)
-
-        if checked_query.type == checker.CheckedType.QUERY:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                f"ytsearch:{checked_query.value}"
-            )
+        if checker.check(self.query):
+            result = await music.rest.load_track(self.query)
         else:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                checked_query.value
-            )
+            result = await music.rest.load_track(f"ytsearch:{self.query}")
 
         if result is None:
             await ctx.respond(
@@ -143,8 +161,6 @@ class Play:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
-
-        track: ongaku.Track
 
         if isinstance(result, ongaku.Playlist):
             track = result.tracks[0]
@@ -160,18 +176,12 @@ class Play:
             description=f"made by: {track.info.author}",
         )
 
-        try:
-            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
-        except ongaku.PlayerMissingError:
-            player = await ctx.client.model.ongaku_client.player.create(ctx.guild_id)
+        player = ongaku_client.create_player(ctx.guild_id)
 
         if player.connected is False:
             await player.connect(voice_state.channel_id)
 
-        try:
-            await player.play(track)
-        except Exception as e:
-            raise e
+        await player.play(track)
 
         await ctx.respond(
             embed=embed,
@@ -180,39 +190,22 @@ class Play:
 
 
 @client.include
-@crescent.command(name="add", description="add a song to the queue")
+@crescent.command(name="add", description="Add more songs or a playlist.")
 class Add:
-    query = crescent.option(str, "The song you wish to play.")
+    query = crescent.option(str, "The name, or link of the song to add.")
 
     async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
         if ctx.guild_id is None:
-            await ctx.respond(
-                "This command must be ran in a guild.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+            raise GuildOnlyError
 
-        try:
-            current_player = await ctx.client.model.ongaku_client.player.fetch(
-                ctx.guild_id
-            )
-        except Exception:
-            await ctx.respond(
-                "You must have a player currently running!",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+        player = music.fetch_player(ctx.guild_id)
 
-        checked_query = await checker.check(self.query)
-
-        if checked_query.type == checker.CheckedType.QUERY:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                f"ytsearch:{checked_query.value}"
-            )
+        if checker.check(self.query):
+            result = await ongaku_client.rest.load_track(self.query)
         else:
-            result = await ctx.client.model.ongaku_client.rest.track.load(
-                checked_query.value
-            )
+            result = await ongaku_client.rest.load_track(f"ytsearch:{self.query}")
 
         if result is None:
             await ctx.respond(
@@ -221,18 +214,16 @@ class Add:
             )
             return
 
-        tracks: list[ongaku.Track] = []
-
         if isinstance(result, ongaku.Playlist):
-            tracks.extend(result.tracks)
+            tracks = result.tracks
 
         elif isinstance(result, ongaku.Track):
-            tracks.append(result)
+            tracks = [result]
 
         else:
-            tracks.extend(result)
+            tracks = [result[0]]
 
-        await current_player.add(tracks)
+        player.add(tracks)
 
         embed = hikari.Embed(
             title="Tracks added",
@@ -244,179 +235,241 @@ class Add:
                 break
             embed.add_field(track.info.title, track.info.author)
 
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
 
 
 @client.include
-@crescent.command(
-    name="pause", description="pause or unpause the currently playing song."
-)
+@crescent.command(name="queue", description="View the current queue.")
+class Queue:
+    async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
+        if ctx.guild_id is None:
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
+
+        if len(player.queue) == 0:
+            await ctx.respond(
+                "There is no songs in the queue.", flags=hikari.MessageFlag.EPHEMERAL
+            )
+            return
+
+        embed = hikari.Embed(
+            title="Queue",
+            description=f"There is currently {len(player.queue)} song{'s' if len(player.queue) > 1 else ''} in the queue.",
+        )
+
+        embed.add_field(
+            f"▶️ {player.queue[0].info.title}",
+            f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+        )
+
+        if len(player.queue) > 1:
+            for i in range(1, 24):
+                if i > len(player.queue):
+                    break
+
+                embed.add_field(
+                    player.queue[i].info.title,
+                    f"Length: {player.queue[i].info.length / 1000}s\nArtist: {player.queue[i].info.author}",
+                )
+
+        await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
+
+
+@client.include
+@crescent.command(name="pause", description="Pause or play the current song.")
 class Pause:
     async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
         if ctx.guild_id is None:
-            await ctx.respond(
-                "This command must be ran in a guild.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-        try:
-            current_player = await ctx.client.model.ongaku_client.player.fetch(
-                ctx.guild_id
-            )
-        except Exception:
-            await ctx.respond(
-                "You must have a player currently running!",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+            raise GuildOnlyError
 
-        await current_player.pause()
+        player = music.fetch_player(ctx.guild_id)
 
-        if current_player.is_paused:
+        await player.pause()
+
+        if player.is_paused:
             await ctx.respond(
-                "Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL
+                "The song has been paused.", flags=hikari.MessageFlag.EPHEMERAL
             )
         else:
             await ctx.respond(
-                "Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL
+                "The song has been unpaused.", flags=hikari.MessageFlag.EPHEMERAL
             )
 
 
 @client.include
-@crescent.command(name="queue", description="View the queue of the player.")
-class Queue:
-    async def callback(self, ctx: crescent.Context):
-        if ctx.guild_id is None:
-            await ctx.respond(
-                "Guild ID is none! You must be in a guild to run this command.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        try:
-            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
-        except Exception:
-            await ctx.respond(
-                "There is no player currently playing in this server.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        if len(player.queue) == 0:
-            await ctx.respond("There is not tracks in the queue currently.")
-            return
-
-        queue_embed = hikari.Embed(
-            title="Queue",
-            description=f"The queue for this server.\nCurrent song: {player.queue[0].info.title}",
-        )
-
-        for x in range(len(player.queue)):
-            if x == 0:
-                continue
-
-            if x >= 25:
-                break
-
-            track = player.queue[x]
-
-            queue_embed.add_field(track.info.title, track.info.author)
-
-        await ctx.respond(embed=queue_embed)
-
-
-@client.include
-@crescent.command(name="volume", description="change the volume of the player.")
-class Volume:
-    volume = crescent.option(
-        int, "The volume you wish to set.", min_value=0, max_value=100
-    )
-
-    async def callback(self, ctx: crescent.Context):
-        if ctx.guild_id is None:
-            await ctx.respond(
-                "Guild ID is none! You must be in a guild to run this command.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        try:
-            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
-        except Exception:
-            await ctx.respond(
-                "There is no player currently playing in this server.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-
-        try:
-            await player.set_volume(self.volume)
-        except ValueError:
-            await ctx.respond("Sorry, but you have entered an invalid number.")
-            return
-
-        await ctx.respond(f"the volume has successfully been set to {self.volume}/100")
-
-
-@client.include
-@crescent.command(name="skip", description="skip a song, or multiple")
+@crescent.command(name="skip", description="Skip the currently playing song.")
 class Skip:
-    amount = crescent.option(
-        int, "The amount of songs you wish to skip.", min_value=1, default=1
-    )
+    async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
+        if ctx.guild_id is None:
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
+
+        await player.skip()
+
+        if len(player.queue) > 0:
+            embed = hikari.Embed(
+                title=player.queue[0].info.title,
+                description=f"Length: {player.queue[0].info.length / 1000}s\nArtist: {player.queue[0].info.author}",
+            )
+
+            artwork_url = player.queue[0].info.artwork_url
+
+            if artwork_url:
+                embed.set_thumbnail(hikari.files.URL(artwork_url, "artwork.png"))
+
+            await ctx.respond(embed=embed, flags=hikari.MessageFlag.EPHEMERAL)
+
+        await ctx.respond("The queue is now empty!", flags=hikari.MessageFlag.EPHEMERAL)
+
+
+@client.include
+@crescent.command(name="volume", description="Set the volume of the player.")
+class Volume:
+    volume = crescent.option(int, "The volume to set.", min_value=0, max_value=200)
 
     async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
         if ctx.guild_id is None:
-            await ctx.respond(
-                "Guild ID is none! You must be in a guild to run this command.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+            raise GuildOnlyError
 
-        try:
-            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
-        except Exception:
-            await ctx.respond(
-                "There is no player currently playing in this server.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+        player = music.fetch_player(ctx.guild_id)
 
-        try:
-            await player.skip(self.amount)
-        except ongaku.PlayerQueueError:
-            await ctx.respond(
-                "It looks like the queue is empty, so no new songs will be played."
-            )
-            return
+        await player.set_volume(self.volume)
 
-        await ctx.respond(f"{self.amount} song(s) were successfully skipped.")
+        await ctx.respond(
+            f"The volume is now set to {self.volume}%",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
 
 
 @client.include
 @crescent.command(
-    name="stop", description="Stops the player, and disconnects it from the server."
+    name="loop", description="Enable or disable the looping of the current track."
 )
+class Loop:
+    async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
+        if ctx.guild_id is None:
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
+
+        player.set_loop()
+
+        if player.loop:
+            if player.track:
+                await ctx.respond(
+                    f"The player is now looping.\nTrack: {player.track.info.title}",
+                    flags=hikari.MessageFlag.EPHEMERAL,
+                )
+            else:
+                await ctx.respond(
+                    "The player is now looping.", flags=hikari.MessageFlag.EPHEMERAL
+                )
+        else:
+            await ctx.respond(
+                "The player is no longer looping.", flags=hikari.MessageFlag.EPHEMERAL
+            )
+
+
+@client.include
+@crescent.command(name="shuffle", description="Shuffle the current queue.")
+class Shuffle:
+    async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
+        if ctx.guild_id is None:
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
+
+        player.shuffle()
+
+        await ctx.respond(
+            "The queue has been successfully shuffled.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+
+
+@client.include
+@crescent.command(
+    name="speed", description="Increase the speed of the currently playing song."
+)
+class Speed:
+    speed = crescent.option(
+        float, "The speed to change the player to.", min_value=0, max_value=5
+    )
+
+    async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
+        if ctx.guild_id is None:
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
+
+        if player.filters:
+            filters = ongaku.Filters.from_filter(player.filters)
+        else:
+            filters = ongaku.Filters()
+
+        filters.set_timescale(speed=self.speed)
+
+        await player.set_filters(filters)
+
+        await ctx.respond(
+            f"The speed has now been set to {self.speed}",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+
+
+@client.include
+@crescent.command(name="stop", description="Stop the currently playing song.")
 class Stop:
     async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
         if ctx.guild_id is None:
-            await ctx.respond(
-                "Guild ID is none! You must be in a guild to run this command.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
-        try:
-            player = await ctx.client.model.ongaku_client.player.fetch(ctx.guild_id)
-        except Exception:
-            await ctx.respond(
-                "There is no player currently playing in this server.",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-            return
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
+
+        await player.stop()
+
+        await ctx.respond(
+            "The player has been stopped.", flags=hikari.MessageFlag.EPHEMERAL
+        )
+
+
+@client.include
+@crescent.command(
+    name="disconnect",
+    description="Stop the currently playing song and disconnect from the VC.",
+)
+class Disconnect:
+    async def callback(self, ctx: crescent.Context):
+        music: ongaku.Client = ctx.client.model.ongaku
+
+        if ctx.guild_id is None:
+            raise GuildOnlyError
+
+        player = music.fetch_player(ctx.guild_id)
 
         await player.disconnect()
 
-        await ctx.respond("Successfully stopped the player.")
+        await ctx.respond(
+            "The player has been disconnected.", flags=hikari.MessageFlag.EPHEMERAL
+        )
 
 
 if __name__ == "__main__":

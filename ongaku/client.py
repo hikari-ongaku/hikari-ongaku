@@ -9,6 +9,7 @@ from __future__ import annotations
 import typing
 
 import aiohttp
+import alluka
 import hikari
 
 from ongaku import errors
@@ -24,6 +25,7 @@ if typing.TYPE_CHECKING:
     import arc
     import tanjun
 
+    from ongaku.abc.extension import Extension
     from ongaku.abc.handler import SessionHandler
 
 
@@ -31,6 +33,9 @@ _logger = logger.getChild("client")
 
 
 __all__ = ("Client",)
+
+
+ExtensionT = typing.TypeVar("ExtensionT", bound="Extension")
 
 
 class Client:
@@ -57,31 +62,32 @@ class Client:
         The session handler to use for the current client.
     logs
         The log level for ongaku.
-    attempts
-        The amount of attempts a session will try to connect to the server.
+    injector
+        The injector for the client and extensions
     """
 
     __slots__: typing.Sequence[str] = (
-        "_attempts",
         "_app",
         "_client_session",
-        "_rest_client",
-        "_is_alive",
-        "_session_handler",
         "_entity_builder",
+        "_extensions",
+        "_injector",
+        "_is_alive",
+        "_rest_client",
+        "_session_handler",
     )
 
     def __init__(
         self,
+        /,
         app: hikari.GatewayBotAware,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
-        attempts: int = 3,
+        injector: alluka.abc.Client = alluka.Client(),
     ) -> None:
         logger.setLevel(logs)
 
-        self._attempts = attempts
         self._app = app
         self._client_session: aiohttp.ClientSession | None = None
 
@@ -89,9 +95,15 @@ class Client:
 
         self._is_alive = False
 
-        self._session_handler = session_handler(self)
+        self._session_handler = session_handler(client=self)
 
         self._entity_builder = EntityBuilder()
+
+        self._extensions: typing.MutableMapping[typing.Type[Extension], Extension] = {}
+
+        self._injector: alluka.abc.Client = injector or alluka.Client()
+
+        self.injector.set_type_dependency(Client, self)
 
         app.event_manager.subscribe(hikari.StartedEvent, self._start_event)
         app.event_manager.subscribe(hikari.StoppingEvent, self._stop_event)
@@ -99,11 +111,11 @@ class Client:
     @classmethod
     def from_arc(
         cls,
+        /,
         client: arc.GatewayClient,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
-        attempts: int = 3,
     ) -> Client:
         """From Arc.
 
@@ -125,14 +137,13 @@ class Client:
             The session handler to use for the current client.
         logs
             The log level for ongaku.
-        attempts
-            The amount of attempts a session will try to connect to the server.
         """
         cls = cls(
-            client.app, session_handler=session_handler, logs=logs, attempts=attempts
+            client.app,
+            session_handler=session_handler,
+            logs=logs,
+            injector=client.injector,
         )
-
-        client.set_type_dependency(Client, cls)
 
         client.add_injection_hook(cls._arc_player_injector)
 
@@ -141,11 +152,11 @@ class Client:
     @classmethod
     def from_tanjun(
         cls,
+        /,
         client: tanjun.abc.Client,
         *,
         session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
-        attempts: int = 3,
     ) -> Client:
         """From Tanjun.
 
@@ -167,17 +178,15 @@ class Client:
             The session handler to use for the current client.
         logs
             The log level for ongaku.
-        attempts
-            The amount of attempts a session will try to connect to the server.
         """
         try:
             app = client.get_type_dependency(hikari.GatewayBotAware)
         except KeyError:
             raise Exception("The gateway bot requested was not found.")
 
-        cls = cls(app, session_handler=session_handler, logs=logs, attempts=attempts)
-
-        client.set_type_dependency(Client, cls)
+        cls = cls(
+            app, session_handler=session_handler, logs=logs, injector=client.injector
+        )
 
         return cls
 
@@ -199,7 +208,7 @@ class Client:
         !!! note
             If the `hikari.StartedEvent` has occurred, and this is False, ongaku is no longer running and has crashed. Check your logs.
         """
-        return self.session_handler.is_alive
+        return self._is_alive
 
     @property
     def entity_builder(self) -> EntityBuilder:
@@ -218,25 +227,33 @@ class Client:
         """
         return self._session_handler
 
+    @property
+    def injector(self) -> alluka.abc.Client:
+        """The dependency injector."""
+        return self._injector
+
     def _get_client_session(self) -> aiohttp.ClientSession:
-        if not self._client_session:
-            self._client_session = aiohttp.ClientSession()
+        if self._client_session:
+            return self._client_session
 
-        if self._client_session.closed:
-            self._client_session = aiohttp.ClientSession()
+        raise errors.ClientAliveError("Client Session does not exist.")
 
-        return self._client_session
-
-    async def _start_event(self, event: hikari.StartedEvent) -> None:
-        _logger.log(TRACE_LEVEL, "Starting up ongaku.")
+    async def _start_event(self, _: hikari.StartedEvent) -> None:
+        _logger.log(TRACE_LEVEL, "Creating client session.")
+        self._client_session = aiohttp.ClientSession()
+        _logger.log(TRACE_LEVEL, "Starting up session handler.")
         await self.session_handler.start()
+
+        if self.session_handler.is_alive and not self._client_session.closed:
+            self._is_alive = True
         _logger.log(TRACE_LEVEL, "Successfully started ongaku.")
 
-    async def _stop_event(self, event: hikari.StoppingEvent) -> None:
-        _logger.log(TRACE_LEVEL, "Shutting down ongaku.")
+    async def _stop_event(self, _: hikari.StoppingEvent) -> None:
+        _logger.log(TRACE_LEVEL, "Shutting down session handler.")
         await self.session_handler.stop()
 
         if self._client_session:
+            _logger.log(TRACE_LEVEL, "Shutting down client session.")
             await self._client_session.close()
 
         _logger.log(TRACE_LEVEL, "Successfully shut down ongaku.")
@@ -263,6 +280,8 @@ class Client:
     def create_session(
         self,
         name: str,
+        /,
+        *,
         ssl: bool = False,
         host: str = "127.0.0.1",
         port: int = 2333,
@@ -298,31 +317,31 @@ class Client:
         attempts
             The attempts that the session is allowed to use, before completely shutting down.
 
+        Raises
+        ------
+        KeyError
+            Raised when a session with the same name is created.
+
         Returns
         -------
         Session
             The session that was added to the handler.
-
-        Raises
-        ------
-        UniqueError
         """
         new_session = Session(
             self,
-            name,
-            ssl,
-            host,
-            port,
-            password,
-            self._attempts,
+            name=name,
+            ssl=ssl,
+            host=host,
+            port=port,
+            password=password,
         )
 
-        return self.session_handler.add_session(new_session)
+        return self.session_handler.add_session(session=new_session)
 
-    def fetch_session(self, name: str) -> Session:
-        """Fetch a session.
+    def get_session(self, name: str, /) -> Session:
+        """Get a session.
 
-        Fetch a session from the session handler.
+        Get a session from the session handler.
 
         Parameters
         ----------
@@ -339,9 +358,9 @@ class Client:
         SessionMissingError
             Raised when the session does not exist.
         """
-        return self.session_handler.fetch_session(name)
+        return self.session_handler.fetch_session(name=name)
 
-    async def delete_session(self, name: str) -> None:
+    async def delete_session(self, name: str, /) -> None:
         """Delete a session.
 
         Delete a session from the session handler.
@@ -356,9 +375,9 @@ class Client:
         SessionMissingError
             Raised when the session does not exist.
         """
-        await self.session_handler.delete_session(name)
+        await self.session_handler.delete_session(name=name)
 
-    def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def create_player(self, guild: hikari.SnowflakeishOr[hikari.Guild], /) -> Player:
         """
         Create a player.
 
@@ -400,9 +419,9 @@ class Client:
 
         new_player = Player(session, hikari.Snowflake(guild))
 
-        return self.session_handler.add_player(new_player)
+        return self.session_handler.add_player(player=new_player)
 
-    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild], /) -> Player:
         """
         Fetch a player.
 
@@ -427,9 +446,11 @@ class Client:
         PlayerMissingError
             Raised when the player for the specified guild does not exist.
         """
-        return self.session_handler.fetch_player(guild)
+        return self.session_handler.fetch_player(guild=guild)
 
-    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+    async def delete_player(
+        self, guild: hikari.SnowflakeishOr[hikari.Guild], /
+    ) -> None:
         """
         Delete a player.
 
@@ -452,7 +473,63 @@ class Client:
         PlayerMissingError
             Raised when the player for the specified guild does not exist.
         """
-        await self.session_handler.delete_player(guild)
+        await self.session_handler.delete_player(guild=guild)
+
+    def add_extension(self, extension: Extension | typing.Type[Extension], /) -> None:
+        """Add Extension.
+
+        Add a new extension to ongaku.
+
+        Parameters
+        ----------
+        extension
+            The extension to add.
+        """
+        if isinstance(extension, typing.Type):
+            extension = extension(self)
+
+        self._extensions[type(extension)] = extension
+        self.injector.set_type_dependency(type(extension), extension)
+
+    def get_extension(self, extension: typing.Type[ExtensionT], /) -> ExtensionT:
+        """Get Extension.
+
+        Get an extension from the client.
+
+        Parameters
+        ----------
+        extension
+            The extension type to receive.
+
+        Raises
+        ------
+        KeyError
+            Raised when the extension could not be found.
+
+        Returns
+        -------
+        ExtensionT
+            The extension.
+        """
+        return self.injector.get_type_dependency(extension)
+
+    def delete_extension(self, extension: typing.Type[Extension]) -> None:
+        """Delete Extension.
+
+        Deletes an extension previously added.
+
+        Parameters
+        ----------
+        extension
+            The extension to remove.
+
+        Raises
+        ------
+        KeyError
+            Raised when the extension was not found.
+        """
+        del self._extensions[extension]
+        self.injector.remove_type_dependency(extension)
 
 
 # MIT License

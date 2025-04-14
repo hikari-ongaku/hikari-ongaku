@@ -12,7 +12,7 @@ import typing
 if typing.TYPE_CHECKING:
     from ongaku.abc.track import Track
 
-__all__ = ("PlaylistInfo", "Playlist")
+__all__ = ("Playlist", "PlaylistInfo")
 
 
 class Playlist(abc.ABC):
@@ -26,8 +26,8 @@ class Playlist(abc.ABC):
 
     __slots__: typing.Sequence[str] = (
         "_info",
-        "_tracks",
         "_plugin_info",
+        "_tracks",
     )
 
     @property
@@ -55,10 +55,7 @@ class Playlist(abc.ABC):
         if self.tracks != other.tracks:
             return False
 
-        if self.plugin_info != other.plugin_info:
-            return False
-
-        return True
+        return self.plugin_info == other.plugin_info
 
 
 class PlaylistInfo(abc.ABC):
@@ -92,10 +89,7 @@ class PlaylistInfo(abc.ABC):
         if self.name != other.name:
             return False
 
-        if self.selected_track != other.selected_track:
-            return False
-
-        return True
+        return self.selected_track == other.selected_track
 
 
 # MIT License

@@ -13,10 +13,10 @@ if typing.TYPE_CHECKING:
     import datetime
 
 __all__ = (
-    "Version",
     "Git",
-    "Plugin",
     "Info",
+    "Plugin",
+    "Version",
 )
 
 
@@ -30,14 +30,14 @@ class Info(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_version",
         "_build_time",
+        "_filters",
         "_git",
         "_jvm",
         "_lavaplayer",
-        "_source_managers",
-        "_filters",
         "_plugins",
+        "_source_managers",
+        "_version",
     )
 
     @property
@@ -105,10 +105,7 @@ class Info(abc.ABC):
         if self.filters != other.filters:
             return False
 
-        if self.plugins != other.plugins:
-            return False
-
-        return True
+        return self.plugins == other.plugins
 
 
 class Version(abc.ABC):
@@ -121,12 +118,12 @@ class Version(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_semver",
+        "_build",
         "_major",
         "_minor",
         "_patch",
         "_pre_release",
-        "_build",
+        "_semver",
     )
 
     @property
@@ -178,10 +175,7 @@ class Version(abc.ABC):
         if self.pre_release != other.pre_release:
             return False
 
-        if self.build != other.build:
-            return False
-
-        return True
+        return self.build == other.build
 
 
 class Git(abc.ABC):
@@ -224,10 +218,7 @@ class Git(abc.ABC):
         if self.commit != other.commit:
             return False
 
-        if self.commit_time != other.commit_time:
-            return False
-
-        return True
+        return self.commit_time == other.commit_time
 
 
 class Plugin(abc.ABC):
@@ -258,10 +249,7 @@ class Plugin(abc.ABC):
         if self.name != other.name:
             return False
 
-        if self.version != other.version:
-            return False
-
-        return True
+        return self.version == other.version
 
 
 # MIT License

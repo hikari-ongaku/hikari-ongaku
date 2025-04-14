@@ -35,13 +35,9 @@ class BasicSessionHandler(handler_.SessionHandler):
     If it closes or fails, it switches to the next available one.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_current_session",
-        "_sessions",
-        "_players",
-    )
+    __slots__: typing.Sequence[str] = ("_current_session", "_players", "_sessions")
 
-    def __init__(self, client: Client) -> None:
+    def __init__(self, *, client: Client) -> None:
         self._client = client
         self._is_alive = False
         self._current_session: Session | None = None
@@ -66,9 +62,7 @@ class BasicSessionHandler(handler_.SessionHandler):
     async def start(self) -> None:
         self._is_alive = True
 
-        for _, session in self._sessions.items():
-            if session.status == session_.SessionStatus.NOT_CONNECTED:
-                await session.start()
+        await asyncio.gather(*[i.start() for i in self.sessions])
 
     async def stop(self) -> None:
         for session in self.sessions:
@@ -78,7 +72,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         self._is_alive = False
 
-    def add_session(self, session: Session) -> Session:
+    def add_session(self, *, session: Session) -> Session:
         """Add a session."""
         if self.is_alive:
             asyncio.create_task(session.start())  # noqa: RUF006
@@ -87,14 +81,14 @@ class BasicSessionHandler(handler_.SessionHandler):
             self._sessions.update({session.name: session})
             return session
 
-        raise errors.UniqueError(f"The name {session.name} is not unique.")
+        raise KeyError(f"The name {session.name} is not unique.")
 
-    def fetch_session(self, name: str | None = None) -> Session:
+    def fetch_session(self, *, name: str | None = None) -> Session:
+        if len(self._sessions) < 1:
+            raise errors.NoSessionsError
+
         if name is not None:
-            try:
-                return self._sessions[name]
-            except KeyError:
-                raise errors.SessionMissingError
+            return self._sessions[name]
 
         if self._current_session:
             return self._current_session
@@ -106,7 +100,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.NoSessionsError
 
-    async def delete_session(self, name: str) -> None:
+    async def delete_session(self, *, name: str) -> None:
         try:
             session = self._sessions.pop(name)
         except KeyError:
@@ -114,12 +108,9 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         await session.stop()
 
-    def add_player(
-        self,
-        player: Player,
-    ) -> Player:
+    def add_player(self, *, player: Player) -> Player:
         if self._players.get(player.guild_id, None) is not None:
-            raise errors.UniqueError(
+            raise KeyError(
                 f"A player with the guild id {player.guild_id} has already been made."
             )
 
@@ -127,7 +118,7 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         return player
 
-    def fetch_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
+    def fetch_player(self, *, guild: hikari.SnowflakeishOr[hikari.Guild]) -> Player:
         player = self._players.get(hikari.Snowflake(guild))
 
         if player:
@@ -135,7 +126,9 @@ class BasicSessionHandler(handler_.SessionHandler):
 
         raise errors.PlayerMissingError
 
-    async def delete_player(self, guild: hikari.SnowflakeishOr[hikari.Guild]) -> None:
+    async def delete_player(
+        self, *, guild: hikari.SnowflakeishOr[hikari.Guild]
+    ) -> None:
         try:
             player = self._players.pop(hikari.Snowflake(guild))
         except KeyError:
