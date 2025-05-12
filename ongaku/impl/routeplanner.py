@@ -13,7 +13,7 @@ from ongaku.abc import routeplanner as routeplanner_
 if typing.TYPE_CHECKING:
     import datetime
 
-__all__ = ("RoutePlannerStatus", "RoutePlannerDetails", "IPBlock", "FailingAddress")
+__all__ = ("FailingAddress", "IPBlock", "RoutePlannerDetails", "RoutePlannerStatus")
 
 
 class RoutePlannerStatus(routeplanner_.RoutePlannerStatus):

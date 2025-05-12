@@ -1,20 +1,23 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import typing
+from unittest import mock
 
-import mock
 import pytest
 from hikari.snowflakes import Snowflake
 
 from ongaku import Playlist
 from ongaku import errors
 from ongaku.abc.track import Track
-from ongaku.client import Client
 from ongaku.impl import player as player
-from ongaku.impl.filters import Filters
 from ongaku.rest import RESTClient
-from ongaku.session import Session
 from tests import payloads
+
+if typing.TYPE_CHECKING:
+    from ongaku.client import Client
+    from ongaku.impl.filters import Filters
+    from ongaku.session import Session
 
 
 def test_properties(ongaku_client: Client):
@@ -26,7 +29,9 @@ def test_properties(ongaku_client: Client):
 class TestRestTrack:
     @pytest.mark.asyncio
     async def test_load_track_with_custom_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -45,7 +50,8 @@ class TestRestTrack:
             ) as patched_request,
         ):
             new_track = await rest.load_track(
-                "https://youtube.com/watch?v=video", session=ongaku_session
+                "https://youtube.com/watch?v=video",
+                session=ongaku_session,
             )
 
             patched_fetch_session.assert_not_called()
@@ -63,7 +69,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_track(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -98,7 +106,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_track_malformed(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -132,7 +142,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_playlist(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -154,7 +166,7 @@ class TestRestTrack:
             ) as patched_request,
         ):
             playlist = await rest.load_track(
-                "https://www.youtube.com/watch?v=video&list=playlist"
+                "https://www.youtube.com/watch?v=video&list=playlist",
             )
 
             patched_fetch_session.assert_called_once()
@@ -164,7 +176,7 @@ class TestRestTrack:
                 "/loadtracks",
                 dict,
                 params={
-                    "identifier": "https://www.youtube.com/watch?v=video&list=playlist"
+                    "identifier": "https://www.youtube.com/watch?v=video&list=playlist",
                 },
             )
 
@@ -174,7 +186,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_playlist_malformed(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -208,7 +222,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_search(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -231,7 +247,10 @@ class TestRestTrack:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_with(
-                "GET", "/loadtracks", dict, params={"identifier": "ytsearch:a-track"}
+                "GET",
+                "/loadtracks",
+                dict,
+                params={"identifier": "ytsearch:a-track"},
             )
 
             assert isinstance(search, typing.Sequence)
@@ -240,7 +259,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_search_malformed(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -274,7 +295,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_empty(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -307,7 +330,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_load_track_as_exception(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -344,7 +369,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_decode_track_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -367,7 +394,10 @@ class TestRestTrack:
             patched_fetch_session.assert_not_called()
 
             patched_request.assert_called_once_with(
-                "GET", "/decodetrack", dict, params={"encodedTrack": "encoded"}
+                "GET",
+                "/decodetrack",
+                dict,
+                params={"encodedTrack": "encoded"},
             )
 
         assert isinstance(new_track, Track)
@@ -397,7 +427,10 @@ class TestRestTrack:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_once_with(
-                "GET", "/decodetrack", dict, params={"encodedTrack": "encoded"}
+                "GET",
+                "/decodetrack",
+                dict,
+                params={"encodedTrack": "encoded"},
             )
 
         assert isinstance(new_track, Track)
@@ -406,7 +439,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_decode_track_malformed(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -418,7 +453,10 @@ class TestRestTrack:
                 return_value=ongaku_session,
             ) as patched_fetch_session,
             mock.patch.object(
-                ongaku_session, "request", new_callable=mock.AsyncMock, return_value={}
+                ongaku_session,
+                "request",
+                new_callable=mock.AsyncMock,
+                return_value={},
             ) as patched_request,
             pytest.raises(errors.BuildError),
         ):
@@ -427,12 +465,17 @@ class TestRestTrack:
         patched_fetch_session.assert_called_once()
 
         patched_request.assert_called_once_with(
-            "GET", "/decodetrack", dict, params={"encodedTrack": "encoded"}
+            "GET",
+            "/decodetrack",
+            dict,
+            params={"encodedTrack": "encoded"},
         )
 
     @pytest.mark.asyncio
     async def test_decode_tracks_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -504,7 +547,9 @@ class TestRestTrack:
 
     @pytest.mark.asyncio
     async def test_decode_tracks_malformed(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -564,7 +609,9 @@ class TestRestPlayer:
             patched_fetch_session.assert_not_called()
 
             patched_request.assert_called_once_with(
-                "GET", "/sessions/session_id/players", list
+                "GET",
+                "/sessions/session_id/players",
+                list,
             )
 
     @pytest.mark.asyncio
@@ -594,7 +641,9 @@ class TestRestPlayer:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_once_with(
-                "GET", "/sessions/session_id/players", list
+                "GET",
+                "/sessions/session_id/players",
+                list,
             )
 
     @pytest.mark.asyncio
@@ -620,13 +669,17 @@ class TestRestPlayer:
             ) as patched_request,
         ):
             await rest.fetch_player(
-                "session_id", Snowflake(1234567890), session=ongaku_session
+                "session_id",
+                Snowflake(1234567890),
+                session=ongaku_session,
             )
 
             patched_fetch_session.assert_not_called()
 
             patched_request.assert_called_once_with(
-                "GET", "/sessions/session_id/players/1234567890", dict
+                "GET",
+                "/sessions/session_id/players/1234567890",
+                dict,
             )
 
     @pytest.mark.asyncio
@@ -656,7 +709,9 @@ class TestRestPlayer:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_once_with(
-                "GET", "/sessions/session_id/players/1234567890", dict
+                "GET",
+                "/sessions/session_id/players/1234567890",
+                dict,
             )
 
     @pytest.mark.asyncio
@@ -685,7 +740,9 @@ class TestRestPlayer:
                 "session_id",
                 Snowflake(1234567890),
                 track=mock.Mock(
-                    encoded="encoded", user_data={}, requestor=Snowflake(1234)
+                    encoded="encoded",
+                    user_data={},
+                    requestor=Snowflake(1234),
                 ),
                 position=1,
                 end_time=2,
@@ -723,7 +780,10 @@ class TestRestPlayer:
 
     @pytest.mark.asyncio
     async def test_update_player(
-        self, ongaku_client: Client, ongaku_session: Session, ongaku_filters: Filters
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
+        ongaku_filters: Filters,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -745,7 +805,9 @@ class TestRestPlayer:
                 "session_id",
                 Snowflake(1234567890),
                 track=mock.Mock(
-                    encoded="encoded", user_data={}, requestor=Snowflake(1234)
+                    encoded="encoded",
+                    user_data={},
+                    requestor=Snowflake(1234),
                 ),
                 position=1,
                 end_time=2,
@@ -801,13 +863,17 @@ class TestRestPlayer:
             ) as patched_request,
         ):
             await rest.delete_player(
-                "session_id", Snowflake(1234567890), session=ongaku_session
+                "session_id",
+                Snowflake(1234567890),
+                session=ongaku_session,
             )
 
             patched_fetch_session.assert_not_called()
 
             patched_request.assert_called_once_with(
-                "DELETE", "/sessions/session_id/players/1234567890", None
+                "DELETE",
+                "/sessions/session_id/players/1234567890",
+                None,
             )
 
     @pytest.mark.asyncio
@@ -837,14 +903,18 @@ class TestRestPlayer:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_once_with(
-                "DELETE", "/sessions/session_id/players/1234567890", None
+                "DELETE",
+                "/sessions/session_id/players/1234567890",
+                None,
             )
 
 
 class TestRestSession:
     @pytest.mark.asyncio
     async def test_update_session_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -863,7 +933,10 @@ class TestRestSession:
             ) as patched_request,
         ):
             await rest.update_session(
-                "session_id", resuming=False, timeout=230, session=ongaku_session
+                "session_id",
+                resuming=False,
+                timeout=230,
+                session=ongaku_session,
             )
 
             patched_fetch_session.assert_not_called()
@@ -910,7 +983,9 @@ class TestRestSession:
 class TestRestInformation:
     @pytest.mark.asyncio
     async def test_fetch_info_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -968,7 +1043,9 @@ class TestRestInformation:
 
     @pytest.mark.asyncio
     async def test_fetch_version_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -991,7 +1068,10 @@ class TestRestInformation:
             patched_fetch_session.assert_not_called()
 
             patched_request.assert_called_once_with(
-                "GET", "/version", str, version=False
+                "GET",
+                "/version",
+                str,
+                version=False,
             )
 
     @pytest.mark.asyncio
@@ -1017,12 +1097,17 @@ class TestRestInformation:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_once_with(
-                "GET", "/version", str, version=False
+                "GET",
+                "/version",
+                str,
+                version=False,
             )
 
     @pytest.mark.asyncio
     async def test_fetch_stats_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1082,7 +1167,9 @@ class TestRestInformation:
 class TestRestRoutePlanner:
     @pytest.mark.asyncio
     async def test_fetch_routeplanner_status_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1114,7 +1201,9 @@ class TestRestRoutePlanner:
 
     @pytest.mark.asyncio
     async def test_fetch_routeplanner_status(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1144,7 +1233,9 @@ class TestRestRoutePlanner:
 
     @pytest.mark.asyncio
     async def test_fetch_routeplanner_status_empty(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1174,7 +1265,9 @@ class TestRestRoutePlanner:
 
     @pytest.mark.asyncio
     async def test_update_routeplanner_address_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1198,12 +1291,17 @@ class TestRestRoutePlanner:
             patched_fetch_session.assert_not_called()
 
             patched_request.assert_called_once_with(
-                "POST", "/routeplanner/free/address", None, json={"address": "1.0.0.1"}
+                "POST",
+                "/routeplanner/free/address",
+                None,
+                json={"address": "1.0.0.1"},
             )
 
     @pytest.mark.asyncio
     async def test_update_routeplanner_address(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1227,12 +1325,17 @@ class TestRestRoutePlanner:
             patched_fetch_session.assert_called_once()
 
             patched_request.assert_called_once_with(
-                "POST", "/routeplanner/free/address", None, json={"address": "1.0.0.1"}
+                "POST",
+                "/routeplanner/free/address",
+                None,
+                json={"address": "1.0.0.1"},
             )
 
     @pytest.mark.asyncio
     async def test_update_all_routeplanner_address_with_session(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 
@@ -1264,7 +1367,9 @@ class TestRestRoutePlanner:
 
     @pytest.mark.asyncio
     async def test_update_all_routeplanner_address(
-        self, ongaku_client: Client, ongaku_session: Session
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
     ):
         rest = RESTClient(ongaku_client)
 

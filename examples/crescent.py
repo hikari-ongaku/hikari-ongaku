@@ -4,7 +4,7 @@
 # ╔══════════════════╗
 # ║ Crescent example ║
 # ╚══════════════════╝
-
+from __future__ import annotations
 
 import dataclasses
 import logging
@@ -28,7 +28,7 @@ ongaku_client = ongaku.Client(bot)
 ongaku_client.create_session(
     name="crescent-session",
     host="127.0.0.1",
-    password="youshallnotpass"
+    password="youshallnotpass",
 )
 
 client = crescent.Client(bot, OngakuModel(ongaku_client))
@@ -43,7 +43,7 @@ client = crescent.Client(bot, OngakuModel(ongaku_client))
 @crescent.event
 async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
-        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
+        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}",
     )
 
 
@@ -51,7 +51,7 @@ async def ready_event(event: ongaku.ReadyEvent):
 @crescent.event
 async def track_start_event(event: ongaku.TrackStartEvent):
     logging.info(
-        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
+        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}",
     )
 
 
@@ -59,7 +59,7 @@ async def track_start_event(event: ongaku.TrackStartEvent):
 @crescent.event
 async def track_end_event(event: ongaku.TrackEndEvent):
     logging.info(
-        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
+        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}",
     )
 
 
@@ -67,7 +67,7 @@ async def track_end_event(event: ongaku.TrackEndEvent):
 @crescent.event
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
     logging.info(
-        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
+        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}",
     )
 
 
@@ -75,7 +75,7 @@ async def track_exception_event(event: ongaku.TrackExceptionEvent):
 @crescent.event
 async def track_stuck_event(event: ongaku.TrackStuckEvent):
     logging.info(
-        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
+        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}",
     )
 
 
@@ -83,7 +83,7 @@ async def track_stuck_event(event: ongaku.TrackStuckEvent):
 @crescent.event
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
-        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}",
     )
 
 
@@ -91,7 +91,7 @@ async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
 @crescent.event
 async def queue_next_event(event: ongaku.QueueNextEvent):
     logging.info(
-        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}",
     )
 
 
@@ -122,7 +122,8 @@ class Play:
         voice_state = bot.cache.get_voice_state(ctx.guild_id, ctx.user.id)
         if not voice_state or not voice_state.channel_id:
             await ctx.respond(
-                "you are not in a voice channel.", flags=hikari.MessageFlag.EPHEMERAL
+                "you are not in a voice channel.",
+                flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
 
@@ -130,11 +131,11 @@ class Play:
 
         if checked_query.type == checker.CheckedType.QUERY:
             result = await ctx.client.model.ongaku_client.rest.track.load(
-                f"ytsearch:{checked_query.value}"
+                f"ytsearch:{checked_query.value}",
             )
         else:
             result = await ctx.client.model.ongaku_client.rest.track.load(
-                checked_query.value
+                checked_query.value,
             )
 
         if result is None:
@@ -194,7 +195,7 @@ class Add:
 
         try:
             current_player = await ctx.client.model.ongaku_client.player.fetch(
-                ctx.guild_id
+                ctx.guild_id,
             )
         except Exception:
             await ctx.respond(
@@ -207,11 +208,11 @@ class Add:
 
         if checked_query.type == checker.CheckedType.QUERY:
             result = await ctx.client.model.ongaku_client.rest.track.load(
-                f"ytsearch:{checked_query.value}"
+                f"ytsearch:{checked_query.value}",
             )
         else:
             result = await ctx.client.model.ongaku_client.rest.track.load(
-                checked_query.value
+                checked_query.value,
             )
 
         if result is None:
@@ -249,7 +250,8 @@ class Add:
 
 @client.include
 @crescent.command(
-    name="pause", description="pause or unpause the currently playing song."
+    name="pause",
+    description="pause or unpause the currently playing song.",
 )
 class Pause:
     async def callback(self, ctx: crescent.Context):
@@ -261,7 +263,7 @@ class Pause:
             return
         try:
             current_player = await ctx.client.model.ongaku_client.player.fetch(
-                ctx.guild_id
+                ctx.guild_id,
             )
         except Exception:
             await ctx.respond(
@@ -274,11 +276,13 @@ class Pause:
 
         if current_player.is_paused:
             await ctx.respond(
-                "Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL
+                "Music has been paused.",
+                flags=hikari.MessageFlag.EPHEMERAL,
             )
         else:
             await ctx.respond(
-                "Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL
+                "Music has been resumed.",
+                flags=hikari.MessageFlag.EPHEMERAL,
             )
 
 
@@ -329,7 +333,10 @@ class Queue:
 @crescent.command(name="volume", description="change the volume of the player.")
 class Volume:
     volume = crescent.option(
-        int, "The volume you wish to set.", min_value=0, max_value=100
+        int,
+        "The volume you wish to set.",
+        min_value=0,
+        max_value=100,
     )
 
     async def callback(self, ctx: crescent.Context):
@@ -362,7 +369,10 @@ class Volume:
 @crescent.command(name="skip", description="skip a song, or multiple")
 class Skip:
     amount = crescent.option(
-        int, "The amount of songs you wish to skip.", min_value=1, default=1
+        int,
+        "The amount of songs you wish to skip.",
+        min_value=1,
+        default=1,
     )
 
     async def callback(self, ctx: crescent.Context):
@@ -386,7 +396,7 @@ class Skip:
             await player.skip(self.amount)
         except ongaku.PlayerQueueError:
             await ctx.respond(
-                "It looks like the queue is empty, so no new songs will be played."
+                "It looks like the queue is empty, so no new songs will be played.",
             )
             return
 
@@ -395,7 +405,8 @@ class Skip:
 
 @client.include
 @crescent.command(
-    name="stop", description="Stops the player, and disconnects it from the server."
+    name="stop",
+    description="Stops the player, and disconnects it from the server.",
 )
 class Stop:
     async def callback(self, ctx: crescent.Context):

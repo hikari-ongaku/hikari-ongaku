@@ -4,7 +4,7 @@
 # ╔═════════════╗
 # ║ Arc example ║
 # ╚═════════════╝
-
+from __future__ import annotations
 
 import logging
 
@@ -12,8 +12,8 @@ import arc
 import hikari
 
 import ongaku
-from ongaku.ext import injection
 from ongaku.ext import checker
+from ongaku.ext import injection
 
 bot = hikari.GatewayBot("...")
 
@@ -24,7 +24,7 @@ ongaku_client = ongaku.Client.from_arc(client)
 ongaku_client.create_session(
     name="arc-session",
     host="127.0.0.1",
-    password="youshallnotpass"
+    password="youshallnotpass",
 )
 
 
@@ -36,49 +36,49 @@ ongaku_client.create_session(
 @bot.listen(ongaku.ReadyEvent)
 async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
-        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
+        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}",
     )
 
 
 @bot.listen(ongaku.TrackStartEvent)
 async def track_start_event(event: ongaku.TrackStartEvent):
     logging.info(
-        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
+        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}",
     )
 
 
 @bot.listen(ongaku.TrackEndEvent)
 async def track_end_event(event: ongaku.TrackEndEvent):
     logging.info(
-        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
+        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}",
     )
 
 
 @bot.listen(ongaku.TrackExceptionEvent)
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
     logging.info(
-        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
+        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}",
     )
 
 
 @bot.listen(ongaku.TrackStuckEvent)
 async def track_stuck_event(event: ongaku.TrackStuckEvent):
     logging.info(
-        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
+        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}",
     )
 
 
 @bot.listen(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
-        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}",
     )
 
 
 @bot.listen(ongaku.QueueNextEvent)
 async def queue_next_event(event: ongaku.QueueNextEvent):
     logging.info(
-        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}",
     )
 
 
@@ -95,11 +95,17 @@ async def queue_empty_event(event: ongaku.QueueEmptyEvent):
 @client.set_error_handler()
 async def error_handler(ctx: arc.GatewayContext, exc: Exception):
     if isinstance(exc, arc.GuildOnlyError):
-        await ctx.respond("You must be in a guild to use this command.", flags=hikari.MessageFlag.EPHEMERAL)
+        await ctx.respond(
+            "You must be in a guild to use this command.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
-    
-    elif isinstance(exc, ongaku.PlayerMissingError):
-        await ctx.respond("There is no player playing in this guild.", flags=hikari.MessageFlag.EPHEMERAL)
+
+    if isinstance(exc, ongaku.PlayerMissingError):
+        await ctx.respond(
+            "There is no player playing in this guild.",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
         return
 
 
@@ -117,14 +123,16 @@ async def play_command(
 ) -> None:
     if ctx.guild_id is None:
         await ctx.respond(
-            "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
+            "This command must be ran in a guild.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
     voice_state = bot.cache.get_voice_state(ctx.guild_id, ctx.author.id)
     if not voice_state or not voice_state.channel_id:
         await ctx.respond(
-            "you are not in a voice channel.", flags=hikari.MessageFlag.EPHEMERAL
+            "you are not in a voice channel.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
@@ -185,11 +193,12 @@ async def add_command(
     query: arc.Option[str, arc.StrParams("The song you wish to add.")],
     player: ongaku.Player = arc.inject(),
 ) -> None:
-
     checked_query = await checker.check(query)
 
     if checked_query.type == checker.CheckedType.QUERY:
-        result = await player.session.client.rest.load_track(f"ytsearch:{checked_query.value}")
+        result = await player.session.client.rest.load_track(
+            f"ytsearch:{checked_query.value}",
+        )
     else:
         result = await player.session.client.rest.load_track(checked_query.value)
 
@@ -277,7 +286,8 @@ async def queue_command(
 async def volume_command(
     ctx: arc.GatewayContext,
     volume: arc.Option[
-        int, arc.IntParams("The volume number you wish to set.", min=0, max=100)
+        int,
+        arc.IntParams("The volume number you wish to set.", min=0, max=100),
     ],
     player: ongaku.Player = arc.inject(),
 ) -> None:
@@ -296,7 +306,8 @@ async def volume_command(
 async def skip_command(
     ctx: arc.GatewayContext,
     amount: arc.Option[
-        int, arc.IntParams("The amount of songs you wish to skip. default is 1.", min=1)
+        int,
+        arc.IntParams("The amount of songs you wish to skip. default is 1.", min=1),
     ] = 1,
     player: ongaku.Player = arc.inject(),
 ) -> None:
@@ -304,7 +315,7 @@ async def skip_command(
         await player.skip(amount)
     except ongaku.PlayerQueueError:
         await ctx.respond(
-            "It looks like the queue is empty, so no new songs will be played."
+            "It looks like the queue is empty, so no new songs will be played.",
         )
         return
 

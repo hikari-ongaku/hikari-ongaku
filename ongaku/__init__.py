@@ -63,7 +63,7 @@ from ongaku.session import Session
 
 logging.addLevelName(TRACE_LEVEL, TRACE_NAME)
 
-__all__ = (
+__all__ = (  # noqa: RUF022
     # .about
     "__author__",
     "__author_email__",

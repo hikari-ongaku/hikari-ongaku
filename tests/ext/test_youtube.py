@@ -1,10 +1,16 @@
-import mock
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from unittest import mock
+
 import pytest
 
-from ongaku import Client
-from ongaku import Session
 from ongaku.ext import youtube as yt
 from ongaku.rest import RESTClient
+
+if TYPE_CHECKING:
+    from ongaku import Client
+    from ongaku import Session
 
 
 @pytest.mark.asyncio

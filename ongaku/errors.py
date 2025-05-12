@@ -16,23 +16,23 @@ if typing.TYPE_CHECKING:
     from ongaku.abc.errors import SeverityType
 
 __all__ = (
-    "OngakuError",
-    "RestError",
-    "RestStatusError",
-    "RestRequestError",
-    "RestEmptyError",
-    "RestExceptionError",
-    "ClientError",
-    "ClientAliveError",
-    "SessionError",
-    "SessionStartError",
-    "SessionHandlerError",
-    "NoSessionsError",
-    "PlayerError",
-    "PlayerConnectError",
-    "PlayerQueueError",
-    "PlayerMissingError",
     "BuildError",
+    "ClientAliveError",
+    "ClientError",
+    "NoSessionsError",
+    "OngakuError",
+    "PlayerConnectError",
+    "PlayerError",
+    "PlayerMissingError",
+    "PlayerQueueError",
+    "RestEmptyError",
+    "RestError",
+    "RestExceptionError",
+    "RestRequestError",
+    "RestStatusError",
+    "SessionError",
+    "SessionHandlerError",
+    "SessionStartError",
     "TimeoutError",
 )
 
@@ -51,7 +51,7 @@ class RestError(OngakuError):
 class RestStatusError(RestError):
     """Raised when the status is 4XX or 5XX."""
 
-    __slots__: typing.Sequence[str] = ("_status", "_reason")
+    __slots__: typing.Sequence[str] = ("_reason", "_status")
 
     def __init__(self, status: int, reason: str | None) -> None:
         self._status = status
@@ -72,11 +72,11 @@ class RestRequestError(RestError):
     """Raised when a rest error is received from the response."""
 
     __slots__: typing.Sequence[str] = (
-        "_timestamp",
-        "_status",
         "_error",
         "_message",
         "_path",
+        "_status",
+        "_timestamp",
         "_trace",
     )
 

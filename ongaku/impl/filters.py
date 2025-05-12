@@ -396,7 +396,14 @@ class Filters(filters_.Filters):
         """
         if self._distortion is None:
             self._distortion = Distortion(
-                None, None, None, None, None, None, None, None
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
             )
 
         self._distortion = Distortion(
@@ -516,7 +523,8 @@ class Filters(filters_.Filters):
     # Plugin filters
 
     def set_plugin_filters(
-        self, plugin_filters: typing.Mapping[str, typing.Any] = {}
+        self,
+        plugin_filters: typing.Mapping[str, typing.Any] = {},
     ) -> Filters:
         """Set Plugin Filters.
 
@@ -574,7 +582,10 @@ class Karaoke(filters_.Karaoke):
 
 class Timescale(filters_.Timescale):
     def __init__(
-        self, speed: float | None, pitch: float | None, rate: float | None
+        self,
+        speed: float | None,
+        pitch: float | None,
+        rate: float | None,
     ) -> None:
         if speed is not None and speed < 0:
             raise ValueError("Speed must be at or above 0.")

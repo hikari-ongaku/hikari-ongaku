@@ -42,7 +42,11 @@ class Player(player_.Player):
 
 class State(player_.State):
     def __init__(
-        self, time: datetime.datetime, position: int, connected: bool, ping: int
+        self,
+        time: datetime.datetime,
+        position: int,
+        connected: bool,
+        ping: int,
     ) -> None:
         self._time = time
         self._position = position

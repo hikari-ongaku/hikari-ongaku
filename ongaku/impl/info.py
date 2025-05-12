@@ -13,7 +13,7 @@ from ongaku.abc import info as info_
 if typing.TYPE_CHECKING:
     import datetime
 
-__all__ = ("Info", "Version", "Git", "Plugin")
+__all__ = ("Git", "Info", "Plugin", "Version")
 
 
 class Info(info_.Info):
@@ -58,7 +58,10 @@ class Version(info_.Version):
 
 class Git(info_.Git):
     def __init__(
-        self, branch: str, commit: str, commit_time: datetime.datetime
+        self,
+        branch: str,
+        commit: str,
+        commit_time: datetime.datetime,
     ) -> None:
         self._branch = branch
         self._commit = commit

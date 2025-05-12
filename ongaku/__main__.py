@@ -1,5 +1,7 @@
 """CLI for ongaku."""
 
+from __future__ import annotations
+
 import os
 import sys
 
@@ -27,7 +29,7 @@ if "--about" in sys.argv or "-a" in sys.argv:
 {WHITE}------------
 Ongaku is a voice library, designed to work with hikari (https://hikari-py.dev/).
 It's a super simple to setup library, whilst also having all features for advanced users as well.
-"""
+""",
     )
     exit(1)
 
@@ -37,7 +39,7 @@ sys.stderr.write(
 {WHITE}--------------------------------
 {WATERMELON}Ongaku version: {WHITE}{ongaku.__version__}
 {WATERMELON}Hikari version: {WHITE}{hikari.__version__}
-{WATERMELON}Install path: {WHITE}{os.path.abspath(os.path.dirname(__file__))}\n\n"""
+{WATERMELON}Install path: {WHITE}{os.path.abspath(os.path.dirname(__file__))}\n\n""",
 )
 
 

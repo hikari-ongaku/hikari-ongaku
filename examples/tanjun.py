@@ -4,7 +4,7 @@
 # ╔════════════════╗
 # ║ Tanjun example ║
 # ╚════════════════╝
-
+from __future__ import annotations
 
 import logging
 
@@ -23,7 +23,7 @@ ongaku_client = ongaku.Client.from_tanjun(client)
 ongaku_client.create_session(
     name="tanjun-session",
     host="127.0.0.1",
-    password="youshallnotpass"
+    password="youshallnotpass",
 )
 
 
@@ -35,49 +35,49 @@ ongaku_client.create_session(
 @bot.listen(ongaku.ReadyEvent)
 async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
-        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
+        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}",
     )
 
 
 @bot.listen(ongaku.TrackStartEvent)
 async def track_start_event(event: ongaku.TrackStartEvent):
     logging.info(
-        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
+        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}",
     )
 
 
 @bot.listen(ongaku.TrackEndEvent)
 async def track_end_event(event: ongaku.TrackEndEvent):
     logging.info(
-        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
+        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}",
     )
 
 
 @bot.listen(ongaku.TrackExceptionEvent)
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
     logging.info(
-        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
+        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}",
     )
 
 
 @bot.listen(ongaku.TrackStuckEvent)
 async def track_stuck_event(event: ongaku.TrackStuckEvent):
     logging.info(
-        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
+        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}",
     )
 
 
 @bot.listen(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
-        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}",
     )
 
 
 @bot.listen(ongaku.QueueNextEvent)
 async def queue_next_event(event: ongaku.QueueNextEvent):
     logging.info(
-        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}"
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}",
     )
 
 
@@ -104,14 +104,16 @@ async def play_command(
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
-            "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
+            "This command must be ran in a guild.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
     voice_state = bot.cache.get_voice_state(ctx.guild_id, ctx.author.id)
     if not voice_state or not voice_state.channel_id:
         await ctx.create_initial_response(
-            "you are not in a voice channel.", flags=hikari.MessageFlag.EPHEMERAL
+            "you are not in a voice channel.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
@@ -174,7 +176,8 @@ async def add_command(
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
-            "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
+            "This command must be ran in a guild.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
 
@@ -230,11 +233,13 @@ async def add_command(
 @component.with_slash_command
 @tanjun.as_slash_command("pause", "pause or unpause the currently playing song.")
 async def pause_command(
-    ctx: tanjun.abc.SlashContext, ongaku_client: ongaku.Client = tanjun.inject()
+    ctx: tanjun.abc.SlashContext,
+    ongaku_client: ongaku.Client = tanjun.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
-            "This command must be ran in a guild.", flags=hikari.MessageFlag.EPHEMERAL
+            "This command must be ran in a guild.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
         return
     try:
@@ -250,18 +255,21 @@ async def pause_command(
 
     if current_player.is_paused:
         await ctx.create_initial_response(
-            "Music has been paused.", flags=hikari.MessageFlag.EPHEMERAL
+            "Music has been paused.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
     else:
         await ctx.create_initial_response(
-            "Music has been resumed.", flags=hikari.MessageFlag.EPHEMERAL
+            "Music has been resumed.",
+            flags=hikari.MessageFlag.EPHEMERAL,
         )
 
 
 @component.with_slash_command
 @tanjun.as_slash_command("queue", "View the queue of the player.")
 async def queue_command(
-    ctx: tanjun.abc.SlashContext, ongaku_client: ongaku.Client = tanjun.inject()
+    ctx: tanjun.abc.SlashContext,
+    ongaku_client: ongaku.Client = tanjun.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(
@@ -304,7 +312,10 @@ async def queue_command(
 
 @component.with_slash_command
 @tanjun.with_int_slash_option(
-    "volume", "The volume number you wish to set.", min_value=1, default=1
+    "volume",
+    "The volume number you wish to set.",
+    min_value=1,
+    default=1,
 )
 @tanjun.as_slash_command("queue", "View the queue of the player.")
 async def volume_command(
@@ -332,12 +343,12 @@ async def volume_command(
         await player.set_volume(volume)
     except ValueError:
         await ctx.create_initial_response(
-            "Sorry, but you have entered an invalid number."
+            "Sorry, but you have entered an invalid number.",
         )
         return
 
     await ctx.create_initial_response(
-        f"the volume has successfully been set to {volume}/100"
+        f"the volume has successfully been set to {volume}/100",
     )
 
 
@@ -374,7 +385,7 @@ async def skip_command(
         await player.skip(amount)
     except ongaku.PlayerQueueError:
         await ctx.create_initial_response(
-            "It looks like the queue is empty, so no new songs will be played."
+            "It looks like the queue is empty, so no new songs will be played.",
         )
         return
 
@@ -383,10 +394,12 @@ async def skip_command(
 
 @component.with_slash_command
 @tanjun.as_slash_command(
-    "stop", "Stops the player, and disconnects it from the server."
+    "stop",
+    "Stops the player, and disconnects it from the server.",
 )
 async def stop_command(
-    ctx: tanjun.abc.SlashContext, ongaku_client: ongaku.Client = tanjun.inject()
+    ctx: tanjun.abc.SlashContext,
+    ongaku_client: ongaku.Client = tanjun.inject(),
 ) -> None:
     if ctx.guild_id is None:
         await ctx.create_initial_response(

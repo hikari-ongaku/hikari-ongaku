@@ -1,6 +1,7 @@
 # ╔════════════════╗
 # ║ Hikari example ║
 # ╚════════════════╝
+from __future__ import annotations
 
 import logging
 
@@ -9,15 +10,18 @@ import hikari
 import ongaku
 from ongaku.ext import checker
 
-
-bot = hikari.GatewayBot("...", suppress_optimization_warning=True, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
+bot = hikari.GatewayBot(
+    "...",
+    suppress_optimization_warning=True,
+    intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT,
+)
 
 ongaku_client = ongaku.Client(bot)
 
 ongaku_client.create_session(
     name="hikari-session",
     host="127.0.0.1",
-    password="youshallnotpass"
+    password="youshallnotpass",
 )
 
 
@@ -27,48 +31,53 @@ ongaku_client.create_session(
 
 
 @bot.listen(ongaku.ReadyEvent)
-async def ready_event(event: ongaku.ReadyEvent): 
+async def ready_event(event: ongaku.ReadyEvent):
     logging.info(
-        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}"
+        f"Ready Event, Resumed: {event.resumed}, session id: {event.session_id}",
     )
 
 
 @bot.listen(ongaku.TrackStartEvent)
 async def track_start_event(event: ongaku.TrackStartEvent):
     logging.info(
-        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}"
+        f"Track Started Event, guild: {event.guild_id}, Track Title: {event.track.info.title}",
     )
 
 
 @bot.listen(ongaku.TrackEndEvent)
 async def track_end_event(event: ongaku.TrackEndEvent):
     logging.info(
-        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}"
+        f"Track Ended Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Reason: {event.reason.name}",
     )
 
 
 @bot.listen(ongaku.TrackExceptionEvent)
 async def track_exception_event(event: ongaku.TrackExceptionEvent):
     logging.info(
-        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}"
+        f"Track Exception Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Exception message: {event.exception.message}",
     )
 
 
 @bot.listen(ongaku.TrackStuckEvent)
 async def track_stuck_event(event: ongaku.TrackStuckEvent):
     logging.info(
-        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}"
+        f"Track Stuck Event, guild: {event.guild_id}, Track Title: {event.track.info.title}, Threshold ms: {event.threshold_ms}",
     )
+
 
 @bot.listen(ongaku.WebsocketClosedEvent)
 async def websocket_close_event(event: ongaku.WebsocketClosedEvent):
     logging.info(
-        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}"
+        f"Websocket Close Event, guild: {event.guild_id}, Reason: {event.reason}, Code: {event.code}, By Remote: {event.by_remote}",
     )
+
 
 @bot.listen(ongaku.QueueNextEvent)
 async def queue_next_event(event: ongaku.QueueNextEvent):
-    logging.info(f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}")
+    logging.info(
+        f"guild: {event.guild_id}'s track: {event.old_track.info.title} has finished! Now playing: {event.track.info.title}",
+    )
+
 
 @bot.listen(ongaku.QueueEmptyEvent)
 async def queue_empty_event(event: ongaku.QueueEmptyEvent):
@@ -90,12 +99,10 @@ def handle_command(content: str, name: str) -> list[str] | None:
 
 
 @bot.listen()
-async def play_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def play_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
@@ -112,7 +119,7 @@ async def play_command(
             reply=event.message,
         )
         return
-    
+
     checked_query = await checker.check(args[0])
 
     if checked_query.type == checker.CheckedType.QUERY:
@@ -165,12 +172,10 @@ async def play_command(
 
 
 @bot.listen()
-async def add_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def add_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
@@ -178,7 +183,7 @@ async def add_command(
 
     if args is None:
         return
-    
+
     try:
         current_player = ongaku_client.fetch_player(event.guild_id)
     except Exception:
@@ -219,7 +224,7 @@ async def add_command(
 
     embed = hikari.Embed(
         title="Tracks added",
-        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}"
+        description=f"All the tracks that have been added. (only shows top 25.)\nTotal tracks added: {len(tracks)}",
     )
 
     for track in tracks:
@@ -235,12 +240,10 @@ async def add_command(
 
 
 @bot.listen()
-async def pause_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def pause_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
@@ -277,12 +280,10 @@ async def pause_command(
 
 
 @bot.listen()
-async def queue_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def queue_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
@@ -333,12 +334,10 @@ async def queue_command(
 
 
 @bot.listen()
-async def volume_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def volume_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
@@ -356,7 +355,7 @@ async def volume_command(
             reply=event.message,
         )
         return
-    
+
     try:
         volume = int(args[0])
     except:
@@ -392,12 +391,10 @@ async def volume_command(
 
 
 @bot.listen()
-async def skip_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def skip_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 
@@ -415,7 +412,7 @@ async def skip_command(
             reply=event.message,
         )
         return
-    
+
     try:
         amount = int(args[0])
     except:
@@ -452,12 +449,10 @@ async def skip_command(
 
 
 @bot.listen()
-async def stop_command(
-    event: hikari.GuildMessageCreateEvent
-) -> None:
+async def stop_command(event: hikari.GuildMessageCreateEvent) -> None:
     if event.content is None:
         return
-    
+
     if event.is_bot:
         return
 

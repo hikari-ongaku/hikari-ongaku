@@ -37,8 +37,8 @@ class BasicSessionHandler(handler_.SessionHandler):
 
     __slots__: typing.Sequence[str] = (
         "_current_session",
-        "_sessions",
         "_players",
+        "_sessions",
     )
 
     def __init__(self, client: Client) -> None:
@@ -120,7 +120,7 @@ class BasicSessionHandler(handler_.SessionHandler):
     ) -> Player:
         if self._players.get(player.guild_id, None) is not None:
             raise errors.UniqueError(
-                f"A player with the guild id {player.guild_id} has already been made."
+                f"A player with the guild id {player.guild_id} has already been made.",
             )
 
         self._players.update({player.guild_id: player})

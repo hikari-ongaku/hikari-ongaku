@@ -14,11 +14,10 @@ from ongaku.internal.about import __url__
 from ongaku.internal.about import __version__
 
 __all__ = (
-    # ongaku.internal.about
     "__author__",
     "__author_email__",
-    "__maintainer__",
     "__license__",
+    "__maintainer__",
     "__url__",
     "__version__",
 )

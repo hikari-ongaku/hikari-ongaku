@@ -1,21 +1,18 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import datetime
 import typing
+from unittest import mock
 
-import mock
 import pytest
-from hikari import Event
 from hikari.events.voice_events import VoiceServerUpdateEvent
 from hikari.events.voice_events import VoiceStateUpdateEvent
-from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 
 from ongaku import errors
 from ongaku import events
 from ongaku.abc.events import TrackEndReasonType
-from ongaku.abc.filters import Filters
-from ongaku.client import Client
 from ongaku.impl import player as player_
 from ongaku.impl import playlist
 from ongaku.impl.player import Voice
@@ -24,9 +21,18 @@ from ongaku.impl.track import TrackInfo
 from ongaku.player import Player
 from ongaku.session import Session
 
+if typing.TYPE_CHECKING:
+    from hikari import Event
+    from hikari.impl import gateway_bot as gateway_bot_
+
+    from ongaku.abc.filters import Filters
+    from ongaku.client import Client
+
 
 async def connect_events(
-    event_type: typing.Type[Event], /, timeout: typing.Union[float, int, None]
+    event_type: type[Event],
+    /,
+    timeout: float | None,
 ):
     if event_type == VoiceServerUpdateEvent:
         return VoiceServerUpdateEvent(
@@ -52,7 +58,9 @@ async def connect_events(
 class TestPlayer:
     @pytest.mark.asyncio
     async def test_properties(
-        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_session: Session,
     ):
         new_player = Player(ongaku_session, 1234567890)
 
@@ -95,7 +103,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app,
@@ -146,7 +156,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app,
@@ -169,7 +181,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app,
@@ -224,7 +238,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 new_player,
@@ -264,7 +280,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", side_effect=errors.SessionStartError
+                ongaku_session,
+                "_get_session_id",
+                side_effect=errors.SessionStartError,
             ),
             pytest.raises(errors.SessionStartError),
         ):
@@ -274,7 +292,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             pytest.raises(errors.PlayerConnectError),
         ):
@@ -284,7 +304,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 new_player,
@@ -299,7 +321,10 @@ class TestPlayer:
 
     @pytest.mark.asyncio
     async def test_add(
-        self, ongaku_session: Session, ongaku_track: Track, ongaku_track_info: TrackInfo
+        self,
+        ongaku_session: Session,
+        ongaku_track: Track,
+        ongaku_track_info: TrackInfo,
     ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
@@ -308,7 +333,8 @@ class TestPlayer:
         assert len(new_player.queue) == 0
 
         new_player.add(
-            Track("encoded_1", ongaku_track_info, {}, {}, None), Snowflake(1)
+            Track("encoded_1", ongaku_track_info, {}, {}, None),
+            Snowflake(1),
         )
 
         assert len(new_player.queue) == 1
@@ -354,10 +380,14 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                new_player,
+                "_channel_id",
+                return_value=Snowflake(987654321),
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -387,10 +417,14 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                new_player,
+                "_channel_id",
+                return_value=Snowflake(987654321),
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -464,10 +498,14 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                new_player,
+                "_channel_id",
+                return_value=Snowflake(987654321),
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -569,10 +607,14 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                new_player,
+                "_channel_id",
+                return_value=Snowflake(987654321),
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -629,7 +671,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -672,7 +716,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             pytest.raises(ValueError),
         ):
@@ -682,7 +728,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             pytest.raises(ValueError),
         ):
@@ -694,7 +742,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -727,7 +777,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             pytest.raises(ValueError),
         ):
@@ -739,7 +791,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             pytest.raises(errors.PlayerQueueError),
         ):
@@ -751,7 +805,9 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             pytest.raises(ValueError),
         ):
@@ -777,12 +833,21 @@ class TestPlayer:
 
     @pytest.mark.asyncio
     async def test_transfer(
-        self, ongaku_client: Client, ongaku_session: Session, ongaku_track: Track
+        self,
+        ongaku_client: Client,
+        ongaku_session: Session,
+        ongaku_track: Track,
     ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
         new_session = Session(
-            ongaku_client, "session", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
 
         # Test not connected
@@ -804,10 +869,13 @@ class TestPlayer:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch(
-                "ongaku.session.Session._get_session_id", return_value="session_id"
+                "ongaku.session.Session._get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 new_session.client.app,
@@ -815,7 +883,9 @@ class TestPlayer:
                 new_callable=mock.AsyncMock,
             ),
             mock.patch.object(
-                new_session.app.event_manager, "wait_for", connect_events
+                new_session.app.event_manager,
+                "wait_for",
+                connect_events,
             ),
             mock.patch(
                 "ongaku.rest.RESTClient.update_player",
@@ -836,7 +906,9 @@ class TestPlayer:
                 new_callable=mock.PropertyMock(return_value=30),
             ),
             mock.patch.object(
-                new_player, "_channel_id", return_value=Snowflake(987654321)
+                new_player,
+                "_channel_id",
+                return_value=Snowflake(987654321),
             ),
             mock.patch("ongaku.player.Player.disconnect") as patch_disconnect,
         ):
@@ -885,7 +957,13 @@ class TestPlayer:
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         voice = player_.Voice("token", "endpoint", "session_id")
         replacement_player = player_.Player(
-            Snowflake(1234567890), None, 10, False, state, voice, ongaku_filters
+            Snowflake(1234567890),
+            None,
+            10,
+            False,
+            state,
+            voice,
+            ongaku_filters,
         )
 
         new_player._update(replacement_player)
@@ -906,7 +984,9 @@ class TestPlayer:
 
         state = player_.State(datetime.datetime.now(), 1, True, 2)
         event = events.PlayerUpdateEvent.from_session(
-            ongaku_session, Snowflake(1234567890), state
+            ongaku_session,
+            Snowflake(1234567890),
+            state,
         )
 
         await new_player._player_update_event(event)
@@ -929,7 +1009,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -945,7 +1027,9 @@ class TestPlayerTrackEndEvent:
 
     @pytest.mark.asyncio
     async def test_loop_with_multiple_tracks(
-        self, ongaku_session: Session, ongaku_track: Track
+        self,
+        ongaku_session: Session,
+        ongaku_track: Track,
     ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
@@ -964,7 +1048,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch("ongaku.player.Player.play") as patched_play,
             mock.patch.object(
@@ -983,7 +1069,9 @@ class TestPlayerTrackEndEvent:
 
     @pytest.mark.asyncio
     async def test_loop_with_singular_track(
-        self, ongaku_session: Session, ongaku_track: Track
+        self,
+        ongaku_session: Session,
+        ongaku_track: Track,
     ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
@@ -1002,7 +1090,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch("ongaku.player.Player.play") as patched_play,
             mock.patch.object(
@@ -1046,7 +1136,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1072,7 +1164,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1097,7 +1191,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1111,7 +1207,9 @@ class TestPlayerTrackEndEvent:
 
     @pytest.mark.asyncio
     async def test_finished_singular(
-        self, ongaku_session: Session, ongaku_track: Track
+        self,
+        ongaku_session: Session,
+        ongaku_track: Track,
     ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
@@ -1124,7 +1222,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1158,7 +1258,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1166,7 +1268,8 @@ class TestPlayerTrackEndEvent:
                 new_callable=mock.AsyncMock,
             ) as patched_dispatch,
             mock.patch(
-                "ongaku.player.Player.play", new_callable=mock.AsyncMock
+                "ongaku.player.Player.play",
+                new_callable=mock.AsyncMock,
             ) as patched_play,
         ):
             assert len(new_player.queue) == 0
@@ -1192,7 +1295,9 @@ class TestPlayerTrackEndEvent:
 
     @pytest.mark.asyncio
     async def test_load_failed_singular(
-        self, ongaku_session: Session, ongaku_track: Track
+        self,
+        ongaku_session: Session,
+        ongaku_track: Track,
     ):
         new_player = Player(ongaku_session, Snowflake(1234567890))
 
@@ -1205,7 +1310,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1239,7 +1346,9 @@ class TestPlayerTrackEndEvent:
 
         with (
             mock.patch.object(
-                ongaku_session, "_get_session_id", return_value="session_id"
+                ongaku_session,
+                "_get_session_id",
+                return_value="session_id",
             ),
             mock.patch.object(
                 ongaku_session.client.app.event_manager,
@@ -1247,7 +1356,8 @@ class TestPlayerTrackEndEvent:
                 new_callable=mock.AsyncMock,
             ) as patched_dispatch,
             mock.patch(
-                "ongaku.player.Player.play", new_callable=mock.AsyncMock
+                "ongaku.player.Player.play",
+                new_callable=mock.AsyncMock,
             ) as patched_play,
         ):
             assert len(new_player.queue) == 0

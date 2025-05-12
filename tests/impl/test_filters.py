@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from ongaku.abc.filters import BandType
@@ -267,7 +269,10 @@ class TestFilterFunctions:
         filters = Filters()
 
         filters.set_channel_mix(
-            left_to_left=0.39, left_to_right=1, right_to_left=0, right_to_right=0.8
+            left_to_left=0.39,
+            left_to_right=1,
+            right_to_left=0,
+            right_to_right=0.8,
         )
 
         assert filters.channel_mix is not None
@@ -281,7 +286,10 @@ class TestFilterFunctions:
         filters = Filters()
 
         filters.set_channel_mix(
-            left_to_left=0.39, left_to_right=1, right_to_left=0, right_to_right=0.8
+            left_to_left=0.39,
+            left_to_right=1,
+            right_to_left=0,
+            right_to_right=0.8,
         )
 
         assert filters.channel_mix is not None
