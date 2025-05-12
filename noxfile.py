@@ -63,6 +63,12 @@ def import_fix(session: nox.Session) -> None:
 
 
 @nox.session()
+def format_check(session: nox.Session) -> None:
+    uv_sync(session, "format")
+    session.run("ruff", "check", "--output-format=github")
+
+
+@nox.session()
 def pyright(session: nox.Session) -> None:
     uv_sync(session)
     session.install(".[injection, speedups]")
