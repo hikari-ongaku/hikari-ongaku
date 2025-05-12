@@ -52,7 +52,10 @@ class RESTClient:
         self._client = client
 
     async def load_track(  # noqa: C901
-        self, query: str, *, session: Session | None = None
+        self,
+        query: str,
+        *,
+        session: Session | None = None,
     ) -> Playlist | typing.Sequence[Track] | Track | None:
         """
         Load tracks.
@@ -112,7 +115,10 @@ class RESTClient:
             session = self._client.session_handler.fetch_session()
 
         response = await session.request(
-            route.method, route.path, dict, params={"identifier": query}
+            route.method,
+            route.path,
+            dict,
+            params={"identifier": query},
         )
 
         if response is None:
@@ -122,16 +128,16 @@ class RESTClient:
 
         if load_type == "empty":
             _logger.log(TRACE_LEVEL, "loadType is empty.")
-            return
+            return None
 
-        elif load_type == "error":
+        if load_type == "error":
             _logger.log(TRACE_LEVEL, "loadType caused an error.")
 
             raise errors.RestExceptionError.from_error(
-                self._client.entity_builder.build_exception_error(response["data"])
+                self._client.entity_builder.build_exception_error(response["data"]),
             )
 
-        elif load_type == "search":
+        if load_type == "search":
             _logger.log(TRACE_LEVEL, "loadType was a search result.")
             tracks: typing.Sequence[Track] = []
             for track in response["data"]:
@@ -158,13 +164,17 @@ class RESTClient:
 
         else:
             raise errors.BuildError(
-                None, f"An unknown loadType was received: {load_type}"
+                None,
+                f"An unknown loadType was received: {load_type}",
             )
 
         return build
 
     async def decode_track(
-        self, track: str, *, session: Session | None = None
+        self,
+        track: str,
+        *,
+        session: Session | None = None,
     ) -> Track:
         """
         Decode a track.
@@ -218,7 +228,10 @@ class RESTClient:
             session = self._client.session_handler.fetch_session()
 
         response = await session.request(
-            route.method, route.path, dict, params={"encodedTrack": track}
+            route.method,
+            route.path,
+            dict,
+            params={"encodedTrack": track},
         )
 
         if response is None:
@@ -230,7 +243,10 @@ class RESTClient:
             raise errors.BuildError(e)
 
     async def decode_tracks(
-        self, tracks: typing.Sequence[str], *, session: Session | None = None
+        self,
+        tracks: typing.Sequence[str],
+        *,
+        session: Session | None = None,
     ) -> typing.Sequence[Track]:
         """
         Decode tracks.
@@ -305,7 +321,10 @@ class RESTClient:
         return new_tracks
 
     async def fetch_players(
-        self, session_id: str, *, session: Session | None = None
+        self,
+        session_id: str,
+        *,
+        session: Session | None = None,
     ) -> typing.Sequence[Player]:
         """
         Fetch all players.
@@ -549,12 +568,12 @@ class RESTClient:
                     {
                         "track": {
                             "encoded": None,
-                        }
-                    }
+                        },
+                    },
                 )
             else:
                 track_data: typing.MutableMapping[str, typing.Any] = {
-                    "encoded": track.encoded
+                    "encoded": track.encoded,
                 }
 
                 user_data = dict(track.user_data)
@@ -604,15 +623,15 @@ class RESTClient:
                         karaoke_payload.update({"level": filters.karaoke.level})
                     if filters.karaoke.mono_level is not None:
                         karaoke_payload.update(
-                            {"monoLevel": filters.karaoke.mono_level}
+                            {"monoLevel": filters.karaoke.mono_level},
                         )
                     if filters.karaoke.filter_band is not None:
                         karaoke_payload.update(
-                            {"filterBand": filters.karaoke.filter_band}
+                            {"filterBand": filters.karaoke.filter_band},
                         )
                     if filters.karaoke.filter_width is not None:
                         karaoke_payload.update(
-                            {"filterWidth": filters.karaoke.filter_width}
+                            {"filterWidth": filters.karaoke.filter_width},
                         )
 
                     if len(karaoke_payload.items()) > 0:
@@ -654,7 +673,7 @@ class RESTClient:
                     rotation_payload: typing.MutableMapping[str, typing.Any] = {}
                     if filters.rotation.rotation_hz is not None:
                         rotation_payload.update(
-                            {"rotationHz": filters.rotation.rotation_hz}
+                            {"rotationHz": filters.rotation.rotation_hz},
                         )
 
                     if len(rotation_payload.items()) > 0:
@@ -664,27 +683,27 @@ class RESTClient:
                     distortion_payload: typing.MutableMapping[str, typing.Any] = {}
                     if filters.distortion.sin_offset is not None:
                         distortion_payload.update(
-                            {"sinOffset": filters.distortion.sin_offset}
+                            {"sinOffset": filters.distortion.sin_offset},
                         )
                     if filters.distortion.sin_scale is not None:
                         distortion_payload.update(
-                            {"sinScale": filters.distortion.sin_scale}
+                            {"sinScale": filters.distortion.sin_scale},
                         )
                     if filters.distortion.cos_offset is not None:
                         distortion_payload.update(
-                            {"cosOffset": filters.distortion.cos_offset}
+                            {"cosOffset": filters.distortion.cos_offset},
                         )
                     if filters.distortion.cos_scale is not None:
                         distortion_payload.update(
-                            {"cosScale": filters.distortion.cos_scale}
+                            {"cosScale": filters.distortion.cos_scale},
                         )
                     if filters.distortion.tan_offset is not None:
                         distortion_payload.update(
-                            {"tanOffset": filters.distortion.tan_offset}
+                            {"tanOffset": filters.distortion.tan_offset},
                         )
                     if filters.distortion.tan_scale is not None:
                         distortion_payload.update(
-                            {"tanScale": filters.distortion.tan_scale}
+                            {"tanScale": filters.distortion.tan_scale},
                         )
                     if filters.distortion.offset is not None:
                         distortion_payload.update({"offset": filters.distortion.offset})
@@ -698,19 +717,19 @@ class RESTClient:
                     channel_mix_payload: typing.MutableMapping[str, typing.Any] = {}
                     if filters.channel_mix.left_to_left is not None:
                         channel_mix_payload.update(
-                            {"leftToLeft": filters.channel_mix.left_to_left}
+                            {"leftToLeft": filters.channel_mix.left_to_left},
                         )
                     if filters.channel_mix.left_to_right is not None:
                         channel_mix_payload.update(
-                            {"leftToRight": filters.channel_mix.left_to_right}
+                            {"leftToRight": filters.channel_mix.left_to_right},
                         )
                     if filters.channel_mix.right_to_left is not None:
                         channel_mix_payload.update(
-                            {"rightToLeft": filters.channel_mix.right_to_left}
+                            {"rightToLeft": filters.channel_mix.right_to_left},
                         )
                     if filters.channel_mix.right_to_right is not None:
                         channel_mix_payload.update(
-                            {"rightToRight": filters.channel_mix.right_to_right}
+                            {"rightToRight": filters.channel_mix.right_to_right},
                         )
 
                     if len(channel_mix_payload.items()) > 0:
@@ -720,7 +739,7 @@ class RESTClient:
                     low_pass_payload: typing.MutableMapping[str, typing.Any] = {}
                     if filters.low_pass.smoothing is not None:
                         low_pass_payload.update(
-                            {"smoothing": filters.low_pass.smoothing}
+                            {"smoothing": filters.low_pass.smoothing},
                         )
 
                     if len(low_pass_payload.items()) > 0:
@@ -735,8 +754,8 @@ class RESTClient:
                         "token": voice.token,
                         "endpoint": voice.endpoint,
                         "sessionId": voice.session_id,
-                    }
-                }
+                    },
+                },
             )
 
         route = routes.PATCH_PLAYER_UPDATE
@@ -1082,7 +1101,9 @@ class RESTClient:
         return self._client.entity_builder.build_statistics(response)
 
     async def fetch_routeplanner_status(
-        self, *, session: Session | None = None
+        self,
+        *,
+        session: Session | None = None,
     ) -> RoutePlannerStatus | None:
         """
         Fetch routeplanner status.
@@ -1146,12 +1167,15 @@ class RESTClient:
             response = None
 
         if response is None:
-            return
+            return None
 
         return self._client.entity_builder.build_routeplanner_status(response)
 
     async def update_routeplanner_address(
-        self, address: str, *, session: Session | None = None
+        self,
+        address: str,
+        *,
+        session: Session | None = None,
     ) -> None:
         """
         Free routeplanner address.
@@ -1198,7 +1222,9 @@ class RESTClient:
         await session.request(route.method, route.path, None, json={"address": address})
 
     async def update_all_routeplanner_addresses(
-        self, *, session: Session | None = None
+        self,
+        *,
+        session: Session | None = None,
     ) -> None:
         """
         Free all routeplanner addresses.

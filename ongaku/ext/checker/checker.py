@@ -59,7 +59,7 @@ async def check(query: str) -> Checked:
     ]:
         if url.path == "/playlist":
             return Checked(queries["list"], CheckedType.PLAYLIST)
-        elif url.path == "/watch":
+        if url.path == "/watch":
             return Checked(queries["v"], CheckedType.TRACK)
 
     return Checked(query, CheckedType.QUERY)

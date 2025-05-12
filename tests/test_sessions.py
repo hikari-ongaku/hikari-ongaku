@@ -1,16 +1,15 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import asyncio
 import datetime
 import typing
+from unittest import mock
 
 import aiohttp
-import mock
 import orjson
 import pytest
 from aiohttp import web
-from hikari import OwnUser
-from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 
 import ongaku
@@ -22,11 +21,21 @@ from ongaku.player import Player
 from ongaku.session import Session
 from tests import payloads
 
+if typing.TYPE_CHECKING:
+    from hikari import OwnUser
+    from hikari.impl import gateway_bot as gateway_bot_
+
 
 class TestSession:
     def test_properties(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_name", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "test_name",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
 
         assert session.client == ongaku_client
@@ -55,7 +64,13 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_get_session_id(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         with mock.patch(
@@ -73,7 +88,13 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_transfer(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         handler = mock.Mock()
@@ -146,7 +167,13 @@ class TestSession:
         ongaku_client = Client(gateway_bot)
 
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         app = web.Application()
@@ -191,11 +218,18 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_start(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         with mock.patch(
-            "ongaku.session.Session._websocket", new_callable=mock.AsyncMock
+            "ongaku.session.Session._websocket",
+            new_callable=mock.AsyncMock,
         ) as patched_websocket:
             await session.start()
 
@@ -206,11 +240,18 @@ class TestSession:
     @pytest.mark.asyncio
     async def test_stop(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         with mock.patch(
-            "ongaku.session.Session._websocket", new_callable=mock.AsyncMock
+            "ongaku.session.Session._websocket",
+            new_callable=mock.AsyncMock,
         ) as patched_websocket:
             await session.start()
 
@@ -227,7 +268,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_string(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -239,7 +286,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=200, text=mock.AsyncMock(return_value="text")
+                    status=200,
+                    text=mock.AsyncMock(return_value="text"),
                 ),
             ) as patched_request,
         ):
@@ -260,7 +308,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_integer(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -272,7 +326,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=200, text=mock.AsyncMock(return_value=1234567890)
+                    status=200,
+                    text=mock.AsyncMock(return_value=1234567890),
                 ),
             ) as patched_request,
         ):
@@ -294,7 +349,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_float(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -306,7 +367,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=200, text=mock.AsyncMock(return_value=4.2)
+                    status=200,
+                    text=mock.AsyncMock(return_value=4.2),
                 ),
             ) as patched_request,
         ):
@@ -328,7 +390,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_boolean(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -340,7 +408,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=200, text=mock.AsyncMock(return_value=True)
+                    status=200,
+                    text=mock.AsyncMock(return_value=True),
                 ),
             ) as patched_request,
         ):
@@ -362,7 +431,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_dict(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -378,7 +453,7 @@ class TestRequest:
                 return_value=mock.AsyncMock(
                     status=200,
                     text=mock.AsyncMock(
-                        return_value=orjson.dumps(return_dict).decode()
+                        return_value=orjson.dumps(return_dict).decode(),
                     ),
                 ),
             ) as patched_request,
@@ -401,7 +476,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_list(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -417,7 +498,7 @@ class TestRequest:
                 return_value=mock.AsyncMock(
                     status=200,
                     text=mock.AsyncMock(
-                        return_value=orjson.dumps(return_list).decode()
+                        return_value=orjson.dumps(return_list).decode(),
                     ),
                 ),
             ) as patched_request,
@@ -440,7 +521,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_tuple(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -456,7 +543,7 @@ class TestRequest:
                 return_value=mock.AsyncMock(
                     status=200,
                     text=mock.AsyncMock(
-                        return_value=orjson.dumps(return_tuple).decode()
+                        return_value=orjson.dumps(return_tuple).decode(),
                     ),
                 ),
             ) as patched_request,
@@ -479,7 +566,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_none(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -491,7 +584,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=204, text=mock.AsyncMock(return_value="")
+                    status=204,
+                    text=mock.AsyncMock(return_value=""),
                 ),
             ) as patched_request,
         ):
@@ -512,7 +606,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_extra_args(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -526,7 +626,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=204, text=mock.AsyncMock(return_value="")
+                    status=204,
+                    text=mock.AsyncMock(return_value=""),
                 ),
             ) as patched_request,
         ):
@@ -585,7 +686,13 @@ class TestRequest:
     @pytest.mark.asyncio
     async def test_errors(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         cs = aiohttp.ClientSession()
@@ -599,7 +706,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=204, text=mock.AsyncMock(return_value="")
+                    status=204,
+                    text=mock.AsyncMock(return_value=""),
                 ),
             ),
             pytest.raises(errors.RestEmptyError),
@@ -615,7 +723,9 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=400, reason="reason", text=mock.AsyncMock(return_value="")
+                    status=400,
+                    reason="reason",
+                    text=mock.AsyncMock(return_value=""),
                 ),
             ),
             pytest.raises(errors.RestStatusError) as rest_status_error_1,
@@ -662,7 +772,7 @@ class TestRequest:
                     status=400,
                     reason="reason",
                     text=mock.AsyncMock(
-                        return_value=orjson.dumps(payloads.REST_ERROR_PAYLOAD).decode()
+                        return_value=orjson.dumps(payloads.REST_ERROR_PAYLOAD).decode(),
                     ),
                 ),
             ),
@@ -673,7 +783,8 @@ class TestRequest:
         assert isinstance(rest_error_error.value, errors.RestRequestError)
 
         assert rest_error_error.value.timestamp == datetime.datetime.fromtimestamp(
-            1 / 1000, datetime.timezone.utc
+            1 / 1000,
+            datetime.timezone.utc,
         )
         assert rest_error_error.value.status == 2
         assert rest_error_error.value.error == "error"
@@ -690,7 +801,8 @@ class TestRequest:
                 "request",
                 new_callable=mock.AsyncMock,
                 return_value=mock.AsyncMock(
-                    status=200, text=mock.AsyncMock("I am malformed.")
+                    status=200,
+                    text=mock.AsyncMock("I am malformed."),
                 ),
             ),
             pytest.raises(errors.BuildError) as build_error,
@@ -706,7 +818,13 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_ready_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(orjson.dumps(payloads.READY_PAYLOAD).decode())
@@ -716,11 +834,17 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_player_update_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(
-            orjson.dumps(payloads.PLAYER_UPDATE_PAYLOAD).decode()
+            orjson.dumps(payloads.PLAYER_UPDATE_PAYLOAD).decode(),
         )
 
         assert isinstance(event, events.PlayerUpdateEvent)
@@ -728,7 +852,13 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_statistics_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         payload = dict(payloads.STATISTICS_PAYLOAD)
@@ -742,11 +872,17 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_start_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(
-            orjson.dumps(payloads.TRACK_START_PAYLOAD).decode()
+            orjson.dumps(payloads.TRACK_START_PAYLOAD).decode(),
         )
 
         assert isinstance(event, events.TrackStartEvent)
@@ -754,11 +890,17 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_end_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(
-            orjson.dumps(payloads.TRACK_END_PAYLOAD).decode()
+            orjson.dumps(payloads.TRACK_END_PAYLOAD).decode(),
         )
 
         assert isinstance(event, events.TrackEndEvent)
@@ -766,11 +908,17 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_exception_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(
-            orjson.dumps(payloads.TRACK_EXCEPTION_PAYLOAD).decode()
+            orjson.dumps(payloads.TRACK_EXCEPTION_PAYLOAD).decode(),
         )
 
         assert isinstance(event, events.TrackExceptionEvent)
@@ -778,11 +926,17 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_track_stuck_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(
-            orjson.dumps(payloads.TRACK_STUCK_PAYLOAD).decode()
+            orjson.dumps(payloads.TRACK_STUCK_PAYLOAD).decode(),
         )
 
         assert isinstance(event, events.TrackStuckEvent)
@@ -790,11 +944,17 @@ class TestHandleOPCode:
     @pytest.mark.asyncio
     async def test_websocket_closed_event(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         event = session._handle_op_code(
-            orjson.dumps(payloads.WEBSOCKET_CLOSED_PAYLOAD).decode()
+            orjson.dumps(payloads.WEBSOCKET_CLOSED_PAYLOAD).decode(),
         )
 
         assert isinstance(event, events.WebsocketClosedEvent)
@@ -804,11 +964,19 @@ class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_text(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         message = aiohttp.WSMessage(
-            aiohttp.WSMsgType.TEXT, orjson.dumps(payloads.READY_PAYLOAD).decode(), None
+            aiohttp.WSMsgType.TEXT,
+            orjson.dumps(payloads.READY_PAYLOAD).decode(),
+            None,
         )
 
         with (
@@ -844,7 +1012,13 @@ class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_error(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         message = aiohttp.WSMessage(aiohttp.WSMsgType.ERROR, "", None)
@@ -854,11 +1028,19 @@ class TestHandleWSMessage:
     @pytest.mark.asyncio
     async def test_closed(self, ongaku_client: Client):
         session = Session(
-            ongaku_client, "test_session", False, "host", 2333, "password", 3
+            ongaku_client,
+            "test_session",
+            False,
+            "host",
+            2333,
+            "password",
+            3,
         )
 
         message = aiohttp.WSMessage(
-            aiohttp.WSMsgType.CLOSED, aiohttp.WSCloseCode.GOING_AWAY, "extra"
+            aiohttp.WSMsgType.CLOSED,
+            aiohttp.WSCloseCode.GOING_AWAY,
+            "extra",
         )
 
         assert await session._handle_ws_message(message) is False

@@ -1,4 +1,5 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import datetime
 
@@ -16,7 +17,14 @@ def test_info():
     filters = ["filter_1", "filter_2"]
     plugins = [Plugin("name_1", "version_1"), Plugin("name_2", "version_2")]
     info = Info(
-        version, time, git, "jvm", "lavaplayer", source_managers, filters, plugins
+        version,
+        time,
+        git,
+        "jvm",
+        "lavaplayer",
+        source_managers,
+        filters,
+        plugins,
     )
 
     assert info.version == version

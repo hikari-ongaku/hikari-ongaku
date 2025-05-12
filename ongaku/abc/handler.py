@@ -82,6 +82,7 @@ class SessionHandler(abc.ABC):
         Add a new session to the session handler.
 
         Parameters
+        ----------
         session
             The session to add to the session handler.
 
@@ -127,6 +128,7 @@ class SessionHandler(abc.ABC):
         Delete a session from the session handler.
 
         Parameters
+        ----------
         name
             The name of the session to delete.
 

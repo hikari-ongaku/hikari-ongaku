@@ -73,7 +73,8 @@ class EntityBuilder:
         self._loads = loads
 
     def _ensure_mapping(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> typing.Mapping[str, typing.Any]:
         if isinstance(payload, str | bytes):
             data = self._loads(payload)
@@ -84,7 +85,8 @@ class EntityBuilder:
         return payload
 
     def _ensure_sequence(
-        self, payload: types.PayloadSequenceT
+        self,
+        payload: types.PayloadSequenceT,
     ) -> typing.Sequence[typing.Any]:
         if isinstance(payload, str | bytes):
             data = self._loads(payload)
@@ -124,7 +126,8 @@ class EntityBuilder:
 
         return RestRequestError(
             datetime.datetime.fromtimestamp(
-                int(data["timestamp"]) / 1000, datetime.timezone.utc
+                int(data["timestamp"]) / 1000,
+                datetime.timezone.utc,
             ),
             data["status"],
             data["error"],
@@ -134,7 +137,8 @@ class EntityBuilder:
         )
 
     def build_exception_error(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> RestExceptionError:
         """Build Rest Exception Error.
 
@@ -170,7 +174,9 @@ class EntityBuilder:
     # Events
 
     def build_ready_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.ReadyEvent:
         """Build Ready Event.
 
@@ -200,11 +206,15 @@ class EntityBuilder:
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Ready")
 
         return events.ReadyEvent.from_session(
-            session, data["resumed"], data["sessionId"]
+            session,
+            data["resumed"],
+            data["sessionId"],
         )
 
     def build_player_update_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.PlayerUpdateEvent:
         """Build Player Update Event.
 
@@ -240,7 +250,9 @@ class EntityBuilder:
         )
 
     def build_statistics_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.StatisticsEvent:
         """Build Statistics Event.
 
@@ -278,7 +290,9 @@ class EntityBuilder:
         )
 
     def build_track_start_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.TrackStartEvent:
         """Build Track Start Event.
 
@@ -314,7 +328,9 @@ class EntityBuilder:
         )
 
     def build_track_end_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.TrackEndEvent:
         """Build Track End Event.
 
@@ -351,7 +367,8 @@ class EntityBuilder:
         )
 
     def build_track_exception(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> events.TrackException:
         """Build Track Exception.
 
@@ -383,7 +400,9 @@ class EntityBuilder:
         )
 
     def build_track_exception_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.TrackExceptionEvent:
         """Build Track Exception Event.
 
@@ -420,7 +439,9 @@ class EntityBuilder:
         )
 
     def build_track_stuck_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.TrackStuckEvent:
         """Build Track Stuck Event.
 
@@ -457,7 +478,9 @@ class EntityBuilder:
         )
 
     def build_websocket_closed_event(
-        self, payload: types.PayloadMappingT, session: Session
+        self,
+        payload: types.PayloadMappingT,
+        session: Session,
     ) -> events.WebsocketClosedEvent:
         """Build Websocket Closed Event.
 
@@ -538,7 +561,8 @@ class EntityBuilder:
         )
 
     def build_filters_equalizer(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> filters_.Equalizer:
         data = self._ensure_mapping(payload)
 
@@ -559,7 +583,8 @@ class EntityBuilder:
         )
 
     def build_filters_timescale(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> filters_.Timescale:
         data = self._ensure_mapping(payload)
 
@@ -592,7 +617,8 @@ class EntityBuilder:
         )
 
     def build_filters_rotation(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> filters_.Rotation:
         data = self._ensure_mapping(payload)
 
@@ -603,7 +629,8 @@ class EntityBuilder:
         )
 
     def build_filters_distortion(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> filters_.Distortion:
         data = self._ensure_mapping(payload)
 
@@ -621,7 +648,8 @@ class EntityBuilder:
         )
 
     def build_filters_channel_mix(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> filters_.ChannelMix:
         data = self._ensure_mapping(payload)
 
@@ -635,7 +663,8 @@ class EntityBuilder:
         )
 
     def build_filters_low_pass(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> filters_.LowPass:
         data = self._ensure_mapping(payload)
 
@@ -691,7 +720,8 @@ class EntityBuilder:
         return info.Info(
             self.build_info_version(data["version"]),
             datetime.datetime.fromtimestamp(
-                int(data["buildTime"]) / 1000, datetime.timezone.utc
+                int(data["buildTime"]) / 1000,
+                datetime.timezone.utc,
             ),
             self.build_info_git(data["git"]),
             data["jvm"],
@@ -726,7 +756,8 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         _logger.log(
-            TRACE_LEVEL, f"Decoding payload: {payload} into Information Version"
+            TRACE_LEVEL,
+            f"Decoding payload: {payload} into Information Version",
         )
 
         return info.Version(
@@ -768,7 +799,8 @@ class EntityBuilder:
             data["branch"],
             data["commit"],
             datetime.datetime.fromtimestamp(
-                int(data["commitTime"]) / 1000, datetime.timezone.utc
+                int(data["commitTime"]) / 1000,
+                datetime.timezone.utc,
             ),
         )
 
@@ -866,7 +898,8 @@ class EntityBuilder:
 
         return player.State(
             datetime.datetime.fromtimestamp(
-                int(data["time"]) / 1000, datetime.timezone.utc
+                int(data["time"]) / 1000,
+                datetime.timezone.utc,
             ),
             data["position"],
             data["connected"],
@@ -935,11 +968,14 @@ class EntityBuilder:
             tracks.append(self.build_track(track_payload))
 
         return playlist.Playlist(
-            self.build_playlist_info(data["info"]), tracks, data["pluginInfo"]
+            self.build_playlist_info(data["info"]),
+            tracks,
+            data["pluginInfo"],
         )
 
     def build_playlist_info(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> playlist_.PlaylistInfo:
         """Build Playlist Info.
 
@@ -971,7 +1007,8 @@ class EntityBuilder:
     # route planner
 
     def build_routeplanner_status(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> routeplanner_.RoutePlannerStatus:
         """Build Route Planner Status.
 
@@ -1004,7 +1041,8 @@ class EntityBuilder:
         )
 
     def build_routeplanner_details(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> routeplanner_.RoutePlannerDetails:
         """Build Route Planner Details.
 
@@ -1030,14 +1068,15 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         _logger.log(
-            TRACE_LEVEL, f"Decoding payload: {payload} into RoutePlannerDetails"
+            TRACE_LEVEL,
+            f"Decoding payload: {payload} into RoutePlannerDetails",
         )
 
         failing_addresses: list[routeplanner_.FailingAddress] = []
 
         for failing_address in data["failingAddresses"]:
             failing_addresses.append(
-                self.build_routeplanner_failing_address(failing_address)
+                self.build_routeplanner_failing_address(failing_address),
             )
 
         return routeplanner.RoutePlannerDetails(
@@ -1051,7 +1090,8 @@ class EntityBuilder:
         )
 
     def build_routeplanner_ipblock(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> routeplanner_.IPBlock:
         """Build Route Planner IP Block.
 
@@ -1079,11 +1119,13 @@ class EntityBuilder:
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into IPBlock")
 
         return routeplanner.IPBlock(
-            routeplanner_.IPBlockType(data["type"]), data["size"]
+            routeplanner_.IPBlockType(data["type"]),
+            data["size"],
         )
 
     def build_routeplanner_failing_address(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> routeplanner_.FailingAddress:
         """Build Route Planner Details.
 
@@ -1113,7 +1155,8 @@ class EntityBuilder:
         return routeplanner.FailingAddress(
             data["failingAddress"],
             datetime.datetime.fromtimestamp(
-                int(data["failingTimestamp"]) / 1000, datetime.timezone.utc
+                int(data["failingTimestamp"]) / 1000,
+                datetime.timezone.utc,
             ),
             data["failingTime"],
         )
@@ -1151,7 +1194,8 @@ class EntityBuilder:
     # statistics
 
     def build_statistics(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> statistics_.Statistics:
         """Build Statistics.
 
@@ -1190,7 +1234,8 @@ class EntityBuilder:
         )
 
     def build_statistics_memory(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> statistics_.Memory:
         """Build Memory Statistics.
 
@@ -1218,7 +1263,10 @@ class EntityBuilder:
         _logger.log(TRACE_LEVEL, f"Decoding payload: {payload} into Statistics Memory")
 
         return statistics.Memory(
-            data["free"], data["used"], data["allocated"], data["reservable"]
+            data["free"],
+            data["used"],
+            data["allocated"],
+            data["reservable"],
         )
 
     def build_statistics_cpu(self, payload: types.PayloadMappingT) -> statistics_.Cpu:
@@ -1250,7 +1298,8 @@ class EntityBuilder:
         return statistics.Cpu(data["cores"], data["systemLoad"], data["lavalinkLoad"])
 
     def build_statistics_frame_statistics(
-        self, payload: types.PayloadMappingT
+        self,
+        payload: types.PayloadMappingT,
     ) -> statistics_.FrameStatistics:
         """Build Frame Statistics.
 
@@ -1276,7 +1325,8 @@ class EntityBuilder:
         data = self._ensure_mapping(payload)
 
         _logger.log(
-            TRACE_LEVEL, f"Decoding payload: {payload} into Statistics FrameStatistics"
+            TRACE_LEVEL,
+            f"Decoding payload: {payload} into Statistics FrameStatistics",
         )
 
         return statistics.FrameStatistics(data["sent"], data["nulled"], data["deficit"])

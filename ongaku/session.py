@@ -57,21 +57,21 @@ class Session:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_client",
-        "_name",
-        "_ssl",
-        "_host",
-        "_port",
-        "_password",
         "_attempts",
-        "_remaining_attempts",
+        "_authorization_headers",
         "_base_uri",
+        "_client",
+        "_host",
+        "_name",
+        "_password",
+        "_players",
+        "_port",
+        "_remaining_attempts",
         "_session_id",
         "_session_task",
+        "_ssl",
         "_status",
-        "_players",
         "_websocket_headers",
-        "_authorization_headers",
     )
 
     def __init__(
@@ -99,7 +99,7 @@ class Session:
         self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
         self._websocket_headers: typing.MutableMapping[str, typing.Any] = {}
         self._authorization_headers: typing.Mapping[str, typing.Any] = {
-            "Authorization": password
+            "Authorization": password,
         }
 
     @property
@@ -166,7 +166,7 @@ class Session:
         self,
         method: str,
         path: str,
-        return_type: typing.Type[types.RequestT] | None,
+        return_type: type[types.RequestT] | None,
         *,
         headers: typing.Mapping[str, typing.Any] = {},
         json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
@@ -258,7 +258,7 @@ class Session:
             raise rest_error
 
         if return_type is None:
-            return
+            return None
 
         payload = await response.text()
 
@@ -290,7 +290,8 @@ class Session:
 
         elif op_code == session_.WebsocketOPCode.PLAYER_UPDATE:
             event = self.client.entity_builder.build_player_update_event(
-                mapped_data, self
+                mapped_data,
+                self,
             )
 
         elif op_code == session_.WebsocketOPCode.STATS:
@@ -301,27 +302,32 @@ class Session:
 
             if event_type == session_.WebsocketEvent.TRACK_START_EVENT:
                 event = self.client.entity_builder.build_track_start_event(
-                    mapped_data, self
+                    mapped_data,
+                    self,
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_END_EVENT:
                 event = self.client.entity_builder.build_track_end_event(
-                    mapped_data, self
+                    mapped_data,
+                    self,
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_EXCEPTION_EVENT:
                 event = self.client.entity_builder.build_track_exception_event(
-                    mapped_data, self
+                    mapped_data,
+                    self,
                 )
 
             elif event_type == session_.WebsocketEvent.TRACK_STUCK_EVENT:
                 event = self.client.entity_builder.build_track_stuck_event(
-                    mapped_data, self
+                    mapped_data,
+                    self,
                 )
 
             else:
                 event = self.client.entity_builder.build_websocket_closed_event(
-                    mapped_data, self
+                    mapped_data,
+                    self,
                 )
 
         return event
@@ -337,12 +343,12 @@ class Session:
 
             return True
 
-        elif msg.type == aiohttp.WSMsgType.ERROR:
+        if msg.type == aiohttp.WSMsgType.ERROR:
             _logger.warning("An error occurred.")
 
         elif msg.type == aiohttp.WSMsgType.CLOSED:
             _logger.warning(
-                f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
+                f"Told to close. Code: {msg.data.name}. Message: {msg.extra}",
             )
 
         return False
@@ -360,13 +366,13 @@ class Session:
                 self._status = session_.SessionStatus.NOT_CONNECTED
 
                 _logger.warning(
-                    "Attempted fetching the bot, but failed as it does not exist."
+                    "Attempted fetching the bot, but failed as it does not exist.",
                 )
             else:
                 self._status = session_.SessionStatus.FAILURE
 
             _logger.warning(
-                "Attempted fetching the bot, but failed as it does not exist."
+                "Attempted fetching the bot, but failed as it does not exist.",
             )
 
             raise errors.SessionStartError

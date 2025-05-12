@@ -1,5 +1,7 @@
 """About this library."""
 
+from __future__ import annotations
+
 import typing
 
 __author__: typing.Final[str] = "mplaty"

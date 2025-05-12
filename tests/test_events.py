@@ -1,17 +1,22 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import datetime
+from typing import TYPE_CHECKING
 
 import hikari
-from hikari.impl import gateway_bot as gateway_bot_
 
 from ongaku import events
 from ongaku.abc.errors import SeverityType
 from ongaku.abc.events import TrackEndReasonType
-from ongaku.client import Client
 from ongaku.impl import player
-from ongaku.impl.track import Track
-from ongaku.session import Session
+
+if TYPE_CHECKING:
+    from hikari.impl import gateway_bot as gateway_bot_
+
+    from ongaku.client import Client
+    from ongaku.impl.track import Track
+    from ongaku.session import Session
 
 
 class TestPayloadEvent:
@@ -22,7 +27,10 @@ class TestPayloadEvent:
         ongaku_session: Session,
     ):
         event = events.PayloadEvent(
-            gateway_bot, ongaku_client, ongaku_session, "payload"
+            gateway_bot,
+            ongaku_client,
+            ongaku_session,
+            "payload",
         )
 
         assert event.app == gateway_bot
@@ -52,7 +60,11 @@ class TestReadyEvent:
         ongaku_session: Session,
     ):
         event = events.ReadyEvent(
-            gateway_bot, ongaku_client, ongaku_session, False, "session_id"
+            gateway_bot,
+            ongaku_client,
+            ongaku_session,
+            False,
+            "session_id",
         )
 
         assert event.app == gateway_bot
@@ -106,7 +118,9 @@ class TestPlayerUpdateEvent:
     ):
         state = player.State(datetime.datetime.now(), 2, False, 3)
         event = events.PlayerUpdateEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), state
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            state,
         )
 
         assert event.app == gateway_bot
@@ -148,7 +162,11 @@ class TestWebsocketClosedEvent:
         ongaku_session: Session,
     ):
         event = events.WebsocketClosedEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), 1, "reason", False
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            1,
+            "reason",
+            False,
         )
 
         assert event.app == gateway_bot
@@ -190,7 +208,9 @@ class TestTrackStartEvent:
         ongaku_track: Track,
     ):
         event = events.TrackStartEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), ongaku_track
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            ongaku_track,
         )
 
         assert event.app == gateway_bot
@@ -289,7 +309,10 @@ class TestTrackExceptionEvent:
     ):
         exception = events.TrackException("message", SeverityType.COMMON, "cause")
         event = events.TrackExceptionEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), ongaku_track, exception
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            ongaku_track,
+            exception,
         )
 
         assert event.app == gateway_bot
@@ -332,7 +355,10 @@ class TestTrackStuckEvent:
         ongaku_track: Track,
     ):
         event = events.TrackStuckEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), ongaku_track, 1
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            ongaku_track,
+            1,
         )
 
         assert event.app == gateway_bot
@@ -373,7 +399,9 @@ class TestQueueEmptyEvent:
         ongaku_track: Track,
     ):
         event = events.QueueEmptyEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), ongaku_track
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            ongaku_track,
         )
 
         assert event.app == gateway_bot
@@ -415,7 +443,10 @@ class TestQueueNextEvent:
         ongaku_track: Track,
     ):
         event = events.QueueNextEvent.from_session(
-            ongaku_session, hikari.Snowflake(1234567890), ongaku_track, ongaku_track
+            ongaku_session,
+            hikari.Snowflake(1234567890),
+            ongaku_track,
+            ongaku_track,
         )
 
         assert event.app == gateway_bot

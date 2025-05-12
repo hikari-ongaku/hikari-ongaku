@@ -46,7 +46,7 @@ from ongaku.abc.statistics import Statistics
 from ongaku.abc.track import Track
 from ongaku.abc.track import TrackInfo
 
-__all__ = (
+__all__ = (  # noqa: RUF022
     # .errors
     "ExceptionError",
     "SeverityType",

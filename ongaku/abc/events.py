@@ -28,7 +28,7 @@ class OngakuEvent(hikari.Event, abc.ABC):
     The base ongaku event, that adds the client and session to all events.
     """
 
-    __slots__: typing.Sequence[str] = ("_client", "_session", "_app")
+    __slots__: typing.Sequence[str] = ("_app", "_client", "_session")
 
     @property
     def client(self) -> Client:
@@ -51,10 +51,7 @@ class OngakuEvent(hikari.Event, abc.ABC):
         if self.client != other.client:
             return False
 
-        if self.session != other.session:
-            return False
-
-        return True
+        return self.session == other.session
 
 
 class TrackEndReasonType(str, enum.Enum):

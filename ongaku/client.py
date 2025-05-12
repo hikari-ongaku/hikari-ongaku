@@ -62,20 +62,20 @@ class Client:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_attempts",
         "_app",
+        "_attempts",
         "_client_session",
-        "_rest_client",
-        "_is_alive",
-        "_session_handler",
         "_entity_builder",
+        "_is_alive",
+        "_rest_client",
+        "_session_handler",
     )
 
     def __init__(
         self,
         app: hikari.GatewayBotAware,
         *,
-        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        session_handler: type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
         attempts: int = 3,
     ) -> None:
@@ -101,7 +101,7 @@ class Client:
         cls,
         client: arc.GatewayClient,
         *,
-        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        session_handler: type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
         attempts: int = 3,
     ) -> Client:
@@ -129,7 +129,10 @@ class Client:
             The amount of attempts a session will try to connect to the server.
         """
         cls = cls(
-            client.app, session_handler=session_handler, logs=logs, attempts=attempts
+            client.app,
+            session_handler=session_handler,
+            logs=logs,
+            attempts=attempts,
         )
 
         client.set_type_dependency(Client, cls)
@@ -143,7 +146,7 @@ class Client:
         cls,
         client: tanjun.abc.Client,
         *,
-        session_handler: typing.Type[SessionHandler] = BasicSessionHandler,
+        session_handler: type[SessionHandler] = BasicSessionHandler,
         logs: str | int = "INFO",
         attempts: int = 3,
     ) -> Client:
@@ -242,7 +245,9 @@ class Client:
         _logger.log(TRACE_LEVEL, "Successfully shut down ongaku.")
 
     async def _arc_player_injector(
-        self, ctx: arc.GatewayContext, inj_ctx: arc.InjectorOverridingContext
+        self,
+        ctx: arc.GatewayContext,
+        inj_ctx: arc.InjectorOverridingContext,
     ) -> None:
         _logger.log(TRACE_LEVEL, "Attempting to inject player.")
 
@@ -285,6 +290,7 @@ class Client:
             The name set must be unique, otherwise an error will be raised.
 
         Parameters
+        ----------
         name
             The name of the session
         ssl

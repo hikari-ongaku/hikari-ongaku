@@ -51,21 +51,21 @@ class Player:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_session",
-        "_guild_id",
+        "_autoplay",
         "_channel_id",
+        "_connected",
+        "_filters",
+        "_guild_id",
         "_is_alive",
         "_is_paused",
-        "_voice",
-        "_state",
-        "_queue",
-        "_filters",
-        "_connected",
-        "_session_id",
-        "_volume",
-        "_autoplay",
-        "_position",
         "_loop",
+        "_position",
+        "_queue",
+        "_session",
+        "_session_id",
+        "_state",
+        "_voice",
+        "_volume",
     )
 
     def __init__(
@@ -237,7 +237,10 @@ class Player:
 
         try:
             await self.app.update_voice_state(
-                self.guild_id, self._channel_id, self_mute=mute, self_deaf=deaf
+                self.guild_id,
+                self._channel_id,
+                self_mute=mute,
+                self_deaf=deaf,
             )
         except Exception as e:
             raise errors.PlayerConnectError(str(e))
@@ -333,7 +336,9 @@ class Player:
         )
 
         await self.session.client.rest.delete_player(
-            session, self._guild_id, session=self.session
+            session,
+            self._guild_id,
+            session=self.session,
         )
 
         _logger.log(
@@ -356,7 +361,9 @@ class Player:
         )
 
     async def play(
-        self, track: track_.Track | None = None, requestor: RequestorT | None = None
+        self,
+        track: track_.Track | None = None,
+        requestor: RequestorT | None = None,
     ) -> None:
         """Play.
 
@@ -467,7 +474,8 @@ class Player:
             track_count += 1
 
         _logger.log(
-            TRACE_LEVEL, f"Successfully added {track_count} track(s) to {self.guild_id}"
+            TRACE_LEVEL,
+            f"Successfully added {track_count} track(s) to {self.guild_id}",
         )
 
     async def pause(self, value: bool | None = None) -> None:
@@ -511,7 +519,10 @@ class Player:
             self._is_paused = not self.is_paused
 
         player = await self.session.client.rest.update_player(
-            session, self.guild_id, paused=self.is_paused, session=self.session
+            session,
+            self.guild_id,
+            paused=self.is_paused,
+            session=self.session,
         )
 
         _logger.log(
@@ -552,7 +563,11 @@ class Player:
         session = self.session._get_session_id()
 
         player = await self.session.client.rest.update_player(
-            session, self.guild_id, track=None, no_replace=False, session=self.session
+            session,
+            self.guild_id,
+            track=None,
+            no_replace=False,
+            session=self.session,
         )
 
         self._is_paused = True
@@ -576,7 +591,7 @@ class Player:
         """
         if len(self.queue) <= 2:
             raise errors.PlayerQueueError(
-                "Queue must have more than 2 tracks to shuffle."
+                "Queue must have more than 2 tracks to shuffle.",
             )
 
         new_queue = list(self.queue)
@@ -590,7 +605,8 @@ class Player:
         self._queue = new_queue
 
         _logger.log(
-            TRACE_LEVEL, f"Successfully shuffled queue in guild {self.guild_id}"
+            TRACE_LEVEL,
+            f"Successfully shuffled queue in guild {self.guild_id}",
         )
 
     async def skip(self, amount: int = 1) -> None:
@@ -636,9 +652,8 @@ class Player:
         for _ in range(amount):
             if len(self._queue) == 0:
                 break
-            else:
-                self._queue.pop(0)
-                removed_tracks += 1
+            self._queue.pop(0)
+            removed_tracks += 1
 
         _logger.log(
             TRACE_LEVEL,
@@ -705,24 +720,22 @@ class Player:
         except ValueError:
             if isinstance(value, track_.Track):
                 raise errors.PlayerQueueError(
-                    f"Failed to remove song: {value.info.title}"
+                    f"Failed to remove song: {value.info.title}",
                 )
-            else:
-                raise errors.PlayerQueueError(
-                    f"Failed to remove song in position {value}"
-                )
+            raise errors.PlayerQueueError(
+                f"Failed to remove song in position {value}",
+            )
 
         try:
             self._queue.pop(index)
         except IndexError:
             if isinstance(value, track_.Track):
                 raise errors.PlayerQueueError(
-                    f"Failed to remove song: {value.info.title}"
+                    f"Failed to remove song: {value.info.title}",
                 )
-            else:
-                raise errors.PlayerQueueError(
-                    f"Failed to remove song in position {value}"
-                )
+            raise errors.PlayerQueueError(
+                f"Failed to remove song in position {value}",
+            )
 
         _logger.log(TRACE_LEVEL, f"Successfully removed track in {self.guild_id}")
 
@@ -756,7 +769,11 @@ class Player:
         session = self.session._get_session_id()
 
         player = await self.session.client.rest.update_player(
-            session, self.guild_id, track=None, no_replace=False, session=self.session
+            session,
+            self.guild_id,
+            track=None,
+            no_replace=False,
+            session=self.session,
         )
 
         self._update(player)
@@ -842,7 +859,8 @@ class Player:
         self._update(player)
 
         _logger.log(
-            TRACE_LEVEL, f"Successfully set volume to {volume} in {self.guild_id}"
+            TRACE_LEVEL,
+            f"Successfully set volume to {volume} in {self.guild_id}",
         )
 
     async def set_position(self, value: int) -> None:
@@ -889,7 +907,7 @@ class Player:
 
         if self.queue[0].info.length < value:
             raise ValueError(
-                "A value greater than the current tracks length is not allowed."
+                "A value greater than the current tracks length is not allowed.",
             )
 
         player = await self.session.client.rest.update_player(
@@ -920,7 +938,10 @@ class Player:
         session = self.session._get_session_id()
 
         player = await self.session.client.rest.update_player(
-            session, self.guild_id, filters=filters, session=self.session
+            session,
+            self.guild_id,
+            filters=filters,
+            session=self.session,
         )
 
         _logger.log(
@@ -1043,7 +1064,9 @@ class Player:
                 f"queue is empty for channel: {self.channel_id} in guild: {self.guild_id}. Dispatching last known track.",
             )
             new_event = events.QueueEmptyEvent.from_session(
-                self.session, guild_id=self.guild_id, old_track=self.queue[0]
+                self.session,
+                guild_id=self.guild_id,
+                old_track=self.queue[0],
             )
 
             self.remove(0)
@@ -1068,8 +1091,11 @@ class Player:
 
         await self.app.event_manager.dispatch(
             events.QueueNextEvent.from_session(
-                self.session, self.guild_id, self._queue[0], event.track
-            )
+                self.session,
+                self.guild_id,
+                self._queue[0],
+                event.track,
+            ),
         )
 
         _logger.log(

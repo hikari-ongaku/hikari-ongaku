@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import typing
 
 PayloadT: typing.TypeAlias = typing.Final[typing.Mapping[str, typing.Any]]
 
-__all__ = (
+__all__ = (  # noqa: RUF022
     # guild id
     "GUILD_ID",
     # filter payloads
@@ -16,7 +18,6 @@ __all__ = (
     "FILTERS_DISTORTION_PAYLOAD",
     "FILTERS_CHANNEL_MIX_PAYLOAD",
     "FILTERS_LOW_PASS_PAYLOAD",
-    # track payloads
     "TRACK_INFO_PAYLOAD",
     "TRACK_PAYLOAD",
     # player payloads

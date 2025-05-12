@@ -10,7 +10,7 @@ from .abc import Checked
 from .abc import CheckedType
 from .checker import check
 
-__all__ = ("check", "Checked", "CheckedType")
+__all__ = ("Checked", "CheckedType", "check")
 
 
 # MIT License

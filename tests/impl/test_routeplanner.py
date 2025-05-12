@@ -1,4 +1,5 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import datetime
 import typing
@@ -14,7 +15,9 @@ from ongaku.impl.routeplanner import RoutePlannerStatus
 def test_routeplanner_status():
     ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
     failing_address = FailingAddress(
-        "failing_address", datetime.datetime.now(), "failing_time"
+        "failing_address",
+        datetime.datetime.now(),
+        "failing_time",
     )
     routeplanner_details = RoutePlannerDetails(
         ip_block,
@@ -26,7 +29,8 @@ def test_routeplanner_status():
         "block_index",
     )
     routeplanner_status = RoutePlannerStatus(
-        RoutePlannerType.ROTATING_ROUTE_PLANNER, routeplanner_details
+        RoutePlannerType.ROTATING_ROUTE_PLANNER,
+        routeplanner_details,
     )
 
     assert routeplanner_status.cls == RoutePlannerType.ROTATING_ROUTE_PLANNER
@@ -36,7 +40,9 @@ def test_routeplanner_status():
 def test_routeplanner_details():
     ip_block = IPBlock(IPBlockType.INET_4_ADDRESS, "size")
     failing_address = FailingAddress(
-        "failing_address", datetime.datetime.now(), "failing_time"
+        "failing_address",
+        datetime.datetime.now(),
+        "failing_time",
     )
     routeplanner_details = RoutePlannerDetails(
         ip_block,

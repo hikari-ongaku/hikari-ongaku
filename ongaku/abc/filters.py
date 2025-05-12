@@ -13,17 +13,17 @@ class Filters:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_volume",
+        "_channel_mix",
+        "_distortion",
         "_equalizer",
         "_karaoke",
+        "_low_pass",
+        "_plugin_filters",
+        "_rotation",
         "_timescale",
         "_tremolo",
         "_vibrato",
-        "_rotation",
-        "_distortion",
-        "_channel_mix",
-        "_low_pass",
-        "_plugin_filters",
+        "_volume",
     )
 
     @property
@@ -148,10 +148,7 @@ class Filters:
         if self.low_pass != other.low_pass:
             return False
 
-        if self.plugin_filters != other.plugin_filters:
-            return False
-
-        return True
+        return self.plugin_filters == other.plugin_filters
 
 
 class Equalizer:
@@ -185,10 +182,7 @@ class Equalizer:
         if self.band != other.band:
             return False
 
-        if self.gain != other.gain:
-            return False
-
-        return True
+        return self.gain == other.gain
 
 
 class Karaoke:
@@ -200,10 +194,10 @@ class Karaoke:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_level",
-        "_mono_level",
         "_filter_band",
         "_filter_width",
+        "_level",
+        "_mono_level",
     )
 
     @property
@@ -239,10 +233,7 @@ class Karaoke:
         if self.filter_band != other.filter_band:
             return False
 
-        if self.filter_width != other.filter_width:
-            return False
-
-        return True
+        return self.filter_width == other.filter_width
 
 
 class Timescale:
@@ -253,7 +244,7 @@ class Timescale:
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#timescale)
     """
 
-    __slots__: typing.Sequence[str] = ("_speed", "_pitch", "_rate")
+    __slots__: typing.Sequence[str] = ("_pitch", "_rate", "_speed")
 
     @property
     def speed(self) -> float | None:
@@ -280,10 +271,7 @@ class Timescale:
         if self.pitch != other.pitch:
             return False
 
-        if self.rate != other.rate:
-            return False
-
-        return True
+        return self.rate == other.rate
 
 
 class Tremolo:
@@ -295,8 +283,8 @@ class Tremolo:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_frequency",
         "_depth",
+        "_frequency",
     )
 
     @property
@@ -316,10 +304,7 @@ class Tremolo:
         if self.frequency != other.frequency:
             return False
 
-        if self.depth != other.depth:
-            return False
-
-        return True
+        return self.depth == other.depth
 
 
 class Vibrato:
@@ -331,8 +316,8 @@ class Vibrato:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_frequency",
         "_depth",
+        "_frequency",
     )
 
     @property
@@ -352,10 +337,7 @@ class Vibrato:
         if self.frequency != other.frequency:
             return False
 
-        if self.depth != other.depth:
-            return False
-
-        return True
+        return self.depth == other.depth
 
 
 class Rotation:
@@ -377,10 +359,7 @@ class Rotation:
         if not isinstance(other, Rotation):
             return False
 
-        if self.rotation_hz != other.rotation_hz:
-            return False
-
-        return True
+        return self.rotation_hz == other.rotation_hz
 
 
 class Distortion:
@@ -392,14 +371,14 @@ class Distortion:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_sin_offset",
-        "_sin_scale",
         "_cos_offset",
         "_cos_scale",
-        "_tan_offset",
-        "_tan_scale",
         "_offset",
         "_scale",
+        "_sin_offset",
+        "_sin_scale",
+        "_tan_offset",
+        "_tan_scale",
     )
 
     @property
@@ -467,10 +446,7 @@ class Distortion:
         if self.offset != other.offset:
             return False
 
-        if self.scale != other.scale:
-            return False
-
-        return True
+        return self.scale == other.scale
 
 
 class ChannelMix:
@@ -522,10 +498,7 @@ class ChannelMix:
         if self.right_to_left != other.right_to_left:
             return False
 
-        if self.right_to_right != other.right_to_right:
-            return False
-
-        return True
+        return self.right_to_right == other.right_to_right
 
 
 class LowPass:
@@ -548,10 +521,7 @@ class LowPass:
         if not isinstance(other, LowPass):
             return False
 
-        if self.smoothing != other.smoothing:
-            return False
-
-        return True
+        return self.smoothing == other.smoothing
 
 
 class BandType(enum.IntEnum):

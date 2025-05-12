@@ -1,9 +1,9 @@
-import typing
+from __future__ import annotations
 
-import mock
+import typing
+from unittest import mock
+
 import pytest
-from hikari import OwnUser
-from hikari.impl import gateway_bot as gateway_bot_
 from hikari.impl.event_manager import EventManagerImpl
 from hikari.intents import Intents
 from hikari.snowflakes import Snowflake
@@ -13,8 +13,13 @@ from ongaku.client import Client
 from ongaku.impl import filters as filters_
 from ongaku.impl.track import Track
 from ongaku.impl.track import TrackInfo
-from ongaku.player import Player
-from ongaku.session import Session
+
+if typing.TYPE_CHECKING:
+    from hikari import OwnUser
+    from hikari.impl import gateway_bot as gateway_bot_
+
+    from ongaku.player import Player
+    from ongaku.session import Session
 
 ENCODED_TRACK: typing.Final[str] = (
     "QAAAuQMAGURFQUQgQUhFQUQgfCBEcmVkZ2UgU29uZyEADlRoZSBTdHVwZW5kaXVtAAAAAAAExqgAC2QzQlEtVVpoMGE4AAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9ZDNCUS1VWmgwYTgBADRodHRwczovL2kueXRpbWcuY29tL3ZpL2QzQlEtVVpoMGE4L21heHJlc2RlZmF1bHQuanBnAAAHeW91dHViZQAAAAAAAAAA"
@@ -33,7 +38,8 @@ def ongaku_client(gateway_bot: gateway_bot_.GatewayBot) -> Client:
 
 @pytest.fixture
 def ongaku_session(
-    gateway_bot: gateway_bot_.GatewayBot, ongaku_client: Client
+    gateway_bot: gateway_bot_.GatewayBot,
+    ongaku_client: Client,
 ) -> Session:
     return mock.Mock(
         app=gateway_bot,
@@ -93,7 +99,9 @@ def ongaku_filters() -> filters_.Filters:
 @pytest.fixture
 def bot_user() -> OwnUser:
     return mock.Mock(
-        global_name="test_username", username="test_username", id=Snowflake(1234567890)
+        global_name="test_username",
+        username="test_username",
+        id=Snowflake(1234567890),
     )
 
 

@@ -17,7 +17,7 @@ class Checked:
     The checked, and confirmed value, with its specific type attached.
     """
 
-    __slots__: typing.Sequence[str] = ("_value", "_type")
+    __slots__: typing.Sequence[str] = ("_type", "_value")
 
     def __init__(self, value: str, type: CheckedType) -> None:
         self._value = value

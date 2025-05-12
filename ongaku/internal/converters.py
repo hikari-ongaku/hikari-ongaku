@@ -11,7 +11,8 @@ import typing
 __all__ = ("json_dumps", "json_loads")
 
 DumpType = typing.Callable[
-    [typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]], bytes
+    [typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]],
+    bytes,
 ]
 """The json dump type."""
 
@@ -19,7 +20,8 @@ json_dumps: DumpType
 """The json dumper."""
 
 LoadType = typing.Callable[
-    [str | bytes], typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any]
+    [str | bytes],
+    typing.Sequence[typing.Any] | typing.Mapping[str, typing.Any],
 ]
 """The json load type."""
 

@@ -14,12 +14,12 @@ if typing.TYPE_CHECKING:
     import datetime
 
 __all__ = (
-    "RoutePlannerStatus",
-    "RoutePlannerDetails",
-    "IPBlock",
     "FailingAddress",
-    "RoutePlannerType",
+    "IPBlock",
     "IPBlockType",
+    "RoutePlannerDetails",
+    "RoutePlannerStatus",
+    "RoutePlannerType",
 )
 
 
@@ -51,10 +51,7 @@ class RoutePlannerStatus(abc.ABC):
         if self.cls != other.cls:
             return False
 
-        if self.details != other.details:
-            return False
-
-        return True
+        return self.details == other.details
 
 
 class RoutePlannerDetails(abc.ABC):
@@ -67,13 +64,13 @@ class RoutePlannerDetails(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = (
-        "_ip_block",
-        "_failing_addresses",
-        "_rotate_index",
-        "_ip_index",
+        "_block_index",
         "_current_address",
         "_current_address_index",
-        "_block_index",
+        "_failing_addresses",
+        "_ip_block",
+        "_ip_index",
+        "_rotate_index",
     )
 
     @property
@@ -133,10 +130,7 @@ class RoutePlannerDetails(abc.ABC):
         if self.current_address_index != other.current_address_index:
             return False
 
-        if self.block_index != other.block_index:
-            return False
-
-        return True
+        return self.block_index == other.block_index
 
 
 class IPBlock(abc.ABC):
@@ -148,7 +142,7 @@ class IPBlock(abc.ABC):
     ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#ip-block-object)
     """
 
-    __slots__: typing.Sequence[str] = ("_type", "_size")
+    __slots__: typing.Sequence[str] = ("_size", "_type")
 
     @property
     def type(self) -> IPBlockType:
@@ -167,10 +161,7 @@ class IPBlock(abc.ABC):
         if self.type != other.type:
             return False
 
-        if self.size != other.size:
-            return False
-
-        return True
+        return self.size == other.size
 
 
 class FailingAddress(abc.ABC):
@@ -182,8 +173,8 @@ class FailingAddress(abc.ABC):
 
     __slots__: typing.Sequence[str] = (
         "_address",
-        "_timestamp",
         "_time",
+        "_timestamp",
     )
 
     @property
@@ -211,10 +202,7 @@ class FailingAddress(abc.ABC):
         if self.timestamp != other.timestamp:
             return False
 
-        if self.time != other.time:
-            return False
-
-        return True
+        return self.time == other.time
 
 
 class RoutePlannerType(str, enum.Enum):

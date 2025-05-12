@@ -1,17 +1,20 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import typing
+from unittest import mock
 
-import mock
 import pytest
 from hikari.snowflakes import Snowflake
 
 from ongaku import errors
 from ongaku.abc.session import SessionStatus
-from ongaku.client import Client
 from ongaku.impl.handlers import BasicSessionHandler
 from ongaku.player import Player
 from ongaku.session import Session
+
+if typing.TYPE_CHECKING:
+    from ongaku.client import Client
 
 
 class TestBasicSessionHandler:
@@ -34,10 +37,22 @@ class TestBasicSessionHandler:
         assert handler.is_alive is False
 
         session_1 = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_1",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
         session_2 = Session(
-            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_2",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
 
         handler.add_session(session_1)
@@ -46,7 +61,8 @@ class TestBasicSessionHandler:
         assert len(handler.sessions) == 2
 
         with mock.patch(
-            "ongaku.session.Session.start", return_value=None
+            "ongaku.session.Session.start",
+            return_value=None,
         ) as patched_session_start:
             await handler.start()
 
@@ -61,19 +77,32 @@ class TestBasicSessionHandler:
         assert handler.is_alive is False
 
         session_1 = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_1",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
         handler.add_session(session_1)
 
         session_2 = Session(
-            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_2",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
         handler.add_session(session_2)
 
         # Start the session up.
 
         with mock.patch(
-            "ongaku.session.Session.start", return_value=None
+            "ongaku.session.Session.start",
+            return_value=None,
         ) as patched_session_start:
             await handler.start()
 
@@ -82,7 +111,8 @@ class TestBasicSessionHandler:
             assert handler.is_alive is True
 
         with mock.patch(
-            "ongaku.session.Session.stop", return_value=None
+            "ongaku.session.Session.stop",
+            return_value=None,
         ) as patched_session_stop:
             await handler.stop()
 
@@ -102,12 +132,24 @@ class TestBasicSessionHandler:
             assert session == ongaku_session
 
         session_1 = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_1",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
         handler.add_session(session_1)
 
         session_2 = Session(
-            ongaku_client, "session_2", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_2",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
         handler.add_session(session_2)
 
@@ -153,7 +195,10 @@ class TestBasicSessionHandler:
         handler._sessions = {"test_session": ongaku_session}
 
         with mock.patch.object(
-            ongaku_session, "stop", new_callable=mock.AsyncMock, return_value=None
+            ongaku_session,
+            "stop",
+            new_callable=mock.AsyncMock,
+            return_value=None,
         ) as patched_stop:
             await handler.delete_session("test_session")
 
@@ -173,7 +218,13 @@ class TestBasicSessionHandler:
         assert len(handler.sessions) == 0
 
         session = Session(
-            ongaku_client, "session_1", False, "127.0.0.1", 2333, "youshallnotpass", 3
+            ongaku_client,
+            "session_1",
+            False,
+            "127.0.0.1",
+            2333,
+            "youshallnotpass",
+            3,
         )
         handler.add_session(session)
 
@@ -201,10 +252,12 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(
-            handler, "_current_session", return_value=ongaku_session
+            handler,
+            "_current_session",
+            return_value=ongaku_session,
         ):
             original_player = handler.add_player(
-                Player(ongaku_session, Snowflake(1234567890))
+                Player(ongaku_session, Snowflake(1234567890)),
             )
 
             assert len(handler.players) == 1
@@ -234,10 +287,12 @@ class TestBasicSessionHandler:
         assert len(handler.players) == 0
 
         with mock.patch.object(
-            handler, "_current_session", return_value=ongaku_session
+            handler,
+            "_current_session",
+            return_value=ongaku_session,
         ):
             original_player = handler.add_player(
-                Player(ongaku_session, Snowflake(1234567890))
+                Player(ongaku_session, Snowflake(1234567890)),
             )
 
             assert len(handler.players) == 1
@@ -250,7 +305,8 @@ class TestBasicSessionHandler:
         # Delete the player.
 
         with mock.patch(
-            "ongaku.player.Player.disconnect", return_value=None
+            "ongaku.player.Player.disconnect",
+            return_value=None,
         ) as patched_player:
             await handler.delete_player(Snowflake(1234567890))
 

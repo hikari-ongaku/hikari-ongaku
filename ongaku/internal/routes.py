@@ -67,15 +67,18 @@ PATCH_SESSION_UPDATE: typing.Final[Route] = Route(PATCH, "/sessions/{session_id}
 GET_PLAYERS: typing.Final[Route] = Route(GET, "/sessions/{session_id}/players")
 
 GET_PLAYER: typing.Final[Route] = Route(
-    GET, "/sessions/{session_id}/players/{guild_id}"
+    GET,
+    "/sessions/{session_id}/players/{guild_id}",
 )
 
 PATCH_PLAYER_UPDATE: typing.Final[Route] = Route(
-    PATCH, "/sessions/{session_id}/players/{guild_id}"
+    PATCH,
+    "/sessions/{session_id}/players/{guild_id}",
 )
 
 DELETE_PLAYER: typing.Final[Route] = Route(
-    DELETE, "/sessions/{session_id}/players/{guild_id}"
+    DELETE,
+    "/sessions/{session_id}/players/{guild_id}",
 )
 
 # Tracks
@@ -91,7 +94,8 @@ POST_DECODE_TRACKS: typing.Final[Route] = Route(POST, "/decodetracks")
 GET_ROUTEPLANNER_STATUS: typing.Final[Route] = Route(GET, "/routeplanner/status")
 
 POST_ROUTEPLANNER_FREE_ADDRESS: typing.Final[Route] = Route(
-    POST, "/routeplanner/free/address"
+    POST,
+    "/routeplanner/free/address",
 )
 
 POST_ROUTEPLANNER_FREE_ALL: typing.Final[Route] = Route(POST, "/routeplanner/free/all")

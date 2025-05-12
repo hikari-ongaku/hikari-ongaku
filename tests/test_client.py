@@ -1,10 +1,12 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
-import mock
+from typing import TYPE_CHECKING
+from unittest import mock
+
 import pytest
 from aiohttp import ClientSession
 from arc.client import GatewayClient as ArcGatewayClient
-from hikari.impl import gateway_bot as gateway_bot_
 from hikari.snowflakes import Snowflake
 from tanjun.clients import Client as TanjunClient
 
@@ -14,7 +16,11 @@ from ongaku.abc.handler import SessionHandler
 from ongaku.builders import EntityBuilder
 from ongaku.client import Client
 from ongaku.rest import RESTClient
-from ongaku.session import Session
+
+if TYPE_CHECKING:
+    from hikari.impl import gateway_bot as gateway_bot_
+
+    from ongaku.session import Session
 
 
 class TestClient:
@@ -36,7 +42,7 @@ class TestClient:
         command_client = ArcGatewayClient(gateway_bot)
 
         with mock.patch(
-            "arc.client.Client.add_injection_hook"
+            "arc.client.Client.add_injection_hook",
         ) as patched_injection_hook:
             client = Client.from_arc(command_client)
 
@@ -74,7 +80,9 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_create_session(
-        self, gateway_bot: gateway_bot_.GatewayBot, ongaku_session: Session
+        self,
+        gateway_bot: gateway_bot_.GatewayBot,
+        ongaku_session: Session,
     ):
         client = Client(gateway_bot)
 
@@ -104,7 +112,9 @@ class TestClient:
         with (
             mock.patch.object(client, "_session_handler"),
             mock.patch.object(
-                client.session_handler, "fetch_session", return_value=ongaku_session
+                client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
             ),
             mock.patch.object(
                 client.session_handler,
@@ -128,10 +138,14 @@ class TestClient:
         with (
             mock.patch.object(client, "_session_handler"),
             mock.patch.object(
-                client.session_handler, "fetch_session", return_value=ongaku_session
+                client.session_handler,
+                "fetch_session",
+                return_value=ongaku_session,
             ),
             mock.patch.object(
-                client.session_handler, "fetch_player", return_value=ongaku_player
+                client.session_handler,
+                "fetch_player",
+                return_value=ongaku_player,
             ),
             mock.patch.object(
                 client.session_handler,
@@ -160,7 +174,10 @@ class TestClient:
         assert player.guild_id == Snowflake(1234567890)
 
         with mock.patch.object(
-            ongaku_player, "disconnect", new_callable=mock.AsyncMock, return_value=None
+            ongaku_player,
+            "disconnect",
+            new_callable=mock.AsyncMock,
+            return_value=None,
         ):
             await client.session_handler.delete_player(Snowflake(1234567890))
 

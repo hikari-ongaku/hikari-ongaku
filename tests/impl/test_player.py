@@ -1,21 +1,31 @@
 # ruff: noqa: D100, D101, D102, D103
+from __future__ import annotations
 
 import datetime
+from typing import TYPE_CHECKING
 
 from hikari.snowflakes import Snowflake
 
-from ongaku.impl.filters import Filters
 from ongaku.impl.player import Player
 from ongaku.impl.player import State
 from ongaku.impl.player import Voice
-from ongaku.impl.track import Track
+
+if TYPE_CHECKING:
+    from ongaku.impl.filters import Filters
+    from ongaku.impl.track import Track
 
 
 def test_player(ongaku_track: Track, ongaku_filters: Filters):
     state = State(datetime.datetime.now(), 2, True, 3)
     voice = Voice("token", "endpoint", "session_id")
     player = Player(
-        Snowflake(1234567890), ongaku_track, 1, True, state, voice, ongaku_filters
+        Snowflake(1234567890),
+        ongaku_track,
+        1,
+        True,
+        state,
+        voice,
+        ongaku_filters,
     )
 
     assert isinstance(player.guild_id, Snowflake)
