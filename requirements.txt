@@ -1,2 +1,2 @@
-hikari ~= 2.2.1
+hikari ~= 2.3.2
 aiohttp ~= 3.11.0
