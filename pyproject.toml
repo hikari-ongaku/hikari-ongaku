@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "hikari-ongaku"
 requires-python = ">=3.10.0,<3.14"
 dependencies = [
-    "hikari ~= 2.2.1",
+    "hikari ~= 2.3.3",
     "aiohttp ~= 3.11.0"
 ]
 dynamic = [
