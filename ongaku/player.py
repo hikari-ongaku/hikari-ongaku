@@ -1071,7 +1071,7 @@ class Player:
 
             self.remove(0)
 
-            await self.app.event_manager.dispatch(new_event)
+            self.app.event_manager.dispatch(new_event, return_tasks=False)
 
             return
 
@@ -1089,13 +1089,14 @@ class Player:
 
         await self.play()
 
-        await self.app.event_manager.dispatch(
+        self.app.event_manager.dispatch(
             events.QueueNextEvent.from_session(
                 self.session,
                 self.guild_id,
                 self._queue[0],
                 event.track,
             ),
+            return_tasks=False,
         )
 
         _logger.log(

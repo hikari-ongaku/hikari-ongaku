@@ -332,14 +332,14 @@ class Session:
 
         return event
 
-    async def _handle_ws_message(self, msg: aiohttp.WSMessage) -> bool:
+    def _handle_ws_message(self, msg: aiohttp.WSMessage) -> bool:
         """Returns false if failure or closure, true otherwise."""
         if msg.type == aiohttp.WSMsgType.TEXT:
             payload_event = events.PayloadEvent.from_session(self, msg.data)
             event = self._handle_op_code(msg.data)
 
-            await self.app.event_manager.dispatch(payload_event)
-            await self.app.event_manager.dispatch(event)
+            self.app.event_manager.dispatch(payload_event, return_tasks=False)
+            self.app.event_manager.dispatch(event, return_tasks=False)
 
             return True
 
@@ -407,7 +407,7 @@ class Session:
                     while True:
                         msg = await ws.receive()
 
-                        if await self._handle_ws_message(msg) is False:
+                        if self._handle_ws_message(msg) is False:
                             self._status = session_.SessionStatus.FAILURE
                             await self.transfer(self.client.session_handler)
                             return
