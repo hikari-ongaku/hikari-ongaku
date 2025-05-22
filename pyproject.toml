@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "hikari-ongaku"
 requires-python = ">=3.10.0,<3.14"
 dependencies = [
-    "hikari ~= 2.2.1",
+    "hikari ~= 2.3.3",
     "aiohttp ~= 3.11.0"
 ]
 dynamic = [
@@ -76,9 +76,9 @@ docstring-code-format = true
 force-single-line = true
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "TCH", "C", "N", "D2", "D3", "D415", "D417", "D418", "D419", "ASYNC", "Q", "RSE", "SIM", "RUF"]
+select = ["E", "F", "I", "C", "N", "D2", "D3", "D415", "D417", "D418", "D419", "ASYNC", "Q", "RSE", "SIM", "RUF"]
 ignore = ["F405", "F403", "E501", "D205"]
-fixable = ["I", "TCH", "D"]
+fixable = ["I", "D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

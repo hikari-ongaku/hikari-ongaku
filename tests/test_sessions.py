@@ -961,8 +961,7 @@ class TestHandleOPCode:
 
 
 class TestHandleWSMessage:
-    @pytest.mark.asyncio
-    async def test_text(self, ongaku_client: Client):
+    def test_text(self, ongaku_client: Client):
         session = Session(
             ongaku_client,
             "test_session",
@@ -993,7 +992,7 @@ class TestHandleWSMessage:
                 return_value=None,
             ) as event_dispatched,
         ):
-            assert await session._handle_ws_message(message) is True
+            assert session._handle_ws_message(message) is True
 
             assert len(event_dispatched.call_args_list) == 2
 
@@ -1009,8 +1008,7 @@ class TestHandleWSMessage:
 
             assert isinstance(first_event_args[0], events.ReadyEvent)
 
-    @pytest.mark.asyncio
-    async def test_error(self, ongaku_client: Client):
+    def test_error(self, ongaku_client: Client):
         session = Session(
             ongaku_client,
             "test_session",
@@ -1023,10 +1021,9 @@ class TestHandleWSMessage:
 
         message = aiohttp.WSMessage(aiohttp.WSMsgType.ERROR, "", None)
 
-        assert await session._handle_ws_message(message) is False
+        assert session._handle_ws_message(message) is False
 
-    @pytest.mark.asyncio
-    async def test_closed(self, ongaku_client: Client):
+    def test_closed(self, ongaku_client: Client):
         session = Session(
             ongaku_client,
             "test_session",
@@ -1043,4 +1040,4 @@ class TestHandleWSMessage:
             "extra",
         )
 
-        assert await session._handle_ws_message(message) is False
+        assert session._handle_ws_message(message) is False
