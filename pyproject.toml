@@ -1,3 +1,93 @@
+[project]
+name = "hikari-ongaku"
+description = "A simple voice library for Hikari."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = []
+maintainers = []
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.10.0,<3.14"
+dependencies = [
+    "hikari ~= 2.3.3",
+    "aiohttp ~= 3.11.0",
+    "regex ~= 2024.11.6",
+    "alluka ~= 0.3.0"
+]
+dynamic = [
+    "version",
+]
+
+[project.urls]
+Homepage = "https://ongaku.mplaty.com"
+Documentation = "https://ongaku.mplaty.com"
+Repository = "https://github.com/hikari-ongaku/hikari-ongaku.git"
+Issues = "https://github.com/hikari-ongaku/hikari-ongaku/issues"
+Changelog = "https://ongaku.mplaty.com/changelog"
+
+[project.optional-dependencies]
+injection = [
+    "hikari-arc ~= 2.1",
+    "hikari-tanjun ~= 2.17.0"
+]
+speedups = [
+    "hikari[speedups] ~= 2.3.3",
+    "aiohttp[speedups] ~= 3.11.0",
+    "orjson ~= 3.10.0"
+]
+
+[dependency-groups]
+dev = [
+    "nox[uv] ~= 2025.5.0",
+    "pyright ~= 1.1.400"
+]
+doc = [
+    "black ~= 25.1.0",
+    "mkdocs ~= 1.6.0",
+    "mkdocs-autorefs ~= 1.4.0",
+    "mkdocs-material[imaging] ~= 9.6.0",
+    "mkdocs-material-extensions ~= 1.3.0",
+    "mkdocstrings-python ~= 1.16.0",
+    "mkdocstrings ~= 0.29.0",
+    "Pygments ~= 2.19.0",
+    "pymdown-extensions ~= 10.15.0",
+    "PyYAML ~= 6.0.0",
+    "pyyaml_env_tag ~= 1.0.0",
+    "Markdown ~= 3.7.0",
+    "MarkupSafe ~= 3.0.0",
+    "mergedeep ~= 1.3.0",
+    "griffe-inherited-docstrings ~= 1.1.0"
+]
+test = [
+    "pytest ~= 8.3.0",
+    "mock ~= 5.2.0",
+    "orjson ~= 3.10.0",
+    "pytest-asyncio ~= 0.26.0",
+    "pytest-aiohttp ~= 1.1.0"
+]
+format = [
+    "ruff ~= 0.11.0"
+]
+
+
+[tool.uv]
+required-version = "~=0.6"
+
 [tool.pyright]
 pythonVersion = "3.10"
 typeCheckingMode = "strict"
@@ -7,22 +97,14 @@ reportUnnecessaryTypeIgnoreComment = "warning"
 reportUninitializedInstanceVariable = "error"
 reportShadowedImports = "warning"
 
-[tool.ruff]
-extend-exclude = [".venv/*", "tests/*"]
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
 
-[tool.ruff.format]
-docstring-code-format = true
+[tool.hatch.version]
+path = "ongaku/internal/about.py"
+pattern = "^__version__: typing\\.Final\\[str\\] = \"(?P<version>[0-9]+(\\.[0-9]+)?(\\.[0-9]+)?(\\.(dev|post|a)[0-9]+)?)\"$"
 
-[tool.ruff.lint.isort]
-force-single-line = true
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "TCH", "C", "N", "D2", "D3", "D415", "D417", "D418", "D419", "ASYNC", "Q", "RSE", "SIM", "RUF"]
-ignore = ["F405", "F403", "E501", "D205"]
-fixable = ["I", "TCH", "D"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
-[tool.ruff.lint.per-file-ignores]
-"examples/**.py" = ["C901"]
+[tool.hatch.build.targets.wheel]
+packages = ["ongaku"]
+artifacts = ["pyproject.toml", "README.md", "LICENSE"]

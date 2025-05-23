@@ -1,3 +1,24 @@
+# MIT License
+
+# Copyright (c) 2023-present MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """
 Checker.
 
@@ -30,7 +51,7 @@ class Sites(enum.IntEnum):
 
     YOUTUBE = 1
     """Youtube.
-    
+
     ??? tip "Checked URL's"
 
         - `youtube.com/watch`
@@ -42,7 +63,7 @@ class Sites(enum.IntEnum):
     """
     YOUTUBE_MUSIC = 2
     """Youtube Music.
-    
+
     ??? tip "Checked URL's"
 
         - music.youtube.com/watch
@@ -50,7 +71,7 @@ class Sites(enum.IntEnum):
     """
     BANDCAMP = 3
     """Bandcamp.
-    
+
     ??? tip "Checked URL's"
 
         - `bandcamp.com/track/`
@@ -64,7 +85,7 @@ class Sites(enum.IntEnum):
     """
     SOUNDCLOUD = 4
     """Soundcloud.
-    
+
     ??? tip "Checked URL's"
 
         - `soundcloud.com/user/song`
@@ -81,7 +102,7 @@ class Sites(enum.IntEnum):
     """
     TWITCH = 5
     """Twitch.
-    
+
     ??? tip "Checked URL's"
 
         - `twitch.tv/`
@@ -91,14 +112,14 @@ class Sites(enum.IntEnum):
     """
     VIMEO = 6
     """Vimeo.
-    
+
     ??? tip "Checked URL's"
 
         - `vimeo.com/1234567890`
     """
     NICO = 7
     """Nico.
-    
+
     ??? tip "Checked URL's"
 
         - `nicovideo.jp/watch/`
@@ -107,7 +128,7 @@ class Sites(enum.IntEnum):
     """
     SPOTIFY = 8
     """Spotify.
-    
+
     ??? tip "Checked URL's"
 
         - `www.open.spotify.com/track/`
@@ -126,7 +147,7 @@ class Sites(enum.IntEnum):
     """
     APPLE = 9
     """Apple.
-    
+
     ??? tip "Checked URL's"
 
         - `www.music.apple.com/song/`
@@ -142,7 +163,7 @@ class Sites(enum.IntEnum):
     """
     DEEZER = 10
     """Deezer.
-    
+
     ??? tip "Checked URL's"
 
         - `www.deezer.com/track/`
@@ -158,7 +179,7 @@ class Sites(enum.IntEnum):
     """
     YANDEX = 11
     """Yandex.
-    
+
     ??? tip "Checked URL's"
 
         - `music.yandex.ru/artist/`
@@ -207,8 +228,7 @@ class Sites(enum.IntEnum):
 
 
 def check(query: str) -> Sites | None:
-    """
-    Check a string.
+    """Check.
 
     Allows for the user to check a current string, and see what type it is.
 
@@ -243,10 +263,6 @@ def check(query: str) -> Sites | None:
     ----------
     query
         The query you wish to check.
-    sites
-        The site(s) you wish to check against.
-
-        By default, this will check against all default lavalink sources.
 
     Returns
     -------
@@ -292,25 +308,4 @@ def check(query: str) -> Sites | None:
         if any(regex.compile(rx).match(query) is not None for rx in regex_patterns):
             return site
 
-
-# MIT License
-
-# Copyright (c) 2023-present MPlatypus
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+    return None

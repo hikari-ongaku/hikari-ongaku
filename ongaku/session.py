@@ -1,38 +1,85 @@
-"""
-Session.
+# MIT License
 
-Session related objects.
-"""
+# Copyright (c) 2023-present MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+"""Session and entities related to Lavalink session objects."""
 
 from __future__ import annotations
 
 import asyncio
+import enum
+import http
+import logging
 import typing
 
 import aiohttp
+from hikari import undefined
 
 from ongaku import errors
 from ongaku import events
-from ongaku.abc import session as session_
+from ongaku.internal import types
 from ongaku.internal.about import __version__
-from ongaku.internal.converters import json_loads
-from ongaku.internal.logger import TRACE_LEVEL
-from ongaku.internal.logger import logger
-
-_logger = logger.getChild("session")
+from ongaku.internal.logging import TRACE_LEVEL
 
 if typing.TYPE_CHECKING:
     import hikari
 
-    from ongaku.abc import handler as handler_
+    from ongaku.abc import handlers
     from ongaku.client import Client
-    from ongaku.internal import types
-    from ongaku.player import Player
+    from ongaku.internal import routes
+    from ongaku.player import ControllablePlayer
 
-__all__ = ("Session",)
+
+__all__: typing.Sequence[str] = (
+    "ControllableSession",
+    "Session",
+    "SessionStatus",
+)
+
+
+_logger: typing.Final[logging.Logger] = logging.getLogger("ongaku.session")
 
 
 class Session:
+    __slots__: typing.Sequence[str] = ("_resuming", "_timeout")
+
+    def __init__(self, *, resuming: bool, timeout: int) -> None:
+        self._resuming = resuming
+        self._timeout = timeout
+
+    @property
+    def resuming(self) -> bool:
+        return self._resuming
+
+    @property
+    def timeout(self) -> int:
+        return self._timeout
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Session):
+            return False
+
+        return self.resuming == other.resuming and self.timeout == other.timeout
+
+
+class ControllableSession:
     """
     Session.
 
@@ -55,9 +102,10 @@ class Session:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_authorization_headers",
         "_base_uri",
         "_client",
+        "_client_session",
+        "_extensions",
         "_host",
         "_name",
         "_password",
@@ -67,13 +115,11 @@ class Session:
         "_session_task",
         "_ssl",
         "_status",
-        "_websocket_headers",
     )
 
     def __init__(
         self,
         client: Client,
-        /,
         *,
         name: str,
         ssl: bool,
@@ -90,12 +136,10 @@ class Session:
         self._base_uri = f"http{'s' if ssl else ''}://{host}:{port}"
         self._session_id: str | None = None
         self._session_task: asyncio.Task[None] | None = None
-        self._status = session_.SessionStatus.NOT_CONNECTED
-        self._players: typing.MutableMapping[hikari.Snowflake, Player] = {}
-        self._websocket_headers: typing.MutableMapping[str, typing.Any] = {}
-        self._authorization_headers: typing.Mapping[str, typing.Any] = {
-            "Authorization": password
-        }
+        self._status = SessionStatus.NOT_CONNECTED
+        self._players: typing.MutableMapping[hikari.Snowflake, ControllablePlayer] = {}
+        self._client_session = None
+        self._extensions = client._extensions  # noqa: SLF001 FIXME: Maybe find a smarter way to do this.
 
     @property
     def client(self) -> Client:
@@ -138,12 +182,7 @@ class Session:
         return self._base_uri
 
     @property
-    def auth_headers(self) -> typing.Mapping[str, typing.Any]:
-        """The headers required for authorization."""
-        return self._authorization_headers
-
-    @property
-    def status(self) -> session_.SessionStatus:
+    def status(self) -> SessionStatus:
         """The current status of the session."""
         return self._status
 
@@ -153,378 +192,38 @@ class Session:
         The current session id.
 
         !!! note
-            Shows up as none if the current session failed to connect, or has not connected yet.
+            Shows up as none if the current session failed to connect,
+            or has not connected yet.
         """
         return self._session_id
 
-    def _handle_op_code(self, data: str, /) -> hikari.Event | None:  # noqa: C901
-        mapped_data = json_loads(data)
-
-        if isinstance(mapped_data, typing.Sequence):
-            raise errors.BuildError(
-                None,
-                "Invalid data received. Must be of type 'typing.Mapping' and not 'typing.Sequence'",
-            )
-
-        op_code = mapped_data["op"]
-
-        event: hikari.Event | None = None
-
-        if op_code == "ready":
-            event = self.client.entity_builder.deserialize_ready_event(
-                mapped_data, session=self
-            )
-
-            self._session_id = event.session_id
-
-        elif op_code == "playerUpdate":
-            event = self.client.entity_builder.deserialize_player_update_event(
-                mapped_data, session=self
-            )
-
-        elif op_code == "stats":
-            event = self.client.entity_builder.deserialize_statistics_event(
-                mapped_data, session=self
-            )
-
-        elif op_code == "event":
-            event_type = mapped_data["type"]
-
-            if event_type == "TrackStartEvent":
-                event = self.client.entity_builder.deserialize_track_start_event(
-                    mapped_data, session=self
-                )
-
-            elif event_type == "TrackEndEvent":
-                event = self.client.entity_builder.deserialize_track_end_event(
-                    mapped_data, session=self
-                )
-
-            elif event_type == "TrackExceptionEvent":
-                event = self.client.entity_builder.deserialize_track_exception_event(
-                    mapped_data, session=self
-                )
-
-            elif event_type == "TrackStuckEvent":
-                event = self.client.entity_builder.deserialize_track_stuck_event(
-                    mapped_data, session=self
-                )
-
-            elif event_type == "WebSocketClosedEvent":
-                event = self.client.entity_builder.deserialize_websocket_closed_event(
-                    mapped_data, session=self
-                )
-
-        for ext in self.client._extensions.values():
-            e = ext.event_handler(mapped_data, self)
-
-            if e:
-                return e
-
-        return event
-
-    async def _handle_ws_message(self, msg: aiohttp.WSMessage, /) -> bool:
-        """Returns false if failure or closure, true otherwise."""
-        if msg.type == aiohttp.WSMsgType.TEXT:
-            payload_event = events.PayloadEvent.from_session(self, payload=msg.data)
-            event = self._handle_op_code(msg.data)
-
-            await self.app.event_manager.dispatch(payload_event)
-            if event:
-                await self.app.event_manager.dispatch(event)
-            else:
-                _logger.warning(f"Received unknown payload: {msg.data}")
-
-            return True
-
-        elif msg.type == aiohttp.WSMsgType.ERROR:
-            _logger.warning("An error occurred.")
-
-        elif msg.type == aiohttp.WSMsgType.CLOSED:
-            _logger.warning(
-                f"Told to close. Code: {msg.data.name}. Message: {msg.extra}"
-            )
-
-        return False
-
-    async def _websocket(self) -> None:
-        bot = self.app.get_me()
-
-        _logger.log(
-            TRACE_LEVEL,
-            f"Attempting to start websocket connection to session {self.name}",
-        )
-
-        if not bot:
-            self._status = session_.SessionStatus.NOT_CONNECTED
-
-            _logger.warning(
-                "Attempted fetching the bot, but failed as it does not exist."
-            )
-
-            raise errors.SessionStartError
-
-        self._websocket_headers = {
-            "User-Id": str(int(bot.id)),
-            "Client-Name": f"{bot.global_name if bot.global_name else 'unknown'}/{__version__}",
-        }
-
-        new_headers: typing.MutableMapping[str, typing.Any] = {}
-
-        new_headers.update(self._websocket_headers)
-
-        new_headers.update(self.auth_headers)
-
-        while True:
-            try:
-                session = self.client._get_client_session()
-                async with session.ws_connect(
-                    self.base_uri + "/v4/websocket",
-                    headers=new_headers,
-                    autoclose=False,
-                ) as ws:
-                    _logger.log(
-                        TRACE_LEVEL,
-                        f"Successfully made connection to session {self.name}",
-                    )
-                    self._status = session_.SessionStatus.CONNECTED
-                    while True:
-                        msg = await ws.receive()
-
-                        if await self._handle_ws_message(msg) is False:
-                            self._status = session_.SessionStatus.FAILURE
-                            await self.transfer(self.client.session_handler)
-                            return
-
-            except Exception as e:
-                _logger.warning(f"Websocket connection failure: {e}")
-                self._status = session_.SessionStatus.NOT_CONNECTED
-                await asyncio.sleep(60)
-
-    def _get_session_id(self) -> str:
-        if self.session_id:
-            return self.session_id
-
-        raise errors.SessionStartError
-
-    @typing.overload
-    async def request(
-        self,
-        method: str,
-        path: str,
-        return_type: typing.Literal[None],
-        /,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, str | int | float | bool] = {},
-        ignore_default_headers: bool = False,
-        optional: typing.Literal[False] = False,
-        version: bool = True,
-    ) -> None: ...
-
-    @typing.overload
-    async def request(
-        self,
-        method: str,
-        path: str,
-        return_type: typing.Type[types.RequestT],
-        /,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, str | int | float | bool] = {},
-        ignore_default_headers: bool = False,
-        optional: typing.Literal[False] = False,
-        version: bool = True,
-    ) -> types.RequestT: ...
-
-    @typing.overload
-    async def request(
-        self,
-        method: str,
-        path: str,
-        return_type: typing.Type[types.RequestT],
-        /,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, str | int | float | bool] = {},
-        ignore_default_headers: bool = False,
-        optional: typing.Literal[True] = True,
-        version: bool = True,
-    ) -> types.RequestT | None: ...
-
-    async def request(  # noqa: C901
-        self,
-        method: str,
-        path: str,
-        return_type: typing.Type[types.RequestT] | None,
-        /,
-        *,
-        headers: typing.Mapping[str, typing.Any] = {},
-        json: typing.Mapping[str, typing.Any] | typing.Sequence[typing.Any] = {},
-        params: typing.Mapping[str, str | int | float | bool] = {},
-        ignore_default_headers: bool = False,
-        optional: bool = False,
-        version: bool = True,
-    ) -> types.RequestT | None:
-        """Request.
-
-        Make a http(s) request to the current session
-
-        Parameters
-        ----------
-        method
-            The method to send the request as. `GET`, `POST`, `PATCH`, `DELETE`, `PUT`
-        path
-            The path to the url. e.g. `/v4/info`
-        return_type
-            The response type you expect.
-        headers
-            The headers to send.
-        json
-            The json data to send.
-        params
-            The parameters to send.
-        ignore_default_headers
-            Whether to ignore the default headers or not.
-        optional
-            Whether the response is optional.
-        version
-            Whether or not to include the version in the path.
-
-        Returns
-        -------
-        types.RequestT | None
-            Your requested type of data.
-
-        Raises
-        ------
-        TimeoutError
-            Raised when the request takes too long to respond.
-        RestEmptyError
-            Raised when the request required a return type, but received nothing, or a 204 response.
-        RestStatusError
-            Raised when a 4XX or a 5XX status is received.
-        BuildError
-            Raised when the mapping or sequence could not be built.
-        RestRequestError
-            Raised when a 4XX or a 5XX status is received, and lavalink gives more information.
-        RestError
-            Raised when an unknown error is caught.
-        """
-        session = self.client._get_client_session()
-
-        new_headers: typing.MutableMapping[str, typing.Any] = dict(headers)
-
-        if ignore_default_headers is False:
-            new_headers.update(self.auth_headers)
-
-        new_params: typing.MutableMapping[str, str] = {}
-
-        for key, value in params.items():
-            if isinstance(value, bool):
-                new_params.update({key: "true" if value else "false"})
-
-            new_params.update({key: str(value)})
-
-        if _logger.isEnabledFor(TRACE_LEVEL):
-            new_params.update({"trace": "true"})
-
-        _logger.log(
-            TRACE_LEVEL,
-            f"Making request to {self.base_uri}{'/v4' if version else ''}{path} with headers: {new_headers} and json: {json} and params: {new_params}",
-        )
-
-        response = await session.request(
-            method,
-            f"{self.base_uri}{'/v4' if version else ''}{path}",
-            headers=new_headers,
-            json=json,
-            params=new_params,
-        )
-
-        if response.status == 204:
-            if optional or (return_type is None):
-                return
-            raise errors.RestEmptyError
-
-        if response.status >= 400:
-            payload = await response.text()
-
-            if len(payload) == 0:
-                raise errors.RestStatusError(response.status, response.reason)
-
-            try:
-                rest_error = self.client.entity_builder.deserialize_rest_error(payload)
-            except Exception:
-                raise errors.RestStatusError(response.status, response.reason)
-            raise rest_error
-
-        payload = await response.text()
-
-        if return_type is None:
-            return
-
-        if issubclass(return_type, str | int | bool | float):
-            print("return type payload")
-            return return_type(payload)
-
-        try:
-            json_payload = json_loads(payload)
-        except Exception as e:
-            raise errors.BuildError(e)
-
-        return return_type(json_payload)
-
-    async def transfer(self, session_handler: handler_.SessionHandler, /) -> None:
-        """
-        Transfer.
-
-        Transfer all the players from this session, to a different one.
-
-        !!! warning
-            This will close the current sessions connection.
-
-        Parameters
-        ----------
-        session_handler
-            The session handler, that will allow this session to move its players too.
-        """
-        session = session_handler.fetch_session()
-
-        _logger.log(
-            TRACE_LEVEL,
-            f"Attempting transfer players from session {self.name} to {session.name}",
-        )
-
-        for player in self._players.values():
-            player = await player.transfer(session=session)
-
-            session_handler.add_player(player=player)
-
-        await self.stop()
-
-        _logger.log(
-            TRACE_LEVEL,
-            f"Successfully transferred and stopped session {self.name} and moved players to session {session.name}",
-        )
-
-    async def start(self) -> None:
+    async def start(self, client_session: aiohttp.ClientSession) -> None:
         """
         Start the session.
 
         Starts up the session, to receive events.
         """
-        _logger.log(
-            TRACE_LEVEL,
-            f"Starting up session {self.name}",
-        )
-        self._session_task = asyncio.create_task(self._websocket())
-        _logger.log(
-            TRACE_LEVEL,
-            f"Successfully started session {self.name}",
+        self._client_session = client_session
+
+        bot = self.app.get_me()
+
+        if not bot:
+            raise errors.SessionStartError("Could not fetch the bot information.")
+
+        bot_name = "unknown"
+        if bot.global_name is not None:
+            bot_name = bot.global_name
+        elif bot.display_name not in (None, undefined.UNDEFINED):
+            bot_name = bot.display_name
+
+        headers = {
+            "User-Id": str(int(bot.id)),
+            "Client-Name": f"{bot_name}/{__version__}",
+            "Authorization": self.password,
+        }
+
+        self._session_task = asyncio.create_task(
+            self._websocket(client_session, headers),
         )
 
     async def stop(self) -> None:
@@ -535,7 +234,8 @@ class Session:
         """
         _logger.log(
             TRACE_LEVEL,
-            f"Shutting down session {self.name}",
+            "Shutting down session %s",
+            self.name,
         )
         if self._session_task:
             self._session_task.cancel()
@@ -547,28 +247,369 @@ class Session:
 
         _logger.log(
             TRACE_LEVEL,
-            f"Successfully shut down session {self.name}",
+            "Successfully shut down session %s",
+            self.name,
+        )
+
+    async def _websocket(
+        self,
+        client_session: aiohttp.ClientSession,
+        headers: typing.Mapping[str, typing.Any],
+    ) -> None:
+        while True:
+            try:
+                ws = await client_session.ws_connect(
+                    self.base_uri + "/v4/websocket",
+                    headers=headers,
+                    autoclose=False,
+                )
+
+                _logger.log(
+                    TRACE_LEVEL,
+                    "Successfully made connection to session %s",
+                    self.name,
+                )
+
+                self._status = SessionStatus.CONNECTED
+
+                event = events.SessionConnectedEvent.from_session(self)
+
+                self._client.app.event_manager.dispatch(event, return_tasks=False)
+
+                async for msg in ws:
+                    match msg.type:
+                        case aiohttp.WSMsgType.TEXT:
+                            payload_event = events.PayloadEvent.from_session(
+                                self,
+                                payload=msg.data,
+                            )
+                            event = self._handle_payload(msg.data)
+
+                            self.app.event_manager.dispatch(
+                                payload_event,
+                                return_tasks=False,
+                            )
+                            if event:
+                                self.app.event_manager.dispatch(
+                                    event,
+                                    return_tasks=False,
+                                )
+                            else:
+                                _logger.warning(
+                                    "Received unknown payload: %s",
+                                    msg.data,
+                                )
+
+                        case aiohttp.WSMsgType.ERROR:
+                            _logger.warning(
+                                "An error occurred, data: %s, extra: %s",
+                                msg.data,
+                                msg.extra,
+                            )
+
+                            event = events.SessionErrorEvent.from_session(self)
+
+                            self.app.event_manager.dispatch(
+                                event,
+                                return_tasks=False,
+                            )
+
+                        case aiohttp.WSMsgType.CLOSED:
+                            event = events.SessionDisconnectedEvent.from_session(
+                                self,
+                                code=msg.data,
+                                reason=msg.extra,
+                            )
+
+                            self.app.event_manager.dispatch(
+                                event,
+                                return_tasks=False,
+                            )
+
+                        case msg_type:
+                            _logger.log(
+                                TRACE_LEVEL,
+                                "Received unknown message type: %s",
+                                msg_type,
+                                msg.data,
+                                msg.extra,
+                            )
+
+            except Exception as err:  # noqa: BLE001, PERF203
+                timeout_delay = 60
+
+                _logger.warning(
+                    "Websocket connection failure: %s reattempting in %ss",
+                    err,
+                    timeout_delay,
+                )
+                self._status = SessionStatus.NOT_CONNECTED
+                await asyncio.sleep(timeout_delay)
+
+    def _handle_payload(self, data: str) -> hikari.Event | None:
+        mapped_data = types.json_loads(data)
+
+        if isinstance(mapped_data, typing.Sequence):
+            raise errors.BuildError(
+                "Expected 'typing.Mapping' but received 'typing.Sequence'",
+            )
+
+        op_code = mapped_data["op"]
+
+        event: hikari.Event | None = None
+
+        op_code_mapping: dict[
+            str,
+            typing.Any,
+        ] = {  # FIXME: I hate that this uses typing.Any, it should technically be a callable
+            "ready": self.client.builder.deserialize_ready_event,
+            "playerUpdate": self.client.builder.deserialize_player_update_event,
+            "stats": self.client.builder.deserialize_statistics_event,
+        }
+
+        if (deserializer := op_code_mapping.get(op_code)) is not None:
+            event = deserializer(
+                mapped_data,
+                session=self,
+            )
+
+        if op_code == "ready":
+            self._session_id = mapped_data["sessionId"]
+
+        elif op_code == "event":
+            event_type = mapped_data["type"]
+
+            event_type_mapping: dict[str, typing.Any] = {
+                "TrackStartEvent": self.client.builder.deserialize_track_start_event,
+                "TrackEndEvent": self.client.builder.deserialize_track_end_event,
+                "TrackExceptionEvent": self.client.builder.deserialize_track_exception_event,
+                "TrackStuckEvent": self.client.builder.deserialize_track_stuck_event,
+                "WebSocketClosedEvent": self.client.builder.deserialize_websocket_closed_event,
+            }
+
+            if (deserializer := event_type_mapping.get(event_type)) is not None:
+                event = deserializer(
+                    mapped_data,
+                    session=self,
+                )
+
+        for e in self._extensions.copy():
+            try:
+                ext = self.client.injector.get_type_dependency(e)
+            except KeyError:
+                self._extensions.discard(e)
+                continue
+
+            event = ext.event_handler(mapped_data, self)
+
+            if event:
+                return event
+
+        return event
+
+    @typing.overload
+    async def request(
+        self,
+        route: routes.BuiltRoute,
+        *,
+        headers: typing.Mapping[str, typing.Any] | None = None,
+        body: types.RequestBodyT = None,
+        params: typing.Mapping[str, str | int | float | bool] | None = None,
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[False] = False,
+    ) -> typing.Sequence[str] | typing.Mapping[str, typing.Any] | str: ...
+
+    @typing.overload
+    async def request(
+        self,
+        route: routes.BuiltRoute,
+        *,
+        headers: typing.Mapping[str, typing.Any] | None = None,
+        body: types.RequestBodyT = None,
+        params: typing.Mapping[str, str | int | float | bool] | None = None,
+        ignore_default_headers: bool = False,
+        optional: typing.Literal[True] = True,
+    ) -> typing.Sequence[str] | typing.Mapping[str, typing.Any] | str | None: ...
+
+    async def request(
+        self,
+        route: routes.BuiltRoute,
+        *,
+        headers: typing.Mapping[str, typing.Any] | None = None,
+        body: types.RequestBodyT = None,
+        params: typing.Mapping[str, str | int | float | bool] | None = None,
+        ignore_default_headers: bool = False,
+        optional: bool = False,
+    ) -> typing.Sequence[str] | typing.Mapping[str, typing.Any] | str | None:
+        """Request.
+
+        Make a http(s) request to the current session
+
+        Parameters
+        ----------
+        route
+            The route to make the request to.
+        headers
+            The headers to send.
+        body
+            The body to send.
+        params
+            The parameters to send.
+        ignore_default_headers
+            Whether to ignore the default headers or not.
+        optional
+            Whether the response is optional.
+
+        Returns
+        -------
+        types.RequestT | None
+            Your requested type of data.
+
+        Raises
+        ------
+        TimeoutError
+            Raised when the request takes too long to respond.
+        RestEmptyError
+            Raised when the response is 204, or 404.
+        RestStatusError
+            Raised when a request fails.
+        BuildError
+            Raised when the mapping or sequence could not be built.
+        RestRequestError
+            Raised when a request fails, but Lavalink has more information.
+        RestError
+            Raised when an unknown error is caught.
+        """
+        if self._client_session is None:
+            raise errors.SessionStartError
+
+        new_headers: typing.MutableMapping[str, typing.Any] = dict(headers or {})
+
+        if ignore_default_headers is False:
+            new_headers["Authorization"] = self.password
+
+        new_params: typing.MutableMapping[str, str] | None = None
+
+        if params and params != {}:
+            new_params = {}
+            for key, value in params.items():
+                if isinstance(value, bool):
+                    new_params.update({key: "true" if value else "false"})
+
+                new_params.update({key: str(value)})
+
+        if _logger.isEnabledFor(TRACE_LEVEL):
+            if new_params is not None:
+                new_params.update({"trace": "true"})
+            else:
+                new_params = {"trace": "true"}
+
+        _logger.log(
+            TRACE_LEVEL,
+            "Making request to %s with headers: %s and json: %s and params: %s",
+            route,
+            new_headers,
+            body,
+            new_params,
+        )
+
+        response = await self._client_session.request(
+            route.method,
+            f"{self.base_uri}{route.path}",
+            headers=new_headers,
+            json=body,
+            params=new_params,
+        )
+
+        if response.status in (http.HTTPStatus.NO_CONTENT, http.HTTPStatus.NOT_FOUND):
+            if optional:
+                return None
+            raise errors.RestEmptyError
+
+        if response.status >= http.HTTPStatus.BAD_REQUEST:
+            payload = await response.text()
+
+            if len(payload) == 0:
+                raise errors.RestStatusError(response.status, response.reason)
+
+            try:
+                rest_error = self.client.builder.deserialize_rest_error(payload)
+            except Exception as err:
+                raise errors.RestStatusError(response.status, response.reason) from err
+            raise rest_error
+
+        payload = await response.text()
+
+        if response.content_type == "application/json":
+            try:
+                json_payload = types.json_loads(payload)
+            except Exception as e:
+                raise errors.BuildError(str(e)) from e
+
+            return json_payload
+
+        return payload
+
+    async def transfer(self, handler: handlers.Handler, /) -> None:
+        """
+        Transfer.
+
+        Transfer all the players from this session, to a different one.
+
+        !!! warning
+            This will close the current sessions connection.
+
+        Parameters
+        ----------
+        handler
+            The session handler, that will allow this session to move its players too.
+        """
+        session = handler.get_session()
+
+        _logger.log(
+            TRACE_LEVEL,
+            "Attempting transfer players from session %s to %s",
+            self.name,
+            session.name,
+        )
+
+        for player in self._players.values():
+            handler.add_player(player=await player.transfer(session=session))
+
+        await self.stop()
+
+        _logger.log(
+            TRACE_LEVEL,
+            "Successfully transferred players from %s to %s",
+            self.name,
+            session.name,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ControllableSession):
+            return False
+
+        return (
+            self.name == other.name
+            and self.ssl == other.ssl
+            and self.host == other.host
+            and self.port == other.port
+            and self.password == other.password
+            and self.base_uri == other.base_uri
+            and self.status == other.status
         )
 
 
-# MIT License
+class SessionStatus(int, enum.Enum):
+    """
+    Session Status.
 
-# Copyright (c) 2023-present MPlatypusPlatypus
+    The status of the session.
+    """
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+    NOT_CONNECTED = 0
+    """Not connected to the lavalink server."""
+    CONNECTED = 1
+    """Successfully connected to the lavalink server."""
+    FAILURE = 2
+    """A failure occurred connecting to the lavalink server."""

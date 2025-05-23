@@ -1,18 +1,21 @@
 # ruff: noqa: D100, D103
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import nox
 from nox import options
 
-PATH_TO_PROJECT = os.path.join(".", "ongaku")
-EXAMPLES_PATH = os.path.join(".", "examples")
+PATH_TO_PROJECT = Path() / "ongaku"
+EXAMPLES_PATH = Path() / "examples"
 SCRIPT_PATHS = [
     PATH_TO_PROJECT,
     EXAMPLES_PATH,
     "noxfile.py",
-    os.path.join(".", "tests"),
+    Path() / "tests",
 ]
 
+options.default_venv_backend = "uv"
 options.sessions = [
     "format_fix",
     "import_fix",
@@ -22,56 +25,82 @@ options.sessions = [
 ]
 
 
+def uv_sync(
+    session: nox.Session,
+    *,
+    groups: list[str] | None = None,
+    extras: list[str] | None = None,
+) -> None:
+    group_set: set[str] = set(groups) if groups else set()
+    extra_set: set[str] = set(extras) if extras else set()
+
+    group_args: list[str] = []
+    for group in group_set:
+        group_args.extend(["--group", group])
+
+    extra_args: list[str] = []
+    for extra in extra_set:
+        extra_args.extend(["--extra", extra])
+
+    session.run_install(
+        "uv",
+        "sync",
+        "--locked",
+        *group_args,
+        *extra_args,
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
+
+
 @nox.session()
 def format_fix(session: nox.Session) -> None:
-    session.install("-U", "ruff")
+    uv_sync(session, groups=["format"])
     session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS)
     session.run("python", "-m", "ruff", "check", *SCRIPT_PATHS, "--fix")
 
 
 @nox.session()
 def import_fix(session: nox.Session) -> None:
-    session.install("-U", "ruff")
+    uv_sync(session, groups=["format"])
     session.run(
-        "python", "-m", "ruff", "check", "--select", "I", *SCRIPT_PATHS, "--fix"
+        "python",
+        "-m",
+        "ruff",
+        "check",
+        "--select",
+        "I",
+        *SCRIPT_PATHS,
+        "--fix",
     )
     session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS)
 
 
 @nox.session()
-def format(session: nox.Session) -> None:
-    session.install("-U", "ruff")
-    session.run("python", "-m", "ruff", "format", *SCRIPT_PATHS, "--check")
-    session.run("python", "-m", "ruff", *SCRIPT_PATHS)
+def format_check(session: nox.Session) -> None:
+    uv_sync(session, groups=["format"])
+    session.run("ruff", "check", "--output-format=github")
 
 
 @nox.session()
 def pyright(session: nox.Session) -> None:
-    session.install(".[injection, speedups]")
-    session.install("-U", "pyright")
+    uv_sync(session, groups=["dev"], extras=["injection", "speedups"])
     session.install("-Ur", "examples/examples_requirements.txt")
     session.run("pyright", PATH_TO_PROJECT, EXAMPLES_PATH)
 
 
 @nox.session()
 def pytest(session: nox.Session) -> None:
-    session.install("-U", ".[injection, dev]")
-    session.install("-Ur", "requirements/tests.txt")
-    session.install
+    uv_sync(session, groups=["test"], extras=["injection", "speedups"])
     session.run("pytest", "tests")
 
 
 @nox.session()
 def docs(session: nox.Session) -> None:
-    session.install("-Ur", "requirements/doc.txt")
-    session.install("-Ur", "requirements.txt")
-    session.install("-U", "black")
+    uv_sync(session, groups=["doc"])
     session.run("python", "-m", "mkdocs", "build", "-q", "-s")
 
 
 @nox.session()
 def servedocs(session: nox.Session) -> None:
-    session.install("-Ur", "requirements/doc.txt")
-    session.install("-Ur", "requirements.txt")
-    session.install("-U", "black")
+    uv_sync(session, groups=["doc"])
     session.run("python", "-m", "mkdocs", "serve")

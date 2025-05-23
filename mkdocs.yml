@@ -57,7 +57,6 @@ plugins:
             show_submodules: false
             signature_crossrefs: true
             show_symbol_type_heading: true
-            show_symbol_type_heading: true
             show_symbol_type_toc: true
             members_order: source
             extensions:
@@ -113,27 +112,29 @@ nav:
   - API Reference:
     - api/index.md
     - Client: api/client.md
-    - Session: api/session.md
-    - Handlers: api/handlers.md
-    - Player: api/player.md
-    - Events: api/events.md
-    - Rest: api/rest.md
     - Errors: api/errors.md
-    - Builders: api/builders.md
-    - Types: api/types.md
-    - ABC:
-      - Errors: api/abc/errors.md
+    - Events: api/events.md
+    - Filters: api/filters.md
+    - Information: api/information.md
+    - Player: api/player.md
+    - Playlist: api/playlist.md
+    - Route Planner: api/route_planner.md
+    - Session: api/session.md
+    - Statistics: api/statistics.md
+    - Track: api/track.md
+    - abc:
+      - Builders: api/abc/builders.md
       - Events: api/abc/events.md
-      - Extension: api/abc/extension.md
-      - Filters: api/abc/filters.md
-      - Handler: api/abc/handler.md
-      - Info: api/abc/info.md
-      - Player: api/abc/player.md
-      - Playlist: api/abc/playlist.md
-      - Route Planner: api/abc/routeplanner.md
-      - Session: api/abc/session.md
-      - Statistics: api/abc/statistics.md
-      - Track: api/abc/track.md
+      - Extensions: api/abc/extensions.md
+      - Handlers: api/abc/handlers.md
+    - api:
+      - Builders: api/api/builders.md
+      - Handlers: api/api/handlers.md
+      - Rest: api/api/rest.md
+    - ext:
+      - Checker: api/ext/checker.md
+      - Injection: api/ext/injection.md
+      - Youtube: api/ext/youtube.md
   - Extensions:
     - ext/index.md
     - Checker: ext/checker.md

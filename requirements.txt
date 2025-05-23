@@ -1,4 +1,0 @@
-hikari ~= 2.1.0
-aiohttp ~= 3.11
-regex ~= 2024.11
-alluka ~= 0.3
