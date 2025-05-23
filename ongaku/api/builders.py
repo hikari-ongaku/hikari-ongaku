@@ -1974,8 +1974,6 @@ class KaraokeBuilder(builders.FilterBuilder):
         "_filter_band",
         "_filter_width",
         "_level",
-        "_level",
-        "_mono_level",
         "_mono_level",
     )
 
@@ -2082,7 +2080,6 @@ class TimescaleBuilder(builders.FilterBuilder):
 class TremoloBuilder(builders.FilterBuilder):
     __slots__: typing.Sequence[str] = (
         "_depth",
-        "_depth",
         "_frequency",
     )
 
@@ -2164,12 +2161,8 @@ class RotationBuilder(builders.FilterBuilder):
 class DistortionBuilder(builders.FilterBuilder):
     __slots__: typing.Sequence[str] = (
         "_cos_offset",
-        "_cos_offset",
-        "_cos_scale",
         "_cos_scale",
         "_offset",
-        "_offset",
-        "_scale",
         "_scale",
         "_sin_offset",
         "_sin_scale",

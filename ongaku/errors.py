@@ -281,7 +281,7 @@ class PlayerMissingError(PlayerError):
 class BuildError(OngakuError):
     """Raised when a abstract class fails to build."""
 
-    __slots__: typing.Sequence[str] = ("_exception", "_reason")
+    __slots__: typing.Sequence[str] = ("_reason",)
 
     def __init__(
         self,
