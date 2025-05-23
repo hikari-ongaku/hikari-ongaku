@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Youtube.
+"""YouTube.
 
 Endpoints for the youtube source plugin.
 """
@@ -33,4 +33,11 @@ from ongaku.ext.youtube.endpoints import update_youtube
 from ongaku.ext.youtube.youtube import RefreshTokenInformation
 from ongaku.ext.youtube.youtube import YouTube
 
-__all__ = ("RefreshTokenInformation", "YouTube", "fetch_youtube", "fetch_youtube_oauth", "fetch_youtube_stream", "update_youtube")
+__all__ = (
+    "RefreshTokenInformation",
+    "YouTube",
+    "fetch_youtube",
+    "fetch_youtube_oauth",
+    "fetch_youtube_stream",
+    "update_youtube",
+)

@@ -145,7 +145,7 @@ class Player:
 
 
 class State:
-    """Player State.
+    """State.
 
     All the information for the players current state.
 
@@ -227,7 +227,7 @@ class State:
 
 
 class Voice:
-    """Player Voice.
+    """Voice.
 
     All of the Player Voice information.
 

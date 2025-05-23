@@ -165,7 +165,7 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> Track:
-        """Decode a track.
+        """Decode track.
 
         Decode a track from its encoded state.
 
@@ -295,9 +295,9 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> player.Player:
-        """Fetch a player.
+        """Fetch player.
 
-        Fetches a specific player from this session.
+        Fetches a specific player from the specified session.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-player)
 
@@ -363,9 +363,9 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> typing.Sequence[player.Player]:
-        """Fetch all players.
+        """Fetch players.
 
-        Fetches all players on this session.
+        Fetches all players from the specified session.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-players)
 
@@ -581,9 +581,9 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> None:
-        """Delete a player.
+        """Delete player.
 
-        Deletes a specific player from this session.
+        Deletes a specific player from the specified session.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#destroy-player)
 
@@ -637,9 +637,9 @@ class RESTClient:
         timeout: int | None = None,
         session: session.ControllableSession | None = None,
     ) -> session.Session:
-        """Update Lavalink session.
+        """Update Session.
 
-        Updates the lavalink session.
+        Update the lavalink session.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#update-session)
 
@@ -711,9 +711,9 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> information.Information:
-        """Get information.
+        """Fetch information.
 
-        Gets the current sessions information.
+        Fetches the current sessions information.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-info)
 
@@ -769,9 +769,9 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> str:
-        """Get version.
+        """Fetch version.
 
-        Gets the current Lavalink version.
+        Fetches the current Lavalink version.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-version)
 
@@ -825,9 +825,9 @@ class RESTClient:
         *,
         session: session.ControllableSession | None = None,
     ) -> statistics.Statistics:
-        """Get statistics.
+        """Fetch statistics.
 
-        Gets the current Lavalink statistics.
+        Fetches the current Lavalink statistics.
 
         ![Lavalink](../../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#get-lavalink-stats)
 

@@ -80,8 +80,7 @@ class Session:
 
 
 class ControllableSession:
-    """
-    Session.
+    """Session.
 
     The base session object.
 
@@ -188,8 +187,7 @@ class ControllableSession:
 
     @property
     def session_id(self) -> str | None:
-        """
-        The current session id.
+        """The current session id.
 
         !!! note
             Shows up as none if the current session failed to connect,
@@ -198,8 +196,7 @@ class ControllableSession:
         return self._session_id
 
     async def start(self, client_session: aiohttp.ClientSession) -> None:
-        """
-        Start the session.
+        """Start.
 
         Starts up the session, to receive events.
         """
@@ -227,8 +224,7 @@ class ControllableSession:
         )
 
     async def stop(self) -> None:
-        """
-        Stop the session.
+        """Stop.
 
         Stops the current session, if it is running.
         """
@@ -443,7 +439,7 @@ class ControllableSession:
     ) -> typing.Sequence[str] | typing.Mapping[str, typing.Any] | str | None:
         """Request.
 
-        Make a http(s) request to the current session
+        Make a http(s) request to the current session.
 
         Parameters
         ----------
@@ -551,8 +547,7 @@ class ControllableSession:
         return payload
 
     async def transfer(self, handler: handlers.Handler, /) -> None:
-        """
-        Transfer.
+        """Transfer.
 
         Transfer all the players from this session, to a different one.
 
@@ -601,8 +596,7 @@ class ControllableSession:
 
 
 class SessionStatus(int, enum.Enum):
-    """
-    Session Status.
+    """Session Status.
 
     The status of the session.
     """

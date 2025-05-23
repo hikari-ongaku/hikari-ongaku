@@ -255,8 +255,7 @@ async def update_youtube(
     po_token: str | None = None,
     visitor_data: str | None = None,
 ) -> None:
-    """
-    Update Youtube.
+    """Update Youtube.
 
     Update youtube endpoints.
 

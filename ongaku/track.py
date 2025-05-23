@@ -40,7 +40,7 @@ __all__: typing.Sequence[str] = (
 class Track:
     """Track.
 
-    The base track.
+    The track object.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track)
     """
@@ -119,7 +119,7 @@ class Track:
 class TrackInfo:
     """Track Information.
 
-    All of the information about the track.
+    The track information object.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#track-info)
     """

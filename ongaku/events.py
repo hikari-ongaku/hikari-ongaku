@@ -57,8 +57,7 @@ __all__ = (
 
 
 class PayloadEvent(events.OngakuEvent):
-    """
-    Payload Event.
+    """Payload Event.
 
     The event that is dispatched each time a message is received from the websocket.
     """
@@ -113,8 +112,7 @@ class PayloadEvent(events.OngakuEvent):
 
 
 class ReadyEvent(events.OngakuEvent):
-    """
-    Ready Event.
+    """Ready Event.
 
     Dispatched by Lavalink upon successful connection and authorization.
     Contains fields determining if resuming was successful, as well as the session id.
@@ -192,8 +190,7 @@ class ReadyEvent(events.OngakuEvent):
 
 
 class PlayerUpdateEvent(events.OngakuEvent):
-    """
-    Player Update Event.
+    """Player Update Event.
 
     Dispatched every x seconds with the current state of the player.
 
@@ -264,8 +261,7 @@ class PlayerUpdateEvent(events.OngakuEvent):
 
 
 class StatisticsEvent(events.OngakuEvent):
-    """
-    Statistics Event.
+    """Statistics Event.
 
     A collection of statistics sent every minute.
 
@@ -376,8 +372,7 @@ class StatisticsEvent(events.OngakuEvent):
 
 
 class WebsocketClosedEvent(events.OngakuEvent):
-    """
-    Websocket Closed Event.
+    """Websocket Closed Event.
 
     Dispatched when an audio WebSocket (to Discord) is closed.
     This can happen for various reasons (normal and abnormal),
@@ -624,8 +619,7 @@ class SessionErrorEvent(events.SessionEvent):
 
 
 class TrackStartEvent(events.TrackEvent):
-    """
-    Track start event.
+    """Track start event.
 
     Dispatched when a track starts playing.
 
@@ -694,8 +688,7 @@ class TrackStartEvent(events.TrackEvent):
 
 
 class TrackEndEvent(events.TrackEvent):
-    """
-    Track end event.
+    """Track end event.
 
     Dispatched when a track ends.
 
@@ -784,8 +777,7 @@ class TrackEndEvent(events.TrackEvent):
 
 
 class TrackExceptionEvent(events.TrackEvent):
-    """
-    Track exception event.
+    """Track exception event.
 
     Dispatched when a track throws an exception.
 
@@ -874,8 +866,7 @@ class TrackExceptionEvent(events.TrackEvent):
 
 
 class TrackStuckEvent(events.TrackEvent):
-    """
-    Track stuck event.
+    """Track stuck event.
 
     Dispatched when a track gets stuck while playing.
 
@@ -964,8 +955,7 @@ class TrackStuckEvent(events.TrackEvent):
 
 
 class QueueEmptyEvent(events.QueueEvent):
-    """
-    Queue empty event.
+    """Queue empty event.
 
     Dispatched when the player finishes all the tracks in the queue.
     """
@@ -1038,8 +1028,7 @@ class QueueEmptyEvent(events.QueueEvent):
 
 
 class QueueNextEvent(events.QueueEvent):
-    """
-    Queue next event.
+    """Queue next event.
 
     Dispatched when the player starts playing a new track.
     """

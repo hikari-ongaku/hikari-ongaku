@@ -19,8 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""
-Checker.
+"""Checker.
 
 The extension, that allows you to check if a link is a url, or a video/playlist!
 """
@@ -43,7 +42,8 @@ class Sites(enum.IntEnum):
 
     All the available sites for lavalink.
 
-    all sites are checked for `http` and `https`, except for twitch and vimeo, which are only `https`.
+    all sites are checked for `http` and `https`,
+    except for twitch and vimeo, which are only `https`.
 
     !!! warning
         Some sites are only useable with plugins.

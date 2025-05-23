@@ -32,10 +32,9 @@ __all__ = ("Git", "Information", "Plugin", "Version")
 
 
 class Information:
-    """
-    Information.
+    """Information.
 
-    All of the Info Version information.
+    All of the Information about the lavalink session.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest.html#info-response)
     """
@@ -129,8 +128,7 @@ class Information:
 
 
 class Version:
-    """
-    Version information.
+    """Version.
 
     All information, about the version of lavalink that is running.
 
@@ -216,8 +214,7 @@ class Version:
 
 
 class Git:
-    """
-    Git information.
+    """Git.
 
     All of the information about the lavalink git information.
 
@@ -268,8 +265,7 @@ class Git:
 
 
 class Plugin:
-    """
-    Plugin information.
+    """Plugin.
 
     All of the Information about the currently loaded plugins.
 

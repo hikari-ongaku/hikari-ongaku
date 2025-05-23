@@ -216,8 +216,7 @@ class Client:
 
     @property
     def is_alive(self) -> bool:
-        """
-        Whether the session handler is alive.
+        """Whether the session handler is alive.
 
         !!! note
             If the `hikari.StartedEvent` has occurred, and this is False,
@@ -300,7 +299,7 @@ class Client:
         port: int = 2333,
         password: str = "youshallnotpass",
     ) -> ControllableSession:
-        """Create Session.
+        """Create session.
 
         Create a new session for the session handler.
 
@@ -350,7 +349,7 @@ class Client:
         return self.handler.add_session(session=new_session)
 
     def get_session(self, name: str) -> ControllableSession:
-        """Get a session.
+        """Get session.
 
         Get a session from the session handler.
 
@@ -372,7 +371,7 @@ class Client:
         return self.handler.get_session(name=name)
 
     async def delete_session(self, name: str) -> None:
-        """Delete a session.
+        """Delete session.
 
         Delete a session from the session handler.
 
@@ -392,7 +391,7 @@ class Client:
         self,
         guild: hikari.SnowflakeishOr[hikari.Guild],
     ) -> ControllablePlayer:
-        """Create a player.
+        """Create player.
 
         Create a new player to play songs on.
 
@@ -438,9 +437,9 @@ class Client:
         self,
         guild: hikari.SnowflakeishOr[hikari.Guild],
     ) -> ControllablePlayer:
-        """Get a player.
+        """Get player.
 
-        Fetches an existing player.
+        Gets an existing player.
 
         Example
         -------
@@ -467,7 +466,7 @@ class Client:
         self,
         guild: hikari.SnowflakeishOr[hikari.Guild],
     ) -> None:
-        """Delete a player.
+        """Delete player.
 
         Delete a pre-existing player.
 
@@ -494,7 +493,7 @@ class Client:
         self,
         extension: Extension | type[Extension],
     ) -> None:
-        """Create Extension.
+        """Create extension.
 
         Add a new extension to ongaku.
 
@@ -511,7 +510,7 @@ class Client:
         self._extensions.add(type(extension))
 
     def get_extension(self, extension: type[types.ExtensionT]) -> types.ExtensionT:
-        """Get Extension.
+        """Get extension.
 
         Get an extension from the client.
 
@@ -533,7 +532,7 @@ class Client:
         return self.injector.get_type_dependency(extension)
 
     def delete_extension(self, extension: type[Extension]) -> None:
-        """Delete Extension.
+        """Delete extension.
 
         Deletes an extension previously added.
 

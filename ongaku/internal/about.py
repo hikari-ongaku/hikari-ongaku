@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import typing
 
-__all__ = (
+__all__: typing.Sequence[str] = (
     "__author__",
     "__author_email__",
     "__license__",

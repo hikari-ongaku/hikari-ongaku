@@ -40,8 +40,7 @@ if typing.TYPE_CHECKING:
 
 
 class RoutePlannerStatus:
-    """
-    Route Planner Status Object.
+    """Routeplanner status.
 
     The status of the route-planner.
 
@@ -77,8 +76,7 @@ class RoutePlannerStatus:
 
 
 class RoutePlannerDetails:
-    """
-    Route Planner details.
+    """Routeplanner details.
 
     All of the information about the failing addresses.
 
@@ -165,8 +163,7 @@ class RoutePlannerDetails:
 
 
 class IPBlock:
-    """
-    Route Planner IP Block.
+    """IP Block.
 
     All of the information about the IP Block.
 
@@ -197,8 +194,7 @@ class IPBlock:
 
 
 class FailingAddress:
-    """
-    Failing address.
+    """Failing address.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#failing-address-object)
     """
@@ -243,8 +239,7 @@ class FailingAddress:
 
 
 class RoutePlannerType(str, enum.Enum):
-    """
-    Route Planner Type.
+    """Route Planner Type.
 
     The type of routeplanner that the server is currently using.
 
@@ -283,8 +278,7 @@ class RoutePlannerType(str, enum.Enum):
 
 
 class IPBlockType(str, enum.Enum):
-    """
-    IP Block Type.
+    """IP Block Type.
 
     The IP Block type, IPV4, or IPV6.
 

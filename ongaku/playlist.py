@@ -35,8 +35,7 @@ __all__: typing.Sequence[str] = (
 
 
 class Playlist:
-    """
-    Playlist.
+    """Playlist.
 
     The playlist object.
 
@@ -87,10 +86,9 @@ class Playlist:
 
 
 class PlaylistInfo:
-    """
-    Playlist information.
+    """Playlist information.
 
-    The playlist info object.
+    The playlist information object.
 
     ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/rest#playlist-info)
     """

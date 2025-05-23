@@ -69,13 +69,11 @@ class BasicHandler(Handler):
     @property
     @te.override
     def sessions(self) -> typing.Sequence[ControllableSession]:
-        """The sessions attached to this handler."""
         return tuple(self._sessions.values())
 
     @property
     @te.override
     def players(self) -> typing.Sequence[ControllablePlayer]:
-        """The players attached to this handler."""
         return tuple(self._players.values())
 
     @property
