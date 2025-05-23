@@ -1,38 +1,56 @@
-"""
-Errors.
+# MIT License
 
-All of the ongaku errors.
-"""
+# Copyright (c) 2023-present MPlatypus
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+"""Errors and exceptions."""
 
 from __future__ import annotations
 
+import enum
 import typing
-
-from ongaku.abc import errors as errors_
 
 if typing.TYPE_CHECKING:
     import datetime
 
-    from ongaku.abc.errors import SeverityType
 
-__all__ = (
+__all__: typing.Sequence[str] = (
     "BuildError",
     "ClientAliveError",
     "ClientError",
+    "ExceptionError",
     "NoSessionsError",
     "OngakuError",
     "PlayerConnectError",
     "PlayerError",
     "PlayerMissingError",
+    "PlayerNotConnectedError",
     "PlayerQueueError",
     "RestEmptyError",
     "RestError",
-    "RestExceptionError",
     "RestRequestError",
     "RestStatusError",
     "SessionError",
     "SessionHandlerError",
+    "SessionMissingError",
     "SessionStartError",
+    "SeverityType",
     "TimeoutError",
 )
 
@@ -53,7 +71,7 @@ class RestStatusError(RestError):
 
     __slots__: typing.Sequence[str] = ("_reason", "_status")
 
-    def __init__(self, status: int, reason: str | None) -> None:
+    def __init__(self, status: int, reason: str | None, /) -> None:
         self._status = status
         self._reason = reason
 
@@ -131,36 +149,40 @@ class RestEmptyError(RestError):
     """Raised when the request was 204, but data was requested."""
 
 
-class RestExceptionError(RestError, errors_.ExceptionError):
+class ExceptionError(RestError):
     """Raised when a track search results in a error result."""
 
     __slots__: typing.Sequence[str] = ()
 
-    def __init__(
-        self,
-        message: str | None,
-        severity: SeverityType,
-        cause: str,
-    ):
+    def __init__(self, message: str | None, severity: SeverityType, cause: str) -> None:
         self._message = message
         self._severity = severity
         self._cause = cause
 
-    @classmethod
-    def from_error(cls, error: errors_.ExceptionError):
-        return cls(error.message, error.severity, error.cause)
-
     @property
     def message(self) -> str | None:
+        """The message of the exception."""
         return self._message
 
     @property
-    def severity(self) -> errors_.SeverityType:
+    def severity(self) -> SeverityType:
+        """The severity of the exception."""
         return self._severity
 
     @property
     def cause(self) -> str:
+        """The cause of the exception."""
         return self._cause
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ExceptionError):
+            return False
+
+        return (
+            self.message == other.message
+            and self.severity == other.severity
+            and self.cause == other.cause
+        )
 
 
 # Client
@@ -175,7 +197,7 @@ class ClientAliveError(ClientError):
 
     __slots__: typing.Sequence[str] = ("_reason",)
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, /) -> None:
         self._reason = reason
 
     @property
@@ -220,9 +242,9 @@ class PlayerError(OngakuError):
 class PlayerConnectError(PlayerError):
     """Raised when the player cannot connect to lavalink, or discord."""
 
-    __slots__: typing.Sequence[str] = "_reason"
+    __slots__: typing.Sequence[str] = ("_reason",)
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, /) -> None:
         self._reason = reason
 
     @property
@@ -231,12 +253,16 @@ class PlayerConnectError(PlayerError):
         return self._reason
 
 
+class PlayerNotConnectedError(PlayerError):
+    """Raised when the player is not connected to a voice channel."""
+
+
 class PlayerQueueError(PlayerError):
     """Raised when the players queue is empty."""
 
-    __slots__: typing.Sequence[str] = "_reason"
+    __slots__: typing.Sequence[str] = ("_reason",)
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, /) -> None:
         self._reason = reason
 
     @property
@@ -255,16 +281,14 @@ class PlayerMissingError(PlayerError):
 class BuildError(OngakuError):
     """Raised when a abstract class fails to build."""
 
-    __slots__: typing.Sequence[str] = ("_exception", "_reason")
+    __slots__: typing.Sequence[str] = ("_reason",)
 
-    def __init__(self, exception: Exception | None, reason: str | None = None) -> None:
-        self._exception = exception
+    def __init__(
+        self,
+        reason: str | None = None,
+        /,
+    ) -> None:
         self._reason = reason
-
-    @property
-    def exception(self) -> Exception | None:
-        """The exception raised to receive the build error."""
-        return self._exception
 
     @property
     def reason(self) -> str | None:
@@ -276,38 +300,35 @@ class TimeoutError(OngakuError):
     """Raised when an event times out."""
 
 
-class UniqueError(OngakuError):
-    """Raised when a value should be unique, but is not."""
+class SeverityType(str, enum.Enum):
+    """
+    Track error severity type.
 
-    __slots__: typing.Sequence[str] = "_reason"
+    The severity type of the lavalink track error.
 
-    def __init__(self, reason: str | None) -> None:
-        self._reason = reason
+    ![Lavalink](../assets/lavalink_logo.png){ .twemoji } [Reference](https://lavalink.dev/api/websocket#severity)
+    """
 
-    @property
-    def reason(self) -> str | None:
-        """The reason for the unique error."""
-        return self._reason
+    COMMON = "common"
+    """Common.
 
+    The cause is known and expected,
+    indicates that there is nothing wrong with the library itself.
+    """
+    SUSPICIOUS = "suspicious"
+    """Suspicious.
 
-# MIT License
+    The cause might not be exactly known,
+    but is possibly caused by outside factors.
 
-# Copyright (c) 2023-present MPlatypus
+    For example when an outside service responds in a format that we do not expect.
+    """
+    FAULT = "fault"
+    """Fault.
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+    The probable cause is an issue with the library,
+    or there is no way to tell what the cause might be.
 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+    This is the default level and other levels are used,
+    in cases where the thrower has more in-depth knowledge about the error.
+    """

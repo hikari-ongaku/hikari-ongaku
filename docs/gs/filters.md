@@ -85,7 +85,7 @@ Add, remove and clear equalizer filter settings.
     ```
 
 !!! note
-    You can use any [BandType][ongaku.abc.filters.BandType] you would like, `BandType.HZ100` is just an example.
+    You can use any [BandType][ongaku.filters.BandType] you would like, `BandType.HZ100` is just an example.
 
 ### Karaoke
 

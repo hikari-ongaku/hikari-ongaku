@@ -110,7 +110,7 @@ Getting tracks, uses a rest method. There is a few methods of fetching a track (
     This method allows you to decode a track from its encoded state.
 
     !!! note
-        The encoded state is attached to all [track][ongaku.abc.track.Track] objects, and can be collected via `track.encoded`
+        The encoded state is attached to all [track][ongaku.track.Track] objects, and can be collected via `track.encoded`
 
     ```py
 
@@ -302,7 +302,7 @@ This allows for removing tracks. You can remove it via a track object, position 
 
 === "Track"
 
-    This method allows for removing a track via its [track][ongaku.abc.track.Track] object.
+    This method allows for removing a track via its [track][ongaku.track.Track] object.
 
     ```py
     player.remove(track)
